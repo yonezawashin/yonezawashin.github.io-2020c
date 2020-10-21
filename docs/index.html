@@ -425,6 +425,143 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     <p><br>
     </p>
 
+	  <h1><a id="mozTocId522169" class="mozTocH1"></a>前期C#スタイルに近づく一歩！Gameクラスの作成</h1>
+    <h2>Gameクラスの作成</h2>
+    <p>Gameクラスを作成しましょう。Gameクラスの重要な役割は次の3つ。<br>
+    これがあれば前期のようにGameクラスに処理を書いて開発できる！</p>
+    <ul>
+      <li>初期処理Init()</li>
+      <li>更新処理Update()</li>
+      <li>描画処理Draw()</li>
+    </ul>
+    <p><br>
+    </p>
+    <p>ソリューションエクスプローラーからプロジェクトを右クリックし、追加＞ヘッダファイル<br>
+      「Game」という名前でヘッダファイルを作り、クラスを定義します。<br>
+      <br>
+      <code>Game.h</code>の内容を次のようにします：</p>
+    <p class="source">#ifndef GAME_H_<br>
+#define GAME_H_<br>
+<br>
+#include "Image.h"<br>
+#include "Screen.h"<br>
+<br>
+class Game<br>
+{<br>
+public :<br>
+&nbsp; /*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↓{ 
+	}を.hに書くことでcppに分けて書くはずの処理ぶぶんを.hに書いてもよい */<br>
+&nbsp;&nbsp;Game() {&nbsp; }; // 初期化コンストラクタ<br>
+&nbsp;&nbsp;~Game() {&nbsp; }; // 破棄処理デストラクタ<br>
+&nbsp;&nbsp;void Init(); // Init処理(定義だけ)<br>
+&nbsp;&nbsp;void Update(); // 更新処理(定義だけ)<br>
+&nbsp;&nbsp;void Draw();// 描画処理(定義だけ)<br>
+<br>
+&nbsp;&nbsp;int x = 0; //staticじゃないintはここで=0で初期化できる<br>
+&nbsp;&nbsp;int vx = 0;<br>
+<br>
+};<br>
+
+#endif<br></p>
+<br>
+<p>次に対となるcppファイルを作成します。<br>
+ソリューションエクスプローラーからプロジェクトを右クリックし、追加＞cppファイル<br>
+      「Game」という名前でcppファイルを作り、クラスの処理を実装します。<br>
+      <br>
+      <code>Game.cpp</code>の内容を次のようにします：</p>
+    <p class="source">#include "Game.h"<br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+&nbsp;&nbsp;Image::Load(); //画像の読込み<br>
+&nbsp;&nbsp;x = 100; // Xの初期位置<br>
+&nbsp;&nbsp;vx = 10; // ボスの初期速度<br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;if (x &lt; 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = 10; //速度の変更<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else if (x &gt; Screen::Width)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = -10; //画面端で移動方向反転<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;x += vx; // ボス画像のX位置の更新<br>
+	<br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+&nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+<br>
+};</p>
+
+
+<h2>では前期に近い【Gameクラスを使って】表示してみる</h2>
+    <p><code>main.cpp</code>のプログラムを変更し、画像が正しくGameクラスで表示できるかテストします。</p>
+    <p class="source">#include "DxLib.h"<br>
+    #include "Screen.h"<br>
+    #include "Image.h"&nbsp;// 画像読み込みクラス<br>
+    <em>#include "Game.h"&nbsp;</em><br>
+<br>
+<br>
+// 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+{<br>
+&nbsp;&nbsp;// 画面モードの設定<br>
+&nbsp;&nbsp;SetGraphMode( Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+<br>
+&nbsp;&nbsp;// ＤＸライブラリの初期化<br>
+&nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
+&nbsp;&nbsp;}<br>
+
+&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+&nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+<br>
+&nbsp;&nbsp;//表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+&nbsp;&nbsp;// これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+&nbsp;&nbsp;SetDrawScreen(DX_SCREEN_BACK);<br>
+<br>
+&nbsp;&nbsp;// Init初期化処理<br>
+&nbsp;&nbsp;<em>Game game; //Gameの定義と同時にC++ではコンストラクタで初期化される<br>
+&nbsp;&nbsp;game.Init(); // gameのInit準備</em><br>
+<br>
+&nbsp;&nbsp;ScreenFlip();<br>
+<br>
+&nbsp;&nbsp;// アニメーション(パラパラ漫画)するにはWhile文<br>
+&nbsp;&nbsp;while (ProcessMessage() == 0) <br>
+&nbsp;&nbsp;{// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+<br>   
+&nbsp;&nbsp;&nbsp;&nbsp;// Update更新処理<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>game.Update(); // gameの更新処理</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// Draw描画処理<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>game.Draw();</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+&nbsp;&nbsp;}<br>
+<br>
+
+&nbsp;&nbsp;// キー入力待ちをする<br>
+&nbsp;&nbsp;WaitKey();<br>
+
+&nbsp;&nbsp;// ＤＸライブラリの後始末<br>
+&nbsp;&nbsp;DxLib_End();<br>
+
+&nbsp;&nbsp;// ソフトの終了<br>
+&nbsp;&nbsp;return 0;<br>
+}</p>
+    <p><br>
+    </p>
 
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
