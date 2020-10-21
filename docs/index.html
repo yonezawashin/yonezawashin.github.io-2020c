@@ -563,6 +563,236 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     <p><br>
     </p>
 
+	      <h1><a id="mozTocId522169" class="mozTocH1"></a>プレイヤを操作するには便利クラスInputクラスの移植が必須！</h1>
+    <h2>Inputクラスの作成</h2>
+    <p>Inputクラスを作成しましょう。InputクラスをC#から移植するときの落とし穴に注意。</p>
+    <ul>
+      <li>static int のstaticタイプの変数は.hだけではシンボリックエラーになるのでこのためだけに最低限.cppファイルを作成する必要がある</li>
+    </ul>
+	<p>
+    </p>
+    <p>ソリューションエクスプローラーからプロジェクトを右クリックし、追加＞ヘッダファイル<br>
+      「Input.h」という名前でヘッダファイルを作り、クラスを定義します。<br>
+      <br>
+      <code>Input.h</code>にC#のInput.csをコピーし、以下のC++移植の修正をします：</p>
+    <p class="source"><em>#ifndef INPUT_H_<br>
+#define INPUT_H_<br>
+<br>
+#include "DxLib.h"</em><br>
+<br>
+<br>
+// 入力クラス<br>
+class Input<br>
+{<br>
+<em>public:</em><br>
+&nbsp;<em>&nbsp;</em>static int prevState; // 1フレーム前の状態<br>
+&nbsp;<em>&nbsp;</em>static int currentState; // 現在の状態<br>
+<br>
+&nbsp;&nbsp;// 初期化。最初に1回だけ呼んでください。<br>
+&nbsp;<em>&nbsp;</em>static void Init()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;prevState = 0;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;currentState = 0;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 最新の入力状況に更新する処理。<br>
+&nbsp;&nbsp;// 毎フレームの最初に（ゲームの処理より先に）呼んでください。<br>
+&nbsp;<em>&nbsp;</em>static void Update()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;prevState = currentState;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;currentState = <em>&nbsp;</em>GetJoypadInputState(<em>&nbsp;</em>DX_INPUT_KEY_PAD1);<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// ボタンが押されているか？<br>
+&nbsp;<em>&nbsp;</em>static bool GetButton(int buttonId)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 今ボタンが押されているかどうかを返却<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return (currentState &amp; buttonId) != 0;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// ボタンが押された瞬間か？<br>
+&nbsp;<em>&nbsp;</em>static bool GetButtonDown(int buttonId)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 今は押されていて、かつ1フレーム前は押されていない場合はtrueを返却<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return ((currentState &amp; buttonId) &amp; ~(prevState 
+	&amp; buttonId)) != 0;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// ボタンが離された瞬間か？<br>
+&nbsp;<em>&nbsp;</em>static bool GetButtonUp(int buttonId)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 1フレーム前は押されていて、かつ今は押されている場合はtrueを返却<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return ((prevState &amp; buttonId) &amp; ~(currentState 
+	&amp; buttonId)) != 0;<br>
+&nbsp;&nbsp;}<br>
+}<em>;&nbsp;//←【注意】クラス定義の終わりにはコロンが必要だよ！</em><br>
+<br>
+#endif<em>&nbsp;&nbsp;//ここでエラー出た人は↑【注意】の;コロン忘れ</em><br></p>
+<br>
+<p>次に対となるcppファイルを作成します。<br>
+ソリューションエクスプローラーからプロジェクトを右クリックし、追加＞cppファイル<br>
+      「Input.cpp」という名前でcppファイルを作ります(たった2行の初期化static int変数の初期化のために必須)。<br>
+      <br>
+      <code>Input.cpp</code>の内容を次のようにします：</p>
+    <p class="source">#include "Input.h"<br>
+<br>
+int <em>Input::</em>prevState <em>{ 0 }</em>; // 1フレーム前の状態<br>
+int <em>Input::</em>currentState <em>{ 0 }</em>; // 現在の状態<br>
+<em>// ↑static intのときはこの行書かないとシンボリックエラーになる件(このためだけにcpp書かなきゃならん)</em><br>
+<br>
+</p>
+
+
+	  <h1><a id="mozTocId522169" class="mozTocH1"></a>Playerクラスでプレイヤをキー入力(↑↓←→)で動かせるように</h1>
+	  <h2>忘れずにプレイヤ画像はImageフォルダにコピー貼り付けしましょう。</h2>
+    <p>Playerクラスを作成する前に、忘れずにプレイヤ画像はImageフォルダにコピー貼り付けしましょう。<br>
+    Imageフォルダにコピーしたらプロジェクトで</p>
+    <p>次は画像ファイルをプロジェクトに追加します。【C#と違いドラッグアンドドロップせず】画像は【プロジェクトを右クリックで「追加」→「既存の項目」で画像を追加】します。<br>
+    <img src="image/player_image_add.gif" alt=""><br>
+
+
+    <h2>Playerクラスの作成</h2>
+    <p>Playerクラスを作成しましょう。<br>
+    Playerクラスをつくるだけで安心すると【落とし穴】があります。Game.cppでInput.Update();も忘れずに</p>
+    <ul>
+      <li>【プレイヤ画像が出ない】→Game.cppで【player.Draw();しましたか？】</li>
+      <li>【プレイヤ画像が動かない1】→Game.cppで【player.Update();しましたか？】</li>
+      <li>【プレイヤ画像が動かない2】→Game.cppで【Input.Update();しましたか？】</li>
+    </ul>
+    <p><br>
+    </p>
+    <p>ソリューションエクスプローラーからプロジェクトを右クリックし、追加＞ヘッダファイル<br>
+      「Player.h」という名前でヘッダファイルを作り、クラスを定義します。<br>
+      <br>
+      <code>Player.h</code>の内容を次のようにします：</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+#define PLAYER_H_<br>
+<br>
+#include "DxLib.h"<br>
+#include "Input.h"<br>
+#include "Image.h"<br>
+<br>
+class Player<br>
+{<br>
+public:<br>
+&nbsp;<em>&nbsp;</em>const float MoveSpeed = <em>6;</em> // 移動速度<br>
+<br>
+&nbsp;<em>&nbsp;</em>float x; // x座標<br>
+&nbsp;<em>&nbsp;</em>float y; // y座標<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;// x : 初期位置x<br>
+&nbsp;&nbsp;// y : 初期位置y<br>
+&nbsp;<em>&nbsp;</em>Player(float <em>_x</em>, float <em>_y</em>)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x = <em>_x</em>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;y = <em>_y</em>;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;<em>&nbsp;</em>void Update()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float vx = 0; // x方向移動速度<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float vy = 0; // y方向移動速度<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(<em>&nbsp;</em>PAD_INPUT_LEFT))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = -MoveSpeed; // 左<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;else if (Input<em>::</em>GetButton(<em>&nbsp;</em>PAD_INPUT_RIGHT))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = MoveSpeed; // 右<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (Input<em>::</em>GetButton(<em>&nbsp;</em>PAD_INPUT_UP))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -MoveSpeed; // 上<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;else if (Input<em>::</em>GetButton(<em>&nbsp;</em>PAD_INPUT_DOWN))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = MoveSpeed; // 下<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 実際に位置を動かす<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x += vx;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;<em>&nbsp;</em>void Draw()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;<em>&nbsp;</em>DrawRotaGraphF(x, y, 1, 0, <em>Image::</em>player<em>, TRUE</em>);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br></p>
+<br>
+
+<p><code>Game.h</code>にPlayerを追加します：</p>
+    <p class="source">#ifndef GAME_H_<br>
+#define GAME_H_<br>
+<br>
+#include "Image.h"<br>
+#include "Screen.h"<br>
+<em>#include "Player.h"</em><br>
+<br>
+class Game<br>
+{<br>
+public :<br>
+&nbsp; /*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↓{ 
+	}を.hに書くことでcppに分けて書くはずの処理ぶぶんを.hに書いてもよい */<br>
+&nbsp;&nbsp;Game() {&nbsp; }; // 初期化コンストラクタ<br>
+&nbsp;&nbsp;~Game() {&nbsp; }; // 破棄処理デストラクタ<br>
+&nbsp;&nbsp;void Init(); // Init処理(定義だけ)<br>
+&nbsp;&nbsp;void Update(); // 更新処理(定義だけ)<br>
+&nbsp;&nbsp;void Draw();// 描画処理(定義だけ)<br>
+<br>
+&nbsp;&nbsp;int x = 0; //staticじゃないintはここで=0で初期化できる<br>
+&nbsp;&nbsp;int vx = 0;<br>
+<br>
+&nbsp;&nbsp;<em>Player player{ 100, Screen::Height / 2 }; // 自機の初期化</em><br>
+};<br>
+
+
+<p>次にGame.cppファイルにUpdateとDraw処理を追加してプレイヤの動作を確認しましょう。<br>
+      <br>
+      <code>Game.cpp</code>の内容を次のようにします：</p>
+    <p class="source">#include "Game.h"<br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+&nbsp;&nbsp;Image::Load(); //画像の読込み<br>
+&nbsp;&nbsp;x = 100; // Xの初期位置<br>
+&nbsp;&nbsp;vx = 10; // ボスの初期速度<br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;<em>Input::Update();&nbsp;//【注意】これ忘れるとキー入力押してもキャラ動かない</em><br>
+<br>
+&nbsp;&nbsp;if (x &lt; 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = 10; //速度の変更<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else if (x &gt; Screen::Width)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = -10; //画面端で移動方向反転<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;x += vx; // ボス画像のX位置の更新<br>
+	<br>
+&nbsp;&nbsp;<em>player.Update(); // プレイヤの更新【忘れるとプレイヤが動かない】</em><br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+&nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+<br>
+&nbsp;&nbsp;<em>player.Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】</em><br>
+};</p>
+
+<p>さて、無事にプレイヤをキー入力(↑↓←→)で動かせるようになりましたか？？？。</p><br>	  
+	  
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
 
