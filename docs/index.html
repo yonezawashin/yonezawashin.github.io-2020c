@@ -351,6 +351,80 @@ void Image::Load()<br>
 &nbsp;&nbsp;assert(bossImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
 };</p>
 
+	  <br>
+	  <br>
+	  
+<h2>試しに【Image.hを使って】表示してみる</h2>
+    <p><code>main.cpp</code>のプログラムを変更し、画像が正しく表示できるかテストします。</p>
+    <p class="source">#include "DxLib.h"<br>
+    #include "Screen.h"<br>
+    <em>#include "Image.h"&nbsp;// 画像読み込みクラス</em><br>
+<br>
+<br>
+// 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+{<br>
+&nbsp;&nbsp;// 画面モードの設定<br>
+&nbsp;&nbsp;SetGraphMode( Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+<br>
+&nbsp;&nbsp;// ＤＸライブラリの初期化<br>
+&nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
+&nbsp;&nbsp;}<br>
+
+&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+&nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+<br>
+&nbsp;&nbsp;//表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+&nbsp;&nbsp;// これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+&nbsp;&nbsp;SetDrawScreen(DX_SCREEN_BACK);<br>
+<br>
+&nbsp;&nbsp;// これまでInitでやってきてた初期化処理<br>
+&nbsp;&nbsp;<em>Image::Load();</em><br>
+&nbsp;&nbsp;int x = 100; // Xの初期位置<br>
+&nbsp;&nbsp;int vx = 10;<br>
+<br>
+&nbsp;&nbsp;ScreenFlip();<br>
+<br>
+&nbsp;&nbsp;// アニメーション(パラパラ漫画)するにはWhile文<br>
+&nbsp;&nbsp;while (ProcessMessage() == 0) <br>
+&nbsp;&nbsp;{// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+<br>   
+&nbsp;&nbsp;&nbsp;&nbsp;// これまではUpdateでやってきてた更新処理<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (x &lt; 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = 10; //速度の変更<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;else if (x &gt; Screen::Width)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = -10;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x += vx; // X位置の更新<br>
+<br>   
+&nbsp;&nbsp;&nbsp;&nbsp;// これまではDrawでやってきてた描画処理<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, <em>Image::bossImage</em>, TRUE);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+&nbsp;&nbsp;}<br>
+<br>
+
+&nbsp;&nbsp;// キー入力待ちをする<br>
+&nbsp;&nbsp;WaitKey();<br>
+
+&nbsp;&nbsp;// ＤＸライブラリの後始末<br>
+&nbsp;&nbsp;DxLib_End();<br>
+
+&nbsp;&nbsp;// ソフトの終了<br>
+&nbsp;&nbsp;return 0;<br>
+}</p>
+    <p><br>
+    </p>
+
 
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
