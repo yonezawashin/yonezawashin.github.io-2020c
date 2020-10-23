@@ -794,7 +794,7 @@ public :<br>
 <br>
 &nbsp;&nbsp;<em>Player player{ 100, Screen::Height / 2 }; // 自機の初期化</em><br>
 };<br>
-
+#endif</p>
 
 <p>次にGame.cppファイルにUpdateとDraw処理を追加してプレイヤの動作を確認しましょう。<br>
       <br>
@@ -831,7 +831,7 @@ void Game::Draw()<br>
 &nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
 <br>
 &nbsp;&nbsp;<em>player.Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】</em><br>
-};</p>
+}</p>
 
 <p>さて、無事にプレイヤをキー入力(↑↓←→)で動かせるようになりましたか？？？。</p><br>	  
 	  
