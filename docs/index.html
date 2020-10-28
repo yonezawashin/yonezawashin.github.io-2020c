@@ -836,6 +836,117 @@ void Game::Draw()<br>
 }</p>
 
 <p>さて、無事にプレイヤをキー入力(↑↓←→)で動かせるようになりましたか？？？。</p><br>	  
+
+	  
+<h2>√2の定義</h2>
+    <p>【C++でも】斜め方向の移動速度を√2で割って補正するために、自分用数学定義クラスを作ってみましょう。ソリューションエクスプローラーのプロジェクトを右クリックし、追加＞ヘッダファイル(.h)<br>
+      MyMath.hという名前でヘッダファイルを生成し、そのファイルにクラスを記述します。</p>
+    <p><code>MyMath.h</code>を編集します：</p>
+    <p class="source">#ifndef _MYMATH_H<br>
+	#define _MYMATH_H<br>
+	// 数学関連クラス<br>class MyMath<br>{<br>
+	public: <br>
+&nbsp; // C ++標準では、静的static定数の【整数型】または【列挙型】のみをクラス内で初期化できます。<br>&nbsp; // 
+	これが、一部の初期化が許可されているのに他のstatic floatなどが初期化できない理由です。<br><br>&nbsp; // 【OH,ノー】 
+	float小数を定義するためだけにcppファイルを作成しないと<br>&nbsp; //static const float Sqrt2 
+	=【このイコールでエラー】 1.41421356237f; <br><br>&nbsp; // ルート2(変数名の定義だけ)<br>static 
+	const float Sqrt2;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	// = 1.41421356237f;<br><br>}; // 【注意】セミコロン抜けで【宣言が必要ですエラー】<br><br>#endif // 
+	【宣言が必要ですエラーは上のセミコロン抜け】</p>
+<br>
+<br>
+<br>
+    <p><code>MyMath.cpp</code>を編集して変数名に1.41421356237f を 割り当てMath。</p>
+    <p class="source"><em>#include "MyMath.h""</em><br>
+	<br>
+	const float MyMath::Sqrt2 = 
+	1.41421356237f;//(floatは有効桁は実質7桁まで正確だがそれ以降は環境によって誤差出る)<br>
+<br>
+	// 【ルールとして.hでfloatなどstatic小数などの初期化許さなかった理由】<br>// 一言でいうと 「作った人がそういうルールにした」<br>
+	// 以下を一言でまとめると「.hヘッダはマシン環境によって変わるようなことは記述しないようにしたかった」<br>// 
+	PCやマシン語翻訳コンパイラによって小数の精度などや数値に誤差が出るから<br>// 
+	環境によって変動する可能性のあるfloatなど(int整数は誤差がない)<br>// をstatic 
+	const静的定数として.hヘッダで初期化することを許可しなかった(定数といえない) 「マシン依存」<br>// 
+	cppで大丈夫なのはcppは実際の処理ベースで動くので【動的な動いてもよい数字となるから】(どの環境でも同じとは限らない)<br>// 
+	【勉強】以下サイトにC++のBjarneさんの説明を翻訳したものがある<br>// 
+	https://qastack.jp/programming/9656941/why-cant-i-initialize-non-const-static-member-or-static-array-in-class</p>
+
+
+
+    <p><br>
+      <br>
+      定義だけじゃなく、実際にプレイヤを動かしているPlayer.hも編集しなきゃ意味がないよ！お忘れなく！！<br>
+      <code>Player.h</code>の内容を次のようにします：</p>
+    <p class="auto-style1"><span class="auto-style2">#ifndef PLAYER_H_<br>
+#define PLAYER_H_<br>
+<br>
+#include "DxLib.h"<br>
+#include "Input.h"<br>
+#include "Image.h"<br>
+<br>
+class Player<br>
+{<br>
+public:<br>
+&nbsp;const float MoveSpeed = 6; // 移動速度<br>
+<br>
+&nbsp;float x; // x座標<br>
+&nbsp;float y; // y座標<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;// x : 初期位置x<br>
+&nbsp;&nbsp;// y : 初期位置y<br>
+&nbsp;Player(float x, float y)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;void Update()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float vx = 0; // x方向移動速度<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float vy = 0; // y方向移動速度<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = -MoveSpeed; // 左<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = MoveSpeed; // 右<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -MoveSpeed; // 上<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = MoveSpeed; // 下<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}</span><br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>// 斜め移動も同じ速度になるように調整<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (vx != 0 &amp;&amp; vy != 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx /= MyMath::Sqrt2;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy /= MyMath::Sqrt2;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 実際に位置を動かす<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x += vx;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
+&nbsp;&nbsp;}<br>
+
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;void Draw()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::player</span>, TRUE);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br></p>
+
+
+	  
 	  
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
