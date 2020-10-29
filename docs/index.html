@@ -1192,7 +1192,7 @@ void Player::Update()<br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;【C#版】game-&gt;playerBullets.Add(new PlayerBullet(x, y));<br>
 &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;C++ではAddがpush_backに↓&nbsp;newがmake_shared↓に<br>
-&nbsp;&nbsp;&nbsp;&nbsp;game-&gt;playerBullets.push_back(std::make_shared<PlayerBullet>(x, y));<br>  
+&nbsp;&nbsp;&nbsp;&nbsp;game-&gt;playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y));<br>  
 &nbsp;&nbsp;}</em><br>
 }<br>
 <br>
