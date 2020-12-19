@@ -1354,6 +1354,40 @@ T* Singleton&lt; T &gt;::instance = 0; //cppでの定義を.h内に書いた(sta
 
 <br>
 
+<p>続いて仲介の役割を担当する<code>GameManager.h</code>を作成します。</p>
+<p class="source">
+#ifndef GAMEMANAGER_H_<br>
+#define GAMEMANAGER_H_<br>
+<br>
+#include &lt;memory&gt;<br>
+#include &lt;vector&gt;<br>
+<br>
+#include "Singleton.h"<br>
+<br>
+class Player;//クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+class PlayerBullet;<br>
+<br>
+class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
+<br>
+&nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機の初期化<br>
+<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+&nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+<br>
+protected:<br>
+&nbsp;&nbsp;GameManager() {}; // 外部からのインスタンス作成は禁止<br>
+&nbsp;&nbsp;virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
+};<br>
+<br>
+<br>
+#endif<br>
+</p>
+
+<br>
+
     <h2>【※メモリから弾を削除】自機弾PlayerBulletの削除処理</h2>
     <p>PlayerBulletクラスを改造しましょう。<br>
     </p>
