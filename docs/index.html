@@ -1768,15 +1768,15 @@ gm.playerBullets.erase(<br>
 &nbsp;&nbsp;v.erase(削除開始ポインタ位置, 終了ポインタ位置);<br>
 で、プレイヤ弾の削除処理では<br>
 gm.playerBullets.erase(<br>
-&nbsp;&nbsp;……
-&nbsp;&nbsp;&nbsp;&nbsp;……
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;……
+&nbsp;&nbsp;……<br>
+&nbsp;&nbsp;&nbsp;&nbsp;……<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;……<br>
 &nbsp;&nbsp;&nbsp;&nbsp;……,<br>
 &nbsp;&nbsp;gm.playerBullets.end()<br>
 );<br>
 よく見ると実は<br>
 gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&nbsp;);<br>
-となっているだけで実は【複雑な何かから～end()終了位置】までの削除処理を行っているだけだとわかります。<br>
+となっているだけで実は【複雑な何かから ～ end()終了位置】までの削除処理を行っているだけだとわかります。<br>
 こういう風にカンマ,や(かっこ)で区切られた構造を読み解く力が身に付けば複雑なコードでも<br>
 <br>
 【分解ステップを踏んでゆけば読み解けるようになります】<br>
