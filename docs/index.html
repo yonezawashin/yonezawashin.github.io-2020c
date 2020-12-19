@@ -883,7 +883,7 @@ void Game::Draw()<br>
 #include "DxLib.h"<br>
 #include "Input.h"<br>
 #include "Image.h"<br>
-<em>#include "MyMath.h"</em>
+<em>#include "MyMath.h"</em><br>
 <br>
 class Player<br>
 {<br>
@@ -1138,72 +1138,59 @@ public:<br>
 &nbsp;&nbsp;// x : 初期位置x<br>
 &nbsp;&nbsp;// y : 初期位置y<br>
 &nbsp;&nbsp;<em>Player(float x, float y, Game* game) : x{ x }, y{ y }, game{ game }<br>
-&nbsp;&nbsp;{};</em>//↑別バージョン初期化コンストラクタ(this-&gt;x = x;やらないバージョン)<br>
+&nbsp;&nbsp;{};</em>//↑別バージョン初期化コンストラクタ(this-&gt;x = x;やらないバージョン、x{ x }でthis-&gt;x = x;と同じ効果)<br>
 <br>
 &nbsp;&nbsp;// 更新処理<br>
-&nbsp;&nbsp;void Update();<br>  
+&nbsp;&nbsp;void Update(){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float vx = 0; // x方向移動速度<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float vy = 0; // y方向移動速度<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = -MoveSpeed; // 左<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = MoveSpeed; // 右<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -MoveSpeed; // 上<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = MoveSpeed; // 下<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 斜め移動も同じ速度になるように調整<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx != 0 &amp;&amp; vy != 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx /= MyMath::Sqrt2;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vy /= MyMath::Sqrt2;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 実際に位置を動かす<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x += vx;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>// ボタン押下で自機弾を発射<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;【C#版】game-&gt;playerBullets.Add(new PlayerBullet(x, y));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;C++ではAddがpush_backに↓&nbsp;newがmake_shared↓に<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;game-&gt;playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y));<br>  
+&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;};<br>  
 <br>
 &nbsp;&nbsp;// 描画処理<br>
-&nbsp;&nbsp;void Draw();<br>
+&nbsp;&nbsp;<em>void Draw(){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::player, TRUE);<br>
+&nbsp;&nbsp;};</em><br>
 <br>
 };<br>
 <br>
 #endif</p>
 
-<p>次にPlayer.cppファイルに弾を打つプログラムを追加してプレイヤが弾を打てるようにしましょう。<br>
-      <br>
-      <code>Player.cpp</code>の内容を次のようにします：</p>
-    <p class="source">#include "Player.h"<br>
-<br>
-// 更新処理<br>
-void Player::Update()<br>
-{<br>
-&nbsp;&nbsp;float vx = 0; // x方向移動速度<br>
-&nbsp;&nbsp;float vy = 0; // y方向移動速度<br>
-<br>
-&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
-&nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;vx = -MoveSpeed; // 左<br>
-&nbsp;&nbsp;}<br>
-&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_RIGHT))<br>
-&nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;vx = MoveSpeed; // 右<br>
-&nbsp;&nbsp;}<br>
-&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
-&nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;vy = -MoveSpeed; // 上<br>
-&nbsp;&nbsp;}<br>
-&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
-&nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;vy = MoveSpeed; // 下<br>
-&nbsp;&nbsp;}<br>
-<br>
-&nbsp;&nbsp;// 斜め移動も同じ速度になるように調整<br>
-&nbsp;&nbsp;if (vx != 0 &amp;&amp; vy != 0)<br>
-&nbsp;&nbsp;{<br>
-&nbsp;&nbsp;vx /= MyMath::Sqrt2;<br>
-&nbsp;&nbsp;vy /= MyMath::Sqrt2;<br>
-&nbsp;&nbsp;}<br>
-<br>
-&nbsp;&nbsp;// 実際に位置を動かす<br>
-&nbsp;&nbsp;x += vx;<br>
-&nbsp;&nbsp;y += vy;<br>
-<br>
-&nbsp;&nbsp;<em>// ボタン押下で自機弾を発射<br>
-&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
-&nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;【C#版】game-&gt;playerBullets.Add(new PlayerBullet(x, y));<br>
-&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;C++ではAddがpush_backに↓&nbsp;newがmake_shared↓に<br>
-&nbsp;&nbsp;&nbsp;&nbsp;game-&gt;playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y));<br>  
-&nbsp;&nbsp;}</em><br>
-}<br>
-<br>
-// 描画処理<br>
-void Player::Draw()<br>
-{<br>
-&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::player, TRUE);<br>
-}<br>
-</p><br>
 <br>
 <br>
 <br>
