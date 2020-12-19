@@ -1281,8 +1281,11 @@ void <em>Player::</em>Draw()<br>
 <p> <img src="image/include_loop.png" alt="" style="width: 1466px; height: 832px;"></p>
 <br>
 <p>さてこの【循環参照・循環インクルード】への対策をどうするかが問題です。<br>
-1)ヘッダ.hでのインクルードを避け.cppファイルでインクルードするのが基本的には有効です(ヘッダ.h同士が相互にコピペしあわないから)<br>
-2)しかし根本的には【★相互に参照しあう構造の設計自体すっきりさせたい】です<br></p>
+【1】 ヘッダ.hでのインクルードを避け.cppファイルでインクルードするのが基本的には有効です(ヘッダ.h同士が相互にコピペしあわないから)<br>
+【2】 しかし根本的には【★相互に参照しあう構造の設計自体すっきりさせたい】です。<br>
+今はPlayer⇔Gameの1対1の関係でまだ把握可能ですが、ザコや敵の弾などが他に増えてくると<br>
+恐怖の三角関係や四角関係など【どこかで一周回ると無限インクルード発生】が起こってきます。<br>
+まだ【1対1の循環なら見抜ける】けど【★三角ループや四角ループは発見が難しすぎ】です。</p>
 <p> <img src="image/include_loop_meditator.png" alt="" style="width: 801px; height: 852px;"></p>
 <p>そう、相互に行き来する【★矢印を一つへ集中させる】のです。<br>
 こういったパターンを【★仲介者(Meditator)パターン】と呼びます。<br>
@@ -1298,6 +1301,57 @@ void <em>Player::</em>Draw()<br>
 案外【ブラックな現場は構造のデザインそのものが悪かった】ことも多いです(なんかいちいちやりづらい環境)<br>
 こういう【構造自体に疑問を持てる人が開発のリーダーシップを取れる】と心地よく制作が進むので<br>
 時間とスキルに余裕ができたら将来のリーダーに向けて【デザイン構造パターン】を勉強するとよいかもしれません。</p><br>
+<br>
+<p>さて、ではまず<code>Singleton.h</code>を追加しましょう。<br>
+コード中身は難しい文法が多いですが、<br>基本の要点は<br>
+【1】「代入」「コピー」「実体ポインタへの直接アクセス」を★private:として【外部から禁止】<br>
+【2】「実体へは★GetInstance()関数経由でしかアクセスできない」よう窓口を絞り<br>
+【3】「テンプレ化」template&lt;class T&gt;して何でも唯一化できるようになっています<br></p>
+<p>難しいコードなので導入するだけでも良いですが、<br>
+C++テキスト後半で「代入」「コピー」「テンプレ化」は触れられているので頑張れば6割ほどは理解できる余地ありです。<br>
+2,3年後上級者となって読み返して9割ほど理解できるようになるよう成長してゆきましょう。</p>
+<p><code>Singleton.h</code></p>
+<p class="source">
+#ifndef SINGLETON_H_<br>
+#define SINGLETON_H_<br>
+<br>
+// テンプレートT型シングルトンSingleton&lt;～&gt; ～になんでも指定して唯一物にできる<br>
+// ★Singleton&lt;T&gt;型は【必ず唯一で複製不可】(使い方:どこからでもアクセスし変数を共有するクラス向き)<br>
+// ★ゲーム内の【どこからアクセスしても統一性が保たれる】(唯一だから)「クラス名と実体が一致」<br>
+template&lt;class T&gt;<br>
+class Singleton<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;// GetInstanceを通して【しか】T型クラスをつくれないうえに、<br>
+&nbsp;&nbsp;// ★作ったものは【かならず唯一で複製不可】<br>
+&nbsp;&nbsp;// それが【シングルトン型】！<br>
+&nbsp;&nbsp;// ゲーム中で唯一で複製不可にしたい【ゲームを一律管理するクラス】などに最適！<br>
+&nbsp;&nbsp;// https://teratail.com/questions/17416<br>
+&nbsp;&nbsp;// http://rudora7.blog81.fc2.com/blog-entry-393.html<br>
+&nbsp;&nbsp;// ②↓同じ関数の定義はプログラム全体で１つだけしか許されません。(static関数名は被らない)<br>
+&nbsp;&nbsp;static inline T&amp; GetInstance()<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;//①↓関数の中で定義されたstatic変数は、関数の定義毎に１つ領域が確保されます。<br>
+&nbsp;&nbsp;&nbsp;&nbsp;static T instance; //メモリ上にstatic変数確保(静かに常に待機するinstance)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return instance; //①=(常駐)②=(唯一) ①と②両方満たすinstanceは【メモリ上に唯一】<br>
+&nbsp;&nbsp;}<br>
+<br>
+protected:<br>
+&nbsp;&nbsp;Singleton() {} // 外部でのインスタンス作成は禁止(protected:内部公開、外部禁止)<br>
+&nbsp;&nbsp;virtual ~Singleton() {} // 仮想デストラクタ(シングルトンを【継承するためには忘れちゃダメ】)<br>
+<br>
+private:<br>
+&nbsp;&nbsp;void operator=(const Singleton&amp; obj) {} // 代入演算子禁止<br>
+&nbsp;&nbsp;Singleton(const Singleton&amp; obj) {} // コピーコンストラクタ禁止(コピーできない【唯一】)<br>
+&nbsp;&nbsp;static T* instance; // private:だから外部アクセスできない【GetInstance()経由しか無理】<br>
+};<br>
+<br>
+// いつもcppで書いたstatic変数初期化も★【Tテンプレートクラスだからすべて.hヘッダにまとめて書いた】<br>
+template&lt; class T &gt;<br>
+T* Singleton&lt; T &gt;::instance = 0; //cppでの定義を.h内に書いた(static変数はclass内で初期化できないから)<br>
+<br>
+#endif<br>
+</p>
+
 <br>
 
     <h2>【※メモリから弾を削除】自機弾PlayerBulletの削除処理</h2>
