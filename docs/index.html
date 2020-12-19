@@ -1749,7 +1749,8 @@ gm.playerBullets.erase(<br>
 &nbsp;&nbsp;gm.playerBullets.end()<br>
 );<br>
 <br>
-テスト用の回し読み待機カウント確認コードを消して読みやすくしてみましょう。<br>
+テスト用の回コードを消して読みやすくしてみましょう。<br>
+【C++】<br>
 gm.playerBullets.erase(<br>
 &nbsp;&nbsp;std::remove_if(gm.playerBullets.begin(), gm.playerBullets.end(),<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {<br>
