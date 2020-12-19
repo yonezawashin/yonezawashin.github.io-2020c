@@ -1201,17 +1201,17 @@ public:<br>
 #endif</p>
 
 <br>
-<p>↑Player.hにあった上記処理部分を↓Player.cppに書き移します</p>
+<p><code>↑Player.hにあった上記処理部分を↓Player.cppを新規作成して書き移します</code></p>
 <p><code>Player.cpp</code>にPlayerBulletの発射処理を追加します：</p>
     <p class="source">
 <em>#include "Player.h"</em><br>
 <br>
-<em>#include "PlayerBullet.h"//弾を生成して【★使う処理があるのでインクルード必要】</em><br>
+<em>#include "PlayerBullet.h"//★弾を生成して【使う処理があるのでインクルード必要】</em><br>
 <br>
 <br>
 <br>
 // 更新処理【書き移す際にはPlayer::という形で::所属が必要になります】<br>
-void <em>Player::Update()</em><br>
+void <em>Player::</em>Update()<br>
 {<br>
 &nbsp;&nbsp;float vx = 0; // x方向移動速度<br>
 &nbsp;&nbsp;float vy = 0; // y方向移動速度<br>
@@ -1264,8 +1264,18 @@ void <em>Player::</em>Draw()<br>
 <br>
 <br>
 <br>
-<p>【確認してみましょう】ここまでで一旦弾が打てるかチェックしてみましょう！【メモリは削除されないバージョンなので要注意！！】<br>
+<p>【確認してみましょう】ここまでで一旦弾が打てるかチェックしてみましょう！【メモリは削除されないバージョンなので要注意！！】</p><br>
 <br>
+<br>
+<br>
+	
+<p>【さてここで大量のエラーで詰んだ人が多いのでは】おそらくは【Player.hに弾を弾を撃つ処理を書いたのでは】</p><br>
+<p>それにしても【なぜヘッダファイルとcppファイルに書く違いだけで大量のエラー】が出てしまうのでしょう？</p><br>
+<br>
+<p>原因である【循環参照・循環インクルード】について説明します</p><br>
+<br>
+<p> <img src="image/include_loop_error.png" alt="" style="width: 1277px; height: 982px;"></p>
+<p> <img src="image/include_loop.png" alt="" style="width: 1466px; height: 832px;"></p>
 <br>
 <br>
 
