@@ -1758,6 +1758,7 @@ gm.playerBullets.erase(<br>
 &nbsp;&nbsp;&nbsp;&nbsp;}),<br>
 &nbsp;&nbsp;gm.playerBullets.end()<br>
 );<br>
+<br>
 これでもまだ複雑ですが、なぜ複雑に見えるか？<br>
 【実は二つの処理が同時に行われている】ためです。<br>
 <br>
@@ -1777,9 +1778,10 @@ gm.playerBullets.erase(<br>
 gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&nbsp;);<br>
 となっているだけで実は【複雑な何かから～end()終了位置】までの削除処理を行っているだけだとわかります。<br>
 こういう風にカンマ,や(かっこ)で区切られた構造を読み解く力が身に付けば複雑なコードでも<br>
-【分解ステップを踏んでゆけば読み解けるようになります】<br>
-そして「複雑な何か」も<br>
 <br>
+【分解ステップを踏んでゆけば読み解けるようになります】<br>
+<br>
+そして次の「複雑な何か↓」も<br>
 【2】remove_if処理:<a href="https://cpprefjp.github.io/reference/algorithm/remove_if.html">ある条件を満たすもの①を配列の後ろに満たさないもの②を前に集め①の始まりの位置を返す</a><br>
 基本構文はvを配列とすると<br>
 &nbsp;&nbsp;std::remove_if(v.begin(), v.end(), 条件);//配列v開始位置から終了位置まで「条件」に従い分離並べ替えし条件を満たす後ろに並べ替えられたものの分離された先頭位置を返す<br>
@@ -1789,7 +1791,8 @@ gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&
 <br>そしてその条件式が<br>
 [](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {&nbsp;return ptr-&gt;isDead;&nbsp;}<br>
 というスタイルでisDeadがtrueかfalseかという【ちょっとクセの強い条件式の書き方】で書かれていたということです。<br>
-ここは毎回びびっているわけにはいかないので【慣れてゆきましょう】何度も見て【見慣れる】ことです。
+<br>
+ここは毎回びびっているわけにはいかないので【慣れてゆきましょう】何度も見て【見慣れる】ことです。<br>
 </p>
 	    
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
