@@ -1692,7 +1692,7 @@ void Game::Update()<br>
 <br>
 &nbsp;&nbsp;// 自機弾の更新処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
-&nbsp;&nbsp;for (const auto&amp; b : playerBullets)<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
 &nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
 &nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
 &nbsp;&nbsp;}<br>
@@ -1703,8 +1703,8 @@ void Game::Update()<br>
 &nbsp;&nbsp;// 自機弾のリストから死んでるものを除去する<br>
 &nbsp;&nbsp;// 非常に複雑な式に見えるがこれでisDeadのものを削除<br>
 &nbsp;&nbsp;// https://stackoverflow.com/questions/42723205/remove-if-from-a-stdvector-of-shared-pointers-with-a-member-function<br>
-&nbsp;&nbsp;playerBullets.erase(<br>
-&nbsp;&nbsp;&nbsp;&nbsp;std::remove_if(playerBullets.begin(), playerBullets.end(),<br>
+&nbsp;&nbsp;gm.playerBullets.erase(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;std::remove_if(gm.playerBullets.begin(), gm.playerBullets.end(),<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//int uc = -1;//テスト用コード(以下のコメントアウト部分は省略可)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//if (ptr-&gt;isDead)<br>
@@ -1713,7 +1713,7 @@ void Game::Update()<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//}////↑弾を捨てるまでの残りカウント1だと終了return時点のisDeadがtrueなら削除へ<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return ptr-&gt;isDead;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}),<br>
-&nbsp;&nbsp;&nbsp;&nbsp;playerBullets.end()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.end()<br>
 &nbsp;&nbsp;);</em><br>
 };<br>
 <br>
@@ -1732,7 +1732,61 @@ void Game::Draw()<br>
 };<br>
 </p>
 <br>
-
+<p>さて、削除部分の処理が非常に複雑ですね。C#と比較してみましょう。<br>
+【C#】<br>
+playerBullets.RemoveAll(pb => pb.isDead);<br>
+【C++】<br>
+gm.playerBullets.erase(<br>
+&nbsp;&nbsp;std::remove_if(gm.playerBullets.begin(), gm.playerBullets.end(),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//int uc = -1;//テスト用コード(以下のコメントアウト部分は省略可)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//if (ptr-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//     uc = ptr.use_count();//おかんのコレ捨てるよカウンタ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//}////↑弾を捨てるまでの残りカウント1だと終了return時点のisDeadがtrueなら削除へ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return ptr-&gt;isDead;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}),<br>
+&nbsp;&nbsp;gm.playerBullets.end()<br>
+);<br>
+<br>
+テスト用の回し読み待機カウント確認コードを消して読みやすくしてみましょう。<br>
+gm.playerBullets.erase(<br>
+&nbsp;&nbsp;std::remove_if(gm.playerBullets.begin(), gm.playerBullets.end(),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return ptr-&gt;isDead;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}),<br>
+&nbsp;&nbsp;gm.playerBullets.end()<br>
+);<br>
+これでもまだ複雑ですが、なぜ複雑に見えるか？<br>
+【実は二つの処理が同時に行われている】ためです。<br>
+【1】erase処理:<a href="https://cpprefjp.github.io/reference/vector/vector/erase.html">指定した配列の要素を削除する処理です。</a>
+基本構文はvを配列とすると<br>
+&nbsp;&nbsp;v.erase(v.begin(), v.begin() + 2);//配列開始位置から2個ぶん削除<br>
+&nbsp;&nbsp;v.erase(削除開始ポインタ位置, 終了ポインタ位置);<br>
+で、プレイヤ弾の削除処理では<br>
+gm.playerBullets.erase(<br>
+&nbsp;&nbsp;……
+&nbsp;&nbsp;&nbsp;&nbsp;……
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;……
+&nbsp;&nbsp;&nbsp;&nbsp;……,<br>
+&nbsp;&nbsp;gm.playerBullets.end()<br>
+);<br>
+よく見ると実は<br>
+gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&nbsp;);<br>
+となっているだけで実は【複雑な何かから～end()終了位置】までの削除処理を行っているだけだとわかります。<br>
+こういう風にカンマ,や(かっこ)で区切られた構造を読み解く力が身に付けば複雑なコードでも<br>
+【分解ステップを踏んでゆけば読み解けるようになります】<br>
+そして「複雑な何か」も<br>
+【2】remove_if処理:<a href="https://cpprefjp.github.io/reference/algorithm/remove_if.html">ある条件を満たすもの①を配列の後ろに満たさないもの②を前に集め①の始まりの位置を返す</a><br>
+基本構文はvを配列とすると<br>
+&nbsp;&nbsp;std::remove_if(v.begin(), v.end(), 条件);//配列v開始位置から終了位置まで「条件」に従い分離並べ替えし条件を満たす後ろに並べ替えられたものの分離された先頭位置を返す<br>
+つまりremove_ifは配列の後ろに条件を満たすものを分離する処理の担当で削除すべきものの先頭の位置をeraseに渡す担当だとわかります。<br>
+要するに【1】と【2】でコラボして「削除」と「分離並べ替え」を【分担していただけ】だったわけです。<br>
+<br>そしてその条件式が<br>
+[](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {&nbsp;return ptr-&gt;isDead;&nbsp;}<br>
+というスタイルでisDeadがtrueかfalseかという【ちょっとクセの強い条件式の書き方】で書かれていたということです。<br>
+ここは毎回びびっているわけにはいかないので【慣れてゆきましょう】何度も見て【見慣れる】ことです。
+</p>
 	    
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
