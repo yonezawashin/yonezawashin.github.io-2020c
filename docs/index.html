@@ -1760,7 +1760,7 @@ gm.playerBullets.erase(<br>
 );<br>
 これでもまだ複雑ですが、なぜ複雑に見えるか？<br>
 【実は二つの処理が同時に行われている】ためです。<br>
-【1】erase処理:<a href="https://cpprefjp.github.io/reference/vector/vector/erase.html">指定した配列の要素を削除する処理です。</a>
+【1】erase処理:<a href="https://cpprefjp.github.io/reference/vector/vector/erase.html">指定した配列の要素を削除する処理です。</a><br>
 基本構文はvを配列とすると<br>
 &nbsp;&nbsp;v.erase(v.begin(), v.begin() + 2);//配列開始位置から2個ぶん削除<br>
 &nbsp;&nbsp;v.erase(削除開始ポインタ位置, 終了ポインタ位置);<br>
