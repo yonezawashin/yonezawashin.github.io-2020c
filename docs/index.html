@@ -1760,6 +1760,7 @@ gm.playerBullets.erase(<br>
 );<br>
 これでもまだ複雑ですが、なぜ複雑に見えるか？<br>
 【実は二つの処理が同時に行われている】ためです。<br>
+<br>
 【1】erase処理:<a href="https://cpprefjp.github.io/reference/vector/vector/erase.html">指定した配列の要素を削除する処理です。</a><br>
 基本構文はvを配列とすると<br>
 &nbsp;&nbsp;v.erase(v.begin(), v.begin() + 2);//配列開始位置から2個ぶん削除<br>
@@ -1778,10 +1779,12 @@ gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&
 こういう風にカンマ,や(かっこ)で区切られた構造を読み解く力が身に付けば複雑なコードでも<br>
 【分解ステップを踏んでゆけば読み解けるようになります】<br>
 そして「複雑な何か」も<br>
+<br>
 【2】remove_if処理:<a href="https://cpprefjp.github.io/reference/algorithm/remove_if.html">ある条件を満たすもの①を配列の後ろに満たさないもの②を前に集め①の始まりの位置を返す</a><br>
 基本構文はvを配列とすると<br>
 &nbsp;&nbsp;std::remove_if(v.begin(), v.end(), 条件);//配列v開始位置から終了位置まで「条件」に従い分離並べ替えし条件を満たす後ろに並べ替えられたものの分離された先頭位置を返す<br>
 つまりremove_ifは配列の後ろに条件を満たすものを分離する処理の担当で削除すべきものの先頭の位置をeraseに渡す担当だとわかります。<br>
+<br>
 要するに【1】と【2】でコラボして「削除」と「分離並べ替え」を【分担していただけ】だったわけです。<br>
 <br>そしてその条件式が<br>
 [](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {&nbsp;return ptr-&gt;isDead;&nbsp;}<br>
