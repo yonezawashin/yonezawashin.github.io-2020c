@@ -1200,6 +1200,8 @@ public:<br>
 <br>
 #endif</p>
 
+<br>
+<p>↑Player.hにあった上記処理部分を↓Player.cppに書き移します</p>
 <p><code>Player.cpp</code>にPlayerBulletの発射処理を追加します：</p>
     <p class="source">
 <em>#include "Player.h"</em><br>
@@ -1208,8 +1210,8 @@ public:<br>
 <br>
 <br>
 <br>
-// 更新処理<br>
-void Player::Update()<br>
+// 更新処理【書き移す際にはPlayer::という形で::所属が必要になります】<br>
+void <em>Player::Update()</em><br>
 {<br>
 &nbsp;&nbsp;float vx = 0; // x方向移動速度<br>
 &nbsp;&nbsp;float vy = 0; // y方向移動速度<br>
@@ -1252,7 +1254,7 @@ void Player::Update()<br>
 }<br>  
 <br>
 // 描画処理<br>
-void Player::Draw()<br>
+void <em>Player::</em>Draw()<br>
 {<br>
 &nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::player, TRUE);<br>
 }<br>
