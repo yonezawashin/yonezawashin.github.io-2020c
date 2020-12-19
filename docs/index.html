@@ -181,13 +181,17 @@ public: //publicはC＃と違いpublic:以下にまとめて書かれるスタ�
     <p><code>main.cpp</code>を編集してScreen.hを読み込ませます：</p>
     <p class="source">#include "DxLib.h"<br>
     <em>#include "Screen.h"</em><br>
-// ＃includeで別ファイルのヘッダファイル.hをこのコード内に読み込む<br>
+// ↑＃includeで別ファイルのヘッダファイル.hをこのコード内に読み込む<br>
 <br>
 // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
 {<br>
 &nbsp;&nbsp;// 画面モードの設定<br>
 &nbsp;&nbsp;SetGraphMode( <em>Screen::Width, Screen::Height,</em> 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+&nbsp;&nbsp;SetWindowSize(<em>Screen::Width, Screen::Height</em>);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
 <br>
 &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
 &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
@@ -195,11 +199,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 &nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
 &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
 &nbsp;&nbsp;}<br>
+<br>
 
-&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-&nbsp;&nbsp;SetWindowSize(<em>Screen::Width, Screen::Height</em>);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
 <br>
 &nbsp;&nbsp;// (中略).....................................<br>
 <br>
@@ -237,7 +238,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
 {<br>
 &nbsp;&nbsp;// 画面モードの設定<br>
-&nbsp;&nbsp;SetGraphMode( Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+&nbsp;&nbsp;SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+&nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
 <br>
 &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
 &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
@@ -245,11 +250,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 &nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
 &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
 &nbsp;&nbsp;}<br>
-
-&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-&nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+<br>
+	    
 <br>
 <em>
 &nbsp;&nbsp;//表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
@@ -340,7 +342,7 @@ private:<br>
 <br>
 <p>次に対となるcppファイルを作成します。<br>
 ソリューションエクスプローラーからプロジェクトを右クリックし、追加＞cppファイル<br>
-      「Image」という名前でcppファイルを作り、クラスを実装します。<br>
+      「Image.cpp」という名前でcppファイルを作り、クラスを実装します。<br>
       <br>
       <code>Image.cpp</code>の内容を次のようにします：</p>
     <p class="source">#include "Image.h"<br>
@@ -367,7 +369,11 @@ void Image::Load()<br>
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
 {<br>
 &nbsp;&nbsp;// 画面モードの設定<br>
-&nbsp;&nbsp;SetGraphMode( Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+&nbsp;&nbsp;SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+&nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
 <br>
 &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
 &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
@@ -375,11 +381,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 &nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
 &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
 &nbsp;&nbsp;}<br>
-
-&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-&nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
 <br>
 &nbsp;&nbsp;//表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
 &nbsp;&nbsp;// これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
@@ -514,7 +515,11 @@ void Game::Draw()<br>
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
 {<br>
 &nbsp;&nbsp;// 画面モードの設定<br>
-&nbsp;&nbsp;SetGraphMode( Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+&nbsp;&nbsp;SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+&nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
 <br>
 &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
 &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
@@ -522,11 +527,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 &nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
 &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
 &nbsp;&nbsp;}<br>
-
-&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-&nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
 <br>
 &nbsp;&nbsp;//表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
 &nbsp;&nbsp;// これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
@@ -883,6 +883,7 @@ void Game::Draw()<br>
 #include "DxLib.h"<br>
 #include "Input.h"<br>
 #include "Image.h"<br>
+<em>#include "MyMath.h"</em>
 <br>
 class Player<br>
 {<br>
@@ -1024,14 +1025,14 @@ public&nbsp;:<br>
 &nbsp;&nbsp;int vx = 0;<br>
 <br>
 &nbsp;&nbsp;<em>std::shared_ptr&lt;Player&gt;&nbsp;player{ std::make_shared&lt;Player&gt;(100, Screen::Height / 2, this) }; // 自機の初期化</em><br>
-&nbsp;&nbsp;<em>//↑プレイヤも回し読みポインタ型に。std::make_shared&lt;Player&gt;でメモリ上に実体を生成<br>
+&nbsp;&nbsp;<em>//↑プレイヤを回し読みポインタ型に。std::make_shared&lt;Player&gt;でメモリ上に実体を生成<br>
 &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト</em><br>
 &nbsp;&nbsp;//&nbsp;List↑と同じvector&nbsp;↑【shared_ptr】<br>
 <br>
-&nbsp;&nbsp;//&nbsp;★【shared_ptr】とは<br>
+&nbsp;&nbsp;//&nbsp;★【shared_ptr】とは【データの回し読み(読まれなくなったら廃棄)】<br>
 &nbsp;&nbsp;//&nbsp;「兄弟で週刊少年ジャンプを【回し読みする】が<br>
-&nbsp;&nbsp;//&nbsp;おかんに【全員読み終わるまでは捨てられないように】するため<br>
-&nbsp;&nbsp;//&nbsp;【読むつもりの人カウンタ】がゼロになると【おかんに捨てられる】」<br>
+&nbsp;&nbsp;//&nbsp;おかんに【全員読み終わるまでは捨てられないように】する<br>
+&nbsp;&nbsp;//&nbsp;【読むつもりの人カウンタ】がゼロになると【おかんに捨てられる(リンク切れ廃棄)】」<br>
 <br>
 };<br>
 <br>
@@ -1065,7 +1066,8 @@ void Game::Update()<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;x += vx; // X位置の更新<br>
 <br>
-&nbsp;&nbsp;player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+&nbsp;&nbsp;player<em>-&gt;</em>Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+&nbsp;&nbsp;<em>//ポインタ↑になると.から->でのアクセスになる</em><br>
 <br>
 &nbsp;&nbsp;<em>// 自機弾の更新処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
@@ -1084,7 +1086,8 @@ void Game::Draw()<br>
 {// 描画処理<br>
 &nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
 <br>
-&nbsp;&nbsp;player-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
+&nbsp;&nbsp;player<em>-&gt;</em>Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
+&nbsp;&nbsp;<em>//ポインタ↑になると.から->でのアクセスになる</em><br>
 <br>
 &nbsp;&nbsp;<em>// 自機弾の描画処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
