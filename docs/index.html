@@ -1281,8 +1281,10 @@ void <em>Player::</em>Draw()<br>
 <p> <img src="image/include_loop.png" alt="" style="width: 1466px; height: 832px;"></p>
 <br>
 <p>さてこの【循環参照・循環インクルード】への対策をどうするかが問題です。<br>
+<br>
 【1】 ヘッダ.hでのインクルードを避け.cppファイルでインクルードするのが基本的には有効です(ヘッダ.h同士が相互にコピペしあわないから)<br>
 【2】 しかし根本的には【★相互に参照しあう構造の設計自体すっきりさせたい】です。<br>
+<br>
 今はPlayer⇔Gameの1対1の関係でまだ把握可能ですが、ザコや敵の弾などが他に増えてくると<br>
 恐怖の三角関係や四角関係など【どこかで一周回ると無限インクルード発生】が起こってきます。<br>
 まだ【1対1の循環なら見抜ける】けど【★三角ループや四角ループは発見が難しすぎ】です。</p>
@@ -1304,9 +1306,11 @@ void <em>Player::</em>Draw()<br>
 <br>
 <p>さて、ではまず<code>Singleton.h</code>を追加しましょう。<br>
 コード中身は難しい文法が多いですが、<br>基本の要点は<br>
+<br>
 【1】「代入」「コピー」「実体ポインタへの直接アクセス」を★private:として【外部から禁止】<br>
 【2】「実体へは★GetInstance()関数経由でしかアクセスできない」よう窓口を絞り<br>
-【3】「テンプレ化」template&lt;class T&gt;して何でも唯一化できるようになっています<br></p>
+【3】「テンプレ化」★template&lt;class T&gt;して何でも唯一化できるようになっています<br></p>
+<br>
 <p>難しいコードなので導入するだけでも良いですが、<br>
 C++テキスト後半で「代入」「コピー」「テンプレ化」は触れられているので頑張れば6割ほどは理解できる余地ありです。<br>
 2,3年後上級者となって読み返して9割ほど理解できるようになるよう成長してゆきましょう。</p>
@@ -1382,10 +1386,109 @@ protected:<br>
 &nbsp;&nbsp;virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
 };<br>
 <br>
-<br>
 #endif<br>
 </p>
 
+<p><code>Game.h</code>からGameManager.hに移行した処理を消して代わりにGameMangerへの連絡先gmを確保します。</p>
+    <p class="source">#ifndef GAME_H_<br>
+#define GAME_H_<br>
+<br>
+<em>#include&nbsp;&lt;vector&gt;//C#のListリストの代わりのC++版<br>
+#include&nbsp;&lt;memory&gt;//スマートなポインタを使うのに必要(shared_ptrなど)</em><br>
+<br>
+#include&nbsp;"Image.h"<br>
+#include&nbsp;"Screen.h"<br>
+<u>#include&nbsp;"PlayerBullet.h"</u><br>
+<br>
+<u>#include&nbsp;"Player.h"</u><br>
+<br>
+<u>class&nbsp;Player;</u><br>
+<br>
+<em>#include&nbsp;"GameManager.h"</em><br>
+<br>
+class&nbsp;Game<br>
+{<br>
+public&nbsp;:<br>
+&nbsp;&nbsp;Game()&nbsp;{}; // 初期化コンストラクタ<br>
+&nbsp;&nbsp;~Game()&nbsp;{}; // 破棄処理デストラクタ<br>
+<br>
+&nbsp;&nbsp;<em>//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+&nbsp;&nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る</em><br>
+<br>
+&nbsp;&nbsp;void Init(); // Init処理(定義だけ)<br>
+&nbsp;&nbsp;void Update(); // 更新処理(定義だけ)<br>
+&nbsp;&nbsp;void Draw();// 描画処理(定義だけ)<br>
+<br>
+&nbsp;&nbsp;int x = 0;<br>
+&nbsp;&nbsp;int vx = 0;<br>
+<br>
+&nbsp;&nbsp;<u>std::shared_ptr&lt;Player&gt;&nbsp;player{ std::make_shared&lt;Player&gt;(100, Screen::Height / 2, this) }; // 自機の初期化<br>
+&nbsp;&nbsp;<em>//↑プレイヤを回し読みポインタ型に。std::make_shared&lt;Player&gt;でメモリ上に実体を生成<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト</u><br>
+<br>
+};<br>
+<br>
+#endif</p>
+
+<p>次にGame.cppファイルのPlayerやPlayerBulletのアクセスをGamaManagerのgm経由に書き換えましょう。<br>
+      <br>
+      <code>Game.cpp</code>の内容を次のように変更します：</p>
+    <p class="source">#include "Game.h"<br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+<br>
+&nbsp;&nbsp;Image::Load(); //画像の読込み<br>
+&nbsp;&nbsp;x = 100; // Xの初期位置<br>
+&nbsp;&nbsp;vx = 10;<br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+<br>
+&nbsp;&nbsp;if (x &lt; 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = 10; //速度の変更<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else if (x &lt; Screen::Width)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = -10;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;x += vx; // X位置の更新<br>
+<br>
+&nbsp;&nbsp;<em>gm.</em>player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+&nbsp;&nbsp;//ポインタ↑になると.から->でのアクセスになる<br>
+<br>
+&nbsp;&nbsp;// 自機弾の更新処理<br>
+&nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
+&nbsp;&nbsp;for (const auto&amp; b : <em>gm.</em>playerBullets)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;//【放置厳禁！！！このままここに弾削除処理書かないとメモリがどんどん減ってくよ(気づかないうちにね..怖)】<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+&nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+<br>
+&nbsp;&nbsp;<em>gm.</em>player-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
+&nbsp;&nbsp;//ポインタ↑になると.から->でのアクセスになる<br>
+<br>
+&nbsp;&nbsp;// 自機弾の描画処理<br>
+&nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
+&nbsp;&nbsp;for (const auto&amp; b : <em>gm.</em>playerBullets)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
+&nbsp;&nbsp;}<br>
+};<br>
+</p>
 <br>
 
     <h2>【※メモリから弾を削除】自機弾PlayerBulletの削除処理</h2>
