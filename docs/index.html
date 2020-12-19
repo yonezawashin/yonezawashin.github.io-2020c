@@ -1269,12 +1269,15 @@ void <em>Player::</em>Draw()<br>
 <br>
 <br>
 	
-<p>【さてここで大量のエラーで詰んだ人が多いのでは】おそらくは【Player.hに弾を弾を撃つ処理を書いたのでは】</p><br>
+<p>【さてここで大量のエラーで詰んだ人が多いのでは】おそらくは【Player.hに弾を弾を撃つ処理を書いたのでは】</p>
 <p>それにしても【なぜヘッダファイルとcppファイルに書く違いだけで大量のエラー】が出てしまうのでしょう？</p><br>
-<br>
-<p>原因である【循環参照・循環インクルード】について説明します</p><br>
-<br>
 <p> <img src="image/include_loop_error.png" alt="" style="width: 1277px; height: 982px;"></p>
+<br>
+<p>原因である【循環参照・循環インクルード】について説明します。<br>
+実はインクルードしたPlayer.hやGame.hは【⇒ビルド】した際に【Player.hの中身が#include "Player.h"へとコピペ】されるのです<br>
+そして問題は相互に【Player.hで#include "Game.h"】⇔【Game.hで#include "Player.h"】すると<br>
+互いへの【コピペがループする】ため【延々とGameかPlayerの定義が完成せず】<br>
+結果、邪悪なことに【全然関係ないPlayerBulletが未定義などと、とばっちりエラーが起こる】のです</p>
 <p> <img src="image/include_loop.png" alt="" style="width: 1466px; height: 832px;"></p>
 <br>
 <br>
