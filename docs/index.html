@@ -1393,8 +1393,8 @@ protected:<br>
     <p class="source">#ifndef GAME_H_<br>
 #define GAME_H_<br>
 <br>
-<em>#include&nbsp;&lt;vector&gt;//C#のListリストの代わりのC++版<br>
-#include&nbsp;&lt;memory&gt;//スマートなポインタを使うのに必要(shared_ptrなど)</em><br>
+#include&nbsp;&lt;vector&gt;//C#のListリストの代わりのC++版<br>
+#include&nbsp;&lt;memory&gt;//スマートなポインタを使うのに必要(shared_ptrなど)<br>
 <br>
 #include&nbsp;"Image.h"<br>
 #include&nbsp;"Screen.h"<br>
@@ -1423,7 +1423,7 @@ public&nbsp;:<br>
 &nbsp;&nbsp;int vx = 0;<br>
 <br>
 &nbsp;&nbsp;<u>std::shared_ptr&lt;Player&gt;&nbsp;player{ std::make_shared&lt;Player&gt;(100, Screen::Height / 2, this) }; // 自機の初期化<br>
-&nbsp;&nbsp;<em>//↑プレイヤを回し読みポインタ型に。std::make_shared&lt;Player&gt;でメモリ上に実体を生成<br>
+&nbsp;&nbsp;//↑プレイヤを回し読みポインタ型に。std::make_shared&lt;Player&gt;でメモリ上に実体を生成<br>
 &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト</u><br>
 <br>
 };<br>
@@ -1504,6 +1504,8 @@ void Game::Draw()<br>
 <u>#include "Game.h"</u>
 <br>
 <u>class Game;//←【エラー地獄に注意！】ここにGameクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避</u><br>
+<br>
+<em>#include&nbsp;"GameManager.h"</em><br>
 <br>
 class Player<br>
 {<br>
