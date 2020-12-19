@@ -1491,6 +1491,117 @@ void Game::Draw()<br>
 </p>
 <br>
 
+
+<p><code>Player.h</code>もGameManagerのgm経由でのアクセスにするので#include "Game.h"やGame*のポインタはなくなります。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+#define PLAYER_H_<br>
+<br>
+#include "DxLib.h"<br>
+#include "Input.h"<br>
+#include "Image.h"<br>
+#include "MyMath.h"<br>
+<br>
+<u>#include "Game.h"</u>
+<br>
+<u>class Game;//←【エラー地獄に注意！】ここにGameクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避</u><br>
+<br>
+class Player<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;const float MoveSpeed = 6; // 移動速度<br>
+<br>
+&nbsp;&nbsp;float x; // x座標<br>
+&nbsp;&nbsp;float y; // y座標<br>
+<br>
+&nbsp;&nbsp;<em>//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+&nbsp;&nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る</em><br>
+<br>
+&nbsp;&nbsp;<u>Game* game { nullptr }; // Gameのインスタンスの参照<br>
+&nbsp;&nbsp;//↑ * ポインタ型です！プレイヤの【内部に】ゲームの情報を【メモリ実体として持つ】と<br>
+&nbsp;&nbsp;//そのプレイヤを親のゲームがもつと【延々とループで終わりなきメモリ爆発ループ】になるから<br>
+&nbsp;&nbsp;//メモリに対しての参照=【レコードの針をGameに指して】【Gameの住所アドレスだけをプレイヤ内部に持つ】</u><br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;// x : 初期位置x<br>
+&nbsp;&nbsp;// y : 初期位置y<br>
+&nbsp;&nbsp;Player(float x, float y<u>, Game* game</u>)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<u>this-&gt;game = game;</u><br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理の関数定義<br>
+&nbsp;&nbsp;void Update();<br>  
+<br>
+&nbsp;&nbsp;// 描画処理の関数定義<br>
+&nbsp;&nbsp;void Draw();<br>
+<br>
+};<br>
+<br>
+#endif</p>
+
+<br>
+<p><code>Player.cpp</code>もGameManagerのgm経由でのアクセスに書き換えます</p>
+    <p class="source">
+#include "Player.h"<br>
+<br>
+#include "PlayerBullet.h"//★弾を生成して【使う処理があるのでインクルード必要】<br>
+<br>
+<br>
+<br>
+// 更新処理【書き移す際にはPlayer::という形で::所属が必要になります】<br>
+void Player::Update()<br>
+{<br>
+&nbsp;&nbsp;float vx = 0; // x方向移動速度<br>
+&nbsp;&nbsp;float vy = 0; // y方向移動速度<br>
+<br>
+&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = -MoveSpeed; // 左<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = MoveSpeed; // 右<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vy = -MoveSpeed; // 上<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vy = MoveSpeed; // 下<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 斜め移動も同じ速度になるように調整<br>
+&nbsp;&nbsp;if (vx != 0 &amp;&amp; vy != 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx /= MyMath::Sqrt2;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vy /= MyMath::Sqrt2;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 実際に位置を動かす<br>
+&nbsp;&nbsp;x += vx;<br>
+&nbsp;&nbsp;y += vy;<br>
+<br>
+&nbsp;&nbsp;// ボタン押下で自機弾を発射<br>
+&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;【C#版→】game-&gt;playerBullets.Add(new PlayerBullet(x, y));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;C++ではAddがpush_backに↓&nbsp;newがmake_shared↓に<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>gm.</em>playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y));<br>  
+&nbsp;&nbsp;}<br>
+}<br>  
+<br>
+// 描画処理<br>
+void Player::Draw()<br>
+{<br>
+&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::player, TRUE);<br>
+}<br>
+<br>
+</p>
+
+
     <h2>【※メモリから弾を削除】自機弾PlayerBulletの削除処理</h2>
     <p>PlayerBulletクラスを改造しましょう。<br>
     </p>
