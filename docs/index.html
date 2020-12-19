@@ -117,6 +117,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {<br>
 &nbsp;&nbsp;// 画面モードの設定<br>
 &nbsp;&nbsp;SetGraphMode( 960 , 540 , 32 ) ; // 画面サイズ960×540のカラービット数32ビットで起動<br>
+&nbsp;&nbsp;SetWindowSize(960, 540);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
 
 &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
 &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
@@ -124,12 +128,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 &nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
 &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
 &nbsp;&nbsp;}<br>
-
-&nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-&nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-&nbsp;&nbsp;SetWindowSize(960, 540);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-&nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
-
 
 &nbsp;&nbsp;<br>
 &nbsp;&nbsp;<br>
