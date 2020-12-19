@@ -1137,8 +1137,16 @@ public:<br>
 &nbsp;&nbsp;// コンストラクタ<br>
 &nbsp;&nbsp;// x : 初期位置x<br>
 &nbsp;&nbsp;// y : 初期位置y<br>
-&nbsp;&nbsp;<em>Player(float x, float y, Game* game) : x{ x }, y{ y }, game{ game }<br>
-&nbsp;&nbsp;{};</em>//↑別バージョン初期化コンストラクタ(this-&gt;x = x;やらないバージョン、x{ x }でthis-&gt;x = x;と同じ効果)<br>
+&nbsp;&nbsp;Player(float x, float y<em>, Game* game</em>)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;game = game;</em><br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<em>// Player(float x, float y, Game* game) : x{ x }, y{ y }, game{ game }<br>
+&nbsp;&nbsp;//{【勉強】(短縮した初期化の書き方も併記しておきます)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;//↑ : x{ x }, ...でthis-&gt;x = x;と同じ効果
+&nbsp;&nbsp;//};</em>//↑別バージョン初期化コンストラクタ(this-&gt;x = x;やらないバージョン)<br>
 <br>
 &nbsp;&nbsp;// 更新処理<br>
 &nbsp;&nbsp;void Update(){<br>
