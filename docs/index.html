@@ -1668,6 +1668,8 @@ public:<br>
       <br>
       <code>Game.cpp</code>の内容を次のようにします：</p>
     <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
@@ -1675,6 +1677,8 @@ void Game::Init()<br>
 &nbsp;&nbsp;Image::Load(); //画像の読込み<br>
 &nbsp;&nbsp;x = 100; // Xの初期位置<br>
 &nbsp;&nbsp;vx = 10;<br>
+<br>
+&nbsp;&nbsp;gm.player = std::make_shared&lt;Player&gt;((float)100, (float)Screen::Height / 2); // 自機の初期化<br>
 };<br>
 <br>
 void Game::Update()<br>
@@ -1692,7 +1696,7 @@ void Game::Update()<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;x += vx; // X位置の更新<br>
 <br>
-&nbsp;&nbsp;player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+&nbsp;&nbsp;gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の更新処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
@@ -1723,11 +1727,11 @@ void Game::Draw()<br>
 {// 描画処理<br>
 &nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
 <br>
-&nbsp;&nbsp;player-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
+&nbsp;&nbsp;gm.player-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の描画処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
-&nbsp;&nbsp;for (const auto&amp; b : playerBullets)<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
 &nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
 &nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
 &nbsp;&nbsp;}<br>
@@ -1867,6 +1871,8 @@ protected:<br>
 <br>
 <p>そして<code>Game.cpp</code>の削除処理をシンプルに書き直します</p>
     <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
@@ -1874,6 +1880,8 @@ void Game::Init()<br>
 &nbsp;&nbsp;Image::Load(); //画像の読込み<br>
 &nbsp;&nbsp;x = 100; // Xの初期位置<br>
 &nbsp;&nbsp;vx = 10;<br>
+<br>
+&nbsp;&nbsp;gm.player = std::make_shared&lt;Player&gt;((float)100, (float)Screen::Height / 2); // 自機の初期化<br>
 };<br>
 <br>
 void Game::Update()<br>
@@ -1891,7 +1899,7 @@ void Game::Update()<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;x += vx; // X位置の更新<br>
 <br>
-&nbsp;&nbsp;player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+&nbsp;&nbsp;gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の更新処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
@@ -1925,11 +1933,11 @@ void Game::Draw()<br>
 {// 描画処理<br>
 &nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
 <br>
-&nbsp;&nbsp;player-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
+&nbsp;&nbsp;gm.player-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の描画処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
-&nbsp;&nbsp;for (const auto&amp; b : playerBullets)<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
 &nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
 &nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
 &nbsp;&nbsp;}<br>
@@ -2009,6 +2017,8 @@ public:<br>
 
 <p>試しに<code>Game.cpp</code>で削除処理をわすれた場合の実験をしてみましょう。</p>
     <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
@@ -2016,6 +2026,8 @@ void Game::Init()<br>
 &nbsp;&nbsp;Image::Load(); //画像の読込み<br>
 &nbsp;&nbsp;x = 100; // Xの初期位置<br>
 &nbsp;&nbsp;vx = 10;<br>
+<br>
+&nbsp;&nbsp;gm.player = std::make_shared&lt;Player&gt;((float)100, (float)Screen::Height / 2); // 自機の初期化<br>
 };<br>
 <br>
 void Game::Update()<br>
@@ -2033,7 +2045,7 @@ void Game::Update()<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;x += vx; // X位置の更新<br>
 <br>
-&nbsp;&nbsp;player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+&nbsp;&nbsp;gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の更新処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
@@ -2058,7 +2070,7 @@ void Game::Draw()<br>
 <br>
 &nbsp;&nbsp;// 自機弾の描画処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
-&nbsp;&nbsp;for (const auto&amp; b : playerBullets)<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
 &nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
 &nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
 &nbsp;&nbsp;}<br>
@@ -2123,6 +2135,8 @@ public:<br>
 
 <p><code>Game.cpp</code>の削除処理ももとに戻しましょう。</p>
     <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
@@ -2130,6 +2144,8 @@ void Game::Init()<br>
 &nbsp;&nbsp;Image::Load(); //画像の読込み<br>
 &nbsp;&nbsp;x = 100; // Xの初期位置<br>
 &nbsp;&nbsp;vx = 10;<br>
+<br>
+&nbsp;&nbsp;gm.player = std::make_shared&lt;Player&gt;((float)100, (float)Screen::Height / 2); // 自機の初期化<br>
 };<br>
 <br>
 void Game::Update()<br>
@@ -2147,7 +2163,7 @@ void Game::Update()<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;x += vx; // X位置の更新<br>
 <br>
-&nbsp;&nbsp;player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+&nbsp;&nbsp;gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の更新処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
@@ -2172,13 +2188,15 @@ void Game::Draw()<br>
 <br>
 &nbsp;&nbsp;// 自機弾の描画処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
-&nbsp;&nbsp;for (const auto&amp; b : playerBullets)<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
 &nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
 &nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
 &nbsp;&nbsp;}<br>
 };<br>
 </p>
 <br>
+
+
 <h2>自機弾の角度を変えられるようにする</h2>
 <p><code>PlayerBullet.h</code>に角度をつけられるようにします</p>
     <p class="source">#ifndef PLAYERBULLET_H_<br>
@@ -2266,14 +2284,7 @@ public: <br>
 	<em>const float MyMath::PI = 3.14159265359F; // 円周率<br>
 	const float MyMath::Deg2Rad = MyMath::PI / 180F; // 度からラジアンに変換する定数</em><br>
 <br>
-	// 【ルールとして.hでfloatなどstatic小数などの初期化許さなかった理由】<br>// 一言でいうと 「作った人がそういうルールにした」<br>
-	// 以下を一言でまとめると「.hヘッダはマシン環境によって変わるようなことは記述しないようにしたかった」<br>// 
-	PCやマシン語翻訳コンパイラによって小数の精度などや数値に誤差が出るから<br>// 
-	環境によって変動する可能性のあるfloatなど(int整数は誤差がない)<br>// をstatic 
-	const静的定数として.hヘッダで初期化することを許可しなかった(定数といえない) 「マシン依存」<br>// 
-	cppで大丈夫なのはcppは実際の処理ベースで動くので【動的な動いてもよい数字となるから】(どの環境でも同じとは限らない)<br>// 
-	【勉強】以下サイトにC++のBjarneさんの説明を翻訳したものがある<br>// 
-	https://qastack.jp/programming/9656941/why-cant-i-initialize-non-const-static-member-or-static-array-in-class</p>
+</p>
 		
 		
 <p><code>Player.cpp</code>のプレイヤの弾の生成を改修します。</p>
@@ -2294,8 +2305,331 @@ public: <br>
 (以下略)
 </p>
  
-<h2>とりあえずC++バージョンに変更できたのはここまで</h2>
+<h1>敵の作成</h1>
  
+<h2>Enemyクラスを作成するにあたってアクションゲームのGameObjectを導入する</h2>
+<p>前期はEnemyクラスを継承する形でZako0をつくりましたが<br>
+この構造のままで作り進めると循環参照インクルードが起こってしまいます。<br>
+なぜなら、衝突判定で【PlayerBullet⇔Enemy⇔Playerの相互の矢印の参照が生まれざる負えません】<br>
+そこでアクションゲームのGameObject、すなわち全てのものが継承する【ベースとなる継承元】を導入します。<br>
+これで矢印はGameObjectにまとまりオブジェクト同士の参照をせずに済みます。<br>
+</p>
+<p><code>GameObject.h</code>を作成します(拡張も見越して3DのZ座標も導入しておきます)。</p>
+<p class="source">#ifndef GAMEOBJECT_H_<br>
+#define GAMEOBJECT_H_<br>
+<br>
+#include &lt;string&gt; //文字タグのため<br>
+#include &lt;memory&gt; //回し読みポインタの定義のため<br>
+<br>
+// ゲーム上に表示される物体の基底クラス。<br>
+// プレイヤーや敵、アイテムなどはこのクラスを継承して作る。<br>
+class GameObject<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;std::string tag = ""; // Zako0やBossやPlayerなど小カテゴリ<br>
+&nbsp;&nbsp;std::string typeTag = ""; // EnemyやPlayerなど大カテゴリ<br>
+&nbsp;&nbsp;std::string statusTag = ""; // 爆発状態やアイテムゲット状態など自由に使えばよい<br>
+&nbsp;&nbsp;float x = 0; // x座標<br>
+&nbsp;&nbsp;float y = 0; // y座標<br>
+&nbsp;&nbsp;float z = 0; //【3D】z座標<br>
+&nbsp;&nbsp;float vx = 0; // x方向の速度<br>
+&nbsp;&nbsp;float vy = 0; // y方向の速度<br>
+&nbsp;&nbsp;float vz = 0; //【3D】z方向の速度<br>
+<br>
+&nbsp;&nbsp;bool isDead = false; // 死んだ（削除対象）フラグ<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;GameObject()<br>
+&nbsp;&nbsp;{<br>
+<br>
+&nbsp;&nbsp;}
+<br>
+&nbsp;&nbsp;//★仮想デストラクタ【忘れるとメモリがヤバいダメ絶対】<br>
+&nbsp;&nbsp;//【注意！】ベースの基底では必ず定義しないとstringなどが浪費され極悪なメモリ被害に発展<br>
+&nbsp;&nbsp;virtual ~GameObject()<br>
+&nbsp;&nbsp;{<br>
+<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;//★純粋仮想関数=0は継承したZakoやPlayerなどの必須機能(継承したら絶対override必須縛り)<br>	
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;virtual void Update() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;virtual void Draw() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+<br>
+&nbsp;&nbsp;//★virtual仮想関数は共通カスタマイズ機能(継承してもoverride必須ではないご自由にカスタマイズ)<br>
+&nbsp;&nbsp;// 衝突したときの関数(仮のvirtual関数←純粋仮想関数と違い継承してもoverride必須ではない)<br>
+&nbsp;&nbsp;virtual void OnCollision(std::shared_ptr<GameObject> other)<br>
+&nbsp;&nbsp;{<br>
+<br>
+&nbsp;&nbsp;};<br>
+<br>
+};<br>
+<br>
+#endif<br>
+</p>
+<p><code>Enemy.h</code>を作成します。</p>
+<p class="source">#ifndef ENEMY_H_<br>
+#define ENEMY_H_<br>
+<br>
+#include "GameObject.h"<br>
+<br>
+#include "GameManager.h"<br>
+<br>
+// 敵の基底クラス。<br>
+// 全ての敵は、このクラスを継承して作る。<br>
+// ★【勉強】abstract型はC++にない!!【純粋仮想関数】を使って作る<br>
+// クラスの基本(C++11).pdfの17ページの下のほう(クラスの基本④)<br>
+class Enemy : public GameObject<br>
+{<br>
+public:<br><br>
+&nbsp;&nbsp;//【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+&nbsp;&nbsp;GameManager& gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&)を得る<br>
+<br>
+&nbsp;&nbsp;float collisionRadius = 32; // 当たり判定の半径<br>
+&nbsp;&nbsp;bool isDead = false; // 死亡フラグ<br>
+&nbsp;&nbsp;float life = 1; // 耐久力<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;Enemy(float x, float y, float z=0)//★z=0をデフォルトとすることでx,yだけでも初期化でき2Dと3D両立<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: GameObject() // GameObjectをベースとして初期化処理を継承する<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Enemy";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理。派生クラスでオーバーライドして使う<br>
+&nbsp;&nbsp;virtual void Update() = 0;//virtual ～ = 0;で【純粋仮想関数に】これで【C#のabstract型に】<br>
+<br>
+&nbsp;&nbsp;// 描画処理。派生クラスでオーバーライドして使う<br>
+&nbsp;&nbsp;virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
+<br>
+&nbsp;&nbsp;//【勉強】関数 = 0って何?と思った人は【関数もメモリ上では住所アドレスに過ぎない】ことを知ろう<br>
+&nbsp;&nbsp;// ★関数 = 0はつまり関数の住所ポインタの針が【メモリ上の何かを針で参照してない(住所不定無処理)】<br>
+&nbsp;&nbsp;// つまり【関数が未定義ってこと】＝【あいまい部分があるabstractクラスってこと】<br>
+&nbsp;&nbsp;//http://etc2myday.jugem.jp/?eid=204<br>
+&nbsp;&nbsp;//http://wisdom.sakura.ne.jp/programming/c/c54.html<br>
+&nbsp;&nbsp;//逆にいうと【関数を配列】にするっていうトリッキーなこともできる!<br>
+&nbsp;&nbsp;//http://www.ced.is.utsunomiya-u.ac.jp/lecture/2012/prog/p3/kadai3/virtualfunc2.php<br>
+<br>
+&nbsp;&nbsp;// 自機弾に当たったときの処理<br>
+&nbsp;&nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr<GameObject> playerBullet)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;life -= 1; // ライフを減らす<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// ライフが無くなったら、死亡<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (life &lt;= 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br>
+</p>
+<h2>Zako0クラスの作成</h2>
+<p><code>Zako0.h</code>を作成します。</p>
+<p class="source">#ifndef ZAKO_0_H_<br>
+#define ZAKO_0_H_<br>
+<br>
+#include "Enemy.h"<br>
+<br>
+// ザコ0クラス<br>
+class Zako0 : public Enemy<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;Zako0(float x, float y, float z=0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako0";<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;void Update() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;void Draw() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako0, TRUE);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br>
+</p>
+<code>Image.h</code>にザコ0ザコ1の画像定義を追加します：</p>
+    <p class="source">#ifndef IMAGE_H_<br>
+#define IMAGE_H_<br>
+<br>
+#include "DxLib.h"<br>
+#include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+<br>
+class Image<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;Image() {}; // 初期化コンストラクタ:定義と{}空の処理<br>
+&nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタ:定義と{}空の処理<br>
+&nbsp;&nbsp;static void Load();<br>
+<br>
+&nbsp;&nbsp;static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
+&nbsp;&nbsp;static int player; //プレイヤ画像のハンドラ<br>
+&nbsp;&nbsp;static int playerBullet; //プレイヤの弾画像のハンドラ<br>
+&nbsp;&nbsp;<em>static int zako0; //ザコ0 画像のハンドラ(読込画像番号)</em><br>
+&nbsp;&nbsp;<em>static int zako1; //ザコ1 画像のハンドラ(読込画像番号)</em><br>
+<br>
+private:<br>
+<br>
+};<br>
+#endif<br>
+</p>
+<br>
+<p>次に対となるcppファイルも変更します。<br>
+      <code>Image.cpp</code>の内容を次のようにします：</p>
+    <p class="source">#include "Image.h"<br>
+<br>
+int Image::bossImage{-1}; // Load終わっても-1(初期値)のままだと画像ロードが失敗してますね<br>
+int Image::player{-1};<br>
+int Image::playerBullet{-1};<br>
+<em>int Image::zako0{-1};</em><br>
+<em>int Image::zako1{-1};</em><br>
+<br>
+void Image::Load()<br>
+{<br>
+&nbsp;&nbsp;bossImage = LoadGraph("Image/boss1.png");<br>
+&nbsp;&nbsp;assert(bossImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;player= LoadGraph("Image/player.png");<br>
+&nbsp;&nbsp;assert(player!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;playerBullet = LoadGraph("Image/player_bullet.png");<br>
+&nbsp;&nbsp;assert(playerBullet!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;<em>zako0 = LoadGraph("Image/zako0.png");<br>
+&nbsp;&nbsp;assert(zako0!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
+<br>
+&nbsp;&nbsp;<em>zako1 = LoadGraph("Image/zako1.png");<br>
+&nbsp;&nbsp;assert(zako1!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
+}<br>
+</p>
+<h2>敵を管理する仕組みの作成</h2>
+<p><code>GameManager.h</code>に敵のリストを追加しましょう。</p>
+<p class="source">
+#ifndef GAMEMANAGER_H_<br>
+#define GAMEMANAGER_H_<br>
+<br>
+#include &lt;memory&gt;<br>
+#include &lt;vector&gt;<br>
+<br>
+#include&nbsp;"Singleton.h"<br>
+<br>
+class&nbsp;Player;&nbsp;//&nbsp;クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+class&nbsp;PlayerBullet;<br>
+class&nbsp;<em>Enemy;</em><br>
+<br>
+class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
+<br>
+&nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機のポインタ<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+&nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+<br>
+<br>
+(中略)..............
+<br>
+protected:<br>
+&nbsp;&nbsp;GameManager() {}; // 外部からのインスタンス作成は禁止<br>
+&nbsp;&nbsp;virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
+};<br>
+<br>
+#endif<br>
+</p>
+
+
+<p><code>Game.cpp</code>に敵の生成と更新と描画処理を追加しましょう。</p>
+    <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;<em>"Zako0.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+<br>
+&nbsp;&nbsp;Image::Load(); //画像の読込み<br>
+&nbsp;&nbsp;x = 100; // Xの初期位置<br>
+&nbsp;&nbsp;vx = 10;<br>
+<br>
+&nbsp;&nbsp;gm.player = std::make_shared&lt;Player&gt;((float)100, (float)Screen::Height / 2); // 自機の初期化<br>
+&nbsp;&nbsp;<em>// とりあえず適当に敵を生成</em><br>
+&nbsp;&nbsp;<em>gm.enemies.push_back(std::make_shared&lt;Zako0&gt;((float)600, (float)100));</em><br>
+&nbsp;&nbsp;<em>gm.enemies.push_back(std::make_shared&lt;Zako0&gt;((float)1000, (float)500));</em><br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+<br>
+&nbsp;&nbsp;if (x &lt; 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = 10; //速度の変更<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else if (x &lt; Screen::Width)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = -10;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;x += vx; // X位置の更新<br>
+<br>
+&nbsp;&nbsp;gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+<br>
+&nbsp;&nbsp;// 自機弾の更新処理<br>
+&nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<em>// 敵の更新処理<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.enemies)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<em>//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験</em><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<em>gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
+&nbsp;&nbsp;<br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+&nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+<br>
+&nbsp;&nbsp;<em>// 敵の描画処理<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.enemies)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
+&nbsp;&nbsp;}</em><br>
+<br>
+&nbsp;&nbsp;gm.player-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
+<br>
+&nbsp;&nbsp;// 自機弾の描画処理<br>
+&nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
+&nbsp;&nbsp;}<br>
+};<br>
+</p>
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
 
