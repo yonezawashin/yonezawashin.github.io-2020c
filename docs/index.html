@@ -1437,7 +1437,8 @@ public&nbsp;:<br>
       <code>Game.cpp</code>の内容を次のように変更します：</p>
     <p class="source">#include "Game.h"<br>
 <br>
-<em>#include "Player.h"</em><br>
+<em>#include "Player.h"//★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include "PlayerBullet.h"//★Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
