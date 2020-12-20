@@ -1788,7 +1788,7 @@ gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&
 【分解ステップを踏んでゆけば読み解けるようになります】<br>
 <br>
 そして次の「複雑な何か↓」も<br>
-【2】remove_if処理:<a href="https://cpprefjp.github.io/reference/algorithm/remove_if.html">ある条件を満たすもの①を配列の後ろに満たさないもの②を前に集め①の始まりの位置を返す</a><br>
+【2】remove_if処理:<a href="https://cpprefjp.github.io/reference/algorithm/remove_if.html">ある条件を①満たすものを[配列の後ろ]に②満たさないものを[前に]集め①の始まりの位置を返す</a><br>
 基本構文はvを配列とすると<br>
 &nbsp;&nbsp;std::remove_if(v.begin(), v.end(), 条件);//配列v開始位置から終了位置まで「条件」に従い分離並べ替えし条件を満たす後ろに並べ替えられたものの分離された先頭位置を返す<br>
 つまりremove_ifは配列の後ろに条件を満たすものを分離する処理の担当で削除すべきものの先頭の位置をeraseに渡す担当だとわかります。<br>
