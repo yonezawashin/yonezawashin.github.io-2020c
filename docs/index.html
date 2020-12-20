@@ -1403,7 +1403,8 @@ protected:<br>
 <br>
 <u>#include&nbsp;"Player.h"</u><br>
 <br>
-<u>class&nbsp;Player;&nbsp;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避</u><br>
+<u>class&nbsp;Player;&nbsp;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避
+class&nbsp;PlayerBullet;</u><br>
 <br>
 <em>#include&nbsp;"GameManager.h"</em><br>
 <br>
@@ -1553,8 +1554,6 @@ public:<br>
 #include&nbsp;"Player.h"<br>
 <br>
 #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★弾を生成して【使う処理があるのでインクルード必要】<br>
-<br>
-<br>
 <br>
 // 更新処理【書き移す際にはPlayer::という形で::所属が必要になります】<br>
 void Player::Update()<br>
