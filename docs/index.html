@@ -326,8 +326,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 class Image<br>
 {<br>
 public:<br>
-&nbsp;&nbsp;Image() {}; // 初期化コンストラクタの定義だけ<br>
-&nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタの定義だけ<br>
+&nbsp;&nbsp;Image() {}; // 初期化コンストラクタ:定義と{}空の処理<br>
+&nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタ:定義と{}空の処理<br>
 &nbsp;&nbsp;static void Load();<br>
 <br>
 &nbsp;&nbsp;static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
@@ -664,8 +664,8 @@ int <em>Input::</em>currentState <em>{ 0 }</em>; // 現在の状態<br>
 class Image<br>
 {<br>
 public:<br>
-&nbsp;&nbsp;Image() {}; // 初期化コンストラクタの定義だけ<br>
-&nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタの定義だけ<br>
+&nbsp;&nbsp;Image() {}; // 初期化コンストラクタ:定義と{}空の処理<br>
+&nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタ:定義と{}空の処理<br>
 &nbsp;&nbsp;static void Load();<br>
 <br>
 &nbsp;&nbsp;static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
@@ -1005,8 +1005,8 @@ public:<br>
 class Image<br>
 {<br>
 public:<br>
-&nbsp;&nbsp;Image() {}; // 初期化コンストラクタの定義だけ<br>
-&nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタの定義だけ<br>
+&nbsp;&nbsp;Image() {}; // 初期化コンストラクタ:定義と{}空の処理<br>
+&nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタ:定義と{}空の処理<br>
 &nbsp;&nbsp;static void Load();<br>
 <br>
 &nbsp;&nbsp;static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
@@ -1403,8 +1403,7 @@ protected:<br>
 <br>
 <u>#include&nbsp;"Player.h"</u><br>
 <br>
-<u>class&nbsp;Player;&nbsp;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
-class&nbsp;PlayerBullet;</u><br>
+<u>class&nbsp;Player;&nbsp;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避</u><br>
 <br>
 <em>#include&nbsp;"GameManager.h"</em><br>
 <br>
@@ -1437,8 +1436,8 @@ public&nbsp;:<br>
       <code>Game.cpp</code>の内容を次のように変更します：</p>
     <p class="source">#include "Game.h"<br>
 <br>
-<em>#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+<em>#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
