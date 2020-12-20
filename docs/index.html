@@ -1035,7 +1035,7 @@ void Image::Load()<br>
 &nbsp;&nbsp;player= LoadGraph("Image/player.png");<br>
 &nbsp;&nbsp;assert(player!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
 <br>
-&nbsp;&nbsp;<em>player= LoadGraph("Image/playerbullet.png");<br>
+&nbsp;&nbsp;<em>player= LoadGraph("Image/player_bullet.png");<br>
 &nbsp;&nbsp;assert(playerbullet!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
 }</p>
 <br>
@@ -1506,8 +1506,6 @@ void Game::Draw()<br>
 #include "Input.h"<br>
 #include "Image.h"<br>
 #include "MyMath.h"<br>
-<br>
-<u>#include "Game.h"</u>
 <br>
 <u>class Game;//←【エラー地獄に注意！】ここにGameクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避</u><br>
 <br>
