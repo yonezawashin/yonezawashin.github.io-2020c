@@ -1035,7 +1035,7 @@ void Image::Load()<br>
 &nbsp;&nbsp;player= LoadGraph("Image/player.png");<br>
 &nbsp;&nbsp;assert(player!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
 <br>
-&nbsp;&nbsp;<em>player= LoadGraph("Image/player_bullet.png");<br>
+&nbsp;&nbsp;<em>playerbullet= LoadGraph("Image/player_bullet.png");<br>
 &nbsp;&nbsp;assert(playerbullet!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
 }</p>
 <br>
@@ -1055,7 +1055,7 @@ void Image::Load()<br>
 <br>
 <em>#include&nbsp;"Player.h"<br>
 <br>
-class&nbsp;Player;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
+class&nbsp;Player;&nbsp;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
 class&nbsp;PlayerBullet;</em><br>
 <br>
 class&nbsp;Game<br>
@@ -1087,9 +1087,9 @@ public&nbsp;:<br>
 <p>次にGame.cppファイルにUpdateとDrawに自機弾更新と描画の処理を追加しましょう。<br>
       <br>
       <code>Game.cpp</code>の内容を次のようにします：</p>
-    <p class="source">#include "Game.h"<br>
+    <p class="source">#include&nbsp;"Game.h"<br>
 <br>
-<em>#include "PlayerBullet.h"//★Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+<em>#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
@@ -1099,7 +1099,7 @@ void Game::Init()<br>
 &nbsp;&nbsp;vx = 10;<br>
 };<br>
 <br>
-void Game::Update()<br>
+void&nbsp;Game::Update()<br>
 {// 更新処理<br>
 <br>
 &nbsp;&nbsp;Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
@@ -1151,15 +1151,15 @@ void Game::Draw()<br>
 
 
 <p><code>Player.h</code>にPlayerBulletへの参照を得るため<em>Gameへのポインタ参照を追加</em>します：</p>
-    <p class="source">#ifndef PLAYER_H_<br>
-#define PLAYER_H_<br>
+    <p class="source">#ifndef&nbsp;PLAYER_H_<br>
+#define&nbsp;PLAYER_H_<br>
 <br>
-#include "DxLib.h"<br>
-#include "Input.h"<br>
-#include "Image.h"<br>
-#include "MyMath.h"<br>
+#include&nbsp;"DxLib.h"<br>
+#include&nbsp;"Input.h"<br>
+#include&nbsp;"Image.h"<br>
+#include&nbsp;"MyMath.h"<br>
 <br>
-<em>class Game;//←【エラー地獄に注意！】ここにGameクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
+<em>class&nbsp;Game;&nbsp;//←【エラー地獄に注意！】ここにGameクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
 <br>
 //↑Gameクラス内にPlayer変数を持っているからPlayerの定義が終わらないとGameの定義が完了しない(未定義エラー)<br>
 //【なのに】Playerクラス内にGame変数を持っているからPlayerの定義も終わらない！！(未定義エラー)<br>
@@ -1167,7 +1167,7 @@ void Game::Draw()<br>
 //【解決するために】とりあえずclass Game;とだけここに書いてGameは定義完了済と見せかけているわけです！<br>
 //[エラー:Playerは未定義です]とか[エラー:Gameは未定義です]とか定義してるはずのものが未定義の場合は大体これ！！</em><br>
 <br>
-class Player<br>
+class&nbsp;Player<br>
 {<br>
 public:<br>
 &nbsp;&nbsp;const float MoveSpeed = 6; // 移動速度<br>
@@ -1204,15 +1204,15 @@ public:<br>
 <p><code>↑Player.hにあった上記処理部分を↓Player.cppを新規作成して書き移します</code></p>
 <p><code>Player.cpp</code>にPlayerBulletの発射処理を追加します：</p>
     <p class="source">
-<em>#include "Player.h"</em><br>
+<em>#include&nbsp;"Player.h"</em><br>
 <br>
-<em>#include "Game.h"//★game->playerBulletsなどClass Game;でカバーできない【定義の内部のplayerBulletsにアクセスするのでインクルード必要】<br>
-#include "PlayerBullet.h"//★弾を生成して【使う処理があるのでインクルード必要】</em><br>
+<em>#include&nbsp;"Game.h"&nbsp;//&nbsp;★game->playerBulletsなどClass Game;でカバーできない【定義の内部のplayerBulletsにアクセスするのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★弾を生成して【使う処理があるのでインクルード必要】</em><br>
 <br>
 <br>
 <br>
 // 更新処理【書き移す際にはPlayer::という形で::所属が必要になります】<br>
-void <em>Player::</em>Update()<br>
+void&nbsp;<em>Player::</em>Update()<br>
 {<br>
 &nbsp;&nbsp;float vx = 0; // x方向移動速度<br>
 &nbsp;&nbsp;float vy = 0; // y方向移動速度<br>
@@ -1255,7 +1255,7 @@ void <em>Player::</em>Update()<br>
 }<br>  
 <br>
 // 描画処理<br>
-void <em>Player::</em>Draw()<br>
+void&nbsp;<em>Player::</em>Draw()<br>
 {<br>
 &nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::player, TRUE);<br>
 }<br>
@@ -1367,10 +1367,10 @@ T* Singleton&lt; T &gt;::instance = 0; //cppでの定義を.h内に書いた(sta
 #include &lt;memory&gt;<br>
 #include &lt;vector&gt;<br>
 <br>
-#include "Singleton.h"<br>
+#include&nbsp;"Singleton.h"<br>
 <br>
-class Player;//クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
-class PlayerBullet;<br>
+class&nbsp;Player;&nbsp;//&nbsp;クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+class&nbsp;PlayerBullet;<br>
 <br>
 class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
 {<br>
@@ -1403,8 +1403,8 @@ protected:<br>
 <br>
 <u>#include&nbsp;"Player.h"</u><br>
 <br>
-<u>class&nbsp;Player;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
-class PlayerBullet;</u><br>
+<u>class&nbsp;Player;&nbsp;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
+class&nbsp;PlayerBullet;</u><br>
 <br>
 <em>#include&nbsp;"GameManager.h"</em><br>
 <br>
@@ -1437,8 +1437,8 @@ public&nbsp;:<br>
       <code>Game.cpp</code>の内容を次のように変更します：</p>
     <p class="source">#include "Game.h"<br>
 <br>
-<em>#include "Player.h"//★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-#include "PlayerBullet.h"//★Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+<em>#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
@@ -1551,9 +1551,9 @@ public:<br>
 <br>
 <p><code>Player.cpp</code>もGameManagerのgm経由でのアクセスに書き換えます</p>
     <p class="source">
-#include "Player.h"<br>
+#include&nbsp;"Player.h"<br>
 <br>
-#include "PlayerBullet.h"//★弾を生成して【使う処理があるのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★弾を生成して【使う処理があるのでインクルード必要】<br>
 <br>
 <br>
 <br>
