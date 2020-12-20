@@ -1836,7 +1836,7 @@ public:<br>
 &nbsp;&nbsp;//&nbsp;[共通テンプレート関数]https://programming-place.net/ppp/contents/cpp/language/009.html#function_template<br>
 &nbsp;&nbsp;template&nbsp;&lt;typename&nbsp;T,&nbsp;class&nbsp;T_if&gt;<br>
 &nbsp;&nbsp;void&nbsp;EraseRemoveIf(std::vector&lt;T&gt;&nbsp;v,&nbsp;T_if&nbsp;if_condition)<br>
-&nbsp;&nbsp;{&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;特定のタイプT↑&nbsp;&nbsp;↑配列v&nbsp;&nbsp;&nbsp;↑条件式if_condition<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;特定のタイプT↑&nbsp;&nbsp;↑配列v&nbsp;&nbsp;&nbsp;↑条件式if_condition<br>
 &nbsp;&nbsp;&nbsp;&nbsp;v.erase(<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::remove_if(v.begin(),&nbsp;v.end(),if_condition),//←条件で後ろに分離した後方部分の先頭位置<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.end()&nbsp;//&nbsp;&nbsp;↓remove_ifの位置<br>
@@ -1849,6 +1849,78 @@ protected:<br>
 };<br>
 <br>
 #endif<br>
+</p>
+<br>
+<br>
+<p>そして<code>Game.cpp</code>の削除処理をシンプルに書き直します</p>
+    <p class="source">#include "Game.h"<br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+<br>
+&nbsp;&nbsp;Image::Load(); //画像の読込み<br>
+&nbsp;&nbsp;x = 100; // Xの初期位置<br>
+&nbsp;&nbsp;vx = 10;<br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+<br>
+&nbsp;&nbsp;if (x &lt; 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = 10; //速度の変更<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else if (x &lt; Screen::Width)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = -10;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;x += vx; // X位置の更新<br>
+<br>
+&nbsp;&nbsp;player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+<br>
+&nbsp;&nbsp;// 自機弾の更新処理<br>
+&nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<u>// 自機弾のリストから死んでるものを除去する<br>
+&nbsp;&nbsp;// 非常に複雑な式に見えるがこれでisDeadのものを削除<br>
+&nbsp;&nbsp;// https://stackoverflow.com/questions/42723205/remove-if-from-a-stdvector-of-shared-pointers-with-a-member-function<br>
+&nbsp;&nbsp;gm.playerBullets.erase(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;std::remove_if(gm.playerBullets.begin(), gm.playerBullets.end(),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//int usingCount = -1;//テスト用コード(以下のコメントアウト部分は省略可)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//if (ptr-&gt;isDead) usingCount = ptr.use_count();//おかんのコレ捨てるよカウンタ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//弾を捨てるまでの残り↑カウント(1だとisDeadがtrueなら0になり削除へ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return ptr-&gt;isDead;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.end()<br>
+&nbsp;&nbsp;);</u><br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+&nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+<br>
+&nbsp;&nbsp;player-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
+<br>
+&nbsp;&nbsp;// 自機弾の描画処理<br>
+&nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
+&nbsp;&nbsp;for (const auto&amp; b : playerBullets)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
+&nbsp;&nbsp;}<br>
+};<br>
 </p>
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
