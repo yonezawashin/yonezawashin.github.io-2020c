@@ -2006,7 +2006,53 @@ public:<br>
 メモリの【グラフがうなぎ上りに上昇しなければ】プレイヤの弾に関してはメモリの削除と開放が成功している証拠です。<br>
 <br>
 <p> <img src="image/memory_leak.png" alt="" style="width: 740px; height: 484px;"></p>
-	
+<p>なんと【万全の対策をしてきたつもりだがメモリが減りません(メモリリーク、メモリ漏れという)】！！<br>
+さて原因を探したところ以下のコードに欠陥を発見しました。<br></p>
+<p><code>GameManager.h</code>に<code>たった一文字 & を追加しましょう</code>。</p>
+<p class="source">
+#ifndef GAMEMANAGER_H_<br>
+#define GAMEMANAGER_H_<br>
+<br>
+#include &lt;memory&gt;<br>
+#include &lt;vector&gt;<br>
+<br>
+#include&nbsp;"Singleton.h"<br>
+<br>
+class&nbsp;Player;&nbsp;//&nbsp;クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+class&nbsp;PlayerBullet;<br>
+<br>
+class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
+<br>
+&nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機の初期化<br>
+<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+&nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+<br>
+<br>
+<br>
+&nbsp;&nbsp;//&nbsp;★削除処理を共通テンプレート関数にする<br>
+&nbsp;&nbsp;//&nbsp;[共通テンプレート関数]https://programming-place.net/ppp/contents/cpp/language/009.html#function_template<br>
+&nbsp;&nbsp;template&nbsp;&lt;typename&nbsp;T,&nbsp;class&nbsp;T_if&gt;<br>
+&nbsp;&nbsp;void&nbsp;EraseRemoveIf(std::vector&lt;T&gt;&nbsp;<em>&v</em>,&nbsp;T_if&nbsp;if_condition)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;特定のタイプT↑&nbsp;&nbsp;↑配列v&nbsp;&nbsp;&nbsp;↑条件式if_condition<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v.erase(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::remove_if(v.begin(),&nbsp;v.end(),if_condition),//←条件で後ろに分離した後方部分の先頭位置<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.end()&nbsp;//&nbsp;&nbsp;↓remove_ifの位置<br>
+&nbsp;&nbsp;&nbsp;&nbsp;);//例.[生][生][死][死][死]←&nbsp;v.end()の位置<br>
+&nbsp;&nbsp;};<br>
+<br>
+protected:<br>
+&nbsp;&nbsp;GameManager() {}; // 外部からのインスタンス作成は禁止<br>
+&nbsp;&nbsp;virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
+};<br>
+<br>
+#endif<br>
+</p>
+
+
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
 
