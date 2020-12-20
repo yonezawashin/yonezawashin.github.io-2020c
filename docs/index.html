@@ -1052,11 +1052,11 @@ void Image::Load()<br>
 <br>
 #include&nbsp;"Image.h"<br>
 #include&nbsp;"Screen.h"<br>
-<em>#include&nbsp;"PlayerBullet.h"</em><br>
 <br>
 <em>#include&nbsp;"Player.h"<br>
 <br>
-class&nbsp;Player;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避</em><br>
+class&nbsp;Player;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
+class&nbsp;PlayerBullet;</em><br>
 <br>
 class&nbsp;Game<br>
 {<br>
@@ -1088,6 +1088,8 @@ public&nbsp;:<br>
       <br>
       <code>Game.cpp</code>の内容を次のようにします：</p>
     <p class="source">#include "Game.h"<br>
+<br>
+<em>#include "PlayerBullet.h"//★Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
@@ -1399,11 +1401,10 @@ protected:<br>
 #include&nbsp;"Screen.h"<br>
 <em>#include&nbsp;"Input.h"</em><br>
 <br>
-<u>#include&nbsp;"PlayerBullet.h"</u><br>
-<br>
 <u>#include&nbsp;"Player.h"</u><br>
 <br>
-<u>class&nbsp;Player;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避</u><br>
+<u>class&nbsp;Player;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
+class PlayerBullet;</u><br>
 <br>
 <em>#include&nbsp;"GameManager.h"</em><br>
 <br>
