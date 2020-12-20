@@ -1942,7 +1942,71 @@ C++だけでなく【C#でもテンプレート化ができます】ぜひ練習
 逆の目線で言うと【実は今まではテンプレート化された使いやすい機能を使わせてもらっていた】のです。意識せずに。<br>
 使う側が意識しなくていいほど【使いやすいテンプレート】を自力で作れることが理想形です。トライしてゆきましょう。<br>
 </p>
-
+<br>
+<p>
+ここまでで一応弾の削除処理は書けました。しかし本当に弾が削除されているか実感がありません。<br>
+弾1個は現状では【かなり微小なメモリしか】使用しません。<br>
+実行して【メモリのグラフを見ても増えているか減っているか見えないほど微小です】<br>
+そこで【人為的に弾1個のメモリを大きくする】実験をしてみましょう。<br>
+注意が必要です【危険な実験】です(ほったらかすと)。増やした【実験コードは必ず元に戻してください！！】<br>
+では実験を始めてみましょう。<br>
+</p>
+<p><code>PlayerBullet.h</code>の内容を次のように【改造】します：</p>
+    <p class="source">#ifndef PLAYERBULLET_H_<br>
+#define PLAYERBULLET_H_<br>
+<br>
+#include "DxLib.h"<br>
+#include "Image.h"<br>
+<br>
+// 自機弾クラス<br>
+class PlayerBullet<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;const float Speed = 25; // 移動速度<br>
+&nbsp;&nbsp;<em>const int VisibleRadius = 16; // 見た目の半径</em><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// ↓【使用要注意！(テスト用！！)】メモリ消費弾(4MB)撃つたびに4MB消費(下の行のコメント外すと)<br>
+&nbsp;&nbsp;<em>【使用注意】int memMUDA[1000000]; // 4バイト×1000000= 4MBの無駄メモリ</em><br>
+<br>
+&nbsp;&nbsp;float x; // x座標<br>
+&nbsp;&nbsp;float y; // y座標<br>
+&nbsp;&nbsp;bool isDead = false; // 死亡フラグ<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;PlayerBullet(float x, float y)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;void Update()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 移動<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x += Speed;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 画面外に出たら、死亡フラグを立てる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (x - VisibleRadius &gt; Screen::Width)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;void Draw()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::playerBullet,TRUE);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+<br>
+#endif<br></p>
+<br>
+<p>無駄メモリをあえて人為的に定義して弾を撃ってみましょう。<br>
+メモリの【グラフがうなぎ上りに上昇しなければ】プレイヤの弾に関してはメモリの削除と開放が成功している証拠です。<br>
+<br>
+<p> <img src="image/memory_leak.png" alt="" style="width: 740px; height: 484px;"></p>
+	
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
 
