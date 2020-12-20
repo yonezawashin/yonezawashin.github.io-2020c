@@ -2203,9 +2203,9 @@ public:<br>
 &nbsp;&nbsp;float y; // y座標<br>
 &nbsp;&nbsp;bool isDead = false; // 死亡フラグ<br>
 <br>
-&nbsp;&nbsp;<em>float vx; // x方向移動速度
-&nbsp;&nbsp;float vy; // y方向移動速度<br>
-&nbsp;&nbsp;float angle; // 移動角度<br></em>
+&nbsp;&nbsp;<em>float vx; // x方向移動速度</em><br>
+&nbsp;&nbsp;<em>float vy; // y方向移動速度</em><br>
+&nbsp;&nbsp;<em>float angle; // 移動角度</em><br>
 <br>
 &nbsp;&nbsp;// コンストラクタ<br>
 &nbsp;&nbsp;PlayerBullet(float x, float y<em>, float angle</em>)<br>
@@ -2213,20 +2213,20 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
 <br>
-&nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;angle = angle;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;vx = (float)std::cos(angle) * Speed;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * Speed;</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;angle = angle;</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>vx = (float)std::cos(angle) * Speed;</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>vy = (float)std::sin(angle) * Speed;</em><br>
 &nbsp;&nbsp;}<br>
 <br>
 &nbsp;&nbsp;// 更新処理<br>
 &nbsp;&nbsp;void Update()<br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// 移動<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<em>x += vx;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;y += vy;</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>x += vx;</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>y += vy;</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// 画面外に出たら、死亡フラグを立てる<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<em>if (x + VisibleRadius &lt; 0 || x - VisibleRadius &gt; Screen::Width || <br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (<em>x + VisibleRadius &lt; 0 || x - VisibleRadius &gt; Screen::Width || <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y + VisibleRadius &lt; 0 || y - VisibleRadius &gt; Screen::Height</em>)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
@@ -2247,19 +2247,15 @@ public:<br>
 
 <p><code>MyMath.h</code>を編集します：</p>
     <p class="source">#ifndef _MYMATH_H<br>
-	#define _MYMATH_H<br>
-	// 数学関連クラス<br>class MyMath<br>{<br>
-	public: <br>
-&nbsp; // C ++標準では、静的static定数の【整数型】または【列挙型】のみをクラス内で初期化できます。<br>&nbsp; // 
-	これが、一部の初期化が許可されているのに他のstatic floatなどが初期化できない理由です。<br><br>&nbsp; // 【OH,ノー】 
-	float小数を定義するためだけにcppファイルを作成しないと<br>&nbsp; //static const float Sqrt2 
-	=【このイコールでエラー】 1.41421356237f; <br><br>&nbsp; // ルート2(変数名の定義だけ)<br>static 
-	const float Sqrt2;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	// = 1.41421356237f;<br>
-	<em>static const float PI; // 円周率 3.14159265359f;<br>
-	static const float Deg2Rad; // 度からラジアンに変換する定数 PI / 180f;<em><br>
-	<br>}; // 【注意】セミコロン抜けで【宣言が必要ですエラー】<br>
-	<br>
+#define _MYMATH_H<br>
+// 数学関連クラス<br>class MyMath<br>{<br>
+public: <br>
+&nbsp;&nbsp;static const float Sqrt2;&nbsp;&nbsp;// = 1.41421356237f;<br>
+&nbsp;&nbsp;<em>static const float PI; // 円周率 3.14159265359f;</em><br>
+&nbsp;&nbsp;<em>static const float Deg2Rad; // 度からラジアンに変換する定数 PI / 180f;</em><br>
+<br>
+}; // 【注意】セミコロン抜けで【宣言が必要ですエラー】<br>
+<br>
 #endif //【宣言が必要ですエラーは上のセミコロン抜け】</p>
 <br>
     <p><code>MyMath.cpp</code>を編集して変数に数値を割り当て。</p>
