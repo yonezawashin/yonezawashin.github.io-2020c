@@ -1436,6 +1436,7 @@ public&nbsp;:<br>
       <br>
       <code>Game.cpp</code>の内容を次のように変更します：</p>
     <p class="source">#include "Game.h"<br>
+<br>
 <em>#include "Player.h"</em><br>
 <br>
 void Game::Init()<br>
@@ -1445,7 +1446,7 @@ void Game::Init()<br>
 &nbsp;&nbsp;x = 100; // Xの初期位置<br>
 &nbsp;&nbsp;vx = 10;<br>
 <br>
-<em>gm.player = std::make_shared&lt;Player&gt;(100, Screen::Height / 2); // 自機の初期化</em>
+&nbsp;&nbsp;<em>gm.player = std::make_shared&lt;Player&gt;(100, Screen::Height / 2); // 自機の初期化</em><br>
 };<br>
 <br>
 void Game::Update()<br>
