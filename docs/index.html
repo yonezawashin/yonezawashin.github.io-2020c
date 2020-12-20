@@ -1204,7 +1204,7 @@ public:<br>
 <p><code>↑Player.hにあった上記処理部分を↓Player.cppを新規作成して書き移します</code></p>
 <p><code>Player.cpp</code>にPlayerBulletの発射処理を追加します：</p>
     <p class="source">
-<em>#include&nbsp;"Player.h"</em><br>
+#include&nbsp;"Player.h"<br>
 <br>
 <em>#include&nbsp;"Game.h"&nbsp;//&nbsp;★game->playerBulletsなどClass Game;でカバーできない【定義の内部のplayerBulletsにアクセスするのでインクルード必要】<br>
 #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★弾を生成して【使う処理があるのでインクルード必要】</em><br>
@@ -1403,7 +1403,7 @@ protected:<br>
 <br>
 <u>#include&nbsp;"Player.h"</u><br>
 <br>
-<u>class&nbsp;Player;&nbsp;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避
+<u>class&nbsp;Player;&nbsp;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
 class&nbsp;PlayerBullet;</u><br>
 <br>
 <em>#include&nbsp;"GameManager.h"</em><br>
@@ -1447,7 +1447,7 @@ void Game::Init()<br>
 &nbsp;&nbsp;x = 100; // Xの初期位置<br>
 &nbsp;&nbsp;vx = 10;<br>
 <br>
-&nbsp;&nbsp;<em>gm.player = std::make_shared&lt;Player&gt;(100, Screen::Height / 2); // 自機の初期化</em><br>
+&nbsp;&nbsp;<em>gm.player = std::make_shared&lt;Player&gt;((float)100, (float)Screen::Height / 2); // 自機の初期化</em><br>
 };<br>
 <br>
 void Game::Update()<br>
@@ -1553,6 +1553,7 @@ public:<br>
     <p class="source">
 #include&nbsp;"Player.h"<br>
 <br>
+<u>#include "Game.h"</u><br>
 #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★弾を生成して【使う処理があるのでインクルード必要】<br>
 <br>
 // 更新処理【書き移す際にはPlayer::という形で::所属が必要になります】<br>
@@ -1709,11 +1710,9 @@ void Game::Update()<br>
 &nbsp;&nbsp;gm.playerBullets.erase(<br>
 &nbsp;&nbsp;&nbsp;&nbsp;std::remove_if(gm.playerBullets.begin(), gm.playerBullets.end(),<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//int uc = -1;//テスト用コード(以下のコメントアウト部分は省略可)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//if (ptr-&gt;isDead)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//     uc = ptr.use_count();//おかんのコレ捨てるよカウンタ<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//}////↑弾を捨てるまでの残りカウント1だと終了return時点のisDeadがtrueなら削除へ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//int usingCount = -1;//テスト用コード(以下のコメントアウト部分は省略可)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//if (ptr-&gt;isDead) usingCount = ptr.use_count();//おかんのコレ捨てるよカウンタ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//弾を捨てるまでの残り↑カウント(1だとisDeadがtrueなら0になり削除へ<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return ptr-&gt;isDead;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}),<br>
 &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.end()<br>
@@ -1739,21 +1738,22 @@ void Game::Draw()<br>
 【C#】<br>
 playerBullets.RemoveAll(pb => pb.isDead);<br>
 【C++】<br>
+<p class="source">
 gm.playerBullets.erase(<br>
 &nbsp;&nbsp;std::remove_if(gm.playerBullets.begin(), gm.playerBullets.end(),<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//int uc = -1;//テスト用コード(以下のコメントアウト部分は省略可)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//if (ptr-&gt;isDead)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//     uc = ptr.use_count();//おかんのコレ捨てるよカウンタ<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//}////↑弾を捨てるまでの残りカウント1だと終了return時点のisDeadがtrueなら削除へ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//int usingCount = -1;//テスト用コード(以下のコメントアウト部分は省略可)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//if (ptr-&gt;isDead) usingCount = ptr.use_count();//おかんのコレ捨てるよカウンタ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//弾を捨てるまでの残り↑カウント(1だとisDeadがtrueなら0になり削除へ<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return ptr-&gt;isDead;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;}),<br>
 &nbsp;&nbsp;gm.playerBullets.end()<br>
 );<br>
+</p>
 <br>
-テスト用の回コードを消して読みやすくしてみましょう。<br>
+テスト用のコードを消して読みやすくしてみましょう。<br>
 【C++】<br>
+<p class="source">
 gm.playerBullets.erase(<br>
 &nbsp;&nbsp;std::remove_if(gm.playerBullets.begin(), gm.playerBullets.end(),<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {<br>
@@ -1761,6 +1761,7 @@ gm.playerBullets.erase(<br>
 &nbsp;&nbsp;&nbsp;&nbsp;}),<br>
 &nbsp;&nbsp;gm.playerBullets.end()<br>
 );<br>
+</p>
 <br>
 これでもまだ複雑ですが、なぜ複雑に見えるか？<br>
 【実は二つの処理が同時に行われている】ためです。<br>
@@ -1770,6 +1771,7 @@ gm.playerBullets.erase(<br>
 &nbsp;&nbsp;v.erase(v.begin(), v.begin() + 2);//配列開始位置から2個ぶん削除<br>
 &nbsp;&nbsp;v.erase(削除開始ポインタ位置, 終了ポインタ位置);<br>
 で、プレイヤ弾の削除処理では<br>
+<p class="source">
 gm.playerBullets.erase(<br>
 &nbsp;&nbsp;……<br>
 &nbsp;&nbsp;&nbsp;&nbsp;……<br>
@@ -1777,6 +1779,7 @@ gm.playerBullets.erase(<br>
 &nbsp;&nbsp;&nbsp;&nbsp;……,<br>
 &nbsp;&nbsp;gm.playerBullets.end()<br>
 );<br>
+</p>
 よく見ると実は<br>
 gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&nbsp;);<br>
 となっているだけで実は【複雑な何かから ～ end()終了位置】までの削除処理を行っているだけだとわかります。<br>
@@ -1793,11 +1796,58 @@ gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&
 要するに【1】と【2】で協力して「削除」と「分離並べ替え」を【分担していただけ】だったわけです。<br>
 <br>そしてその条件式が<br>
 [](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {&nbsp;return ptr-&gt;isDead;&nbsp;}<br>
-というスタイルでisDeadがtrueかfalseかという【ちょっとクセの強い条件式の書き方】で書かれていたということです。<br>
+というスタイルでisDeadがtrueかfalseかreturnするという【ちょっとクセの強い条件式の書き方】で書かれていたということです。<br>
 <br>
-ここは毎回びびっているわけにはいかないので【慣れてゆきましょう】何度も見て【見慣れる】ことです。<br>
+ここは【慣れてゆくしかないです】何度も見て【見慣れる】ことです。<br>
 </p>
-	    
+
+
+<p>ただ、この複雑な文が増えてくると【コードが見にくくなる】ので【テンプレート化】に挑戦してみましょう。</p> 
+
+
+<p><code>GameManager.h</code>に共通の削除機能として【テンプレート機能】として追加してみましょう。</p>
+<p class="source">
+#ifndef GAMEMANAGER_H_<br>
+#define GAMEMANAGER_H_<br>
+<br>
+#include &lt;memory&gt;<br>
+#include &lt;vector&gt;<br>
+<br>
+#include&nbsp;"Singleton.h"<br>
+<br>
+class&nbsp;Player;&nbsp;//&nbsp;クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+class&nbsp;PlayerBullet;<br>
+<br>
+class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
+<br>
+&nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機の初期化<br>
+<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+&nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+<br>
+<br>
+<br>
+&nbsp;&nbsp;// ★削除処理を共通テンプレート関数にする
+&nbsp;&nbsp;// [共通テンプレート関数]https://programming-place.net/ppp/contents/cpp/language/009.html#function_template
+&nbsp;&nbsp;template <typename T, class T_if>
+&nbsp;&nbsp;void EraseRemoveIf(std::vector<T> v, T_if if_condition)
+&nbsp;&nbsp;{   //           特定のタイプT↑ ↑配列v   ↑条件式if_condition
+&nbsp;&nbsp;&nbsp;&nbsp;v.erase(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::remove_if(v.begin(), v.end(),if_condition),//←条件で後ろに分離した後方部分の先頭位置
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.end() //  ↓remove_ifの位置
+&nbsp;&nbsp;&nbsp;&nbsp;);//例.[生][生][死][死][死]← v.end()の位置
+&nbsp;&nbsp;};
+<br>
+protected:<br>
+&nbsp;&nbsp;GameManager() {}; // 外部からのインスタンス作成は禁止<br>
+&nbsp;&nbsp;virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
+};<br>
+<br>
+#endif<br>
+</p>
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
 
