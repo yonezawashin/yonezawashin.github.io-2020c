@@ -1890,8 +1890,8 @@ void Game::Update()<br>
 &nbsp;&nbsp;<br>
 &nbsp;&nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
 &nbsp;&nbsp;<br>
-&nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+&nbsp;&nbsp;<em>gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
 &nbsp;&nbsp;<br>
 &nbsp;&nbsp;<u>// 自機弾のリストから死んでるものを除去する<br>
 &nbsp;&nbsp;// 非常に複雑な式に見えるがこれでisDeadのものを削除<br>
@@ -1922,6 +1922,14 @@ void Game::Draw()<br>
 &nbsp;&nbsp;}<br>
 };<br>
 </p>
+<p>さて、使う側はすっきり2行にまとまりました。<br>
+これなら削除するリストがenemiesやenemyBulletsなど増えてきても書きやすいです。</p>
+<p>テンプレート化template&nbsp;&lt;typename&nbsp;T&gt;を習得することは上級者への第一歩です。<br>
+C++だけでなく【C#でもテンプレート化ができます】ぜひ練習して習得してゆきましょう。<br>
+逆の目線で言うと【実は今まではテンプレート化された使いやすい機能を使わせてもらっていた】のです。意識せずに。<br>
+使う側が意識しなくていいほど【使いやすいテンプレート】を自力で作れることが理想形です。トライしてゆきましょう。<br>
+</p>
+
 <h2>とりあえずC++バージョンに変更できたのはここまで</h2>
 
 
