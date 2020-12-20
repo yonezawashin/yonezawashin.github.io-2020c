@@ -1766,7 +1766,7 @@ gm.playerBullets.<em>erase</em>(<br>
 これでもまだ複雑ですが、なぜ複雑に見えるか？<br>
 【実は二つの処理が同時に行われている】ためです。<br>
 <br>
-【1】erase処理:<a href="https://cpprefjp.github.io/reference/vector/vector/erase.html">指定した配列の要素を削除する処理です。</a><br>
+【1】erase処理&nbsp;:&nbsp;<a href="https://cpprefjp.github.io/reference/vector/vector/erase.html">指定した配列の要素を削除する処理です。</a><br>
 基本構文はvを配列とすると<br>
 &nbsp;&nbsp;v.erase(v.begin(), v.begin() + 2);//配列開始begin位置から2個ぶん削除<br>
 &nbsp;&nbsp;v.erase(削除開始ポインタ位置, 終了ポインタ位置);<br>
@@ -1787,8 +1787,8 @@ gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&
 <br>
 【分解ステップを踏んでゆけば読み解けるようになります】<br>
 <br>
-そして次の「複雑な何か↓」も<br>
-【2】remove_if処理:<a href="https://cpprefjp.github.io/reference/algorithm/remove_if.html">ある条件を①満たすものを[配列の後ろ]に②満たさないものを[前に]集め①の始まりの位置を返す</a><br>
+そして次の「複雑な何か↓」も分解して読み解いてみましょう。<br>
+【2】remove_if処理&nbsp;:&nbsp;<a href="https://cpprefjp.github.io/reference/algorithm/remove_if.html">ある条件を①満たすものを【配列の後ろ】に、②満たさないものを【前に】集め①の始まりの位置を返す</a><br>
 基本構文はvを配列とすると<br>
 &nbsp;&nbsp;std::remove_if(v.begin(), v.end(), 条件);//配列v開始位置から終了位置まで「条件」に従い分離並べ替えし条件を満たす後ろに並べ替えられたものの分離された先頭位置を返す<br>
 つまりremove_ifは配列の後ろに条件を満たすものを分離する処理の担当で削除すべきものの先頭の位置をeraseに渡す担当だとわかります。<br>
@@ -1832,16 +1832,16 @@ public:<br>
 <br>
 <br>
 <br>
-&nbsp;&nbsp;//&nbsp;★削除処理を共通テンプレート関数にする<br>
+&nbsp;&nbsp;<em>//&nbsp;★削除処理を共通テンプレート関数にする<br>
 &nbsp;&nbsp;//&nbsp;[共通テンプレート関数]https://programming-place.net/ppp/contents/cpp/language/009.html#function_template<br>
 &nbsp;&nbsp;template&nbsp;&lt;typename&nbsp;T,&nbsp;class&nbsp;T_if&gt;<br>
 &nbsp;&nbsp;void&nbsp;EraseRemoveIf(std::vector&lt;T&gt;&nbsp;v,&nbsp;T_if&nbsp;if_condition)<br>
-&nbsp;&nbsp;{&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;特定のタイプT↑&nbsp;↑配列v&nbsp;&nbsp;&nbsp;↑条件式if_condition<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;特定のタイプT↑&nbsp;&nbsp;↑配列v&nbsp;&nbsp;&nbsp;↑条件式if_condition<br>
 &nbsp;&nbsp;&nbsp;&nbsp;v.erase(<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::remove_if(v.begin(),&nbsp;v.end(),if_condition),//←条件で後ろに分離した後方部分の先頭位置<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.end()&nbsp;//&nbsp;&nbsp;↓remove_ifの位置<br>
 &nbsp;&nbsp;&nbsp;&nbsp;);//例.[生][生][死][死][死]←&nbsp;v.end()の位置<br>
-&nbsp;&nbsp;};<br>
+&nbsp;&nbsp;};</em><br>
 <br>
 protected:<br>
 &nbsp;&nbsp;GameManager() {}; // 外部からのインスタンス作成は禁止<br>
