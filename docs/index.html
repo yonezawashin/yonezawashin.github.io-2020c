@@ -1398,11 +1398,13 @@ protected:<br>
 <br>
 #include&nbsp;"Image.h"<br>
 #include&nbsp;"Screen.h"<br>
+<em>#include&nbsp;"Input.h"</em><br>
+<br>
 <u>#include&nbsp;"PlayerBullet.h"</u><br>
 <br>
 <u>#include&nbsp;"Player.h"</u><br>
 <br>
-<u>class&nbsp;Player;</u><br>
+<u>class&nbsp;Player;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避</u><br>
 <br>
 <em>#include&nbsp;"GameManager.h"</em><br>
 <br>
@@ -1441,6 +1443,8 @@ void Game::Init()<br>
 &nbsp;&nbsp;Image::Load(); //画像の読込み<br>
 &nbsp;&nbsp;x = 100; // Xの初期位置<br>
 &nbsp;&nbsp;vx = 10;<br>
+<br>
+<em>gm.player = std::make_shared&lt;Player&gt;(100, Screen::Height / 2); // 自機の初期化</em>
 };<br>
 <br>
 void Game::Update()<br>
