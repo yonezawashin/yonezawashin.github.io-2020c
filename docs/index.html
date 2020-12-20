@@ -1157,9 +1157,7 @@ void Game::Draw()<br>
 #include "Image.h"<br>
 #include "MyMath.h"<br>
 <br>
-<em>#include "Game.h"<br>
-<br>
-class Game;//←【エラー地獄に注意！】ここにGameクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
+<em>class Game;//←【エラー地獄に注意！】ここにGameクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
 <br>
 //↑Gameクラス内にPlayer変数を持っているからPlayerの定義が終わらないとGameの定義が完了しない(未定義エラー)<br>
 //【なのに】Playerクラス内にGame変数を持っているからPlayerの定義も終わらない！！(未定義エラー)<br>
@@ -1206,7 +1204,8 @@ public:<br>
     <p class="source">
 <em>#include "Player.h"</em><br>
 <br>
-<em>#include "PlayerBullet.h"//★弾を生成して【使う処理があるのでインクルード必要】</em><br>
+<em>#include "Game.h"//★game->playerBulletsなどClass Game;でカバーできない【定義の内部のplayerBulletsにアクセスするのでインクルード必要】<br>
+#include "PlayerBullet.h"//★弾を生成して【使う処理があるのでインクルード必要】</em><br>
 <br>
 <br>
 <br>
@@ -1794,7 +1793,7 @@ gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&
 &nbsp;&nbsp;std::remove_if(v.begin(), v.end(), 条件);//配列v開始位置から終了位置まで「条件」に従い分離並べ替えし条件を満たす後ろに並べ替えられたものの分離された先頭位置を返す<br>
 つまりremove_ifは配列の後ろに条件を満たすものを分離する処理の担当で削除すべきものの先頭の位置をeraseに渡す担当だとわかります。<br>
 <br>
-要するに【1】と【2】でコラボして「削除」と「分離並べ替え」を【分担していただけ】だったわけです。<br>
+要するに【1】と【2】で協力して「削除」と「分離並べ替え」を【分担していただけ】だったわけです。<br>
 <br>そしてその条件式が<br>
 [](std::shared_ptr&lt;PlayerBullet&gt; &amp;ptr) {&nbsp;return ptr-&gt;isDead;&nbsp;}<br>
 というスタイルでisDeadがtrueかfalseかという【ちょっとクセの強い条件式の書き方】で書かれていたということです。<br>
