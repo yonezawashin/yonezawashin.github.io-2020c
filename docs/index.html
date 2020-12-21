@@ -3020,6 +3020,7 @@ void Game::Update()<br>
 &nbsp;&nbsp;// 自機弾のリストから死んでるものを除去する<br>
 &nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+<br>
 &nbsp;&nbsp;<em>// 敵のリストから死んでるものを除去する<br>
 &nbsp;&nbsp;gm.EraseRemoveIf(gm.enemies,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Enemy&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
@@ -3079,6 +3080,25 @@ public:<br>
 <br>
 #endif<br>
 </p>
+	
+	<p><code>Game.cpp</code>にZako1の生成処理を追加します。</p>
+    <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako1.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+<br>
+&nbsp;&nbsp;// とりあえず適当に敵を生成
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared<Zako0>((float)600, (float)100));
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared<Zako0>((float)1000, (float)500));
+&nbsp;&nbsp;<em>gm.enemies.push_back(std::make_shared<Zako1>((float)1000, (float)150));</em>
+};<br>
+<br>
 	
 </body>
 </html>
