@@ -2890,11 +2890,11 @@ public:<br><br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;life -= 1; // ライフを減らす<br>
 <br>
-&nbsp;&nbsp;&nbsp;&nbsp;// ライフが無くなったら、死亡
-&nbsp;&nbsp;&nbsp;&nbsp;if (life &lt;= 0)
-&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;// ライフが無くなったら、死亡<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (life &lt;= 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
 &nbsp;&nbsp;}</em><br>
 };<br>
 <br>
@@ -2912,11 +2912,11 @@ public:<br><br>
 #include "Image.h"<br>
 #include "Screen.h"<br>
 <br>
-<em>#include "GameObject.h"</em><br>
+#include "GameObject.h"<br>
 <br>
 // 自機弾クラス<br>
-<em>// 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意</em><br>
-class PlayerBullet<em>: public GameObject</em><br>
+// 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意<br>
+class PlayerBullet: public GameObject<br>
 {<br>
 public:<br>
 &nbsp;&nbsp;const float Speed = 25; // 移動速度<br>
@@ -2943,11 +2943,11 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, angle, Image::playerBullet,TRUE);<br>
 &nbsp;&nbsp;}<br>
 <br>
-&nbsp;&nbsp;<em>// 敵にぶつかった時の処理
-&nbsp;&nbsp;void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other)
-&nbsp;&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;
-&nbsp;&nbsp;}</em>
+&nbsp;&nbsp;<em>// 敵にぶつかった時の処理<br>
+&nbsp;&nbsp;void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;}</em><br>
 };<br>
 <br>
 #endif<br></p>
@@ -3017,10 +3017,10 @@ void Game::Update()<br>
 &nbsp;&nbsp;<br>
 &nbsp;&nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
 &nbsp;&nbsp;<br>
-&nbsp;&nbsp;// 自機弾のリストから死んでるものを除去する
+&nbsp;&nbsp;// 自機弾のリストから死んでるものを除去する<br>
 &nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
-&nbsp;&nbsp;<em>// 敵のリストから死んでるものを除去する
+&nbsp;&nbsp;<em>// 敵のリストから死んでるものを除去する<br>
 &nbsp;&nbsp;gm.EraseRemoveIf(gm.enemies,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Enemy&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
 &nbsp;&nbsp;<br>
