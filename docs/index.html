@@ -1770,9 +1770,8 @@ gm.playerBullets.<em>erase</em>(<br>
 【実は二つの処理が同時に行われている】ためです。<br>
 <br>
 【1】erase処理&nbsp;:&nbsp;<a href="https://cpprefjp.github.io/reference/vector/vector/erase.html">指定した配列の要素を削除する処理です。</a><br>
-基本構文はvを配列とすると<br>
-&nbsp;&nbsp;v.erase(v.begin(), v.begin() + 2);//配列開始begin位置から2個ぶん削除<br>
-&nbsp;&nbsp;v.erase(削除開始ポインタ位置, 終了ポインタ位置);<br>
+基本構文は<br>
+&nbsp;&nbsp;v.erase(【削除開始位置】, 【終了位置】);<br>
 で、プレイヤ弾の削除処理では<br>
 <p class="source">
 gm.playerBullets.erase(<br>
@@ -1784,8 +1783,8 @@ gm.playerBullets.erase(<br>
 );<br>
 </p>
 よく見ると実は<br>
-gm.playerBullets.erase(複雑な何か&nbsp;&nbsp;,&nbsp;gm.playerBullets.end()&nbsp;);<br>
-となっているだけで実は【複雑な何かから ～ end()終了位置】までの削除処理を行っているだけだとわかります。<br>
+gm.playerBullets.erase(【複雑な何か】,&nbsp;gm.playerBullets.end()&nbsp;);<br>
+となっているだけで実は【複雑な何か】 ～ 【end()終了位置】までの削除処理を行っているだけだとわかります。<br>
 こういう風にカンマ,や(かっこ)で区切られた構造を読み解く力が身に付けば複雑なコードでも<br>
 <br>
 【分解ステップを踏んでゆけば読み解けるようになります】<br>
