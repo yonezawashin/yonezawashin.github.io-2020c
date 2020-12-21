@@ -3171,9 +3171,9 @@ public:<br>
 // 更新処理<br>
 void Player::Update()<br>
 {<br>
-&nbsp;&nbsp;// 継承したGameObjectにvx,vyがあるのでvx,vyをfloatで定義し直さないように修正<br>
-&nbsp;&nbsp;<u>float </u>vx = 0; // x方向移動速度<br>
-&nbsp;&nbsp;<u>float </u>vy = 0; // y方向移動速度<br>
+&nbsp;&nbsp;// 継承したGameObjectにvx,vyがあるのでvx,vyをfloatで定義し直さないように注意<br>
+&nbsp;&nbsp;vx = 0; // x方向移動速度<br>
+&nbsp;&nbsp;vy = 0; // y方向移動速度<br>
 <br>
 &nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
 &nbsp;&nbsp;{<br>
@@ -3517,7 +3517,7 @@ public:<br>
 &nbsp;&nbsp;float angleH=0; // 移動角度(水平Horizontal)<br>
 <br>
 <br>
-&nbsp;&nbsp;// コンストラクタ
+&nbsp;&nbsp;// コンストラクタ<br>
 &nbsp;&nbsp;EnemyBullet(float x, float y, float angle, float speed)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
 &nbsp;&nbsp;{<br>
