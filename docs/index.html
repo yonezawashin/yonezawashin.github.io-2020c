@@ -1446,7 +1446,7 @@ void Game::Init()<br>
 &nbsp;&nbsp;x = 100; // Xの初期位置<br>
 &nbsp;&nbsp;vx = 10;<br>
 <br>
-&nbsp;&nbsp;<em>gm.player = std::make_shared&lt;Player&gt;((float)100, (float)Screen::Height / 2); // 自機の初期化</em><br>
+&nbsp;&nbsp;<em>gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化</em><br>
 };<br>
 <br>
 void Game::Update()<br>
@@ -1910,7 +1910,8 @@ void Game::Update()<br>
 &nbsp;&nbsp;<br>
 &nbsp;&nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
 &nbsp;&nbsp;<br>
-&nbsp;&nbsp;<em>gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;<em>// 自機弾の削除処理<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
 &nbsp;&nbsp;<br>
 &nbsp;&nbsp;<u>// 自機弾のリストから死んでるものを除去する<br>
@@ -2057,7 +2058,8 @@ void Game::Update()<br>
 &nbsp;&nbsp;<br>
 &nbsp;&nbsp;<em>return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験</em><br>
 &nbsp;&nbsp;<br>
-&nbsp;&nbsp;<em>//gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;<em>// 自機弾の削除処理<br>
+&nbsp;&nbsp;//gm.EraseRemoveIf(gm.playerBullets,<br>
 &nbsp;&nbsp;//&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
 &nbsp;&nbsp;<br>
 };<br>
@@ -2172,7 +2174,8 @@ void Game::Update()<br>
 &nbsp;&nbsp;<br>
 &nbsp;&nbsp;<em>//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験</em><br>
 &nbsp;&nbsp;<br>
-&nbsp;&nbsp;<em>gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;<em>// 自機弾の削除処理<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
 &nbsp;&nbsp;<br>
 };<br>
@@ -2318,6 +2321,7 @@ public: <br>
 <p class="source">#ifndef GAMEOBJECT_H_<br>
 #define GAMEOBJECT_H_<br>
 <br>
+#include "DxLib.h"<br>
 #include &lt;string&gt; //文字タグのため<br>
 #include &lt;memory&gt; //回し読みポインタの定義のため<br>
 <br>
@@ -2363,7 +2367,7 @@ public:<br>
 &nbsp;&nbsp;virtual void OnCollision(std::shared_ptr&lt;GameObject&gt; other)<br>
 &nbsp;&nbsp;{<br>
 <br>
-&nbsp;&nbsp;};<br>
+&nbsp;&nbsp;}<br>
 <br>
 };<br>
 <br>
@@ -2416,7 +2420,7 @@ public:<br><br>
 &nbsp;&nbsp;//http://www.ced.is.utsunomiya-u.ac.jp/lecture/2012/prog/p3/kadai3/virtualfunc2.php<br>
 <br>
 &nbsp;&nbsp;// 自機弾に当たったときの処理<br>
-&nbsp;&nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr<GameObject> playerBullet)<br>
+&nbsp;&nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet)<br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;life -= 1; // ライフを減らす<br>
 <br>
@@ -2436,6 +2440,7 @@ public:<br><br>
 #define ZAKO_0_H_<br>
 <br>
 #include "Enemy.h"<br>
+#include "Image.h"<br>
 <br>
 // ザコ0クラス<br>
 class Zako0 : public Enemy<br>
@@ -2530,7 +2535,7 @@ void Image::Load()<br>
 <br>
 class&nbsp;Player;&nbsp;//&nbsp;クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
 class&nbsp;PlayerBullet;<br>
-class&nbsp;<em>Enemy;</em><br>
+<em>class&nbsp;Enemy;</em><br>
 <br>
 class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
 {<br>
@@ -2539,7 +2544,7 @@ public:<br>
 <br>
 &nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機のポインタ<br>
 &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
-&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+&nbsp;&nbsp;<em>std::vector&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト</em><br>
 &nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
 <br>
 <br>
@@ -2556,9 +2561,9 @@ protected:<br>
 
 <p><code>Game.cpp</code>に敵の生成と更新と描画処理を追加しましょう。</p>
     <p class="source">#include "Game.h"<br>
-#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-#include&nbsp;<em>"Zako0.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+<em>#include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
@@ -2603,10 +2608,10 @@ void Game::Update()<br>
 &nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
 &nbsp;&nbsp;}</em><br>
 &nbsp;&nbsp;<br>
-&nbsp;&nbsp;<em>//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験</em><br>
+&nbsp;&nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
 &nbsp;&nbsp;<br>
-&nbsp;&nbsp;<em>gm.EraseRemoveIf(gm.playerBullets,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
 &nbsp;&nbsp;<br>
 };<br>
 <br>
