@@ -2360,7 +2360,7 @@ public:<br>
 <br>
 &nbsp;&nbsp;//★virtual仮想関数は共通カスタマイズ機能(継承してもoverride必須ではないご自由にカスタマイズ)<br>
 &nbsp;&nbsp;// 衝突したときの関数(仮のvirtual関数←純粋仮想関数と違い継承してもoverride必須ではない)<br>
-&nbsp;&nbsp;virtual void OnCollision(std::shared_ptr<GameObject> other)<br>
+&nbsp;&nbsp;virtual void OnCollision(std::shared_ptr&lt;GameObject&gt; other)<br>
 &nbsp;&nbsp;{<br>
 <br>
 &nbsp;&nbsp;};<br>
