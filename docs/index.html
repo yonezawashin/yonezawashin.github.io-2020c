@@ -2445,7 +2445,7 @@ public:<br><br>
 <br>
 <em>#include&nbsp;"GameObject.h"</em><br>
 <br>
-<em>#include&nbsp;"GameManager.h"</em><br>
+#include&nbsp;"GameManager.h"<br>
 <br>
 <em>// 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意</em><br>
 class Player <em>: public GameObject</em><br>
@@ -2455,7 +2455,7 @@ public:<br>
 <br>
 &nbsp;&nbsp;<em>//【★注意！】ここに【x,yの定義が残ってるとGameObjectと被る】ので<br>
 &nbsp;&nbsp;// 名前の同じ変数が2つ【パラレルワールドに存在してしまう！】<br>
-&nbsp;&nbsp;// Playerからx,yを変えたつもりでも【ベースのGameObjectのx,yが変わらない不思議バグが多発！】</em><br>
+&nbsp;&nbsp;// Playerからx=13,y=5に変えたつもりでも【ベースのGameObjectはx=0,y=0のままの不思議バグで混乱！】</em><br>
 &nbsp;&nbsp;<u>float x; // x座標<br>
 &nbsp;&nbsp;float y; // y座標</u><br>
 <br>
@@ -2465,12 +2465,12 @@ public:<br>
 &nbsp;&nbsp;// コンストラクタ<br>
 &nbsp;&nbsp;// x : 初期位置x<br>
 &nbsp;&nbsp;// y : 初期位置y<br>
-&nbsp;&nbsp;Player(float x, float y<em>, float z=0</em>)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<em>: GameObject() //【忘れると】GameObjectの初期化処理が無効になる</em>
+&nbsp;&nbsp;Player(float x, float y<em>, float z=0</em>)//z=0デフォルトにして2Dのときはzを省略できる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>: GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！</em><br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;z = z;//[3D]</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;z = z;//[3D対応]</em><br>
 &nbsp;&nbsp;}<br>
 <br>
 &nbsp;&nbsp;// 更新処理の関数定義<br>
@@ -2527,7 +2527,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * Speed;<br>
 &nbsp;&nbsp;}<br>
 <br><br>
-&nbsp;&nbsp;<em>//[3D]コンストラクタ(引数4つの別窓口の初期化)<br>
+&nbsp;&nbsp;<em>// [3D用]コンストラクタ(引数4つの別窓口の初期化を用意)<br>
 &nbsp;&nbsp;PlayerBullet(float x, float y, float z, float angle)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
 &nbsp;&nbsp;{<br>
