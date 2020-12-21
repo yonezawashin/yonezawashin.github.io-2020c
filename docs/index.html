@@ -3554,13 +3554,22 @@ public:<br>
 &nbsp;&nbsp;// 更新処理<br>
 &nbsp;&nbsp;void Update()<br>
 &nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;(中略)....................<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 速度の分だけ移動<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x += vx;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 画面外に出たら死亡フラグを立てる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (y + VisibleRadius &lt; 0 || y - VisibleRadius > Screen::Height ||<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x + VisibleRadius &lt; 0 || x - VisibleRadius > Screen::Width)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
 &nbsp;&nbsp;}<br>
 <br>
 &nbsp;&nbsp;// 描画処理<br>
 &nbsp;&nbsp;void Draw()<br>
 &nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, angle, Image::playerBullet,TRUE);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, angle, Image::enemyBullet16,TRUE);<br>
 &nbsp;&nbsp;}<br>
 <br>
 &nbsp;&nbsp;<em>// 敵にぶつかった時の処理<br>
