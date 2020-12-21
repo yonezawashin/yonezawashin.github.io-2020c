@@ -2629,7 +2629,7 @@ public:<br>
 <br>
 #endif<br>
 </p>
-<code>Image.h</code>にザコ0ザコ1の画像定義を追加します：</p>
+<code>Image.h</code>にザコ0ザコ1と敵弾の画像定義を追加します：</p>
     <p class="source">#ifndef IMAGE_H_<br>
 #define IMAGE_H_<br>
 <br>
@@ -2646,6 +2646,7 @@ public:<br>
 &nbsp;&nbsp;static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
 &nbsp;&nbsp;static int player; //プレイヤ画像のハンドラ<br>
 &nbsp;&nbsp;static int playerBullet; //プレイヤの弾画像のハンドラ<br>
+&nbsp;&nbsp;<em>static int enemyBullet16; //敵弾 画像のハンドラ(読込画像番号)</em><br>
 &nbsp;&nbsp;<em>static int zako0; //ザコ0 画像のハンドラ(読込画像番号)</em><br>
 &nbsp;&nbsp;<em>static int zako1; //ザコ1 画像のハンドラ(読込画像番号)</em><br>
 <br>
@@ -2662,6 +2663,7 @@ private:<br>
 int Image::bossImage{-1}; // Load終わっても-1(初期値)のままだと画像ロードが失敗してますね<br>
 int Image::player{-1};<br>
 int Image::playerBullet{-1};<br>
+<em>int Image::enemyBullet16{-1};</em><br>
 <em>int Image::zako0{-1};</em><br>
 <em>int Image::zako1{-1};</em><br>
 <br>
@@ -2675,6 +2677,9 @@ void Image::Load()<br>
 <br>
 &nbsp;&nbsp;playerBullet = LoadGraph("Image/player_bullet.png");<br>
 &nbsp;&nbsp;assert(playerBullet!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;<em>enemyBullet16 = LoadGraph("Image/enemy_bullet_16.png");<br>
+&nbsp;&nbsp;assert(enemyBullet16!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
 <br>
 &nbsp;&nbsp;<em>zako0 = LoadGraph("Image/zako0.png");<br>
 &nbsp;&nbsp;assert(zako0!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
@@ -3341,7 +3346,231 @@ void Game::Draw()<br>
 	
 	<h1><a id="mozTocId2004" class="mozTocH1"></a>自機のライフの作成</h1>
 	
+	<p><code>Player.h</code>にライフと無敵時間を定義します。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+#define PLAYER_H_<br>
+<br>
+#include "DxLib.h"<br>
+#include "Input.h"<br>
+#include "Image.h"<br>
+#include "MyMath.h"<br>
+<br>
+#include&nbsp;"GameObject.h"<br>
+<br>
+#include&nbsp;"GameManager.h"<br>
+<br>
+// 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意<br>
+class Player : public GameObject<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;const float MoveSpeed = 6; // 移動速度<br>
+&nbsp;&nbsp;<em>int MutekiJikan = 120; // 無敵時間</em><br>
+<br>
+&nbsp;&nbsp;<em>float collisionRadius = 32; // 当たり判定半径</em><br>
+<br>
+&nbsp;&nbsp;<em>int life = 3; // ライフ</em><br>
+&nbsp;&nbsp;<em>int mutekiTimer = 0; // 残り無敵時間。0以下なら無敵じゃないってこと</em><br>
+<br>
+&nbsp;&nbsp;//【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+&nbsp;&nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;// x : 初期位置x<br>
+&nbsp;&nbsp;// y : 初期位置y<br>
+&nbsp;&nbsp;Player(float x, float y, float z=0) // z=0デフォルトにして2Dのときはzを省略できる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;//[3D対応]<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理の関数定義<br>
+&nbsp;&nbsp;void Update();<br>  
+<br>
+&nbsp;&nbsp;// 描画処理の関数定義<br>
+&nbsp;&nbsp;void Draw();<br>
+<br>
+&nbsp;&nbsp;<em>// 敵にぶつかった時の処理<br>
+&nbsp;&nbsp;void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other);</em><br>
+<br>	    
+&nbsp;&nbsp;<em>// ダメージを受ける処理<br>
+&nbsp;&nbsp;void TakeDamage();</em><br>
+};<br>
+<br>
+#endif</p>
 	
+	<p><code>Player.cpp</code>に敵との当たり判定処理を追加します。</p>
+    <p class="source">
+#include&nbsp;"Player.h"<br>
+<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;弾を生成して【使う処理があるのでインクルード必要】<br>
+<br>
+// 更新処理<br>
+void Player::Update()<br>
+{<br>
+&nbsp;&nbsp;// 継承したGameObjectにvx,vyがあるのでvx,vyをfloatで定義し直さないように修正<br>
+&nbsp;&nbsp;<u>float </u>vx = 0; // x方向移動速度<br>
+&nbsp;&nbsp;<u>float </u>vy = 0; // y方向移動速度<br>
+<br>
+&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = -MoveSpeed; // 左<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = MoveSpeed; // 右<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vy = -MoveSpeed; // 上<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vy = MoveSpeed; // 下<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 斜め移動も同じ速度になるように調整<br>
+&nbsp;&nbsp;if (vx != 0 &amp;&amp; vy != 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx /= MyMath::Sqrt2;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vy /= MyMath::Sqrt2;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 実際に位置を動かす<br>
+&nbsp;&nbsp;x += vx;<br>
+&nbsp;&nbsp;y += vy;<br>
+<br>
+&nbsp;&nbsp;// ボタン押下で自機弾を発射<br>
+&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;C++ではAddがpush_backに↓&nbsp;newがmake_shared↓に<br>
+&nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;x, y, 0));//右<br>  
+&nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, -15 * MyMath::Deg2Rad));//右上<br>  
+&nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, +15 * MyMath::Deg2Rad));//右下<br>  
+&nbsp;&nbsp;}<br>
+<br>    
+&nbsp;&nbsp;<em>mutekiTimer--;</em><br>
+}<br>  
+<br>
+// 描画処理<br>
+void Player::Draw()<br>
+{<br>
+&nbsp;&nbsp;<em>// 無敵ではない場合は描画<br>
+&nbsp;&nbsp;// 無敵中は2フレームに1回描画（点滅）<br>
+&nbsp;&nbsp;if (mutekiTimer &lt;= 0 || mutekiTimer % 2 == 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;</em>DrawRotaGraphF(x, y, 1, 0, Image::player, TRUE);<br>
+}<br>
+<br>
+// 敵にぶつかった時の処理<br>
+void Player::OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other)<br>
+{<br>
+&nbsp;&nbsp;<em>// 無敵じゃなければダメージを受ける<br>
+&nbsp;&nbsp;if (mutekiTimer &lt;= 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;}</em><br>
+}<br>
+<br>
+<em>// ダメージを受ける処理<br>
+void Player::TakeDamage()<br>
+{<br>
+&nbsp;&nbsp;life -= 1; // ライフ減少<br>
+<br>
+&nbsp;&nbsp;if (life &lt;= 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// ライフが無くなったら死亡<br>
+&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 無敵時間発動<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mutekiTimer = MutekiJikan;<br>
+&nbsp;&nbsp;}<br>
+}</em><br>
+</p>
+
+	<h1><a id="mozTocId2005" class="mozTocH1"></a>敵弾の作成</h1>	
+
+		<p><code>EnemyBullet.h</code>を改修します。当たり判定を表す変数を追加します。</p>
+    <p class="source">#ifndef ENEMYBULLET_H_<br>
+#define ENEMYBULLET_H_<br>
+<br>
+#include &lt;cmath&gt;&nbsp;//sin,cosを使うのに必要<br>
+<br>
+#include "DxLib.h"<br>
+#include "Image.h"<br>
+#include "Screen.h"<br>
+<br>
+#include "GameObject.h"<br>
+<br>
+// 敵弾クラス<br>
+class EnemyBullet: public GameObject<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;const int VisibleRadius = 8; // 見た目の半径<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// ↓【使用要注意！(テスト用！！)】メモリ消費弾(4MB)撃つたびに4MB消費(下の行のコメント外すと)<br>
+&nbsp;&nbsp;//【実験コード】int memMUDA[1000000]; // 4バイト×1000000= 4MBの無駄メモリ<br>
+<br>
+&nbsp;&nbsp;float angle; // 移動角度(垂直Vertical)<br>
+&nbsp;&nbsp;float angleH=0; // 移動角度(水平Horizontal)<br>
+<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ
+&nbsp;&nbsp;EnemyBullet(float x, float y, float angle, float speed)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angle;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 角度からx方向の移動速度を算出<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = (float)std::cos(angle) * speed;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 角度からy方向の移動速度を算出<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * speed;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// [3D版]コンストラクタ
+&nbsp;&nbsp;EnemyBullet(float x, float y, float z, float angleV, float angleH, float speed)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z; // [3D版]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angleV;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angleH = angleH;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// [3Dの角度は水平・垂直に分割]https://teratail.com/questions/126004
+&nbsp;&nbsp;&nbsp;&nbsp;float cosAngleV = (float)std::cos(angle);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 角度からx方向の移動速度を算出<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vx = cosAngleV * (float)std::sin(angleH) * speed;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 角度からy方向の移動速度を算出<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * speed;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 角度からz方向の移動速度を算出<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vz = cosAngleV * (float)std::cos(angleH) * speed;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;void Update()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(中略)....................<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;void Draw()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, angle, Image::playerBullet,TRUE);<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;<em>// 敵にぶつかった時の処理<br>
+&nbsp;&nbsp;void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;}</em><br>
+};<br>
+<br>
+#endif<br></p>
 	
 </body>
 </html>
