@@ -1970,7 +1970,7 @@ class PlayerBullet<br>
 {<br>
 public:<br>
 &nbsp;&nbsp;const float Speed = 25; // 移動速度<br>
-&nbsp;&nbsp;<em>const int VisibleRadius = 16; // 見た目の半径</em><br>
+&nbsp;&nbsp;const int VisibleRadius = 16; // 見た目の半径<br>
 &nbsp;&nbsp;<br>
 &nbsp;&nbsp;// ↓【使用要注意！(テスト用！！)】メモリ消費弾(4MB)撃つたびに4MB消費(下の行のコメント外すと)<br>
 &nbsp;&nbsp;<em>int memMUDA[1000000]; // 4バイト×1000000= 4MBの無駄メモリ</em><br>
@@ -2012,7 +2012,7 @@ public:<br>
 <p>無駄メモリをあえて人為的に定義して弾を撃ってみましょう。<br>
 メモリの【グラフがうなぎ上りに上昇しなければ】プレイヤの弾に関してはメモリの削除と開放が成功している証拠です。<br>
 <br>
-<p> <img src="image/memory_leak.png" alt="" style="width: 773px; height: 467px;"></p>
+<p> <img src="image/memory_valance_and.png" alt="" style="width: 773px; height: 467px;"></p>
 
 <p>試しに<code>Game.cpp</code>で削除処理をわすれた場合の実験をしてみましょう。</p>
     <p class="source">#include "Game.h"<br>
@@ -2127,10 +2127,6 @@ public:<br>
 <br>
 #endif<br></p>
 <br>
-<p>無駄メモリをあえて人為的に定義して弾を撃ってみましょう。<br>
-メモリの【グラフがうなぎ上りに上昇しなければ】プレイヤの弾に関してはメモリの削除と開放が成功している証拠です。<br>
-<br>
-<p> <img src="image/memory_leak.png" alt="" style="width: 773px; height: 467px;"></p>
 
 <p><code>Game.cpp</code>の削除処理ももとに戻しましょう。</p>
     <p class="source">#include "Game.h"<br>
