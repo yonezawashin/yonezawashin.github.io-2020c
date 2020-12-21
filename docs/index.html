@@ -2956,7 +2956,7 @@ public:<br>
     <p class="source">#include "Game.h"<br>
 #include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
 #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-<em>#include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+#include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
@@ -3062,11 +3062,11 @@ public:<br>
 &nbsp;&nbsp;// 更新処理<br>
 &nbsp;&nbsp;void Update() override<br>
 &nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // 左へ移動<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>sinMove += 1; // Sinの波運動の角度を進める</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;</em><br>
-&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // 左へ移動<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<em>//[前の角度でのY] - [今の角度でのY]の差を足すことで【ベースのyの位置 ± sinの動き】になる</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>y += currentSinY - prevSinY; // 上下方向のSinの波運動</em><br>
 &nbsp;&nbsp;}<br>
 <br>
