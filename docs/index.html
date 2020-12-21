@@ -3067,6 +3067,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>sinMove += 1; // Sinの波運動の角度を進める</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;</em><br>
+<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>y += currentSinY - prevSinY; // 上下方向のSinの波運動</em><br>
 &nbsp;&nbsp;}<br>
@@ -3093,10 +3094,10 @@ void Game::Init()<br>
 <br>
 &nbsp;&nbsp;(中略)..................<br>
 <br>
-&nbsp;&nbsp;// とりあえず適当に敵を生成
-&nbsp;&nbsp;gm.enemies.push_back(std::make_shared<Zako0>((float)600, (float)100));
-&nbsp;&nbsp;gm.enemies.push_back(std::make_shared<Zako0>((float)1000, (float)500));
-&nbsp;&nbsp;<em>gm.enemies.push_back(std::make_shared<Zako1>((float)1000, (float)150));</em>
+&nbsp;&nbsp;// とりあえず適当に敵を生成<br>
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared<Zako0>((float)600, (float)100));<br>
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared<Zako0>((float)1000, (float)500));<br>
+&nbsp;&nbsp;<em>gm.enemies.push_back(std::make_shared<Zako1>((float)1000, (float)150));</em><br>
 };<br>
 <br>
 	
