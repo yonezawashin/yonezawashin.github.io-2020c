@@ -3531,7 +3531,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * speed;<br>
 &nbsp;&nbsp;}<br>
 <br>
-&nbsp;&nbsp;// [3D版]コンストラクタ
+&nbsp;&nbsp;// [3D版]コンストラクタ<br>
 &nbsp;&nbsp;EnemyBullet(float x, float y, float z, float angleV, float angleH, float speed)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
 &nbsp;&nbsp;{<br>
@@ -3541,7 +3541,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angleV;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angleH = angleH;<br>
 <br>
-&nbsp;&nbsp;&nbsp;&nbsp;// [3Dの角度は水平・垂直に分割]https://teratail.com/questions/126004
+&nbsp;&nbsp;&nbsp;&nbsp;// [3Dの角度は水平・垂直に分割]https://teratail.com/questions/126004<br>
 &nbsp;&nbsp;&nbsp;&nbsp;float cosAngleV = (float)std::cos(angle);<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// 角度からx方向の移動速度を算出<br>
 &nbsp;&nbsp;&nbsp;&nbsp;vx = cosAngleV * (float)std::sin(angleH) * speed;<br>
