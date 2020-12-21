@@ -2588,8 +2588,9 @@ public:<br>
 #endif<br></p>
 
 
-
 <h2><a id="mozTocId00082" class="mozTocH1"></a>Zako0クラスの作成</h2>
+
+
 <p><code>Zako0.h</code>を作成します。</p>
 <p class="source">#ifndef ZAKO_0_H_<br>
 #define ZAKO_0_H_<br>
@@ -2792,7 +2793,7 @@ void Game::Draw()<br>
 </p>
 </body>
 <body>
-    <p class="title">[C++移植]シューティングゲーム 1</p>
+    <p class="title">[C++移植]シューティングゲーム 2</p>
     <br>
     <ol id="mozToc">
       <!--mozToc h1 1-->
@@ -2805,6 +2806,277 @@ void Game::Draw()<br>
 </li>
     </ol>
     <h1><a id="mozTocId2001" class="mozTocH1"></a>敵と自機弾の当たり判定の作成</h1>
-    <p>前期でやったシューティングの制作をC++に移植することで以下を作業を通じて【体得しよう】。</p>
+    <p>当たり判定を移植してゆきます。</p>
+	
+<p><code>MyMath.h</code>を編集します：</p>
+    <p class="source">#ifndef _MYMATH_H<br>
+#define _MYMATH_H<br>
+// 数学関連クラス<br>class MyMath<br>{<br>
+public: <br>
+&nbsp;&nbsp;static const float Sqrt2;&nbsp;&nbsp;// = 1.41421356237f;<br>
+&nbsp;&nbsp;static const float PI; // 円周率 3.14159265359f;<br>
+&nbsp;&nbsp;static const float Deg2Rad; // 度からラジアンに変換する定数 PI / 180f;<br>
+<br>
+&nbsp;&nbsp;<em>/// &lt;summary&gt;<br>
+&nbsp;&nbsp;/// 円と円が重なっているかを調べる<br>
+&nbsp;&nbsp;/// &lt;/summary&gt;<br>
+&nbsp;&nbsp;/// &lt;param name="x1"&gt;円1の中心x&lt;/param&gt;<br>
+&nbsp;&nbsp;/// &lt;param name="y1"&gt;円1の中心y&lt;/param&gt;<br>
+&nbsp;&nbsp;/// &lt;param name="radius1"&gt;円1の半径&lt;/param&gt;<br>
+&nbsp;&nbsp;/// &lt;param name="x2"&gt;円2の中心x&lt;/param&gt;<br>
+&nbsp;&nbsp;/// &lt;param name="y2"&gt;円2の中心y&lt;/param&gt;<br>
+&nbsp;&nbsp;/// &lt;param name="radius2"&gt;円2の半径&lt;/param&gt;<br>
+&nbsp;&nbsp;/// &lt;returns&gt;重なっていればtrue、重なっていなければfalseを返却する&lt;/returns&gt;<br>
+&nbsp;&nbsp;static bool CircleCircleIntersection(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float x1, float y1, float radius1,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float x2, float y2, float radius2)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; ((radius1 + radius2) * (radius1 + radius2));<br>
+&nbsp;&nbsp;}</em><br>
+}; // 【注意】セミコロン抜けで【宣言が必要ですエラー】<br>
+<br>
+#endif //【宣言が必要ですエラーは上のセミコロン抜け】</p>
+<br>
+	
+	
+<p><code>Enemy.h</code>を改修します。当たり判定の半径を表す変数と、死亡フラグ、被弾時の処理を追加します。</p>
+<p class="source">#ifndef ENEMY_H_<br>
+#define ENEMY_H_<br>
+<br>
+#include "GameObject.h"<br>
+<br>
+#include "GameManager.h"<br>
+<br>
+// 敵の基底クラス。<br>
+// 全ての敵は、このクラスを継承して作る。<br>
+// ★【勉強】abstract型はC++にない!!【純粋仮想関数】を使って作る<br>
+// クラスの基本(C++11).pdfの17ページの下のほう(クラスの基本④)<br>
+class Enemy : public GameObject<br>
+{<br>
+public:<br><br>
+&nbsp;&nbsp;//【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+&nbsp;&nbsp;GameManager& gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&)を得る<br>
+<br>
+&nbsp;&nbsp;float collisionRadius = 32; // 当たり判定の半径<br>
+&nbsp;&nbsp;<em>float life = 1; // 耐久力</em><br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;Enemy(float x, float y, float z=0)//★z=0をデフォルトとすることでx,yだけでも初期化でき2Dと3D両立<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: GameObject() // GameObjectをベースとして初期化処理を継承する<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Enemy";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理。派生クラスでオーバーライドして使う<br>
+&nbsp;&nbsp;virtual void Update() = 0;//virtual ～ = 0;で【純粋仮想関数に】これで【C#のabstract型に】<br>
+<br>
+&nbsp;&nbsp;// 描画処理。派生クラスでオーバーライドして使う<br>
+&nbsp;&nbsp;virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
+<br>
+&nbsp;&nbsp;//【勉強】関数 = 0って何?と思った人は【関数もメモリ上では住所アドレスに過ぎない】ことを知ろう<br>
+&nbsp;&nbsp;// ★関数 = 0はつまり関数の住所ポインタの針が【メモリ上の何かを針で参照してない(住所不定無処理)】<br>
+&nbsp;&nbsp;// つまり【関数が未定義ってこと】＝【あいまい部分があるabstractクラスってこと】<br>
+&nbsp;&nbsp;//http://etc2myday.jugem.jp/?eid=204<br>
+&nbsp;&nbsp;//http://wisdom.sakura.ne.jp/programming/c/c54.html<br>
+&nbsp;&nbsp;//逆にいうと【関数を配列】にするっていうトリッキーなこともできる!<br>
+&nbsp;&nbsp;//http://www.ced.is.utsunomiya-u.ac.jp/lecture/2012/prog/p3/kadai3/virtualfunc2.php<br>
+<br>
+&nbsp;&nbsp;<em>// 自機弾に当たったときの処理 関数の【★引数をGameObject型↓にすることで循環インクルード抑止】<br>
+&nbsp;&nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;life -= 1; // ライフを減らす<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// ライフが無くなったら、死亡
+&nbsp;&nbsp;&nbsp;&nbsp;if (life &lt;= 0)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;}</em><br>
+};<br>
+<br>
+#endif<br>
+</p>
+	
+	
+	<p><code>PlayerBullet.h</code>を改修します。当たり判定を表す変数を追加します。</p>
+    <p class="source">#ifndef PLAYERBULLET_H_<br>
+#define PLAYERBULLET_H_<br>
+<br>
+#include &lt;cmath&gt;&nbsp;//sin,cosを使うのに必要<br>
+<br>
+#include "DxLib.h"<br>
+#include "Image.h"<br>
+#include "Screen.h"<br>
+<br>
+<em>#include "GameObject.h"</em><br>
+<br>
+// 自機弾クラス<br>
+<em>// 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意</em><br>
+class PlayerBullet<em>: public GameObject</em><br>
+{<br>
+public:<br>
+&nbsp;&nbsp;const float Speed = 25; // 移動速度<br>
+&nbsp;&nbsp;const int VisibleRadius = 16; // 見た目の半径<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// ↓【使用要注意！(テスト用！！)】メモリ消費弾(4MB)撃つたびに4MB消費(下の行のコメント外すと)<br>
+&nbsp;&nbsp;//【実験コード】int memMUDA[1000000]; // 4バイト×1000000= 4MBの無駄メモリ<br>
+<br>
+&nbsp;&nbsp;<em>float collisionRadius = 16; // 当たり判定の半径</em><br>
+&nbsp;&nbsp;float angle; // 移動角度<br>
+<br>
+<br>
+&nbsp;&nbsp;(中略)....................<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;void Update()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(中略)....................<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;void Draw()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, angle, Image::playerBullet,TRUE);<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;<em>// 敵にぶつかった時の処理
+&nbsp;&nbsp;void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other)
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;
+&nbsp;&nbsp;}</em>
+};<br>
+<br>
+#endif<br></p>
+
+	<p><code>Game.cpp</code>を改修します。自機弾と敵が当たっているか調べる処理を追加します。</p>
+    <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+<em>#include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+<br>
+&nbsp;&nbsp;gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+<br>
+&nbsp;&nbsp;// 自機弾の更新処理<br>
+&nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// 敵の更新処理<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.enemies)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<em>// 自機弾と敵の衝突判定<br>
+&nbsp;&nbsp;for(const auto&amp; playerBullet : gm.playerBullets)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 自機弾が死んでたらスキップする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (playerBullet-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;for(const auto&amp; enemy : gm.enemies)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 敵が死んでたらスキップする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (enemy-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 自機弾と敵が重なっているか？<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;OnCollisionEnemy(enemy);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 衝突の結果、自機弾が死んだら、この弾のループはおしまい<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (playerBullet-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// 自機弾のリストから死んでるものを除去する
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+&nbsp;&nbsp;<em>// 敵のリストから死んでるものを除去する
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.enemies,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Enemy&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
+&nbsp;&nbsp;<br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+(以下略)............<br>
+</p>
+	
+<p><code>Zako1.h</code>のlifeを5にすることでZako1を硬くしてみましょう。<br>
+ついでにsinの波運動も試してみましょう。</p>
+<p class="source">#ifndef ZAKO_1_H_<br>
+#define ZAKO_1_H_<br>
+<br>
+#include "Enemy.h"<br>
+<br>
+<em>#include &lt;cmath&gt; // Sinの計算に使う<br>
+#include "MyMath.h"</em><br>
+#include "Image.h"<br>
+<br>
+// ザコ1クラス<br>
+class Zako1 : public Enemy<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;<em>float sinMove = 0; // Sinの動きをする際の0～360度</em><br>
+&nbsp;&nbsp;<em>float sinRadius = 30; // Sinの動きをするときの半径</em><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;Zako1(float x, float y, float z=0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako1";//オブジェクトの種類判別タグ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>life = 5;</em><br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;void Update() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>sinMove += 1; // Sinの波運動の角度を進める</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // 左へ移動<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>//[前の角度でのY] - [今の角度でのY]の差を足すことで【ベースのyの位置 ± sinの動き】になる</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>y += currentSinY - prevSinY; // 上下方向のSinの波運動</em><br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;void Draw() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako1, TRUE);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br>
+</p>
+	
 </body>
 </html>
