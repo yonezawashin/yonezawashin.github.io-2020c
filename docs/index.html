@@ -2279,24 +2279,25 @@ public: <br>
 	<br>
 	const float MyMath::Sqrt2 = 
 	1.41421356237f;//(floatは有効桁は実質7桁まで正確だがそれ以降は環境によって誤差出る)<br>
-	<em>const float MyMath::PI = 3.14159265359F; // 円周率<br>
-	const float MyMath::Deg2Rad = MyMath::PI / 180F; // 度からラジアンに変換する定数</em><br>
+	<em>const float MyMath::PI = 3.14159265359f; // 円周率<br>
+	const float MyMath::Deg2Rad = MyMath::PI / 180; // 度からラジアンに変換する定数</em><br>
 <br>
 </p>
 		
 		
 <p><code>Player.cpp</code>のプレイヤの弾の生成を改修します。</p>
     <p class="source">#include "Player.h"<br>
-<em>#include "MyMath.h"</em>
-(前略)<br>
+<em>#include "MyMath.h"<br></em>
+<br>
+(前略)...................................<br>
 <br>
 &nbsp;&nbsp;// ボタン押下で自機弾を発射<br>
 &nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;C++ではAddがpush_backに↓&nbsp;newがmake_shared↓に<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, 0));//右</em><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<em>gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, -15F * MyMath.Deg2Rad));//右上</em><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<em>gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, +15f * MyMath.Deg2Rad));//右下</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, -15 * MyMath::Deg2Rad));//右上</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, +15 * MyMath::Deg2Rad));//右下</em><br>
 &nbsp;&nbsp;}<br>
 }<br>  
 <br>
