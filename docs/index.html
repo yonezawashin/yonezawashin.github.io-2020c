@@ -2465,7 +2465,7 @@ public:<br>
 &nbsp;&nbsp;// コンストラクタ<br>
 &nbsp;&nbsp;// x : 初期位置x<br>
 &nbsp;&nbsp;// y : 初期位置y<br>
-&nbsp;&nbsp;Player(float x, float y<em>, float z=0</em>)//z=0デフォルトにして2Dのときはzを省略できる<br>
+&nbsp;&nbsp;Player(float x, float y<em>, float z=0</em>) <em>// z=0デフォルトにして2Dのときはzを省略できる</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>: GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！</em><br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
@@ -2527,7 +2527,9 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * Speed;<br>
 &nbsp;&nbsp;}<br>
 <br><br>
-&nbsp;&nbsp;<em>// [3D用]コンストラクタ(引数4つの別窓口の初期化を用意)<br>
+&nbsp;&nbsp;<em>//【★勉強】初期化は何種類も【別窓口を】用意できる<br>
+&nbsp;&nbsp;//マニアックな初期設定は【①別窓口】【②デフォルト=0で省略可にする】<br>
+&nbsp;&nbsp;// [3D用]コンストラクタ(引数4つの別窓口の初期化を用意)<br>
 &nbsp;&nbsp;PlayerBullet(float x, float y, float z, float angle)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
 &nbsp;&nbsp;{<br>
