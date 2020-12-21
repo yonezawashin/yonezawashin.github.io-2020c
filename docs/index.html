@@ -3166,7 +3166,7 @@ public:<br>
 // 更新処理<br>
 void Player::Update()<br>
 {<br>
-&nbsp;&nbsp;// 継承したGameObjectにvx,vyがあるのでvx,vyをfloatで定義し直さないように修正
+&nbsp;&nbsp;// 継承したGameObjectにvx,vyがあるのでvx,vyをfloatで定義し直さないように修正<br>
 &nbsp;&nbsp;<u>float </u>vx = 0; // x方向移動速度<br>
 &nbsp;&nbsp;<u>float </u>vy = 0; // y方向移動速度<br>
 <br>
@@ -3327,7 +3327,7 @@ void Game::Draw()<br>
 &nbsp;&nbsp;&nbsp;&nbsp;e-&gt;Draw();<br>
 &nbsp;&nbsp;}<br>
 <br>
-&nbsp;&nbsp;<em>if (!player.isDead) // 自機が死んでいなければ
+&nbsp;&nbsp;<em>if (!player.isDead) // 自機が死んでいなければ<br>
 &nbsp;&nbsp;&nbsp;&nbsp;</em>player-&gt;Draw(); // プレイヤの描画【忘れるとプレイヤ表示されない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の描画処理<br>
@@ -3339,7 +3339,7 @@ void Game::Draw()<br>
 };<br>
 </p>
 	
-	<h1><a id="mozTocId2003" class="mozTocH1"></a>自機と敵の当たり判定</h1>
+	<h1><a id="mozTocId2004" class="mozTocH1"></a>自機のライフの作成</h1>
 	
 	
 	
