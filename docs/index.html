@@ -3375,7 +3375,7 @@ public:<br>
 &nbsp;&nbsp;const float MoveSpeed = 6; // 移動速度<br>
 &nbsp;&nbsp;<em>int MutekiJikan = 120; // 無敵時間</em><br>
 <br>
-&nbsp;&nbsp;<em>float collisionRadius = 32; // 当たり判定半径</em><br>
+&nbsp;&nbsp;float collisionRadius = 32; // 当たり判定半径<br>
 <br>
 &nbsp;&nbsp;<em>int life = 3; // ライフ</em><br>
 &nbsp;&nbsp;<em>int mutekiTimer = 0; // 残り無敵時間。0以下なら無敵じゃないってこと</em><br>
@@ -3400,8 +3400,8 @@ public:<br>
 &nbsp;&nbsp;// 描画処理の関数定義<br>
 &nbsp;&nbsp;void Draw();<br>
 <br>
-&nbsp;&nbsp;<em>// 敵にぶつかった時の処理<br>
-&nbsp;&nbsp;void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other);</em><br>
+&nbsp;&nbsp;// 敵にぶつかった時の処理<br>
+&nbsp;&nbsp;void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other);<br>
 <br>	    
 &nbsp;&nbsp;<em>// ダメージを受ける処理<br>
 &nbsp;&nbsp;void TakeDamage();</em><br>
@@ -3459,7 +3459,7 @@ void Player::Update()<br>
 &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, +15 * MyMath::Deg2Rad));//右下<br>  
 &nbsp;&nbsp;}<br>
 <br>    
-&nbsp;&nbsp;<em>mutekiTimer--;</em><br>
+&nbsp;&nbsp;<em>mutekiTimer--; // 無敵タイマーは無条件で毎フレームカウントダウン</em><br>
 }<br>  
 <br>
 // 描画処理<br>
@@ -3477,7 +3477,7 @@ void Player::OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other)<br>
 &nbsp;&nbsp;<em>// 無敵じゃなければダメージを受ける<br>
 &nbsp;&nbsp;if (mutekiTimer &lt;= 0)<br>
 &nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;TakeDamage();<br>
 &nbsp;&nbsp;}</em><br>
 }<br>
 <br>
@@ -3502,7 +3502,7 @@ void Player::TakeDamage()<br>
 <h1><a id="mozTocId2005" class="mozTocH1"></a>敵弾の作成</h1>	
 	<h2><a id="mozTocId20051" class="mozTocH1"></a>敵弾の作成(発射間隔を空けて撃つ方法を学ぶ)</h2>
 
-		<p><code>EnemyBullet.h</code>を改修します。当たり判定を表す変数を追加します。</p>
+		<p><code>EnemyBullet.h</code>を新規作成します。</p>
     <p class="source">#ifndef ENEMYBULLET_H_<br>
 #define ENEMYBULLET_H_<br>
 <br>
@@ -3634,6 +3634,7 @@ protected:<br>
 #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
 <em>#include&nbsp;"EnemyBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
 #include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako1.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
@@ -3767,7 +3768,7 @@ void Game::Draw()<br>
 };<br>
 </p>	
 
-<p><code>Zako0.h</code>の弾の発射間隔を開けます。</p>
+<p><code>Zako0.h</code>に弾を発射間隔を開けながら撃たせます。</p>
 <p class="source">#ifndef ZAKO_0_H_<br>
 #define ZAKO_0_H_<br>
 <br>
@@ -3916,10 +3917,10 @@ public:<br>
 #endif<br></p>
 
 	<p>staticなクラスなので<code>MyRandom.cpp</code>を作成して変数をcppで定義初期化します。</p>
-<p class="source">#include "MyRandom.h"
-
-std::random_device MyRandom::rnd;// 非決定的な乱数生成器
-std::mt19937 MyRandom::random; // メルセンヌ・ツイスタの32ビット版 https://qiita.com/angel_p_57/items/971d0208186f81d5d044
+<p class="source">#include "MyRandom.h"<br>
+<br>
+std::random_device MyRandom::rnd;// 非決定的な乱数生成器<br>
+std::mt19937 MyRandom::random; // メルセンヌ・ツイスタの32ビット版 https://qiita.com/angel_p_57/items/971d0208186f81d5d044<br>
 </p>
 	
 <p><code>Zako2.h</code>を作成して弾の発射方向を-15度～+15度までランダムに散らすようにしてみます。</p>
