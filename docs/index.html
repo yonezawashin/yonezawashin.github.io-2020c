@@ -2831,8 +2831,12 @@ void Game::Draw()<br>
       <li><a href="#mozTocId2003">自機と敵の当たり判定</a></li>
       <li><a href="#mozTocId2004">自機のライフの作成</a></li>
       <li><a href="#mozTocId2005">敵弾の作成</a><br>
-      	<a href="#mozTocId20052">- 練習問題(色んな弾の撃ち方を試す)</a>
+      	<a href="#mozTocId20052">- 練習問題(MyRandomで±15度に散乱弾を撃つ敵キャラ)</a>
+      	<a href="#mozTocId20053">- 練習問題(やられると点滅後自爆する敵キャラ)</a>
       </li>
+	    <br>
+	    <p>次のテキスト3はこちら。</p><br>
+	    <a href="#mozTocId3000">[C++移植]シューティングゲーム 3</a><br>
     </ol>
     <h1><a id="mozTocId2001" class="mozTocH1"></a>敵と自機弾の当たり判定の作成</h1>
     <p>当たり判定を移植してゆきます。</p>
@@ -4145,6 +4149,265 @@ void Game::Draw()<br>
 	
 <br>	
 	
+<a id="mozTocId3000" class="mozTocH1"></a>
+</body>
+<body>
+    <p class="title">[C++移植]シューティングゲーム 3</p>
+    <br>
+    <ol id="mozToc">
+      <!--mozToc h1 1-->
+      <li><a href="#mozTocId3001">自機と敵弾の当たり判定</a></li>
+      <li><a href="#mozTocId3002">爆発エフェクトの作成(分割画像DivImage型の定義)</a></li>
+      <li><a href="#mozTocId3003">ボスの作成</a></li>
+	    <br>
+	    <p>次のテキスト4はこちら。</p><br>
+	    <a href="#mozTocId4000">[C++移植]シューティングゲーム 4</a><br>
+    </ol>
+    <h1><a id="mozTocId3001" class="mozTocH1"></a>自機と敵弾の当たり判定</h1>
+	
+    <p>自機と敵弾がぶつかったら、自機がダメージを受けるようにしましょう。</p>
+	
+	<p><code>EnemyBullet.h</code>に当たり判定の大きさを表す変数を追加します。</p>
+    <p class="source">#ifndef ENEMYBULLET_H_<br>
+#define ENEMYBULLET_H_<br>
+<br>
+#include &lt;cmath&gt;&nbsp;//sin,cosを使うのに必要<br>
+<br>
+#include "DxLib.h"<br>
+#include "Image.h"<br>
+#include "Screen.h"<br>
+<br>
+#include "GameObject.h"<br>
+<br>
+// 敵弾クラス<br>
+class EnemyBullet: public GameObject<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;const int VisibleRadius = 8; // 見た目の半径<br>
+&nbsp;&nbsp;<em>float collisionRadius = 8; // 当たり判定半径</em><br>
+<br>
+&nbsp;&nbsp;(以下略)........................<br>
+</p>
+	
+	<p><code>Player.h</code>に敵弾とぶつかったときの処理の定義を追加します。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+#define PLAYER_H_<br>
+<br>
+#include "DxLib.h"<br>
+#include "Input.h"<br>
+#include "Image.h"<br>
+#include "MyMath.h"<br>
+<br>
+#include&nbsp;"GameObject.h"<br>
+<br>
+#include&nbsp;"GameManager.h"<br>
+<br>
+// 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意<br>
+class Player : public GameObject<br>
+{<br>
+public:<br>
+<br>
+&nbsp;&nbsp;(中略)...........<br>
+<br>
+&nbsp;&nbsp;// 敵にぶつかった時の処理<br>
+&nbsp;&nbsp;void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other);<br>
+<br>
+&nbsp;&nbsp;<em>// 敵弾とぶつかった時の処理<br>
+&nbsp;&nbsp;void OnCollisionEnemyBullet(std::shared_ptr&lt;GameObject&gt; other);</em><br>
+<br>
+&nbsp;&nbsp;// ダメージを受ける処理<br>
+&nbsp;&nbsp;void TakeDamage();<br>
+};<br>
+<br>
+#endif</p>
+	
+	<p><code>Player.cpp</code>に敵弾とぶつかったときの処理を追加します。</p>
+    <p class="source">
+#include&nbsp;"Player.h"<br>
+<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;弾を生成して【使う処理があるのでインクルード必要】<br>
+<br>
+// 更新処理<br>
+void Player::Update()<br>
+{<br>
+&nbsp;&nbsp;(中略).........<br>
+}<br>  
+<br>
+// 描画処理<br>
+void Player::Draw()<br>
+{<br>
+&nbsp;&nbsp;(中略).........<br>
+}<br>
+<br>
+// 敵にぶつかった時の処理<br>
+void Player::OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other)<br>
+{<br>
+&nbsp;&nbsp;<em>// 無敵じゃなければダメージを受ける<br>
+&nbsp;&nbsp;if (mutekiTimer &lt;= 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;TakeDamage();<br>
+&nbsp;&nbsp;}</em><br>
+}<br>
+<br>
+<em>// 敵弾とぶつかった時の処理<br>
+void Player::OnCollisionEnemyBullet(std::shared_ptr&lt;GameObject&gt; other)<br>
+{<br>
+&nbsp;&nbsp;// 無敵じゃなければダメージを受ける<br>
+&nbsp;&nbsp;if (mutekiTimer &lt;= 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;TakeDamage();<br>
+&nbsp;&nbsp;}<br>
+}</em><br>
+<br>
+// ダメージを受ける処理<br>
+void Player::TakeDamage()<br>
+{<br>
+&nbsp;&nbsp;life -= 1; // ライフ減少<br>
+<br>
+&nbsp;&nbsp;if (life &lt;= 0)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// ライフが無くなったら死亡<br>
+&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;else<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 無敵時間発動<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mutekiTimer = MutekiJikan;<br>
+&nbsp;&nbsp;}<br>
+}<br>
+</p>
+	
+		<p><code>Game.cpp</code>に当たり判定の処理を追加します。</p>
+    <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"EnemyBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako1.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako2.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako3.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+<br>
+&nbsp;&nbsp;if (!gm.player-&gt;isDead) // 自機が死んでいなければ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+<br>
+&nbsp;&nbsp;// 自機弾の更新処理<br>
+&nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// 敵弾の更新処理<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.enemyBullets)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<em>// 自機と敵弾の衝突判定<br>
+&nbsp;&nbsp;foreach (const auto&amp; enemyBullet : gm.enemyBullets)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 自機が死んでたらこれ以上判定しない<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (gm.player-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 敵弾が死んでたらスキップ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (enemyBullet-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemyBullet-&gt;x, enemyBullet-&gt;y, enemyBullet-&gt;collisionRadius))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;OnCollisionEnemyBullet(enemyBullet);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}</em><br>
+<br>
+&nbsp;&nbsp;// 敵の更新処理<br>
+&nbsp;&nbsp;for (const auto&amp; e : gm.enemies)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;e-&gt;Update();<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// 自機弾と敵の衝突判定<br>
+&nbsp;&nbsp;for(const auto&amp; playerBullet : gm.playerBullets)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 自機弾が死んでたらスキップする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (playerBullet-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for(const auto&amp; enemy : gm.enemies)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 敵が死んでたらスキップする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (enemy-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 自機弾と敵が重なっているか？<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;OnCollisionEnemy(enemy);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 衝突の結果、自機弾が死んだら、この弾のループはおしまい<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (playerBullet-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// 自機と敵の衝突判定<br>
+&nbsp;&nbsp;for(const auto&amp; enemy : gm.enemies)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 自機が死んでたらこれ以上判定しない<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (gm.player-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 敵が死んでたらスキップ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (enemy-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;OnCollisionEnemy(enemy);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// 自機弾のリストから死んでるものを除去する<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+<br>
+&nbsp;&nbsp;// 敵のリストから死んでるものを除去する<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.enemies,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Enemy&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+&nbsp;&nbsp;<br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+&nbsp;&nbsp;(中略)......<br>
+};<br>
+</p>
 	
 </body>
 </html>
