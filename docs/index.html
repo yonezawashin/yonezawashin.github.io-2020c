@@ -3700,7 +3700,7 @@ void Game::Update()<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if (enemy-&gt;isDead)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
 <br>
-&nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる
+&nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
@@ -3751,7 +3751,7 @@ void Game::Draw()<br>
 };<br>
 </p>	
 
-<p><code>Zako0.h</code>を作成します。</p>
+<p><code>Zako0.h</code>の弾の発射間隔を開けます。</p>
 <p class="source">#ifndef ZAKO_0_H_<br>
 #define ZAKO_0_H_<br>
 <br>
@@ -3782,6 +3782,51 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>if (counter % 10 == 0)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.push_back(std::make_shared&lt;EnemyBullet&gt;(x, y, 180 * MyMath::Deg2Rad, 8));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;void Draw() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako0, TRUE);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br>
+</p>
+
+	<p><code>Zako0.h</code>の弾の発射間隔を開ける方法は別のやり方もあります。</p>
+<p class="source">#ifndef ZAKO_0_H_<br>
+#define ZAKO_0_H_<br>
+<br>
+#include "Enemy.h"<br>
+#include "Image.h"<br>
+<em>#include "MyMath.h"</em><br>
+<br>
+// ザコ0クラス<br>
+class Zako0 : public Enemy<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;<em>int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）</em><br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;Zako0(float x, float y, float z=0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako0";<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;void Update() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>coolTime--;</em><br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>if (coolTime <= 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.push_back(std::make_shared&lt;EnemyBullet&gt;(x, y, 180 * MyMath::Deg2Rad, 8));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;coolTime += 10;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
 &nbsp;&nbsp;}<br>
 <br>
