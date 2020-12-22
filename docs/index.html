@@ -4065,7 +4065,8 @@ public:<br>
 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;bombCounter--; // 爆発カウンタは常にカウントダウン(-1から始まるときは0を通過しないので爆発しない)<br>
 <br>
-&nbsp;&nbsp;&nbsp;&nbsp;if(life &lt;= 0) bombCounter = BombTime; // 爆発モードに入るとbombCounterがプラス値になり0になると爆発<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if(life &lt;= 0 && bombCounter &lt; 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bombCounter = BombTime; // 爆発モードに入る(bombCounterがプラス値になり0になると爆発)<br>
 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;if (bombCounter == 0) // 初期状態は-1からカウントダウン-1,-2,-3..するからここには入らずに済む<br>
 &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -4077,14 +4078,23 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;}<br>
 &nbsp;&nbsp;}<br>
 <br>
+&nbsp;&nbsp;// 【勉強】共通処理を上書きオーバーライドで上塗りして共通処理を無効化・乗っ取るテクニック<br>
+&nbsp;&nbsp;// 自機弾との衝突処理を★【上書きオーバーライド】して死亡フラグが立たないように<br>
+&nbsp;&nbsp;void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet) override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;life -= 1; // ライフを減らす<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 死亡フラグは衝突ではONにしない<br>
+&nbsp;&nbsp;}<br>
+<br>	
 &nbsp;&nbsp;// 描画処理<br>
 &nbsp;&nbsp;void Draw() override<br>
 &nbsp;&nbsp;{&nbsp;&nbsp;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;//【ド・モルガンの定理を学ぼう】||と&&の逆の関係性の法則<br>
 &nbsp;&nbsp;&nbsp;&nbsp;//【勉強】条件【または||】は条件【かつ&&】の(life &lt;= 0 && bombCounter &gt; 0)のちょうど逆条件！<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if(life &gt; 0 || bombCounter &lt;= 0<br>
-&nbsp;&nbsp;&nbsp;&nbsp; || (bombCounter % 4 &lt; 2) ) // パラパラ4枚の周期で余り2以下の時だけ描く<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako2, TRUE);<br>
+&nbsp;&nbsp;&nbsp;&nbsp; || (bombCounter % 8 &lt; 4) ) //[点滅]パラパラ8枚の周期で余り4以下の時だけ描く<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako3, TRUE);<br>
 &nbsp;&nbsp;}<br>
 };<br>
 <br>
