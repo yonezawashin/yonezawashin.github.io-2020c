@@ -4020,8 +4020,10 @@ void Game::Draw()<br>
 <br>
 &nbsp;&nbsp;(中略)..................<br>
 };<br>
-</p>	
-
+</p>
+<br>	
+	<p>どうでしょうか(-15度～+15度)の散乱弾を撃てましたか？。</p>
+<br>
 	<p>こんどは<code>Zako3.h</code>を作成して10ダメージ受けると点滅状態(5秒=5×60=300フレーム)になり、isDeadと同時に弾を全方向に0度～360度に散らすようにしてみます。</p>
 <p class="source">#ifndef ZAKO_3_H_<br>
 #define ZAKO_3_H_<br>
@@ -4077,7 +4079,7 @@ public:<br>
 &nbsp;&nbsp;// 描画処理<br>
 &nbsp;&nbsp;void Draw() override<br>
 &nbsp;&nbsp;{&nbsp;&nbsp;//【ド・モルガンの定理を学ぼう】||と&&の逆の関係性の法則<br>
-&nbsp;&nbsp;&nbsp;&nbsp;//【勉強】条件または||は条件&&の(life &lt;= 0 && bombCounter &gt; 0)のちょうど逆条件！
+&nbsp;&nbsp;&nbsp;&nbsp;//【勉強】条件または||は条件&&の(life &lt;= 0 && bombCounter &gt; 0)のちょうど逆条件！<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if(life &gt; 0 || bombCounter &lt;= 0<br>
 &nbsp;&nbsp;&nbsp;&nbsp; || (bombCounter % 4 &lt; 2) ) // パラパラ4枚の周期で余り2以下の時だけ描く<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako2, TRUE);<br>
@@ -4125,6 +4127,10 @@ void Game::Draw()<br>
 &nbsp;&nbsp;(中略)..................<br>
 };<br>
 </p>	
+<br>
+	<p>どうでしょうか爆弾っぽい自爆タイプの敵キャラが作れましたか？。</p>
+<br>	
+	
 	
 </body>
 </html>
