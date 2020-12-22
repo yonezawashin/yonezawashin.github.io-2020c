@@ -2633,7 +2633,7 @@ public:<br>
 <br>
 #endif<br>
 </p>
-<p><code>Image.h</code>にザコ0ザコ1と敵弾の画像定義を追加します：</p>
+<p><code>Image.h</code>にザコ0,1,2と敵弾の画像定義を追加します：</p>
     <p class="source">#ifndef IMAGE_H_<br>
 #define IMAGE_H_<br>
 <br>
@@ -2653,6 +2653,7 @@ public:<br>
 &nbsp;&nbsp;<em>static int enemyBullet16; //敵弾 画像のハンドラ(読込画像番号)</em><br>
 &nbsp;&nbsp;<em>static int zako0; //ザコ0 画像のハンドラ(読込画像番号)</em><br>
 &nbsp;&nbsp;<em>static int zako1; //ザコ1 画像のハンドラ(読込画像番号)</em><br>
+&nbsp;&nbsp;<em>static int zako2; //ザコ2 画像のハンドラ(読込画像番号)</em><br>
 <br>
 private:<br>
 <br>
@@ -2670,6 +2671,7 @@ int Image::playerBullet{-1};<br>
 <em>int Image::enemyBullet16{-1};</em><br>
 <em>int Image::zako0{-1};</em><br>
 <em>int Image::zako1{-1};</em><br>
+<em>int Image::zako2{-1};</em><br>
 <br>
 void Image::Load()<br>
 {<br>
@@ -2690,6 +2692,9 @@ void Image::Load()<br>
 <br>
 &nbsp;&nbsp;<em>zako1 = LoadGraph("Image/zako1.png");<br>
 &nbsp;&nbsp;assert(zako1!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
+<br>
+&nbsp;&nbsp;<em>zako2 = LoadGraph("Image/zako2.png");<br>
+&nbsp;&nbsp;assert(zako2!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
 }<br>
 </p>
 <h2>敵を管理する仕組みの作成</h2>
@@ -3929,6 +3934,7 @@ std::mt19937 MyRandom::random; // メルセンヌ・ツイスタの32ビット�
 <br>
 #include "Enemy.h"<br>
 #include "Image.h"<br>
+#include "Screen.h"<br>
 #include &lt;cmath&gt; // Sin Cosの計算に使う<br>
 #include "MyMath.h"<br>
 #include "MyRandom.h"<br>
@@ -3949,7 +3955,7 @@ public:<br>
 &nbsp;&nbsp;// 更新処理<br>
 &nbsp;&nbsp;void Update() override<br>
 &nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;if(x &gt; Screen::Width-200)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if(x &gt; Screen::Width - 200)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;{  // スクリーンの端から200の位置で止まる<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
 &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -3985,9 +3991,7 @@ public:<br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
-<br>
-&nbsp;&nbsp;(中略)..................<br>
-<br>
+&nbsp;&nbsp;Image::Load(); //画像の読込み<br>
 &nbsp;&nbsp;<em>MyRandom::Init(); // 乱数シードの初期化</em><br>
 <br>
 &nbsp;&nbsp;(中略)..................<br>
@@ -3996,7 +4000,7 @@ void Game::Init()<br>
 &nbsp;&nbsp;gm.enemies.push_back(std::make_shared&lt;Zako0&gt;((float)600, (float)100));<br>
 &nbsp;&nbsp;gm.enemies.push_back(std::make_shared&lt;Zako0&gt;((float)1000, (float)500));<br>
 &nbsp;&nbsp;gm.enemies.push_back(std::make_shared&lt;Zako1&gt;((float)1000, (float)150));<br>
-&nbsp;&nbsp;<em>gm.enemies.push_back(std::make_shared&lt;Zako2&gt;((float)1500, (float)250));</em><br>
+&nbsp;&nbsp;<em>gm.enemies.push_back(std::make_shared&lt;Zako2&gt;((float)1200, (float)250));</em><br>
 };<br>
 <br>
 void Game::Update()<br>
