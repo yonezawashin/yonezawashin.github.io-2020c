@@ -3254,7 +3254,7 @@ void Game::Update()<br>
 <br>
 &nbsp;&nbsp;(中略)..................<br>
 <br>
-&nbsp;&nbsp;<em>if (!player.isDead) // 自機が死んでいなければ<br>
+&nbsp;&nbsp;<em>if (!gm.player-&gt;isDead) // 自機が死んでいなければ<br>
 &nbsp;&nbsp;&nbsp;&nbsp;</em>gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の更新処理<br>
@@ -3341,8 +3341,8 @@ void Game::Draw()<br>
 &nbsp;&nbsp;&nbsp;&nbsp;e-&gt;Draw();<br>
 &nbsp;&nbsp;}<br>
 <br>
-&nbsp;&nbsp;<em>if (!player.isDead) // 自機が死んでいなければ<br>
-&nbsp;&nbsp;&nbsp;&nbsp;</em>player-&gt;Draw(); // プレイヤの描画【忘れるとプレイヤ表示されない】<br>
+&nbsp;&nbsp;<em>if (!gm.player-&gt;isDead) // 自機が死んでいなければ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;</em>gm.player-&gt;Draw(); // プレイヤの描画【忘れるとプレイヤ表示されない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の描画処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
@@ -3648,7 +3648,7 @@ void Game::Update()<br>
 <br>
 &nbsp;&nbsp;(中略)..................<br>
 <br>
-&nbsp;&nbsp;if (!player.isDead) // 自機が死んでいなければ<br>
+&nbsp;&nbsp;if (!gm.player-&gt;isDead) // 自機が死んでいなければ<br>
 &nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の更新処理<br>
@@ -3743,8 +3743,8 @@ void Game::Draw()<br>
 &nbsp;&nbsp;&nbsp;&nbsp;e-&gt;Draw();<br>
 &nbsp;&nbsp;}<br>
 <br>
-&nbsp;&nbsp;if (!player.isDead) // 自機が死んでいなければ<br>
-&nbsp;&nbsp;&nbsp;&nbsp;player-&gt;Draw(); // プレイヤの描画【忘れるとプレイヤ表示されない】<br>
+&nbsp;&nbsp;if (!gm.player-&gt;isDead) // 自機が死んでいなければ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;Draw(); // プレイヤの描画【忘れるとプレイヤ表示されない】<br>
 <br>
 &nbsp;&nbsp;// 自機弾の描画処理<br>
 &nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
