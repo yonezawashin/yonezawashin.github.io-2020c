@@ -2820,7 +2820,7 @@ void Game::Draw()<br>
       <li><a href="#mozTocId2002">敵に耐久力を持たせる(おまけでSinの波運動のコード例も)</a></li>
       <li><a href="#mozTocId2003">自機と敵の当たり判定</a></li>
       <li><a href="#mozTocId2004">自機のライフの作成</a></li>
-      <li><a href="#mozTocId2005">敵弾の作成</a>
+      <li><a href="#mozTocId2005">敵弾の作成</a><br>
       	<a href="#mozTocId20052">- 練習問題(色んな弾の撃ち方を試す)</a>
       </li>
     </ol>
@@ -2877,7 +2877,7 @@ public:<br><br>
 &nbsp;&nbsp;//【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
 &nbsp;&nbsp;GameManager& gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&)を得る<br>
 <br>
-&nbsp;&nbsp;float collisionRadius = 32; // 当たり判定の半径<br>
+&nbsp;&nbsp;<em>float collisionRadius = 32; // 当たり判定の半径</em><br>
 &nbsp;&nbsp;<em>float life = 1; // 耐久力</em><br>
 <br>
 &nbsp;&nbsp;// コンストラクタ<br>
