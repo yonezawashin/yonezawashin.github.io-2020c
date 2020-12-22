@@ -3823,7 +3823,7 @@ public:<br>
 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;<em>coolTime--;</em><br>
 <br>
-&nbsp;&nbsp;&nbsp;&nbsp;<em>if (coolTime <= 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>if (coolTime &lt;= 0)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.push_back(std::make_shared&lt;EnemyBullet&gt;(x, y, 180 * MyMath::Deg2Rad, 8));<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;coolTime += 10;<br>
@@ -3839,6 +3839,163 @@ public:<br>
 <br>
 #endif<br>
 </p>
+	
+	<h2><a id="mozTocId20052" class="mozTocH1"></a>練習問題(色んな弾の撃ち方を試す)</h2>
+	
+<p>弾の発射角度の方向を180度 + (-15度～+15度)にすることで散乱弾を実現します。</p>
+<p>まず、乱数生成に必要な乱数クラス<code>MyRandom.h</code>を作成します。</p>
+	
+	<p class="source">#ifndef MYRANDOM_H_<br>
+#define MYRANDOM_H_<br>
+<br>
+#include &lt;random&gt;<br>
+<br>
+class MyRandom<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;// ゲーム中で唯一のインスタンス<br>
+&nbsp;&nbsp;static std::random_device rnd;// 非決定的な乱数生成器<br>
+&nbsp;&nbsp;static std::mt19937 random; // メルセンヌ・ツイスタの32ビット版<br>
+<br>
+&nbsp;&nbsp;// 初期化（シード指定無し）<br>
+&nbsp;&nbsp;static void Init()<br>
+&nbsp;&nbsp;{   // https://cpprefjp.github.io/reference/random/random_device.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;random.seed(rnd()); // 乱数をシードにすることで毎回ランダムにする<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 初期化（シードを指定）<br>
+&nbsp;&nbsp;static void Init(int seed)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;random.seed(seed);<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 指定した範囲の整数の乱数を取得する（maxは出ないので注意）<br>
+&nbsp;&nbsp;static int Range(int min, int max)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;std::uniform_int_distribution<> randRange(min, max); // [0, 99] 範囲の一様乱数<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return randRange(random);<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 指定した範囲の小数の乱数を取得する（maxは出ないので注意）<br>
+&nbsp;&nbsp;static float Range(float min, float max)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;std::uniform_real_distribution<> randRange(min, max); // [0, 99] 範囲の一様乱数<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return (float)randRange(random);<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 指定した確率（％）でtrueになる<br>
+&nbsp;&nbsp;static bool Percent(float probability)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return Range(0.0f, 1.0f) * 100 &lt;= probability;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 指定した範囲で乱数を返却する。<br>
+&nbsp;&nbsp;// 例えば1.5fを指定すると、-1.5～+1.5の範囲の値を返却する。<br>
+&nbsp;&nbsp;static float PlusMinus(float value)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return Range(-value, value);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br></p>
+
+	<p>staticなクラスなので<code>MyRandom.cpp</code>を作成して変数をcppで定義初期化します。</p>
+<p class="source">#include "MyRandom.h"
+
+std::random_device MyRandom::rnd;// 非決定的な乱数生成器
+std::mt19937 MyRandom::random; // メルセンヌ・ツイスタの32ビット版 https://qiita.com/angel_p_57/items/971d0208186f81d5d044
+</p>
+	
+<p><code>Zako2.h</code>を作成して弾の発射方向を-15度～+15度までランダムに散らすようにしてみます。</p>
+<p class="source">#ifndef ZAKO_2_H_<br>
+#define ZAKO_2_H_<br>
+<br>
+#include "Enemy.h"<br>
+#include "Image.h"<br>
+#include &lt;cmath&gt; // Sin Cosの計算に使う<br>
+#include "MyMath.h"<br>
+#include "MyRandom.h"<br>
+<br>
+// ザコ2クラス<br>
+class Zako2 : public Enemy<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;Zako2(float x, float y, float z=0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako2";<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;void Update() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if(x &gt; Screen::Width-200)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{  // スクリーンの端から200の位置で止まる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;coolTime--;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (coolTime &lt;= 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float bulletAngle = MyRandom::Range(-15.0f,15.0f); // ±15度の乱数の角度を取得<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.push_back(std::make_shared&lt;EnemyBullet&gt;(x, y, (180 + bulletAngle) * MyMath::Deg2Rad, 8));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;coolTime += 10;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;void Draw() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako2, TRUE);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br>
+</p>
+
+<p><code>Game.cpp</code>にMyRandom乱数とザコ2の初期化を追加します。</p>
+    <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"EnemyBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako1.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+<em>#include&nbsp;"Zako2.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+<br>
+&nbsp;&nbsp;<em>MyRandom::Init(); // 乱数シードの初期化</em><br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+<br>
+&nbsp;&nbsp;// とりあえず適当に敵を生成<br>
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared&lt;Zako0&gt;((float)600, (float)100));<br>
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared&lt;Zako0&gt;((float)1000, (float)500));<br>
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared&lt;Zako1&gt;((float)1000, (float)150));<br>
+&nbsp;&nbsp;<em>gm.enemies.push_back(std::make_shared&lt;Zako2&gt;((float)1500, (float)250));</em><br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+<br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+};<br>
+</p>	
+						   
 	
 </body>
 </html>
