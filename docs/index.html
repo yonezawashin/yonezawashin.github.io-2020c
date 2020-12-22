@@ -2633,7 +2633,7 @@ public:<br>
 <br>
 #endif<br>
 </p>
-<p><code>Image.h</code>にザコ0,1,2と敵弾の画像定義を追加します：</p>
+<p><code>Image.h</code>にザコ0,1,2,3と敵弾の画像定義を追加します：</p>
     <p class="source">#ifndef IMAGE_H_<br>
 #define IMAGE_H_<br>
 <br>
@@ -2654,6 +2654,7 @@ public:<br>
 &nbsp;&nbsp;<em>static int zako0; //ザコ0 画像のハンドラ(読込画像番号)</em><br>
 &nbsp;&nbsp;<em>static int zako1; //ザコ1 画像のハンドラ(読込画像番号)</em><br>
 &nbsp;&nbsp;<em>static int zako2; //ザコ2 画像のハンドラ(読込画像番号)</em><br>
+&nbsp;&nbsp;<em>static int zako3; //ザコ3 画像のハンドラ(読込画像番号)</em><br>
 <br>
 private:<br>
 <br>
@@ -2672,6 +2673,7 @@ int Image::playerBullet{-1};<br>
 <em>int Image::zako0{-1};</em><br>
 <em>int Image::zako1{-1};</em><br>
 <em>int Image::zako2{-1};</em><br>
+<em>int Image::zako3{-1};</em><br>
 <br>
 void Image::Load()<br>
 {<br>
@@ -2695,6 +2697,9 @@ void Image::Load()<br>
 <br>
 &nbsp;&nbsp;<em>zako2 = LoadGraph("Image/zako2.png");<br>
 &nbsp;&nbsp;assert(zako2!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
+<br>
+&nbsp;&nbsp;<em>zako3 = LoadGraph("Image/zako3.png");<br>
+&nbsp;&nbsp;assert(zako3!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
 }<br>
 </p>
 <h2>敵を管理する仕組みの作成</h2>
@@ -4016,7 +4021,71 @@ void Game::Draw()<br>
 &nbsp;&nbsp;(中略)..................<br>
 };<br>
 </p>	
-						   
+
+	<p>こんどは<code>Zako3.h</code>を作成して10ダメージ受けると点滅状態(5秒=5×60=300フレーム)になり、isDeadと同時に弾を全方向に0度～360度に散らすようにしてみます。</p>
+<p class="source">#ifndef ZAKO_3_H_<br>
+#define ZAKO_3_H_<br>
+<br>
+#include "Enemy.h"<br>
+#include "Image.h"<br>
+#include "Screen.h"<br>
+#include &lt;cmath&gt; // Sin Cosの計算に使う<br>
+#include "MyMath.h"<br>
+#include "MyRandom.h"<br>
+<br>
+// ザコ3クラス(自爆型機雷タイプの敵キャラ)<br>
+class Zako3 : public Enemy<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;int bombCounter = -1; // やられたときのisDeadまでのカウントダウン<br>
+&nbsp;&nbsp;int BombTime = 300; // 爆発までのカウント時間<br>
+&nbsp;&nbsp;int life = 10; // 敵ライフ<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;Zako3(float x, float y, float z=0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako3";<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;void Update() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if(x &gt; Screen::Width - 350)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{  // スクリーンの端から350の位置で止まる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{  // スクリーン端から350の位置で自爆モードに入る<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;life = 0; // 画面中央付近で勝手にlife=0で自爆モードに入る<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bombCounter--; // 爆発カウンタは常にカウントダウン(-1から始まるときは0を通過しないので爆発しない)<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if(life &lt;= 0) bombCounter = BombTime; // 爆発モードに入るとbombCounterがプラス値になり0になると爆発<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (bombCounter == 0) // 初期状態は-1からカウントダウン-1,-2,-3..するからここには入らずに済む<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for(int i=0; i &lt; 360; i = i+10) //【勉強】for文は1ずつプラスじゃなくてもよい<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.push_back(std::make_shared&lt;EnemyBullet&gt;(x, y, (180 + i) * MyMath::Deg2Rad, 6));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // 爆発カウンタ==0で初めてisDead状態に<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;void Draw() override<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;//【ド・モルガンの定理を学ぼう】||と&&の逆の関係性の法則<br>
+&nbsp;&nbsp;&nbsp;&nbsp;//【勉強】条件または||は条件&&の(life &lt;= 0 && bombCounter &gt; 0)のちょうど逆条件！
+&nbsp;&nbsp;&nbsp;&nbsp;if(life &gt; 0 || bombCounter &lt;= 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp; || (bombCounter % 4 &lt; 2) ) // パラパラ4枚の周期で余り2以下の時だけ描く<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako2, TRUE);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br>
+</p>
 	
 </body>
 </html>
