@@ -4086,6 +4086,45 @@ public:<br>
 <br>
 #endif<br>
 </p>
+
+	<p><code>Game.cpp</code>にザコ3の生成処理を追加します。</p>
+    <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"EnemyBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako1.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako2.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+<em>#include&nbsp;"Zako3.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+&nbsp;&nbsp;Image::Load(); //画像の読込み<br>
+&nbsp;&nbsp;<em>MyRandom::Init(); // 乱数シードの初期化</em><br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+<br>
+&nbsp;&nbsp;// とりあえず適当に敵を生成<br>
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared&lt;Zako0&gt;((float)600, (float)100));<br>
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared&lt;Zako0&gt;((float)1000, (float)500));<br>
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared&lt;Zako1&gt;((float)1000, (float)150));<br>
+&nbsp;&nbsp;gm.enemies.push_back(std::make_shared&lt;Zako2&gt;((float)1200, (float)250));<br>
+&nbsp;&nbsp;<em>gm.enemies.push_back(std::make_shared&lt;Zako3&gt;((float)1300, (float)400));</em><br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+<br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+};<br>
+</p>	
 	
 </body>
 </html>
