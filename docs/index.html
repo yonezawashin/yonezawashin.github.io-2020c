@@ -4079,7 +4079,8 @@ public:<br>
 <br>
 &nbsp;&nbsp;// 描画処理<br>
 &nbsp;&nbsp;void Draw() override<br>
-&nbsp;&nbsp;{&nbsp;&nbsp;//【ド・モルガンの定理を学ぼう】||と&&の逆の関係性の法則<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;//【ド・モルガンの定理を学ぼう】||と&&の逆の関係性の法則<br>
 &nbsp;&nbsp;&nbsp;&nbsp;//【勉強】条件【または||】は条件【かつ&&】の(life &lt;= 0 && bombCounter &gt; 0)のちょうど逆条件！<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if(life &gt; 0 || bombCounter &lt;= 0<br>
 &nbsp;&nbsp;&nbsp;&nbsp; || (bombCounter % 4 &lt; 2) ) // パラパラ4枚の周期で余り2以下の時だけ描く<br>
@@ -4102,8 +4103,6 @@ public:<br>
 <br>
 void Game::Init()<br>
 {// Init処理<br>
-&nbsp;&nbsp;Image::Load(); //画像の読込み<br>
-&nbsp;&nbsp;<em>MyRandom::Init(); // 乱数シードの初期化</em><br>
 <br>
 &nbsp;&nbsp;(中略)..................<br>
 <br>
