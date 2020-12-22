@@ -2629,7 +2629,7 @@ public:<br>
 <br>
 #endif<br>
 </p>
-<code>Image.h</code>にザコ0ザコ1と敵弾の画像定義を追加します：</p>
+<p><code>Image.h</code>にザコ0ザコ1と敵弾の画像定義を追加します：</p>
     <p class="source">#ifndef IMAGE_H_<br>
 #define IMAGE_H_<br>
 <br>
@@ -3572,14 +3572,228 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, angle, Image::enemyBullet16,TRUE);<br>
 &nbsp;&nbsp;}<br>
 <br>
-&nbsp;&nbsp;<em>// 敵にぶつかった時の処理<br>
-&nbsp;&nbsp;void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other)<br>
+&nbsp;&nbsp;// プレイヤにぶつかった時の処理<br>
+&nbsp;&nbsp;void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; other)<br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
-&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;}<br>
 };<br>
 <br>
 #endif<br></p>
+	
+<p><code>GameManager.h</code>にEnemyBulletを管理するリストの定義を追加します。</p>
+<p class="source">
+#ifndef GAMEMANAGER_H_<br>
+#define GAMEMANAGER_H_<br>
+<br>
+#include &lt;memory&gt;<br>
+#include &lt;vector&gt;<br>
+<br>
+#include&nbsp;"Singleton.h"<br>
+<br>
+class&nbsp;Player;&nbsp;//&nbsp;クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+class&nbsp;PlayerBullet;<br>
+class&nbsp;Enemy;<br>
+<em>class&nbsp;EnemyBullet;</em><br>
+<br>
+class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
+<br>
+&nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機のポインタ<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+&nbsp;&nbsp;<em>std::vector&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト</em><br>
+&nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+<br>
+<br>
+(中略)..............
+<br>
+protected:<br>
+&nbsp;&nbsp;GameManager() {}; // 外部からのインスタンス作成は禁止<br>
+&nbsp;&nbsp;virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
+};<br>
+<br>
+#endif<br>
+</p>
+	
+<p><code>Game.cpp</code>にEnemyBulletの更新Updateと削除Remove、描画Drawの処理を追加します。</p>
+    <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+<em>#include&nbsp;"EnemyBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+#include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+<br>
+&nbsp;&nbsp;<em>if (!player.isDead) // 自機が死んでいなければ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;</em>gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+<br>
+&nbsp;&nbsp;// 自機弾の更新処理<br>
+&nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;<em>// 敵弾の更新処理<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.enemyBullets)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}</em><br>
+<br>
+&nbsp;&nbsp;// 敵の更新処理<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.enemies)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Update();<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// 自機弾と敵の衝突判定<br>
+&nbsp;&nbsp;for(const auto&amp; playerBullet : gm.playerBullets)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 自機弾が死んでたらスキップする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (playerBullet-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for(const auto&amp; enemy : gm.enemies)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 敵が死んでたらスキップする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (enemy-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 自機弾と敵が重なっているか？<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;OnCollisionEnemy(enemy);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 衝突の結果、自機弾が死んだら、この弾のループはおしまい<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (playerBullet-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<em>// 自機と敵の衝突判定<br>
+&nbsp;&nbsp;for(const auto&amp; enemy : gm.enemies)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 自機が死んでたらこれ以上判定しない<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (gm.player-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 敵が死んでたらスキップ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (enemy-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる
+&nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;OnCollisionEnemy(enemy);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// 自機弾のリストから死んでるものを除去する<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+&nbsp;&nbsp;// 敵のリストから死んでるものを除去する<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.enemies,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Enemy&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+&nbsp;&nbsp;// 敵弾のリストから死んでるものを除去する<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.enemyBullets,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;EnemyBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+&nbsp;&nbsp;<br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+&nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+<br>
+&nbsp;&nbsp;// 敵の描画処理<br>
+&nbsp;&nbsp;for (const auto&amp; e : gm.enemies)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;e-&gt;Draw();<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;<em>if (!player.isDead) // 自機が死んでいなければ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;</em>player-&gt;Draw(); // プレイヤの描画【忘れるとプレイヤ表示されない】<br>
+<br>
+&nbsp;&nbsp;// 自機弾の描画処理<br>
+&nbsp;&nbsp;// C#のforeach文と同じく全自機弾を更新できる<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.playerBullets)<br>
+&nbsp;&nbsp;{&nbsp;&nbsp;// autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;<em>// 敵弾の描画処理<br>
+&nbsp;&nbsp;for (const auto&amp; b : gm.enemyBullets)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
+&nbsp;&nbsp;}</em><br>
+};<br>
+</p>	
+
+<p><code>Zako0.h</code>を作成します。</p>
+<p class="source">#ifndef ZAKO_0_H_<br>
+#define ZAKO_0_H_<br>
+<br>
+#include "Enemy.h"<br>
+#include "Image.h"<br>
+<em>#include "MyMath.h"</em><br>
+<br>
+// ザコ0クラス<br>
+class Zako0 : public Enemy<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;<em>int counter = 0;</em><br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;Zako0(float x, float y, float z=0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako0";<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;void Update() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>counter++;</em><br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<em>if (counter % 10 == 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.push_back(std::make_shared&lt;EnemyBullet&gt;(x, y, 180 * MyMath::Deg2Rad, 8));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;void Draw() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako0, TRUE);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br>
+</p>
 	
 </body>
 </html>
