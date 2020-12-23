@@ -4430,12 +4430,13 @@ public:<br>
 &nbsp;&nbsp;int AllNum = 0;<br>
 &nbsp;&nbsp;bool is3DTexture = false;<br>
 <br>
+// 初期化 : X方向分割画像数 XNum, Y方向分割画像数 YNum, 画像 横 幅XSizeピクセル, 画像 縦 高さYSizeピクセル
 &nbsp;&nbsp;DivImage(int XNum, int YNum, int XSize, int YSize, bool is3DTexture=false)<br>
 &nbsp;&nbsp;{   // 初期化コンストラクタ<br>
-&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XNum = XNum;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YNum = YNum;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XSize = XSize;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YSize = YSize;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XNum = XNum; // X方向分割画像数<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YNum = YNum; // Y方向分割画像数<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XSize = XSize; // 画像 横 幅XSize(ピクセルドット数)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YSize = YSize; // 画像 縦 高さYSize(ピクセルドット数)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;AllNum = XNum * YNum;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;is3DTexture = is3DTexture;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// ★div分割画像読込ハンドラ保存用のint配列メモリを確保し-1で初期化<br>
