@@ -4456,13 +4456,15 @@ public:<br>
 &nbsp;&nbsp;};<br>
 <br>
 &nbsp;&nbsp;//【勉強 []添え字演算子を独自に定義】https://programming.pc-note.net/cpp/operator.html<br>
-&nbsp;&nbsp;// 内部のHandleArrayに今までの様にImage::explosion[5]とかで簡単アクセスできるように【あいだにに噛ます】<br>	    
+&nbsp;&nbsp;// 内部のHandleArrayに今までの様にImage::explosion[5]とかで簡単アクセスできるように【あいだに噛ます】<br>	    
 &nbsp;&nbsp;int const& operator [](int index) const<br>
 &nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if(index&lt;0 || AllNum<=index) assert("画像データのアクセス番号がおかしい！" == "");<br>
 &nbsp;&nbsp;&nbsp;&nbsp;return HandleArray[index];<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;int& operator [](int index)<br>
 &nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if(index&lt;0 || AllNum<=index) assert("画像データのアクセス番号がおかしい！" == "");<br>
 &nbsp;&nbsp;&nbsp;&nbsp;return HandleArray[index];<br>
 &nbsp;&nbsp;}<br>
 <br>
