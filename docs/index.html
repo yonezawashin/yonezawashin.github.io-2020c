@@ -4161,7 +4161,6 @@ void Game::Draw()<br>
       <!--mozToc h1 1-->
       <li><a href="#mozTocId3001">自機と敵弾の当たり判定</a></li>
       <li><a href="#mozTocId3002">爆発エフェクトの作成(分割画像DivImage型の定義)</a><br>
-	    <a href="#mozTocId30022">分割画像DivImage型で分割画像をデータ内に分割XY数や画像サイズ、画像数を保持</a><br>
 	    <a href="#mozTocId30022">爆発クラスの作成</a><br>
 	    <a href="#mozTocId30023">管理する仕組みの作成</a><br>
 	    <a href="#mozTocId30024">爆発を出す処理(Enemyで敵の共通の爆発を生成)</a><br>
@@ -4417,7 +4416,7 @@ void Game::Draw()<br>
 &nbsp;&nbsp;(中略)......<br>
 };<br>
 </p>
-	<h1><a id="mozTocId3002" class="mozTocH1"></a>爆発エフェクトの作成(分割画像DivImage型の定義)</h1>
+	<h1><a id="mozTocId30022" class="mozTocH1"></a>爆発エフェクトの作成(分割画像DivImage型の定義)</h1>
 
 	<h2>分割画像DivImage型で分割画像をデータ内に分割XY数や画像サイズ、画像数を保持</h2>
 <p><code>DivImage.h</code>を新規作成して、カスタムしたデータタイプ【DivImage型】を定義して縦2×横8の分割された爆発画像を読込みましょう。</p>
@@ -4781,7 +4780,7 @@ void Game::Draw()<br>
 };<br>
 </p>
 
-	<h2><a id="mozTocId3002" class="mozTocH1"></a>爆発を出す処理(Enemyで敵の共通の爆発を生成)</h2>
+	<h2><a id="mozTocId30024" class="mozTocH1"></a>爆発を出す処理(Enemyで敵の共通の爆発を生成)</h2>
 	
 <p><code>Enemy.h</code>を改修して、敵が死んだときに爆発エフェクトを出すようにしましょう。</p>
 <p class="source">#ifndef ENEMY_H_<br>
