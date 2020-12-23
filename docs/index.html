@@ -4430,15 +4430,15 @@ public:<br>
 &nbsp;&nbsp;int AllNum = 0;<br>
 &nbsp;&nbsp;bool is3DTexture = false;<br>
 <br>
-// 初期化 : X方向分割画像数 XNum, Y方向分割画像数 YNum, 画像 横 幅XSizeピクセル, 画像 縦 高さYSizeピクセル
+// 初期化 : X方向分割画像数 XNum, Y方向分割画像数 YNum, 画像 横 幅XSizeピクセル, 画像 縦 高さYSizeピクセル<br>
 &nbsp;&nbsp;DivImage(int XNum, int YNum, int XSize, int YSize, bool is3DTexture=false)<br>
 &nbsp;&nbsp;{   // 初期化コンストラクタ<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XNum = XNum; // X方向分割画像数<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YNum = YNum; // Y方向分割画像数<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XSize = XSize; // 画像 横 幅XSize(ピクセルドット数)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YSize = YSize; // 画像 縦 高さYSize(ピクセルドット数)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;AllNum = XNum * YNum;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;is3DTexture = is3DTexture;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;AllNum = XNum * YNum; // トータルの分割画像数<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;is3DTexture = is3DTexture; // 3Dテクスチャ分割画像かtrueだと2のべき乗チェックが入る<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// ★div分割画像読込ハンドラ保存用のint配列メモリを確保し-1で初期化<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;HandleArray = new int[AllNum]; // 配列を確保し-1で初期化<br>
 &nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &gt; AllNum; i++) HandleArray[i] = -1;<br>
@@ -4616,12 +4616,12 @@ public:<br>
 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;imageIndex = counter / 3; // そのままだと速すぎるので、3で割る<br>
 <br>
-&nbsp;&nbsp;&nbsp;&nbsp;// 絵は16枚しかない（0～15）ので、
-&nbsp;&nbsp;&nbsp;&nbsp;// 16番目を表示しようとしたら終了。
-&nbsp;&nbsp;&nbsp;&nbsp;if (imageIndex &gt;= 16)
-&nbsp;&nbsp;&nbsp;&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;
-&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;// 絵は16枚しかない（0～15）ので、<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 16番目を表示しようとしたら終了。<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (imageIndex &gt;= 16)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
 &nbsp;&nbsp;}<br>
 <br>
 &nbsp;&nbsp;// 描画処理<br>
@@ -4630,7 +4630,7 @@ public:<br>
 &nbsp;&nbsp;// Image.explosionは配列であり、<br>
 &nbsp;&nbsp;// 分割して読み込んだ絵のハンドルが各要素に格納されているので、<br>
 &nbsp;&nbsp;// 要素番号を指定してハンドルを取り出して使う。<br>
-&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::explosion.HandleArray[imageIndex], TRUE);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::explosion[imageIndex], TRUE);<br>
 &nbsp;&nbsp;}<br>
 };<br>
 <br>
