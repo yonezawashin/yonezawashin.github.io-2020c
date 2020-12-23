@@ -2831,7 +2831,7 @@ void Game::Draw()<br>
       <li><a href="#mozTocId2003">自機と敵の当たり判定</a></li>
       <li><a href="#mozTocId2004">自機のライフの作成</a></li>
       <li><a href="#mozTocId2005">敵弾の作成</a><br>
-      	<a href="#mozTocId20052">- 練習問題(MyRandomで±15度に散乱弾を撃つ敵キャラ)</a>
+      	<a href="#mozTocId20052">- 練習問題(MyRandomで±15度に散乱弾を撃つ敵キャラ)</a><br>
       	<a href="#mozTocId20053">- 練習問題(やられると点滅後自爆する敵キャラ)</a>
       </li>
 	    <br>
@@ -4480,7 +4480,7 @@ private: // コピーと代入をプライベートにして禁止する<br>
 <br>
 #include "DxLib.h"<br>
 #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
-<em>#include "DivImage.h"</em><br>
+<em>#include "DivImage.h" // 分割画像の読込みに使う</em><br>
 <br>
 class Image<br>
 {<br>
@@ -4518,7 +4518,7 @@ int Image::zako1{-1};<br>
 int Image::zako2{-1};<br>
 int Image::zako3{-1};<br>
 <em>// ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定</em><br> 
-<em>int Image::explosion{ 8, 2, 64, 64 };</em><br>
+<em>DivImage Image::explosion{ 8, 2, 64, 64 };</em><br>
 <br>
 void Image::Load()<br>
 {<br>
