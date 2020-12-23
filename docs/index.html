@@ -4441,7 +4441,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;is3DTexture = is3DTexture; // 3Dテクスチャ分割画像かtrueだと2のべき乗チェックが入る<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// ★div分割画像読込ハンドラ保存用のint配列メモリを確保し-1で初期化<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;HandleArray = new int[AllNum]; // 配列を確保し-1で初期化<br>
-&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &gt; AllNum; i++) HandleArray[i] = -1;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; AllNum; i++) HandleArray[i] = -1;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;//↑【演習★】初期化後の動的配列をデバッガで見てみよう[ary,256として再評価ボタン]<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// http://visualstudiostudy.blog.fc2.com/blog-entry-17.html<br>
 &nbsp;&nbsp;&nbsp;&nbsp;int* ary = HandleArray;<br>
@@ -4631,6 +4631,200 @@ public:<br>
 &nbsp;&nbsp;// 分割して読み込んだ絵のハンドルが各要素に格納されているので、<br>
 &nbsp;&nbsp;// 要素番号を指定してハンドルを取り出して使う。<br>
 &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::explosion[imageIndex], TRUE);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br>
+</p>
+
+		
+<p><code>GameManager.h</code>にExplosionを管理するリストの定義を追加します。</p>
+<p class="source">
+#ifndef GAMEMANAGER_H_<br>
+#define GAMEMANAGER_H_<br>
+<br>
+#include &lt;memory&gt;<br>
+#include &lt;vector&gt;<br>
+<br>
+#include&nbsp;"Singleton.h"<br>
+<br>
+class&nbsp;Player;&nbsp;//&nbsp;クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+class&nbsp;PlayerBullet;<br>
+class&nbsp;Enemy;<br>
+class&nbsp;EnemyBullet;<br>
+<em>class&nbsp;Explosion;</em><br>
+<br>
+class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
+<br>
+&nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機のポインタ<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+&nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
+&nbsp;&nbsp;<em>std::vector&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト</em><br>
+&nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+<br>
+<br>
+(中略)..............
+<br>
+protected:<br>
+&nbsp;&nbsp;GameManager() {}; // 外部からのインスタンス作成は禁止<br>
+&nbsp;&nbsp;virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
+};<br>
+<br>
+#endif<br>
+</p>
+	
+	<p><code>Game.cpp</code>に当たり判定の処理を追加します。</p>
+    <p class="source">#include "Game.h"<br>
+#include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"EnemyBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+<em>#include&nbsp;"Explosion.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+#include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako1.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako2.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+#include&nbsp;"Zako3.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+<br>
+void Game::Init()<br>
+{// Init処理<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+};<br>
+<br>
+void Game::Update()<br>
+{// 更新処理<br>
+<br>
+&nbsp;&nbsp;Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+<br>
+&nbsp;&nbsp;(中略)..................<br>
+<br>
+&nbsp;&nbsp;// 自機と敵の衝突判定<br>
+&nbsp;&nbsp;for(const auto&amp; enemy : gm.enemies)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 自機が死んでたらこれ以上判定しない<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (gm.player-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 敵が死んでたらスキップ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (enemy-&gt;isDead)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;OnCollisionEnemy(enemy);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<em>// 爆発エフェクトの更新処理<br>
+&nbsp;&nbsp;for (const auto&amp; e : gm.explosions)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;e-&gt;Update();<br>
+&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;<br>
+<br>
+&nbsp;&nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// 自機弾のリストから死んでるものを除去する<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+&nbsp;&nbsp;// 敵のリストから死んでるものを除去する<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.enemies,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Enemy&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+&nbsp;&nbsp;// 敵弾のリストから死んでるものを除去する<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.enemyBullets,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;EnemyBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<em>//爆発エフェクトのリストから死んでるものを除去する<br>
+&nbsp;&nbsp;gm.EraseRemoveIf(gm.explosions,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Exploions&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
+&nbsp;&nbsp;<br>
+};<br>
+<br>
+void Game::Draw()<br>
+{// 描画処理<br>
+&nbsp;&nbsp;(中略)......<br>
+<br>
+&nbsp;&nbsp;// 敵の描画処理<br>
+&nbsp;&nbsp;for (const auto&amp; e : gm.enemies)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;e-&gt;Draw();<br>
+&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// 爆発エフェクトの描画処理<br>
+&nbsp;&nbsp;for (const auto&amp; e : gm.explosions)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;e-&gt;Draw();<br>
+&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;(中略)......<br>
+<br>
+};<br>
+</p>
+
+<p><code>Enemy.h</code>を改修して、敵が死んだときに爆発エフェクトを出すようにしましょう。</p>
+<p class="source">#ifndef ENEMY_H_<br>
+#define ENEMY_H_<br>
+<br>
+#include "GameObject.h"<br>
+<br>
+#include "GameManager.h"<br>
+<br>
+// 敵の基底クラス。<br>
+// 全ての敵は、このクラスを継承して作る。<br>
+// ★【勉強】abstract型はC++にない!!【純粋仮想関数】を使って作る<br>
+// クラスの基本(C++11).pdfの17ページの下のほう(クラスの基本④)<br>
+class Enemy : public GameObject<br>
+{<br>
+public:<br><br>
+&nbsp;&nbsp;//【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+&nbsp;&nbsp;GameManager& gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&)を得る<br>
+<br>
+&nbsp;&nbsp;float collisionRadius = 32; // 当たり判定の半径<br>
+&nbsp;&nbsp;bool isDead = false; // 死亡フラグ<br>
+&nbsp;&nbsp;float life = 1; // 耐久力<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;Enemy(float x, float y, float z=0)//★z=0をデフォルトとすることでx,yだけでも初期化でき2Dと3D両立<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: GameObject() // GameObjectをベースとして初期化処理を継承する<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Enemy";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理。派生クラスでオーバーライドして使う<br>
+&nbsp;&nbsp;virtual void Update() = 0;//virtual ～ = 0;で【純粋仮想関数に】これで【C#のabstract型に】<br>
+<br>
+&nbsp;&nbsp;// 描画処理。派生クラスでオーバーライドして使う<br>
+&nbsp;&nbsp;virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
+<br>
+&nbsp;&nbsp;//【勉強】関数 = 0って何?と思った人は【関数もメモリ上では住所アドレスに過ぎない】ことを知ろう<br>
+&nbsp;&nbsp;// ★関数 = 0はつまり関数の住所ポインタの針が【メモリ上の何かを針で参照してない(住所不定無処理)】<br>
+&nbsp;&nbsp;// つまり【関数が未定義ってこと】＝【あいまい部分があるabstractクラスってこと】<br>
+&nbsp;&nbsp;//http://etc2myday.jugem.jp/?eid=204<br>
+&nbsp;&nbsp;//http://wisdom.sakura.ne.jp/programming/c/c54.html<br>
+&nbsp;&nbsp;//逆にいうと【関数を配列】にするっていうトリッキーなこともできる!<br>
+&nbsp;&nbsp;//http://www.ced.is.utsunomiya-u.ac.jp/lecture/2012/prog/p3/kadai3/virtualfunc2.php<br>
+<br>
+&nbsp;&nbsp;// 自機弾に当たったときの処理<br>
+&nbsp;&nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;life -= 1; // ライフを減らす<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// ライフが無くなったら、死亡<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (life &lt;= 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>// 爆発を出す<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.explosions.push_back(std::make_shared<Explosion>(x, y);</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
 &nbsp;&nbsp;}<br>
 };<br>
 <br>
