@@ -4242,11 +4242,11 @@ void Player::Draw()<br>
 // 敵にぶつかった時の処理<br>
 void Player::OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other)<br>
 {<br>
-&nbsp;&nbsp;<em>// 無敵じゃなければダメージを受ける<br>
+&nbsp;&nbsp;// 無敵じゃなければダメージを受ける<br>
 &nbsp;&nbsp;if (mutekiTimer &lt;= 0)<br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;TakeDamage();<br>
-&nbsp;&nbsp;}</em><br>
+&nbsp;&nbsp;}<br>
 }<br>
 <br>
 <em>// 敵弾とぶつかった時の処理<br>
