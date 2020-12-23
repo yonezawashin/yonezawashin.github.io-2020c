@@ -4429,6 +4429,7 @@ public:<br>
 &nbsp;&nbsp;int* HandleArray = NULL;<br>
 &nbsp;&nbsp;int AllNum = 0;<br>
 &nbsp;&nbsp;bool is3DTexture = false;<br>
+<br>
 &nbsp;&nbsp;DivImage(int XNum, int YNum, int XSize, int YSize, bool is3DTexture=false)<br>
 &nbsp;&nbsp;{   // 初期化コンストラクタ<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XNum = XNum;<br>
@@ -4447,16 +4448,30 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if(is3DTexture==true) ImagePowCheck((*this)); // *(this)でthisポインタの示す変数内容を表す<br>
 #endif<br>
 &nbsp;&nbsp;};<br>
+<br>
 &nbsp;&nbsp;~DivImage()<br>
 &nbsp;&nbsp;{   // デストラクタでメモリを解放<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if (this-&gt;HandleArray != NULL)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete[] this-&gt;HandleArray;<br>
 &nbsp;&nbsp;};<br>
+<br>
+&nbsp;&nbsp;//【勉強 []添え字演算子を独自に定義】https://programming.pc-note.net/cpp/operator.html<br>
+&nbsp;&nbsp;// 内部のHandleArrayに今までの様にImage::explosion[5]とかで簡単アクセスできるように【あいだにに噛ます】<br>	    
+&nbsp;&nbsp;int const& operator [](int index) const<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return HandleArray[index];<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;int& operator [](int index)<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return HandleArray[index];<br>
+&nbsp;&nbsp;}<br>
+<br>
 #ifdef _DEBUG // デバッグ機能(デバッグの時だけ _DEBUG が定義)<br>
 &nbsp;&nbsp;bool is_pow2(unsigned int x) // 2のべき乗か計算<br>
 &nbsp;&nbsp;{   // https://programming-place.net/ppp/contents/c/rev_res/math012.html<br>
 &nbsp;&nbsp;&nbsp;&nbsp;return (x != 0) && (x & (x - 1)) == 0;<br>
 &nbsp;&nbsp;}<br>
+<br>
 &nbsp;&nbsp;void ImagePowCheck(DivImage& divImage)<br>
 &nbsp;&nbsp;{   // ★3Dに使う画像は2のべき乗でなければ受け付けないようにする<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// https://yttm-work.jp/gmpg/gmpg_0031.html<br>
@@ -4466,6 +4481,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;else assert("3Dに使うなら2のべき乗の画像サイズにしなきゃ" == "");<br>
 &nbsp;&nbsp;}<br>
 #endif<br>
+<br>
 private: // コピーと代入をプライベートにして禁止する<br>
 &nbsp;&nbsp;//コピーコンストラクタ<br>
 &nbsp;&nbsp;DivImage(const DivImage& divImage) {};<br>
