@@ -4488,7 +4488,7 @@ public:<br>
 &nbsp;&nbsp;Image() {}; // 初期化コンストラクタ:定義と{}空の処理<br>
 &nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタ:定義と{}空の処理<br>
 &nbsp;&nbsp;static void Load();<br>
-&nbsp;&nbsp;static int LoadDivGraph(const TCHAR* FileName, DivImage& divImage);<br>    
+&nbsp;&nbsp;<em>static int LoadDivGraph(const TCHAR* FileName, DivImage& divImage);</em><br>    
 <br>
 &nbsp;&nbsp;static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
 &nbsp;&nbsp;static int player; //プレイヤ画像のハンドラ<br>
@@ -4565,7 +4565,57 @@ void Image::Load()<br>
 &nbsp;&nbsp;}</em><br>
 }<br>
 </p>
-		
+
+		<p><code>Explosion.h</code>を新規作成して爆発エフェクトを表示するクラスを作ります。</p>
+<p class="source">#ifndef EXPLOSION_H_<br>
+#define EXPLOSION_H_<br>
+<br>
+#include "Image.h"<br>
+<br>
+#include "GameObject.h"<br>
+<br>
+// ザコ2クラス<br>
+class Zako2 : public GameObject<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;int counter = 0; // 時間を計るための変数<br>
+&nbsp;&nbsp;int imageIndex  = 0; // 表示すべき画像の番号<br>
+<br>
+&nbsp;&nbsp;// コンストラクタ<br>
+&nbsp;&nbsp;Explosion(float x, float y, float z=0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Explosion";<br>
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 更新処理<br>
+&nbsp;&nbsp;void Update() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;counter++;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;imageIndex = counter / 3; // そのままだと速すぎるので、3で割る<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// 絵は16枚しかない（0～15）ので、
+&nbsp;&nbsp;&nbsp;&nbsp;// 16番目を表示しようとしたら終了。
+&nbsp;&nbsp;&nbsp;&nbsp;if (imageIndex &gt;= 16)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;}<br>
+<br>
+&nbsp;&nbsp;// 描画処理<br>
+&nbsp;&nbsp;void Draw() override<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;// Image.explosionは配列であり、<br>
+&nbsp;&nbsp;// 分割して読み込んだ絵のハンドルが各要素に格納されているので、<br>
+&nbsp;&nbsp;// 要素番号を指定してハンドルを取り出して使う。<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::explosion.HandleArray[imageIndex], TRUE);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+<br>
+#endif<br>
+</p>
+
 		
 </body>
 </html>
