@@ -4739,10 +4739,9 @@ void Game::Update()<br>
 &nbsp;&nbsp;// 敵弾のリストから死んでるものを除去する<br>
 &nbsp;&nbsp;gm.EraseRemoveIf(gm.enemyBullets,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;EnemyBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
-&nbsp;&nbsp;<br>
 &nbsp;&nbsp;<em>//爆発エフェクトのリストから死んでるものを除去する<br>
 &nbsp;&nbsp;gm.EraseRemoveIf(gm.explosions,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Exploions&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Explosion&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
 &nbsp;&nbsp;<br>
 };<br>
 <br>
