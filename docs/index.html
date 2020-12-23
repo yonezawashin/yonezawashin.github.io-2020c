@@ -4409,5 +4409,151 @@ void Game::Draw()<br>
 };<br>
 </p>
 	
+	<h1><a id="mozTocId3002" class="mozTocH1"></a>爆発エフェクトの作成(分割画像DivImage型の定義)<</h1>
+	
+<p><code>DivImage.h</code>を新規作成して、カスタムしたデータタイプ【DivImage型】を定義して縦2×横8の分割された爆発画像を読込みましょう。</p>
+    <p class="source">#ifndef DIVIMAGE_H_<br>
+#define DIVIMAGE_H_<br>
+<br>
+#include "DxLib.h"<br>
+#include &lt;assert.h&gt; // 画像の2のべき乗チェックに使う<br>
+<br>
+// 分割画像を読込むためのデータ構造(画像数や画像ハンドル配列、3Dに使う場合の2のべき乗チェック機能をもつ)<br>
+class DivImage<br>
+{&nbsp;&nbsp;// 2Dの分割画像や3Dに分割Div画像を使うと画像全体が使われてしまうのを回避するための情報<br>
+public:<br>
+&nbsp;&nbsp;int XNum = 0;<br>
+&nbsp;&nbsp;int YNum = 0;<br>
+&nbsp;&nbsp;int XSize = 0;<br>
+&nbsp;&nbsp;int YSize = 0;<br>
+&nbsp;&nbsp;int* HandleArray = NULL;<br>
+&nbsp;&nbsp;int AllNum = 0;<br>
+&nbsp;&nbsp;DivImage(int XNum, int YNum, int XSize, int YSize)<br>
+&nbsp;&nbsp;{   // 初期化コンストラクタ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XNum = XNum;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YNum = YNum;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XSize = XSize;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YSize = YSize;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;AllNum = XNum * YNum;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// ★div分割画像読込ハンドラ保存用のint配列メモリを確保し-1で初期化<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;HandleArray = new int[AllNum]; // 配列を確保し-1で初期化<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &gt; AllNum; i++) HandleArray[i] = -1;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;//↑【演習★】初期化後の動的配列をデバッガで見てみよう[ary,256として再評価ボタン]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// http://visualstudiostudy.blog.fc2.com/blog-entry-17.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;int* ary = HandleArray;<br>
+#ifdef _DEBUG // デバッグ機能(デバッグの時だけ _DEBUG が定義)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ImagePowCheck((*this)); // *(this)でthisポインタの示す変数内容を表す<br>
+#endif<br>
+&nbsp;&nbsp;};<br>
+&nbsp;&nbsp;~DivImage()<br>
+&nbsp;&nbsp;{   // デストラクタでメモリを解放<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (this-&gt;HandleArray != NULL)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete[] this-&gt;HandleArray;<br>
+&nbsp;&nbsp;};<br>
+#ifdef _DEBUG // デバッグ機能(デバッグの時だけ _DEBUG が定義)<br>
+&nbsp;&nbsp;bool is_pow2(unsigned int x) // 2のべき乗か計算<br>
+&nbsp;&nbsp;{   // https://programming-place.net/ppp/contents/c/rev_res/math012.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return (x != 0) && (x & (x - 1)) == 0;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;void ImagePowCheck(DivImage& divImage)<br>
+&nbsp;&nbsp;{   // ★3Dに使う画像は2のべき乗でなければ受け付けないようにする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// https://yttm-work.jp/gmpg/gmpg_0031.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// https://yappy-t.hatenadiary.org/entry/20100110/1263138881<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (divImage.XSize &gt; 0 && divImage.YSize > 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&& is_pow2(divImage.XSize) && is_pow2(divImage.YSize)) return;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;else assert("3Dに使うなら2のべき乗の画像サイズにしなきゃ" == "");<br>
+&nbsp;&nbsp;}<br>
+#endif<br>
+private: // コピーと代入をプライベートにして禁止する<br>
+&nbsp;&nbsp;//コピーコンストラクタ<br>
+&nbsp;&nbsp;DivImage(const DivImage& divImage) {};<br>
+<br>
+&nbsp;&nbsp;//代入演算子のオーバーロード<br>
+&nbsp;&nbsp;DivImage& operator=(const DivImage& divImage) {};<br>
+};<br>
+<br>
+#endif<br></p>
+		
+	<p><code>Image.h</code>でカスタムしたデータタイプ【DivImage型】で縦2×横8の分割された爆発画像を読込みましょう。</p>
+    <p class="source">#ifndef IMAGE_H_<br>
+#define IMAGE_H_<br>
+<br>
+#include "DxLib.h"<br>
+#include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+<em>#include "DivImage.h"</em><br>
+<br>
+class Image<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;Image() {}; // 初期化コンストラクタ:定義と{}空の処理<br>
+&nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタ:定義と{}空の処理<br>
+&nbsp;&nbsp;static void Load();<br>
+<br>
+&nbsp;&nbsp;static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
+&nbsp;&nbsp;static int player; //プレイヤ画像のハンドラ<br>
+&nbsp;&nbsp;static int playerBullet; //プレイヤの弾画像のハンドラ<br>
+&nbsp;&nbsp;static int enemyBullet16; //敵弾 画像のハンドラ(読込画像番号)<br>
+&nbsp;&nbsp;static int zako0; //ザコ0 画像のハンドラ(読込画像番号)<br>
+&nbsp;&nbsp;static int zako1; //ザコ1 画像のハンドラ(読込画像番号)<br>
+&nbsp;&nbsp;static int zako2; //ザコ2 画像のハンドラ(読込画像番号)<br>
+&nbsp;&nbsp;static int zako3; //ザコ3 画像のハンドラ(読込画像番号)<br>
+&nbsp;&nbsp;<em>static DivImage explosion; // [分割画像]爆発エフェクト</em><br>
+<br>
+private:<br>
+<br>
+};<br>
+#endif<br>
+</p>
+<br>
+<p>次に対となるcppファイルも変更します。<br>
+      <code>Image.cpp</code>の内容を次のようにします：</p>
+    <p class="source">#include "Image.h"<br>
+<br>
+int Image::bossImage{-1}; // Load終わっても-1(初期値)のままだと画像ロードが失敗してますね<br>
+int Image::player{-1};<br>
+int Image::playerBullet{-1};<br>
+int Image::enemyBullet16{-1};<br>
+int Image::zako0{-1};<br>
+int Image::zako1{-1};<br>
+int Image::zako2{-1};<br>
+int Image::zako3{-1};<br>
+<em>// ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定</em><br> 
+<em>int Image::explosion{ 8, 2, 64, 64 };</em><br>
+<br>
+void Image::Load()<br>
+{<br>
+&nbsp;&nbsp;bossImage = LoadGraph("Image/boss1.png");<br>
+&nbsp;&nbsp;assert(bossImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;player= LoadGraph("Image/player.png");<br>
+&nbsp;&nbsp;assert(player!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;playerBullet = LoadGraph("Image/player_bullet.png");<br>
+&nbsp;&nbsp;assert(playerBullet!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;enemyBullet16 = LoadGraph("Image/enemy_bullet_16.png");<br>
+&nbsp;&nbsp;assert(enemyBullet16!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;zako0 = LoadGraph("Image/zako0.png");<br>
+&nbsp;&nbsp;assert(zako0!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;zako1 = LoadGraph("Image/zako1.png");<br>
+&nbsp;&nbsp;assert(zako1!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;zako2 = LoadGraph("Image/zako2.png");<br>
+&nbsp;&nbsp;assert(zako2!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;zako3 = LoadGraph("Image/zako3.png");<br>
+&nbsp;&nbsp;assert(zako3!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;<em>Image::LoadDivGraph("Image/explosion.png", explosion); // div分割画像をロード
+&nbsp;&nbsp;for (int i = 0; i &lt; explosion.AllNum; i++)
+&nbsp;&nbsp;{   // 画像読込失敗
+&nbsp;&nbsp;&nbsp;&nbsp;if (explosion.HandleArray[i] == -1) assert("爆発分割画像読込失敗" == "");
+&nbsp;&nbsp;}</em>
+}<br>
+</p>
+		
+		
 </body>
 </html>
