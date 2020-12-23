@@ -4409,7 +4409,7 @@ void Game::Draw()<br>
 };<br>
 </p>
 	
-	<h1><a id="mozTocId3002" class="mozTocH1"></a>爆発エフェクトの作成(分割画像DivImage型の定義)<</h1>
+	<h1><a id="mozTocId3002" class="mozTocH1"></a>爆発エフェクトの作成(分割画像DivImage型の定義)</h1>
 	
 <p><code>DivImage.h</code>を新規作成して、カスタムしたデータタイプ【DivImage型】を定義して縦2×横8の分割された爆発画像を読込みましょう。</p>
     <p class="source">#ifndef DIVIMAGE_H_<br>
@@ -4428,13 +4428,15 @@ public:<br>
 &nbsp;&nbsp;int YSize = 0;<br>
 &nbsp;&nbsp;int* HandleArray = NULL;<br>
 &nbsp;&nbsp;int AllNum = 0;<br>
-&nbsp;&nbsp;DivImage(int XNum, int YNum, int XSize, int YSize, int NotUse3DFlag = true)<br>
+&nbsp;&nbsp;bool is3DTexture = false;<br>
+&nbsp;&nbsp;DivImage(int XNum, int YNum, int XSize, int YSize, bool is3DTexture=false)<br>
 &nbsp;&nbsp;{   // 初期化コンストラクタ<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XNum = XNum;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YNum = YNum;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XSize = XSize;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YSize = YSize;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;AllNum = XNum * YNum;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;is3DTexture = is3DTexture;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// ★div分割画像読込ハンドラ保存用のint配列メモリを確保し-1で初期化<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;HandleArray = new int[AllNum]; // 配列を確保し-1で初期化<br>
 &nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &gt; AllNum; i++) HandleArray[i] = -1;<br>
@@ -4442,7 +4444,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// http://visualstudiostudy.blog.fc2.com/blog-entry-17.html<br>
 &nbsp;&nbsp;&nbsp;&nbsp;int* ary = HandleArray;<br>
 #ifdef _DEBUG // デバッグ機能(デバッグの時だけ _DEBUG が定義)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;if(NotUse3DFlag==false) ImagePowCheck((*this)); // *(this)でthisポインタの示す変数内容を表す<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if(is3DTexture==true) ImagePowCheck((*this)); // *(this)でthisポインタの示す変数内容を表す<br>
 #endif<br>
 &nbsp;&nbsp;};<br>
 &nbsp;&nbsp;~DivImage()<br>
