@@ -4317,7 +4317,7 @@ void Game::Update()<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<br>
 &nbsp;&nbsp;<em>// 自機と敵弾の衝突判定<br>
-&nbsp;&nbsp;foreach (const auto&amp; enemyBullet : gm.enemyBullets)<br>
+&nbsp;&nbsp;for (const auto&amp; enemyBullet : gm.enemyBullets)<br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// 自機が死んでたらこれ以上判定しない<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if (gm.player-&gt;isDead)<br>
