@@ -4607,6 +4607,9 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
 &nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Explosion";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z; // [3D対応]<br>
 &nbsp;&nbsp;}<br>
 <br>
 &nbsp;&nbsp;// 更新処理<br>
@@ -4822,7 +4825,7 @@ public:<br><br>
 &nbsp;&nbsp;&nbsp;&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>// 爆発を出す<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.explosions.push_back(std::make_shared&lt;Explosion&gt;(x, y);</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.explosions.push_back(std::make_shared&lt;Explosion&gt;(x, y));</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;}<br>
 &nbsp;&nbsp;}<br>
 };<br>
