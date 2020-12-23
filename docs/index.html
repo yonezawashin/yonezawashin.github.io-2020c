@@ -4428,7 +4428,7 @@ public:<br>
 &nbsp;&nbsp;int YSize = 0;<br>
 &nbsp;&nbsp;int* HandleArray = NULL;<br>
 &nbsp;&nbsp;int AllNum = 0;<br>
-&nbsp;&nbsp;DivImage(int XNum, int YNum, int XSize, int YSize)<br>
+&nbsp;&nbsp;DivImage(int XNum, int YNum, int XSize, int YSize, int NotUse3DFlag = true)<br>
 &nbsp;&nbsp;{   // 初期化コンストラクタ<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;XNum = XNum;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;YNum = YNum;<br>
@@ -4442,7 +4442,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;// http://visualstudiostudy.blog.fc2.com/blog-entry-17.html<br>
 &nbsp;&nbsp;&nbsp;&nbsp;int* ary = HandleArray;<br>
 #ifdef _DEBUG // デバッグ機能(デバッグの時だけ _DEBUG が定義)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;ImagePowCheck((*this)); // *(this)でthisポインタの示す変数内容を表す<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if(NotUse3DFlag==false) ImagePowCheck((*this)); // *(this)でthisポインタの示す変数内容を表す<br>
 #endif<br>
 &nbsp;&nbsp;};<br>
 &nbsp;&nbsp;~DivImage()<br>
@@ -4488,6 +4488,7 @@ public:<br>
 &nbsp;&nbsp;Image() {}; // 初期化コンストラクタ:定義と{}空の処理<br>
 &nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタ:定義と{}空の処理<br>
 &nbsp;&nbsp;static void Load();<br>
+&nbsp;&nbsp;static int LoadDivGraph(const TCHAR* FileName, DivImage& divImage);<br>    
 <br>
 &nbsp;&nbsp;static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
 &nbsp;&nbsp;static int player; //プレイヤ画像のハンドラ<br>
@@ -4520,6 +4521,17 @@ int Image::zako3{-1};<br>
 <em>// ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定</em><br> 
 <em>DivImage Image::explosion{ 8, 2, 64, 64 };</em><br>
 <br>
+<em>// DXライブラリのLoadDivGraphを使いやすくラッピング<br>
+// ★関数に参照渡しを行う<br>
+// 関数の引数に参照渡しを行うことでdivImageの中身を書き換えることができる(値渡しでは書換不可)<br>
+//　https://qiita.com/agate-pris/items/05948b7d33f3e88b8967<br>
+//  https://qiita.com/RuthTaro/items/f35c3a26779c0ca1a41a<br>
+int Image::LoadDivGraph(const TCHAR* FileName, DivImage& divImage)<br>
+{<br>
+&nbsp;&nbsp;return DxLib::LoadDivGraph(FileName, divImage.XNum * divImage.YNum,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;divImage.XNum, divImage.YNum, divImage.XSize, divImage.YSize, divImage.HandleArray);<br>
+};</em><br>
+<br>	    
 void Image::Load()<br>
 {<br>
 &nbsp;&nbsp;bossImage = LoadGraph("Image/boss1.png");<br>
