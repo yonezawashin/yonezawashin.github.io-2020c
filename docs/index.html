@@ -4788,5 +4788,162 @@
       &nbsp;&nbsp;}<br>
       }<br>
     </p>
+    <br>
+    <p><code>Boss.h</code>を新規作成してif else でStateに応じて行動を遷移させてみましょう。</p>
+    <p>「<b>登場</b>」画面右から出てくる<br>
+      　↓<br>
+      「<b>通常</b>」通常の状態。通常の攻撃を行う<br>
+      　↓<br>
+      「<b>気絶</b>」気絶状態の絵になる<br>
+      　↓<br>
+      「<b>発狂</b>」怒った絵になる。激しい攻撃を繰り広げてくる<br>
+      　↓<br>
+      「<b>死亡</b>」少し時間をかけて死亡の演出を行う<br>
+      　↓<br>
+      完全に消滅</p>
+    <p><br>
+    </p>
+    <p class="source">#ifndef BOSS_H_<br>
+      #define BOSS_H_<br>
+      <br>
+      #include "Enemy.h"<br>
+      <br>
+      #include "Image.h"<br>
+      <br>
+      // ボスクラス。Enemyを継承して作る<br>
+      class Boss : public Enemy<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // ボスの状態種別<br>
+      &nbsp;&nbsp;&nbsp; enum class State<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Appear, // 登場<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Normal, // 通常時<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Swoon, // 気絶時<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Angry, // 発狂モード<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Dying, // 死亡<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; State state = State::Appear; // 現在の状態<br>
+      &nbsp;&nbsp;&nbsp; int swoonTime = 120; // 残り気絶時間<br>
+      &nbsp;&nbsp;&nbsp; int dyingTime = 180; // 死亡時のアニメーション時間<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Boss(float x, float y, float z = 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Boss"; // オブジェクトの種類判別タグ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = 100; // ライフ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collisionRadius = 70; // 当たり判定半径<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (state == State::Appear) // 登場状態<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x -= 1; // 左へ移動<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (x &lt;= 750) // x座標が750以下になったら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; state = State::Normal; // 通常状態へ移行<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Normal) // 通常状態<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Swoon) // 気絶状態<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; swoonTime--; // タイマー減少<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (swoonTime &lt;= 0) // タイマーが0になったら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; state = State::Angry; // 発狂モードへ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Angry) // 発狂モード<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Dying) // 死亡中<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dyingTime--; // タイマー減少<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (dyingTime &lt;= 0) // タイマーが0になったら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isDead = true; // 完全に消滅<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (state == State::Appear || state == State::Normal) // 登場時と通常時<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::boss1, TRUE); // 普通の画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Swoon) // 気絶時<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::boss2, TRUE); // 気絶時の画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Angry) // 発狂モード<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::boss3, TRUE); // 怒ってる画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Dying) // 死亡中<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::boss2, TRUE); // 気絶時の画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 自機弾に当たったときの処理をoverride（上書き）する<br>
+      &nbsp;&nbsp; &nbsp;void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet) override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 登場時、気絶時、死亡時は被弾しても何もしない<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (state == State::Appear || state == State::Swoon || state == State::Dying)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;life -= 1; // ライフを減らす<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (life &lt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ライフが無くなったら、すぐ消滅するのではなく、死亡状態へ移行<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;state = State::Dying;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (state == State::Normal &amp;&amp; life &lt;= 50)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 通常状態でライフが50以下になったら、気絶する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;state = State::Swoon;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <p><code>Game.cpp</code>にボスの生成処理を追加してボスが期待通りに状態遷移することを確認しましょう。</p>
+    <p class="source">#include "Game.h"<br>
+      <br>
+      #include "Player.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include "PlayerBullet.h"<br>
+      #include "EnemyBullet.h"<br>
+      #include "Explosion.h"<br>
+      #include "Zako0.h"<br>
+      #include "Zako1.h"<br>
+      #include "Zako2.h"<br>
+      #include "Zako3.h"<br>
+      <em>#include "Boss.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+      <br>
+      void Game::Init()<br>
+      {// Init処理<br>
+      &nbsp;&nbsp;&nbsp; Image::Load(); //画像の読込み<br>
+      &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数シードの初期化<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; (中略).................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp; // とりあえず適当に敵を生成<br>
+      &nbsp;&nbsp;&nbsp; <em>gm.enemies.push_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));</em><br>
+      }<br>
+      <br>
+      (以下略).................</p>
   </body>
 </html>
