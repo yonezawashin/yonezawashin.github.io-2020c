@@ -4945,5 +4945,347 @@
       }<br>
       <br>
       (以下略).................</p>
+    <br>
+    <a id="mozTocId4000" class="mozTocH1"></a>
+    <p class="title">[C++移植]シューティングゲーム 4</p>
+    <br>
+    <ol id="mozToc">
+      <!--mozToc h1 1-->
+      <li><a href="#mozTocId4001">シーンを分ける(循環インクルードを避けメモリも管理するには?)</a></li>
+      <li><a href="#mozTocId4002">CSVを読み込んで敵を生成するプログラム</a><br>
+        <a href="#mozTocId40022">カスタムしたデータ構造DataCsv.hでデータ自身にLoadと幅高さを任せる</a><br>
+        <a href="#mozTocId40023">敵データの全方位読出しアルゴリズム</a><br>
+      </li>
+      <li><a href="#mozTocId4003">自機狙い弾</a></li>
+      <li><a href="#mozTocId4004">自機に向かってくる敵</a></li>
+      <br>
+      <p>次のテキスト5はこちら。</p>
+      <br>
+      <a href="#mozTocId4000">[C++移植]シューティングゲーム 4</a><br>
+    </ol>
+    <h1><a id="mozTocId4001" class="mozTocH1"></a>シーンを分ける(循環インクルードを避けメモリも管理するには?)</h1>
+    <p>タイトルやプレイ画面やゲームオーバーのシーンを分けましょう。<br>
+      シーンは構造的に<code>タイトル⇒プレイ画面⇒ゲームオーバー⇒タイトル...とループする</code>ので<br>
+      普通に考えれば循環インクルードしやすいですね。<br>
+      ということで基本方針としては</p>
+    <ol>
+      <li>マネージャの.hヘッダに現在のシーンと一つ前のシーンを保持</li>
+      <li>マネージャの.cppで各シーンをインクルードして画面チェンジ機能の処理を作成する</li>
+      <li>各シーンではマネージャの.hをインクルードして画面チェンジ機能を呼び出す</li>
+    </ol>
+    <p>上記の構造であれば、マネージャの.hヘッダで循環は止まります、なぜか?<br>
+      マネージャの.hヘッダには【画面チェンジ機能の定義だけ】があり、各シーンをインクルード必要としません。<br>
+      実際の<b>【画面チェンジ機能の処理はcppに書き】【cppで各シーンの.hヘッダをインクルードします】</b><br>
+    </p>
+    <p>さて、実際のプログラムをしてみましょう。<br>
+      <b>【シーン専門のマネージャーSceneManagerを作ることにしましょう】</b>(GameManagerでやっても良いですが)。 <br>
+      管理方針は人によりますが、現状のマネージャーの役割は一度ここで整理しておいた方がよいですね</p>
+    <ol>
+      <li>【ゲームのマネージャ役】敵リストなど<b>メモリへのリンクを保持</b>する</li>
+      <li>【ゲームのマネージャ役2】メモリから<b>isDeadの要素などを高速削除</b>する機能</li>
+      <li>【ゲームのマネージャ役3】メモリの<b>要素同士の連絡の【参照を集約】</b>して隠れた参照をしないように整理する</li>
+      <li>【シーンのマネージャ役】現在と前の画面の<b>メモリへのリンクを保持</b>する</li>
+      <li>【シーンのマネージャ役2】次の画面へ<b>シーンをチェンジ</b>する(チェンジするだけでなく前画面の<b>弾などのメモリ参照を外さないとメモリに残り続ける</b>)</li>
+      <li>【シーンのマネージャ役3】<b>前の画面の弾など【終了時のメモリ参照の掃除】</b>を<b>【各シーンに号令をかける】</b></li>
+    </ol>
+    <p>シーンの遷移こそがある意味【一番のメモリの管理の見せどころ】。</p>
+    <p>なぜなら<b>【画面チェンジは実質≒前の画面のメモリへの参照リンクお掃除】</b>に近いですから。</p>
+    <p>気をつけてくださいね<b>【メモリの回し読みポインタの参照リンクお掃除しないと】</b>前の画面の<b>メモリはフリーになりません</b></p>
+    <p><code>Scene.hを新規作成</code>してベースとなるシーンの基底クラスを定義しましょう。</p>
+    <p class="source">#ifndef SCENE_H_<br>
+      #define SCENE_H_<br>
+      <br>
+      #include &lt;string&gt; // シーンの判別文字列tagに使う<br>
+      <br>
+      // シーンの基底クラス あいまいなabstract型タイプ<br>
+      class Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;std::string tag = ""; // シーンの種類の判別に使う<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;//★仮想デストラクタ【忘れるとメモリがヤバいダメ絶対】<br>
+      &nbsp;&nbsp; &nbsp;//【注意！】ベースの基底では必ず定義しないとstringなどが浪費され極悪なメモリ被害に発展<br>
+      &nbsp;&nbsp; &nbsp;virtual ~Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 特に配列とかなくても★string文字列も内部では実質配列だから！5文字分のメモリとかがすり減ってく..<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 仮想デストラクタはstringなど暗黙に内部に配列を持つ要素のデストラクタを暗黙に呼んでくれている！<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;//★純粋仮想関数=0は継承したPlaySceneなどの必須機能(継承したら絶対override必須縛り)<br>
+      &nbsp;&nbsp; &nbsp;// 必須縛りによってSceneを継承したものは【Update,Drawが実装されてるはずの確証があるので】<br>
+      &nbsp;&nbsp; &nbsp;// for文であいまいなSceneのまま【まとめてUpdate,Drawできる】のだ。<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 初期化処理<br>
+      &nbsp;&nbsp; &nbsp;virtual void Initialize() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じくリセット処理を行うが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;virtual void Finalize() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 更新処理<br>
+      &nbsp;&nbsp; &nbsp;virtual void Update() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;virtual void Draw() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <p><code>SceneManager.hを新規作成</code>してシーンを管理するクラスを定義しましょう。</p>
+    <p class="source">#ifndef SCNENEMANAGER_H_<br>
+      #define SCNENEMANAGER_H_<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      #include &lt;memory&gt;<br>
+      #include &lt;string&gt;<br>
+      <br>
+      #include "Singleton.h"<br>
+      <br>
+      class Scene; //クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+      <br>
+      class SceneManager : public Singleton&lt;SceneManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;friend class Singleton&lt;SceneManager&gt;; // Singleton でのインスタンス作成は許可<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;std::string selectStage = "stage1"; // 選択中のステージ(タイトルでのデフォルト選択などもマネージャに保持できる)<br>
+      &nbsp;&nbsp; &nbsp;int scoreMax = -1; // シーンをまたぐスコアなどはマネージャに定義すればシーンチェンジ後も消えない<br>
+      &nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Scene&gt; prevScene{ nullptr }; // 一つ前のシーン<br>
+      &nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Scene&gt; currentScene{ nullptr }; // 現在のシーン<br>
+      &nbsp;&nbsp; &nbsp;// シーンをチェンジし遷移する(前のシーンのリセット処理もする) optionsはステージcsvなどの指定に使える<br>
+      &nbsp;&nbsp; &nbsp;void LoadScene(std::string sceneName, std::vector&lt;std::string&gt; options = { "" });<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp; &nbsp;SceneManager() {}; // 外部からのインスタンス作成は禁止<br>
+      &nbsp;&nbsp; &nbsp;virtual ~SceneManager() {}; //外部からのインスタンス破棄も禁止<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <p><code>TitleScene.hを新規作成</code>してタイトル画面のひな型を作成しましょう。</p>
+    <p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp; &nbsp;SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;TitleScene() : Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;tag = "TitleScene";<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 初期化処理<br>
+      &nbsp;&nbsp; &nbsp;void Initialize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;void Finalize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 更新処理<br>
+      &nbsp;&nbsp; &nbsp;void Update() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene", { "stage1" }); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 0, "TitleSceneです。ボタン押下でPlaySceneへ。", GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (sm.scoreMax &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 200, "MAXスコア: " + sm.scoreMax, GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <p><code>GameOverScene.hを新規作成</code>してゲームオーバー画面のひな型を作成しましょう。</p>
+    <p class="source">#ifndef GAMEOVERSCENE_H_<br>
+      #define GAMEOVERSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      class GameOverScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp; &nbsp;SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;GameOverScene() : Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;tag = "GameOverScene";<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 初期化処理<br>
+      &nbsp;&nbsp; &nbsp;void Initialize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;void Finalize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 更新処理<br>
+      &nbsp;&nbsp; &nbsp;void Update() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("TitleScene"); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 0, "GameOver....ボタン押下でPlaySceneへ", GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <p><code>PlayScene.hを新規作成</code>してプレイ画面のひな型を作成しましょう。<br>
+      なお、<b>実際のプレイに関するコードはGame.cppから頑張って移植</b>してみましょう。<br>
+      ここに全部書くと逆にシーン遷移に関するコードがわかりづらくなりますから。<br>
+      個々人で作成中の<code>Game.cppのゲームのコードをUpdate(),Draw(),Init()はInitialize()へ移植</code>してみましょう。</p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      #include "Player.h"<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp; &nbsp;SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;int score = 0; // プレイ中のゲームのスコア:短期的数値でシーン遷移ごとにリセットされる<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;PlayScene() : Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;tag = "PlayScene";<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 初期化処理<br>
+      &nbsp;&nbsp; &nbsp;void Initialize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここでプレイヤの初期化などのプレイ開始時の処理<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;void Finalize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ終了時のメモリのリセット処理(ゲームクリアやゲームオーバーなど)<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ゲーム終了時のスコアがMAXなら記録して終了<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(score &gt; sm.scoreMax) sm.scoreMax = score;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 更新処理<br>
+      &nbsp;&nbsp; &nbsp;void Update() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ中の更新処理を持ってくる<br>
+      <br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ゲームオーバー判定と画面チェンジ処理<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;bool isGameover = (gm.player == nullptr);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (!isGameover &amp;&amp; gm.player-&gt;isDead) isGameover = true;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isGameover)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ画面の描画処理を持ってくる<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <p><code>SceneManager.cppを新規作成</code>してシーンを遷移する機能を作成しましょう。</p>
+    <p class="source">#include "SceneManager.h"<br>
+      <br>
+      #include "Scene.h"<br>
+      #include "TitleScene.h"<br>
+      #include "PlayScene.h"<br>
+      #include "GameOverScene.h"<br>
+      <br>
+      void SceneManager::LoadScene(std::string sceneName, std::vector&lt;std::string&gt; options)<br>
+      {<br>
+      &nbsp;&nbsp; &nbsp;// 現在のシーンの終了処理<br>
+      &nbsp;&nbsp; &nbsp;if(currentScene !=nullptr)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene-&gt;Finalize(); // 終了処理を呼び出す<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;if (sceneName == "TitleScene")<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 次のシーンの生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene = std::make_shared&lt;TitleScene&gt;();<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;else if (sceneName == "PlayScene")<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;//オプション指定があればそれを選択ステージ名とする<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (options.size()&gt;0 &amp;&amp; options[0] != "")<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;selectStage = options[0]; // オプション配列の0番目を選ぶステージ名に指定<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 次のシーンの生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene = std::make_shared&lt;PlayScene&gt;();<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;else if (sceneName == "GameOverScene")<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 次のシーンの生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene = std::make_shared&lt;GameOverScene&gt;();<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 次のシーンの初期化<br>
+      &nbsp;&nbsp; &nbsp;currentScene-&gt;Initialize(); // 初期化を呼び出す<br>
+      }</p>
+    <br>
   </body>
 </html>
