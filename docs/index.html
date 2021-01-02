@@ -4333,11 +4333,11 @@
       #endif<br>
       <br>
       private: // コピーと代入をプライベートにして禁止する<br>
-      &nbsp;&nbsp;//コピーコンストラクタ<br>
-      &nbsp;&nbsp;DivImage(const DivImage&amp; divImage) {};<br>
+      &nbsp;&nbsp;&nbsp; // コピーコンストラクタの禁止privateオーバーロード<br>
+      &nbsp;&nbsp;&nbsp; DivImage(const DivImage&amp; divImage) {};<br>
       <br>
-      &nbsp;&nbsp;//代入演算子のオーバーロード<br>
-      &nbsp;&nbsp;DivImage&amp; operator=(const DivImage&amp; divImage) {};<br>
+      &nbsp;&nbsp;&nbsp; // 代入演算子の禁止privateオーバーロード<br>
+      &nbsp;&nbsp;&nbsp; DivImage&amp; operator=(const DivImage&amp; divImage) {};<br>
       };<br>
       <br>
       #endif</p>
@@ -4953,7 +4953,9 @@
     <br>
     <ol id="mozToc">
       <!--mozToc h1 1-->
-      <li><a href="#mozTocId4001">シーンを分ける(循環インクルードを避けメモリも管理するには?)</a></li>
+      <li><a href="#mozTocId4001">シーンを分ける(循環インクルードを避けメモリも管理するには?)</a><br>
+        <a href="#mozTocId40012">画面やステージごとにImageのメモリを開放する</a><br>
+      </li>
       <li><a href="#mozTocId4002">CSVを読み込んで敵を生成するプログラム</a><br>
         <a href="#mozTocId40022">カスタムしたデータ構造DataCsv.hでデータ自身にLoadと幅高さを任せる</a><br>
         <a href="#mozTocId40023">敵データの全方位読出しアルゴリズム</a><br>
@@ -4993,6 +4995,7 @@
     <p>シーンの遷移こそがある意味【一番のメモリの管理の「要所」】。</p>
     <p>なぜなら<b>【画面チェンジは実質≒前の画面のメモリへの参照リンクお掃除】</b>に近いですから。</p>
     <p>気をつけてくださいね<b>【メモリの回し読みポインタの参照リンクお掃除しないと】</b>前の画面の<b>メモリはフリーになりません</b></p>
+    <h2>シーンマネージャで画面遷移を作成する(Game.cppからコードを画面に分けて移植)</h2>
     <p><code>Scene.hを新規作成</code>してベースとなるシーンの基底クラスを定義しましょう。</p>
     <p class="source">#ifndef SCENE_H_<br>
       #define SCENE_H_<br>
@@ -5801,10 +5804,10 @@
     <br>
     <br>
     <p>さて、移植しただけではゲームは動きません。<br>
-      <code>Game.hとGame.cppにシーンのマネージャへの連絡先sm</code>を追加しましょう。</p>
+      <code>Game.hとGame.cppにシーンの初期遷移、更新、描画の処理</code>を追加しましょう。</p>
     <br>
     <br>
-    <p><code>Game.hにシーンの初期遷移、更新、描画の処理</code>を追加しましょう。</p>
+    <p><code>Game.hにシーンのマネージャへの連絡先sm</code>を追加しましょう。</p>
     <p class="source">#ifndef GAME_H_<br>
       #define GAME_H_<br>
       <br>
@@ -5835,7 +5838,7 @@
       &nbsp;&nbsp;&nbsp; void Draw();// 描画処理(定義だけ)<br>
       };<br>
       #endif</p>
-    <p><code>Game.cppから移植したコードを削除します。</code></p>
+    <p><code>Game.cppにシーンの初期遷移、更新、描画の処理</code>を追加しましょう。</p>
     <p class="source">#include "Game.h"<br>
       <br>
       #include "MyRandom.h"<br>
@@ -5865,6 +5868,350 @@
         &nbsp;&nbsp; &nbsp;sm.currentScene-&gt;Draw();</em><br>
       }</p>
     <br>
-    
+    <br>
+    <br>
+    <br>
+    <p>さて、ここまでで画面遷移できるようになりました。<br>
+      <b>一度実行して画面遷移できるか確認</b>してみてください。<br>
+    </p>
+    <br>
+    <br>
+    <br>
+    <h2><a id="mozTocId40012" class="mozTocH1"></a>画面やステージごとにImageのメモリを開放する</h2>
+    <p>さて、画面遷移は実現しましたが、<b>現状ではメモリの節約効果は薄いです</b>。<br>
+      なぜか？ 答えはImageクラスではゲーム<b>開始時に全画像データを読み込んだままずっと持ち続け</b>てます。<br>
+      ゆえにゲームが壮大になれば<b>【冒険で使う全画像データがメモリにのり続けてしまい】</b>ます。<br>
+      よって<b>【画面やステージマップごと】</b>に<b>【使用する画像以外をメモリから解放する】</b>処理を取り入れましょう。<br>
+      (実はプレイ中の<b>敵や弾[1個=数byte]の削除処理はメモリより【当たり判定のCPU計算を軽くする】効果の方が強かった</b>)<br>
+      (<b>敵や弾[1個=数byte]×1000個でも1000バイト=1KBキロバイト</b>、一方で<b>【大きめの背景画像ファイルは1個で1～1000KBキロバイト=1MBメガバイト】</b>)<br>
+      (<b>つまり画像1つ分で弾数万発ぶんのメモリ節約</b>、まあでも<b>【数万発の当たり判定したらCPU重くて画面フリーズしますが】</b>)<br>
+    </p>
+    <br>
+    <br>
+    <p><code>Image.hにロード済み画像の辞書に関する定義</code>を追加しましょう(mapタイプ型 = 辞書配列型)。</p>
+    <p class="source">#ifndef IMAGE_H_<br>
+      #define IMAGE_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
+      <em>#include &lt;map&gt; // ロード済の画像辞書に使う<br>
+        #include &lt;memory&gt; // 辞書の指す先を回し読みポインタにする<br>
+        #include &lt;vector&gt; // シーンのリストに使う<br>
+        #include &lt;algorithm&gt; // シーンのリストからのfindに使う</em><br>
+      #include "DivImage.h" // 分割画像の読込みに使う<br>
+      <br>
+      class Image<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; Image() {}; // 初期化コンストラクタの定義だけ<br>
+      &nbsp;&nbsp;&nbsp; ~Image() {}; // 破棄する処理デストラクタの定義だけ<br>
+      &nbsp;&nbsp;&nbsp; static void Load(<em>std::string scene=""</em>); <em>// シーンを指定して使う画像だけロードもできる</em><br>
+      &nbsp;&nbsp;&nbsp; static int LoadDivGraph(const TCHAR* FileName, DivImage&amp; divImage<em>, std::string scene="", std::vector&lt;std::string&gt; useScenes={""}</em>);<br>
+      &nbsp;&nbsp;&nbsp; static int LoadGraph(const TCHAR* FileName<em>, std::string scene = "", std::vector&lt;std::string&gt; useScenes = { "" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; <em>static std::map&lt;std::string, std::shared_ptr&lt;DivImage&gt;&gt; loadDic; // ロード済の画像辞書</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;&nbsp; static int player; //プレイヤ画像のハンドラ<br>
+      &nbsp;&nbsp;&nbsp; static int playerBullet; //プレイヤの弾画像のハンドラ<br>
+      &nbsp;&nbsp;&nbsp; static int enemyBullet16; //敵弾 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;&nbsp; static int zako0; //ザコ0 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;&nbsp; static int zako1; //ザコ1 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;&nbsp; static int zako2; //ザコ2 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;&nbsp; static int zako3; //ザコ3 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;&nbsp; static int boss1; // ボス通常時<br>
+      &nbsp;&nbsp;&nbsp; static int boss2; // ボス気絶<br>
+      &nbsp;&nbsp;&nbsp; static int boss3; // ボス発狂<br>
+      &nbsp;&nbsp;&nbsp; static DivImage explosion; // [分割画像]爆発エフェクト<br>
+      <br>
+      private:<br>
+      <br>
+      };<br>
+      #endif</p>
+    <br>
+    <p><code>Image.cppにロード済み画像を辞書に登録しシーンで使わない画像を開放する処理</code>を追加しましょう。</p>
+    <p class="source">#include "Image.h"<br>
+      <br>
+      <em>std::map&lt;std::string, std::shared_ptr&lt;DivImage&gt;&gt; Image::loadDic;</em><br>
+      <br>
+      int Image::bossImage{ -1 }; // Load終わっても-1(初期値)のままだと画像ロードが失敗してますね<br>
+      int Image::player{ -1 };<br>
+      int Image::playerBullet{ -1 };<br>
+      int Image::enemyBullet16{ -1 };<br>
+      int Image::zako0{ -1 };<br>
+      int Image::zako1{ -1 };<br>
+      int Image::zako2{ -1 };<br>
+      int Image::zako3{ -1 };<br>
+      int Image::boss1{ -1 };<br>
+      int Image::boss2{ -1 };<br>
+      int Image::boss3{ -1 };<br>
+      // ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定<br>
+      DivImage Image::explosion{ 8, 2, 64, 64 };<br>
+      <br>
+      void Image::Load(<em>std::string scene</em>)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; bossImage = LoadGraph("Image/boss1.png"<em>, scene, { "TitleScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(bossImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; player = LoadGraph("Image/player.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(player != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; playerBullet = LoadGraph("Image/player_bullet.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(playerBullet != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; enemyBullet16 = LoadGraph("Image/enemy_bullet_16.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(enemyBullet16 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; zako0 = LoadGraph("Image/zako0.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(zako0 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; zako1 = LoadGraph("Image/zako1.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(zako1 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; zako2 = LoadGraph("Image/zako2.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(zako2 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; zako3 = LoadGraph("Image/zako3.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(zako3 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; boss1 = LoadGraph("Image/boss1.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(boss1 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; boss2 = LoadGraph("Image/boss2.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(boss2 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; boss3 = LoadGraph("Image/boss3.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(boss3 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // div分割画像をロード<em> or メモリ開放</em><br>
+      &nbsp;&nbsp;&nbsp; Image::LoadDivGraph("Image/explosion.png", explosion<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; <u>for (int i = 0; i &lt; explosion.AllNum; i++)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 画像読込失敗<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (explosion.HandleArray[i] == -1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert("画像読込失敗(画像ファイル名やフォルダが正しい?)" == "");<br>
+        &nbsp;&nbsp;&nbsp; }</u><br>
+      }<br>
+      <br>
+      <em>// DXライブラリのLoadGraphを同じ関数名でラッピング(既存コードの書換えを最小限にする工夫)<br>
+        // シーンごとにすでにメモリにロードしてある画像でシーンに使わないものはメモリから解放する<br>
+        int Image::LoadGraph(const TCHAR* FileName, std::string scene, std::vector&lt;std::string&gt; useScenes)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; DivImage divImage{ 1,1,1,1 }; // 1×1の1分割画像として分割画像とロードを共通化<br>
+        &nbsp;&nbsp;&nbsp; return Image::LoadDivGraph(FileName, divImage, scene, useScenes);<br>
+        }</em><br>
+      <br>
+      // DXライブラリのLoadDivGraphを使いやすくラッピング<br>
+      // ★関数に参照渡しを行う<br>
+      // 関数の引数に参照渡しを行うことでdivImageの中身を書き換えることができる(値渡しでは書換不可)<br>
+      // https://qiita.com/agate-pris/items/05948b7d33f3e88b8967<br>
+      // https://qiita.com/RuthTaro/items/f35c3a26779c0ca1a41a<br>
+      int Image::LoadDivGraph(const TCHAR* FileName, DivImage&amp; divImage<em>, std::string scene, std::vector&lt;std::string&gt; useScenes</em>)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; <em>int result = -1;<br>
+        &nbsp;&nbsp;&nbsp; // 次のシーンで使う画像かの判別、useScenesリストにあれば使う判定<br>
+        &nbsp;&nbsp;&nbsp; bool use = std::find(useScenes.begin(), useScenes.end(), scene) != useScenes.end();<br>
+        &nbsp;&nbsp;&nbsp; if (use)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; &nbsp;// ロード済み辞書に指定したファイルがある(count=1)のとき<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (loadDic.count(FileName) == 1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;&amp; loadDic[FileName] != nullptr &amp;&amp; loadDic[FileName]-&gt;HandleArray != nullptr)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 画像ハンドルをfor文で書き写す(単一:AllNum=1,分割画像:AllNum&gt;1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; loadDic[FileName]-&gt;AllNum; i++)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; divImage.HandleArray[i] = loadDic[FileName]-&gt;HandleArray[i];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ロード済みなら画像ハンドルを返す(ロード時間短縮)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (loadDic[FileName]-&gt;AllNum == 1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return loadDic[FileName]-&gt;HandleArray[0];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else return 0; // 分割画像なら成功:0を返す(本家LoadDivGraphに合わせて)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXライブラリで画像をロードし辞書に登録<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (divImage.AllNum == 1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 単一画像のロードと画像サイズ取得<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result = divImage.HandleArray[0] = DxLib::LoadGraph(FileName);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GetGraphSize(result, &amp;(divImage.XSize), &amp;(divImage.YSize)); // 画像サイズ取得<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (divImage.AllNum &gt; 1) // 複数分割画像の読込み<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result = </em>DxLib::LoadDivGraph(FileName, divImage.XNum * divImage.YNum,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; divImage.XNum, divImage.YNum, divImage.XSize, divImage.YSize, divImage.HandleArray);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>for (int i = 0; i &lt; divImage.AllNum; i++)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; { // 画像読込失敗<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (divImage.HandleArray[i] == -1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert("画像読込失敗(画像ファイル名やフォルダが正しい?)" == "");<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 辞書用にdivImageの【★コピーを取って回し読みポインタ】として保管<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (result != -1) loadDic[FileName] = std::make_shared&lt;DivImage&gt;(divImage);//←★コピーコンストラクタ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return result; // ロードした結果を返す<br>
+        &nbsp;&nbsp;&nbsp; } // ↓ここまでの↑returnに引っかからずif抜けてきたら【シーン利用しない画像】<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 今回のシーンでは利用しない画像の時はメモリから画像を開放して節約<br>
+        &nbsp;&nbsp;&nbsp; if (loadDic.count(FileName) == 1 &amp;&amp;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; loadDic[FileName] != nullptr &amp;&amp; loadDic[FileName]-&gt;HandleArray != nullptr)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; &nbsp;// メモリから画像開放 https://dxlib.xsrv.jp/function/dxfunc_graph1.html#R3N15<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; loadDic[FileName]-&gt;AllNum; i++)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DeleteGraph(loadDic[FileName]-&gt;HandleArray[i]);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; loadDic.erase(FileName); // 辞書からも索引削除(同時に回し読みポインタ開放)<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; // 今回のシーンでは利用しない画像の時は-2を返す<br>
+        &nbsp;&nbsp;&nbsp; return -2; // 画像読込み失敗の-1と区別するため-2を返します</em><br>
+      };</p>
+    <br>
+    <p><code>DivImage.hにコピーコンストラクタをpublic定義にして</code>画像辞書に分割画像のコピーへの回し読みポインタを保存できるようにする。<br>
+      <a href="https://docs.google.com/presentation/d/1m7LS913CRtCuFAz9-pbyWpka49vUoyqiL_n9h1kG_sY/edit?usp=sharing">スライドで変更理由に目を通しておきましょう(C++の根の深いコピー時の*ポインタとデータ分離問題)。</a></p>
+    <p class="source">#ifndef DIVIMAGE_H_<br>
+      #define DIVIMAGE_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include &lt;assert.h&gt; // 画像の2のべき乗チェックに使う<br>
+      <br>
+      // 分割画像を読込むためのデータ構造(画像数や画像ハンドル配列、3Dに使う場合の2のべき乗チェック機能をもつ)<br>
+      class DivImage<br>
+      {&nbsp; // 2Dの分割画像や3Dに分割Div画像を使うと画像全体が使われてしまうのを回避するための情報<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; int XNum = 0;<br>
+      &nbsp;&nbsp;&nbsp; int YNum = 0;<br>
+      &nbsp;&nbsp;&nbsp; int XSize = 0;<br>
+      &nbsp;&nbsp;&nbsp; int YSize = 0;<br>
+      &nbsp;&nbsp;&nbsp; int* HandleArray = nullptr;<br>
+      &nbsp;&nbsp;&nbsp; int AllNum = 0;<br>
+      &nbsp;&nbsp;&nbsp; bool is3DTexture = false;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化 : X方向分割画像数 XNum, Y方向分割画像数 YNum, 画像 横 幅XSizeピクセル, 画像 縦 高さYSizeピクセル<br>
+      &nbsp;&nbsp;&nbsp; DivImage(int XNum, int YNum, int XSize, int YSize, bool is3DTexture = false)<br>
+      &nbsp;&nbsp;&nbsp; { // 初期化コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;XNum = XNum; // X方向分割画像数<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;YNum = YNum; // Y方向分割画像数<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;XSize = XSize; // 画像 横 幅XSize(ピクセルドット数)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;YSize = YSize; // 画像 縦 高さYSize(ピクセルドット数)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AllNum = XNum * YNum; // トータルの分割画像数<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;is3DTexture = is3DTexture; // 3Dテクスチャ分割画像かtrueだと2のべき乗チェックが入る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★div分割画像読込ハンドラ保存用のint配列メモリを確保し-1で初期化<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;HandleArray = new int[AllNum]; // 配列を確保し-1で初期化<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; AllNum; i++) HandleArray[i] = -1;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //↑【演習★】初期化後の動的配列をデバッガで見てみよう[ary,256として再評価ボタン]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // http://visualstudiostudy.blog.fc2.com/blog-entry-17.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int* ary = HandleArray;<br>
+      #ifdef _DEBUG // デバッグ機能(デバッグの時だけ _DEBUG が定義)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (is3DTexture == true) ImagePowCheck((*this)); // *(this)でthisポインタの示す変数内容を表す<br>
+      #endif<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; ~DivImage()<br>
+      &nbsp;&nbsp;&nbsp; { // デストラクタでメモリを解放<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;HandleArray != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[] this-&gt;HandleArray;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// コピーコンストラクタ(動的new配列をクラス内に持つ場合にはカスタムが必要)<br>
+        &nbsp;&nbsp;&nbsp; // [解説スライド] https://docs.google.com/presentation/d/1m7LS913CRtCuFAz9-pbyWpka49vUoyqiL_n9h1kG_sY/edit?usp=sharing<br>
+        &nbsp;&nbsp;&nbsp; DivImage(const DivImage&amp; divImage)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ↓★この配列だけはデフォルトのコピーコンストラクタではコピーされない！<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;HandleArray = new int[AllNum]; //★[勉強]こちらでもnew確保<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; AllNum; i++) HandleArray[i] = divImage.HandleArray[i];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 他はただのコピー書き移し<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;XNum = divImage.XNum; this-&gt;YNum = divImage.YNum;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;XSize = divImage.XSize; this-&gt;YSize = divImage.YSize;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AllNum = XNum * YNum;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;is3DTexture = divImage.is3DTexture;<br>
+        &nbsp;&nbsp;&nbsp; };</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //【勉強 []添え字演算子を独自に定義】https://programming.pc-note.net/cpp/operator.html<br>
+      &nbsp;&nbsp;&nbsp; // 内部のHandleArrayに今までの様にImage::explosion[5]とかで簡単アクセスできるように【あいだに噛ます】<br>
+      &nbsp;&nbsp;&nbsp; int const&amp; operator [](int index) const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (index &lt; 0 || AllNum &lt;= index) assert("画像データのアクセス番号がおかしい！" == "");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return HandleArray[index];<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; int&amp; operator [](int index)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (index &lt; 0 || AllNum &lt;= index) assert("画像データのアクセス番号がおかしい！" == "");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return HandleArray[index];<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      #ifdef _DEBUG // デバッグ機能(デバッグの時だけ _DEBUG が定義)<br>
+      &nbsp;&nbsp;&nbsp; bool is_pow2(unsigned int x) // 2のべき乗か計算<br>
+      &nbsp;&nbsp;&nbsp; { // https://programming-place.net/ppp/contents/c/rev_res/math012.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (x != 0) &amp;&amp; (x &amp; (x - 1)) == 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; void ImagePowCheck(DivImage&amp; divImage)<br>
+      &nbsp;&nbsp;&nbsp; { // ★3Dに使う画像は2のべき乗でなければ受け付けないようにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://yttm-work.jp/gmpg/gmpg_0031.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://yappy-t.hatenadiary.org/entry/20100110/1263138881<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (divImage.XSize &gt; 0 &amp;&amp; divImage.YSize &gt; 0<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;&amp; is_pow2(divImage.XSize) &amp;&amp; is_pow2(divImage.YSize)) return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else assert("3Dに使うなら2のべき乗の画像サイズにしなきゃ" == "");<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      #endif<br>
+      <br>
+      private: // <u>コピーと</u>代入をプライベートにして禁止する<br>
+      &nbsp;&nbsp;&nbsp; <u>// コピーコンストラクタの禁止privateオーバーロード<br>
+        &nbsp;&nbsp;&nbsp; DivImage(const DivImage&amp; divImage) {};</u><br>
+      &nbsp;&nbsp;&nbsp; <em>// いままでコピー禁止してたのはnew,deleteの面倒なデータと*ポインタ分離問題を察知するため</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 代入演算子の禁止privateオーバーロード<br>
+      &nbsp;&nbsp;&nbsp; DivImage&amp; operator=(const DivImage&amp; divImage) {};<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <p><code>TitleScene.hにシーンごとの画像読込みとメモリ開放する処理</code>を追加しましょう。</p>
+    <p class="source">(中略)........<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; void Initialize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Image::Load("TitleScene"); //画像の読込みとメモリ開放</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // テスト用のボス画像をタイトルでアニメで左右移動させる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x = 100; // Xの初期位置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vx = 10; // ボスの初期速度<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      (中略)........</p>
+    <br>
+    <p><code>PlayScene.hにシーンごとの画像読込みとメモリ開放する処理</code>を追加しましょう。</p>
+    <p class="source">(中略)........<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; void Initialize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Image::Load("PlayScene"); //画像の読込みとメモリ開放</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ここでプレイヤの初期化などのプレイ開始時の処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 敵の仮生成<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.enemies.push_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      (中略)........</p>
+    <br>
+    <p><code>GameOverScene.hにシーンごとの画像読込みとメモリ開放する処理</code>を追加します。<br>
+      (現状シーンで画像使ってないけどプレイ中画面のメモリを解放する効果が出る)。</p>
+    <p class="source">(中略)........<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; void Initialize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Image::Load("GameOverScene"); //画像の読込みとメモリ開放</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      (中略)........</p>
+    <br>
+    <p><code>Game.cppでやっていたImageのLoadを削除</code>します。</p>
+    <p class="source">#include "Game.h"<br>
+      <br>
+      #include "MyRandom.h"<br>
+      <br>
+      void Game::Init()<br>
+      {// Init処理<br>
+      &nbsp;&nbsp;&nbsp; <u>Image::Load("PlayScene"); //画像の読込み</u><br>
+      &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数シードの初期化<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ゲーム開始して最初はタイトルシーンに遷移<br>
+      &nbsp;&nbsp;&nbsp; sm.LoadScene("TitleScene");<br>
+      }<br>
+      <br>
+      (以下略)............</p>
+    <br>
   </body>
 </html>
