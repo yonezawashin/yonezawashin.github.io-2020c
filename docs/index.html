@@ -4955,6 +4955,8 @@
       <!--mozToc h1 1-->
       <li><a href="#mozTocId4001">シーンを分ける(循環インクルードを避けメモリも管理するには?)</a><br>
         <a href="#mozTocId40012">画面やステージごとにImageのメモリを開放する</a><br>
+        <a href="#mozTocId40013">【簡易版】サウンドの読込みと再生機能</a><br>
+        <a href="#mozTocId40014">画面やステージごとにサウンドをメモリ読込み・解放(音量調整機能も追加)</a><br>
       </li>
       <li><a href="#mozTocId4002">CSVを読み込んで敵を生成するプログラム</a><br>
         <a href="#mozTocId40022">カスタムしたデータ構造DataCsv.hでデータ自身にLoadと幅高さを任せる</a><br>
@@ -5246,7 +5248,9 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;bool isGameover = (gm.player == nullptr);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (!isGameover &amp;&amp; gm.player-&gt;isDead) isGameover = true;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isGameover)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 描画処理<br>
@@ -5642,7 +5646,9 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;bool isGameover = (gm.player == nullptr);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (!isGameover &amp;&amp; gm.player-&gt;isDead) isGameover = true;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isGameover)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 描画処理<br>
@@ -6217,9 +6223,967 @@
     <br>
     <br>
     <p>これで一応画面ごとにメモリから画像データが開放される構造になりました。<br>
-    でも、ほとんどメモリのグラフには変化がないかもしれません(<b>タイトル動画など重いデータあれば威力発揮</b>)
+      でも、ほとんどメモリのグラフには変化がないかもしれません(<b>タイトル動画など重いデータあれば威力発揮</b>) </p>
+    <br>
+    <br>
+    <h2><a id="mozTocId40013" class="mozTocH1"></a>【簡易版】サウンドの読込みと再生機能</h2>
+    <p>実は画像より音声のほうがメモリ消費が大きかったりします。<br>
+      なぜか?画像はアニメしなければ1枚ですよね。<br>
+      一方<b>【音声には時間の長さがあります】</b>再生時間が10分など長くなれば数MBになります。<br>
+      <b>特に.mp3など圧縮された音声ファイルはメモリ上では非圧縮の.wavになります！</b><br>
+      ゲーム開始前は小さいmp3の音声ファイルがゲーム開始すると<b>【メモリ上で数十倍に膨れ上がります】</b><br>
+      しかも最悪なことに<b>【圧縮をもとの音声に戻すためロードにめちゃくちゃ時間がかかります】</b><br>
+      ゆえにロードが重くなるのを防ぐためLoadSoundMemする<b>音声ファイルは【あらかじめ.wav変換したほうがLoadが早い】</b>です。<br>
+      以下リンクの変換ツールで<b>mp3などを.wavの非圧縮の音声ファイルに変換</b>して使いましょう。<br>
+      <a href="https://forest.watch.impress.co.jp/library/software/flicaudiocon/">https://forest.watch.impress.co.jp/library/software/flicaudiocon/</a> <br>
+      <br>
+      今回はまず<b>「C#のおいかけ」</b>から音声ファイルを取ってきてSoundクラスを作成してみましょう。<br>
+      以下のファイルを作成中のC++の「SEフォルダ」や「BGMフォルダ」にコピーしておきましょう。</p>
+    <ul>
+      <li>start.ogg&nbsp;&nbsp; ⇒ SE/start.oggに移動</li>
+      <li>bomb.wav&nbsp; ⇒ SE/bomb.wavに移動</li>
+      <li>title.ogg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⇒ BGM/title.mp3に移動</li>
+      <li>gameplay.ogg ⇒ BGM/gameplay.mp3に移動</li>
+      <li>ending.ogg &nbsp;&nbsp;&nbsp; ⇒ BGM/ending.mp3に移動</li>
+    </ul>
+    <p>まずは簡易版のSoundクラスを作ってC#の復習としましょう。</p>
+    <p><code>Sound.hを新規作成</code>します。</p>
+    <p class="source">#ifndef SOUND_H_<br>
+      #define SOUND_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include &lt;assert.h&gt; // 音声読み込みの読込み失敗表示用<br>
+      #include &lt;string&gt;<br>
+      <br>
+      class Sound<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;Sound() {}; // 初期化コンストラクタの定義<br>
+      &nbsp;&nbsp; &nbsp;~Sound() {}; // 破棄処理デストラクタの定義<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// メモリ再生音源管理番号<br>
+      &nbsp;&nbsp; &nbsp;static int start; // ピロピロリン<br>
+      &nbsp;&nbsp; &nbsp;static int bomb; // ボン！<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;static std::string playingMusic; // 再生中のBGM(同一BGMをPlayMusic指定しても再生し直さない)<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;static void Load();<br>
+      &nbsp;&nbsp; &nbsp;// メモリから音声を再生(個別の音量設定も効かせられる)<br>
+      &nbsp;&nbsp; &nbsp;static void Play(int handle, int PlayType = DX_PLAYTYPE_BACK);<br>
+      &nbsp;&nbsp; &nbsp;// ディスク上の音楽を直接再生する(メモリ上に展開しない)<br>
+      &nbsp;&nbsp; &nbsp;static void PlayMusic(std::string file, int PlayType = DX_PLAYTYPE_LOOP);<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      private:<br>
+      <br>
+      };<br>
+      #endif</p>
+    <br>
+    <br>
+    <p><code>Sound.cppを新規作成</code>します。<br>
+      C#の仕組みに加えて<b>すでにプレイ中のBGMは同じBGMをPlayMusicしようとしても再生し直さない工夫をしています。これで再生ボタンUpdate連打状態で重くなるストッパーになりますね</b>、C#でUpdateで同じBGMの再生連打して重くなった経験のある人は取り入れてみましょう。</p>
+    <p class="source">#include "Sound.h"<br>
+      <br>
+      // メモリ再生音源管理番号<br>
+      int Sound::start; // ピロピロリン<br>
+      int Sound::bomb; // ボン！<br>
+      <br>
+      std::string Sound::playingMusic; // 再生中のBGM(同一BGMをプレイ指定しても初めから再生しない)<br>
+      <br>
+      void Sound::Load()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; start = LoadSoundMem("SE/start.ogg");<br>
+      &nbsp;&nbsp;&nbsp; assert(start != -1); // 読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; bomb = LoadSoundMem("SE/bomb.wav");<br>
+      &nbsp;&nbsp;&nbsp; assert(bomb != -1); // 読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      }<br>
+      <br>
+      // メモリ上の音声を再生する。<br>
+      void Sound::Play(int handle, int PlayType)<br>
+      {&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // メモリ上から音声再生<br>
+      &nbsp;&nbsp;&nbsp; PlaySoundMem(handle, PlayType);<br>
+      }<br>
+      <br>
+      // ディスク上の音楽を直接再生する(メモリ上に展開しない)<br>
+      void Sound::PlayMusic(std::string file, int PlayType)<br>
+      {&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <b>// プレイ中のBGMを再指定しても再生し直さず即時return<br>
+        &nbsp;&nbsp;&nbsp; if (file == playingMusic) return;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; playingMusic = file; // プレイ中のBGM名を記録</b><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DxLib::PlayMusic(file.c_str(), PlayType); //ディスクから直接再生(メモリにのせない)<br>
+      }<br>
     </p>
     <br>
     <br>
+    <p><code>Game.cppにSoundのロード処理を追加</code>します。<br>
+    </p>
+    <p class="source">#include "Game.h"<br>
+      <br>
+      #include "MyRandom.h"<br>
+      <em>#include "Sound.h"</em><br>
+      <br>
+      void Game::Init()<br>
+      {// Init処理<br>
+      &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数シードの初期化<br>
+      &nbsp;&nbsp;&nbsp; <em>Sound::Load(); //音声の読込み</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ゲーム開始して最初はタイトルシーンに遷移<br>
+      &nbsp;&nbsp;&nbsp; sm.LoadScene("TitleScene");<br>
+      }<br>
+      <br>
+      void Game::Update()<br>
+      {// 更新処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // シーンの更新処理<br>
+      &nbsp;&nbsp;&nbsp; sm.currentScene-&gt;Update();<br>
+      }<br>
+      <br>
+      void Game::Draw()<br>
+      {// 描画処理<br>
+      &nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // シーンの描画処理<br>
+      &nbsp;&nbsp;&nbsp; sm.currentScene-&gt;Draw();<br>
+      }<br>
+    </p>
+    <br>
+    <p><code>TitleScene.hにサウンドの読込みとBGM再生、ゲームスタート時の再生処理と再生終わり待ちで画面遷移する処理</code>を追加します。</p>
+    <p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      <em>#include "Sound.h"</em><br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp; &nbsp;SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;<em>// スタートボタンを押したら音声再生完了を待って画面移動<br>
+        &nbsp;&nbsp; &nbsp;bool isStartPushed = false;</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// テスト用のボス画像をタイトルでアニメで左右移動させる<br>
+      &nbsp;&nbsp; &nbsp;int x = 0; //staticじゃないintはここで=0で初期化できる<br>
+      &nbsp;&nbsp; &nbsp;int vx = 0;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;TitleScene() : Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;tag = "TitleScene";<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 初期化処理<br>
+      &nbsp;&nbsp; &nbsp;void Initialize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Image::Load("TitleScene"); //画像の読込みとメモリ開放<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>Sound::PlayMusic("BGM/title.mp3"); //タイトルBGMを再生<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isStartPushed = false; // ボタンのフラグをリセット</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// テスト用のボス画像をタイトルでアニメで左右移動させる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x = 100; // Xの初期位置<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;vx = 10; // ボスの初期速度<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;void Finalize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<em>// ボタン入力に応じた処理<br>
+        &nbsp;&nbsp; &nbsp;void HandleInput()<br>
+        &nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// ボタンを押したらスタート音声を再生<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::Play(Sound::start);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isStartPushed = true; // 画面遷移トリガーON<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;}</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 更新処理<br>
+      &nbsp;&nbsp; &nbsp;void Update() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// スタートの効果音の再生が終わるまで画面遷移を待つ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isStartPushed &amp;&amp; CheckSoundMem(Sound::start) == 0)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// スタート音声再生終了をトリガーとして画面遷移<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene", { "stage1" }); //シーン遷移<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;HandleInput(); // キー入力処理</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// テスト用のボス画像をタイトルでアニメで左右移動させる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (x &lt; 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;vx = 10; //速度の変更<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (x &gt; Screen::Width)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;vx = -10; //画面端で移動方向反転<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x += vx; // ボス画像のX位置の更新<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 0, "TitleSceneです。ボタン押下でPlaySceneへ。", GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (sm.scoreMax &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 200, "MAXスコア: " + sm.scoreMax, GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// テスト用のボス画像をタイトルでアニメで左右移動させる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawRotaGraphF((float)x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <p><code>PlayScene.hにプレイBGM再生と敵の被弾の効果音の処理</code>を追加します。<br>
+      音声のハンドルを<b>辞書管理してメモリから解放したり個別音量調整できるように</b>します。</p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      <em>#include "Sound.h"</em><br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      #include "Player.h"<br>
+      #include "Boss.h"<br>
+      #include "PlayerBullet.h"<br>
+      #include "EnemyBullet.h"<br>
+      #include "Explosion.h"<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp;&nbsp; GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; int score = 0; // プレイ中のゲームのスコア:短期的数値でシーン遷移ごとにリセットされる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; PlayScene() : Scene()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;tag = "PlayScene";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; void Initialize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Image::Load("PlayScene"); //画像の読込みとメモリ開放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>Sound::PlayMusic("BGM/gameplay.mp3"); //プレイ画面BGMを再生</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここでプレイヤの初期化などのプレイ開始時の処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵の仮生成<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemies.push_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      (中略)...................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略)...................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾と敵の衝突判定<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; playerBullet : gm.playerBullets)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾が死んでたらスキップする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (playerBullet-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; continue;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; enemy : gm.enemies)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵が死んでたらスキップする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (enemy-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; continue;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾と敵が重なっているか？<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; playerBullet-&gt;OnCollisionEnemy(enemy);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>Sound::Play(Sound::bomb); // 効果音の再生</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 衝突の結果、自機弾が死んだら、この弾のループはおしまい<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (playerBullet-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; break;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (中略)...................<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲームオーバー判定と画面チェンジ処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bool isGameover = (gm.player == nullptr);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isGameover &amp;&amp; gm.player-&gt;isDead) isGameover = true;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isGameover)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>Sound::PlayMusic("BGM/ending.mp3");</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (中略)...................<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <p>ここまでで簡易的なサウンドの再生できるようになります。<br>
+      実行してみてうまく音声が再生できるか試してみましょう。<br>
+      次は高度なサウンドの機能を作成しますが、難易度が上がりますので<br>
+      <b>簡単に再生できるだけでよい人は高度なサウンド機能は一旦後回しでもよいかも</b>しれません。</p>
+    <br>
+    <br>
+    <br>
+    <h2><a id="mozTocId40014" class="mozTocH1"></a>画面やステージごとにサウンドをメモリ読込み・解放(音量調整機能も追加)</h2>
+    <p>さて、一応基本的なサウンド再生機能は実現しました。<br>
+      この項では<b>少し高度なサウンドの音量管理とメモリ管理を辞書配列で実現します。</b><br>
+      とりあえず再生できればよいや、という人は<b>あとから取り入れる形でもよいかも</b>しれません。</p>
+    <p>辞書配列には<b>辞書配列mapの【高速版unordered_map】を使用</b>しました。<br>
+      普通の辞書は【あいうえお順に毎度並べ替えに時間かけてる】ですが、<br>
+      <b>高速版辞書は【いちいち、あいうえお並び替えしないから高速】</b>と覚えておきましょう。<br>
+      <b>並べ替え順のない高速辞書を【ハッシュ】と呼びます。</b><br>
+      <b>ハッシュは【辞書のキー⇒順番の必要ないデータへの高速アクセス可】と暗記</b>しておきましょう。<br>
+      配列などの中では<b>【条件付きでほぼ最速】</b>という認識で大丈夫です。<br>
+      まとめて複数の音声をフェードアウトするときはUpdateで音声辞書を秒間60回連続検索することになるので導入しました。<br>
+      ちなみにどれくらい高速かは下記リンク参照(ハッシュはO(1)という最速水準の単位です)<br>
+      <a href="https://qiita.com/drken/items/872ebc3a2b5caaa4a0d0">https://qiita.com/drken/items/872ebc3a2b5caaa4a0d0</a><br>
+    </p>
+    <p><code>Sound.hに辞書配列や音量管理関数の定義を追加</code>します。 </p>
+    <p class="source">#ifndef SOUND_H_<br>
+      #define SOUND_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include &lt;assert.h&gt; // 音声読み込みの読込み失敗表示用<br>
+      #include &lt;string&gt;<br>
+      <em>#include &lt;unordered_map&gt; // 音声の辞書【map高速版】https://qiita.com/sileader/items/a40f9acf90fbda16af51<br>
+        #include &lt;vector&gt; // シーンのリストに使う<br>
+        #include &lt;algorithm&gt; // シーンのリストからのfindに使う</em><br>
+      <br>
+      class Sound<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; Sound() {}; // 初期化コンストラクタの定義<br>
+      &nbsp;&nbsp;&nbsp; ~Sound() {}; // 破棄処理デストラクタの定義<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // メモリ再生音源管理番号<br>
+      &nbsp;&nbsp;&nbsp; static int start; // ピロピロリン<br>
+      &nbsp;&nbsp;&nbsp; static int bomb; // ボン！<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// ディスク再生音源管理番号<br>
+        &nbsp;&nbsp;&nbsp; static int title; // タイトル画面BGM<br>
+        &nbsp;&nbsp;&nbsp; static int gameplay; // プレイ画面BGM<br>
+        &nbsp;&nbsp;&nbsp; static int ending; // ゲームオーバ画面BGM</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>static std::unordered_map&lt;std::string, int&gt; loadDic; // ロード済の音声辞書<br>
+        &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;int, std::string&gt; SE_Dic; // SEファイル名辞書<br>
+        &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;int, std::string&gt; BGM_Dic; // BGMファイル名辞書<br>
+        &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;std::string, float&gt; volumeDic; // 【音声ごと】の[音量]辞書</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>static float volumeSE; // 効果音のベース音量(0～100%で指定)<br>
+        &nbsp;&nbsp;&nbsp; static float volumeBGM; // 音楽BGMのベース音量(0～100%で指定)</em><br>
+      &nbsp;&nbsp;&nbsp; static std::string playingMusic; // 再生中のBGM(同一BGMをPlayMusic指定しても再生し直さない<br>
+      &nbsp;&nbsp;&nbsp; <em>static int musicId; // 音楽ID -3,-4,-5..メモリ上にのせないが番号を管理し個別に音量設定できるよう</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; static void Load(<em>std::string scene = ""</em>); <em>// シーンを指定して使うサウンドだけロードもできる</em><br>
+      &nbsp;&nbsp;&nbsp; // メモリから音声を再生(個別の音量設定も効かせられる)<br>
+      &nbsp;&nbsp;&nbsp; static void Play(int handle, int PlayType = DX_PLAYTYPE_BACK);<br>
+      &nbsp;&nbsp;&nbsp; // ディスク上の音楽を直接再生する(メモリ上に展開しない)<br>
+      &nbsp;&nbsp;&nbsp; static void PlayMusic(std::string file, int PlayType = DX_PLAYTYPE_LOOP);<br>
+      &nbsp;&nbsp;&nbsp; <em>// IDからディスク上の音楽を直接再生する(メモリ上に展開しない)<br>
+        &nbsp;&nbsp;&nbsp; static void PlayMusic(int musicId, int PlayType = DX_PLAYTYPE_LOOP);<br>
+        &nbsp;&nbsp;&nbsp; // ファイルを辞書登録しmusicIDで管理する(メモリにはのせずファイル名とIDだけ登録)<br>
+        &nbsp;&nbsp;&nbsp; static int SetMusicFile(std::string file, bool isSE = false);<br>
+        &nbsp;&nbsp;&nbsp; // 音声ファイルごとのボリューム設定<br>
+        &nbsp;&nbsp;&nbsp; static void SetVolume(float VolumeParcent, int SoundHandle);<br>
+        &nbsp;&nbsp;&nbsp; // メモリ音源の音量の更新(再生中に減らせばフェードアウト)<br>
+        &nbsp;&nbsp;&nbsp; static int UpdateVolume(int SoundHandle = -1);<br>
+        &nbsp;&nbsp;&nbsp; // 再生中のディスク音楽の音量の更新<br>
+        &nbsp;&nbsp;&nbsp; static int UpdateMusicVolume();<br>
+        &nbsp;&nbsp;&nbsp; // 音声をメモリへ読込み番号GET or シーンで使わない場合はメモリから解放<br>
+        &nbsp;&nbsp;&nbsp; static int LoadSoundMem(const TCHAR *FileName, std::string scene, std::vector&lt;std::string&gt; useScenes</em><em><em>, bool isBGM</em>, int BufferNum = 3);</em><br>
+      <br>
+      private:<br>
+      <br>
+      };<br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <p><code>Sound.cppに音声辞書とメモリ開放と音量調節処理を追加</code>します。<br>
+      音声のハンドルを<b>辞書管理してメモリから解放したり個別音量調整できるように</b>します。</p>
+    <p class="source">#include "Sound.h"<br>
+      <br>
+      // メモリ再生音源管理番号<br>
+      int Sound::start; // ピロピロリン<br>
+      int Sound::bomb; // ボン！<br>
+      <br>
+      <em>// ディスク再生音源管理番号<br>
+        int Sound::title; // タイトル画面BGM<br>
+        int Sound::gameplay; // プレイ画面BGM<br>
+        int Sound::ending; // ゲームオーバ画面BGM<br>
+        <br>
+        <br>
+        std::unordered_map&lt;std::string, int&gt; Sound::loadDic; // ロード済の音声辞書<br>
+        std::unordered_map&lt;int, std::string&gt; Sound::SE_Dic; // SEファイル名辞書<br>
+        std::unordered_map&lt;int, std::string&gt; Sound::BGM_Dic; // BGMファイル名辞書<br>
+        std::unordered_map&lt;std::string, float&gt; Sound::volumeDic; // 【音声ごと】の[音量]辞書<br>
+        <br>
+        float Sound::volumeSE{ 100 }; // 効果音のベース音量(0～100%で指定)<br>
+        float Sound::volumeBGM{ 100 }; // 音楽BGMのベース音量(0～100%で指定)</em><br>
+      std::string Sound::playingMusic{ "" }; // 再生中のBGM(同一BGMをPlayMusic指定しても再生し直さない<br>
+      <em>int Sound::musicId{ -3 }; // 音楽ID -3,-4,-5..メモリ上にのせないが番号を管理し個別に音量設定できるよう</em><br>
+      <br>
+      <em>// シーンを指定して使うサウンドだけロードもできる</em><br>
+      void Sound::Load(<em>std::string scene</em>)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; start = Sound::LoadSoundMem("SE/start.ogg"<em>, scene, { "TitleScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; assert(start != -1); // 読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;&nbsp; <em>// オプションで同時[8つ]爆発音再生を可能に(デフォルトは3)falseをtrueにするとBGM扱い</em><br>
+      &nbsp;&nbsp;&nbsp; bomb = Sound::LoadSoundMem("SE/bomb.wav"<em>,scene,{"TitleScene","PlayScene"},false, 8);<br>
+        &nbsp;&nbsp;&nbsp; </em>assert(bomb != -1); // 読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>title = SetMusicFile("BGM/title.mp3");<br>
+        &nbsp;&nbsp;&nbsp; gameplay = SetMusicFile("BGM/gameplay.mp3");<br>
+        &nbsp;&nbsp;&nbsp; ending = SetMusicFile("BGM/ending.mp3");</em><br>
+      }<br>
+      <br>
+      // メモリ上の音声を再生する。<br>
+      void Sound::Play(int handle, int PlayType)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; <em>assert(handle != -1 &amp;&amp; "プレイする音声がメモリにない?" != "");</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 音量の更新<br>
+        &nbsp;&nbsp;&nbsp; UpdateVolume(handle);</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // メモリ上から音声再生<br>
+      &nbsp;&nbsp;&nbsp; PlaySoundMem(handle, PlayType);<br>
+      }<br>
+      <br>
+      // ディスク上の音楽を直接再生する(メモリ上に展開しない)<br>
+      void Sound::PlayMusic(std::string file, int PlayType)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // プレイ中のBGMを再指定しても初めから再生せず即時return<br>
+      &nbsp;&nbsp;&nbsp; if (file == playingMusic) return;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; playingMusic = file; // プレイ中のBGM名を設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>Sound::UpdateMusicVolume(); // 音量の更新</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DxLib::PlayMusic(file.c_str(), PlayType); //ディスクから直接再生(メモリにのせない)<br>
+      }<br>
+      <br>
+      <em>// IDからディスク上の音楽を直接再生する(メモリ上に展開しない)<br>
+        void Sound::PlayMusic(int musicId, int PlayType)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; if (musicId &gt; -1) return;//音楽IDはマイナスのID番号を割り振ったはず<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; std::string file = "";<br>
+        &nbsp;&nbsp;&nbsp; // 辞書から対応するファイル名を取得<br>
+        &nbsp;&nbsp;&nbsp; if (BGM_Dic.count(musicId) == 1)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; file = BGM_Dic[musicId];<br>
+        &nbsp;&nbsp;&nbsp; else if (SE_Dic.count(musicId) == 1)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; file = SE_Dic[musicId];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (file == "") return;//対応する音楽ファイルが辞書に未登録<br>
+        &nbsp;&nbsp;&nbsp; // ファイル名から音楽ファイルを再生<br>
+        &nbsp;&nbsp;&nbsp; Sound::PlayMusic(file, PlayType);<br>
+        }<br>
+        <br>
+        // ファイルを辞書登録しmusicIDで管理する(メモリにはのせずファイル名とIDだけ登録)<br>
+        int Sound::SetMusicFile(std::string file, bool isSE)<br>
+        {&nbsp;&nbsp;&nbsp; // 既に辞書登録済なら即時return<br>
+        &nbsp;&nbsp;&nbsp; if (loadDic.count(file) == 1) return loadDic[file];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 新規に辞書にファイル登録<br>
+        &nbsp;&nbsp;&nbsp; loadDic[file] = musicId; //IDの辞書に登録<br>
+        &nbsp;&nbsp;&nbsp; if (isSE) SE_Dic[musicId] = file; //SEの辞書に登録<br>
+        &nbsp;&nbsp;&nbsp; else BGM_Dic[musicId] = file; //BGMの辞書に登録<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return musicId--; // 後ろに--つけるとカウントダウン前をreturn<br>
+        }<br>
+        <br>
+        // 音声ファイルごとのボリューム設定<br>
+        void Sound::SetVolume(float VolumeParcent, int SoundHandle)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; if (SoundHandle == -1) return;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (SE_Dic.count(SoundHandle) == 1)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ハンドル番号がSEの辞書で見つかれば<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::string file = SE_Dic[SoundHandle];<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volumeDic[file] = VolumeParcent;//個別音量を辞書登録<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; else if (BGM_Dic.count(SoundHandle) == 1)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ハンドル番号がBGMの辞書で見つかれば<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::string file = BGM_Dic[SoundHandle];<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volumeDic[file] = VolumeParcent;//個別音量を辞書登録<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // セットした後の音声には音量が反映されるが<br>
+        &nbsp;&nbsp;&nbsp; // すでに再生中の音量は変わらないので↓UpdateVolumeとセットで実行<br>
+        }<br>
+        <br>
+        // メモリ音源の音量の更新(再生中に減らせばフェードアウト)<br>
+        int Sound::UpdateVolume(int SoundHandle)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 特に指定がなければすべての音量を更新<br>
+        &nbsp;&nbsp;&nbsp; if (SoundHandle == -1)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 辞書のfor文はキーとバリューがペアになってる<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int result = 0, resultAll = 0;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; kv : loadDic)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 辞書のキーがkv.first,バリューがkv.second<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int handle = kv.second;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 【★勉強】自分自身を呼出す奥の手<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (handle != -1) //↓【再起呼出し】<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; result = Sound::UpdateVolume(handle);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (result == -1)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; resultAll += -1; // 失敗した数ぶん-1がカウントされる<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return resultAll; // 全音量更新完了【再起呼出しループで】<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 音源指定があるときはhandleを指定して音量を更新<br>
+        &nbsp;&nbsp;&nbsp; int handle = SoundHandle;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; int volume = 255;<br>
+        &nbsp;&nbsp;&nbsp; float volumeParcent = 100;<br>
+        &nbsp;&nbsp;&nbsp; std::string file = "";<br>
+        &nbsp;&nbsp;&nbsp; if (SE_Dic.count(handle) == 1)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // サウンド番号がSE辞書で見つかれば<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; file = SE_Dic[handle];<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volumeParcent = volumeSE; //音量をSEのベース音量に<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; else if (BGM_Dic.count(handle) == 1)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // サウンド番号がBGM辞書で見つかれば<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; file = BGM_Dic[handle];<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volumeParcent = volumeBGM; //音量をSEのベース音量に<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (volumeDic.count(file) == 1)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 音量辞書をファイル名で検索して<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float fileParcent = volumeDic[file];<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volumeParcent *= fileParcent / 100; //個別音量%割合反映<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (volumeParcent &lt; 100) // 音量に%パーセントを掛ける<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volume = (int)(((float)volume) * volumeParcent / 100);<br>
+        &nbsp;&nbsp;&nbsp; // 音量反映<br>
+        &nbsp;&nbsp;&nbsp; int result = ChangeVolumeSoundMem(volume, handle);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (result == 0) // 音量変更成功<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return volume;<br>
+        &nbsp;&nbsp;&nbsp; else return result; // 音量変更失敗<br>
+        }<br>
+        <br>
+        // 再生中のディスク音楽の音量の更新<br>
+        int Sound::UpdateMusicVolume()<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; std::string file = playingMusic;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; int volume = 255;<br>
+        &nbsp;&nbsp;&nbsp; float volumeParcent = volumeBGM;<br>
+        &nbsp;&nbsp;&nbsp; if (volumeDic.count(file) == 1)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 音量辞書をファイル名で検索して<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float fileParcent = volumeDic[file];<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volumeParcent *= fileParcent / 100; //個別音量%割合反映<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (volumeParcent &lt; 100) // 音量に%パーセントを掛ける<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volume = (int)(((float)volume) * volumeParcent / 100);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 音量反映<br>
+        &nbsp;&nbsp;&nbsp; int result = SetVolumeMusic(volume);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (result == 0) // 音量変更成功<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return volume;<br>
+        &nbsp;&nbsp;&nbsp; else return result; // 音量変更失敗<br>
+        }<br>
+        <br>
+        // 音声をメモリへ読込み番号GET or シーンで使わない場合はメモリから解放<br>
+        int Sound::LoadSoundMem(const TCHAR *FileName, std::string scene, std::vector&lt;std::string&gt; useScenes, bool isBGM, int BufferNum)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; int result = -1;<br>
+        &nbsp;&nbsp;&nbsp; // 次のシーンで使う音声かの判別、useScenesリストにあれば使う判定<br>
+        &nbsp;&nbsp;&nbsp; bool use = std::find(useScenes.begin(), useScenes.end(), scene) != useScenes.end();<br>
+        &nbsp;&nbsp;&nbsp; if (use)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ロード済み辞書に指定したファイルがある(count=1)のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (loadDic.count(FileName) == 1 &amp;&amp; loadDic[FileName] != -1)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ロード済みなら音声ハンドルを返す(ロード時間短縮)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return loadDic[FileName];<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // DXライブラリで音声をロード、BufferNumは同時再生可能数<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; result = DxLib::LoadSoundMem(FileName, BufferNum);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (result != -1)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 辞書にサウンドハンドル番号を保管<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int handle = result; //ロード結果からハンドル番号取得<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; loadDic[FileName] = handle;//ロード済辞書に登録<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isBGM) BGM_Dic[handle] = FileName;//BGMの辞書に登録<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else SE_Dic[handle] = FileName;//SEの辞書に登録<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return result; // ロードした結果を返す<br>
+        &nbsp;&nbsp;&nbsp; } // ↓ここまでの↑returnに引っかからずif抜けてきたら【シーン利用しないサウンド】<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 今回のシーンでは利用しないサウンドの時はメモリからサウンドを開放して節約<br>
+        &nbsp;&nbsp;&nbsp; if (loadDic.count(FileName) == 1 &amp;&amp; loadDic[FileName] != -1)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // メモリからサウンド開放 https://dxlib.xsrv.jp/function/dxfunc_sound.html#R8N8<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int handle = loadDic[FileName];<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; result = DxLib::DeleteSoundMem(handle);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert(result != -1 &amp;&amp; "音声メモリ開放失敗" != "");<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 辞書からハンドルを削除<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (SE_Dic.count(handle) == 1)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; SE_Dic.erase(handle);//SEの辞書から削除<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (BGM_Dic.count(handle) == 1)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; BGM_Dic.erase(handle);//BGMの辞書から削除<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; loadDic.erase(FileName); // ID辞書からも索引削除<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; // 今回のシーンでは利用しないサウンドの時は-2を返す<br>
+        &nbsp;&nbsp;&nbsp; return -2; // サウンド読込み失敗の-1と区別するため-2を返します<br>
+        }</em><br>
+    </p>
+    <br>
+    <br>
+    <p><code>TitleScene.hにシーンごとのサウンドのロードと音量調節機能を追加</code>します。<br>
+      タイトル画面で<b>上下キーを押すと音量調整できるようになり左右キーでSE⇔BGM調整モードを切り替え</b>られます。</p>
+    <p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "Sound.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;<em>// 設定モード<br>
+        &nbsp;&nbsp; &nbsp;enum class SettingMode<br>
+        &nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;BGM=0, // BGM設定モード<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;SE, // SE設定モード<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;NUM // 列挙数[enumの数を得る] https://qiita.com/k-satoda/items/2985e81216b3ee500956<br>
+        &nbsp;&nbsp; &nbsp;};<br>
+        &nbsp;&nbsp; &nbsp;SettingMode settingMode = SettingMode::BGM; // 現在の設定モード</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp; &nbsp;SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// スタートボタンを押したら音声再生完了を待って画面移動<br>
+      &nbsp;&nbsp; &nbsp;bool isStartPushed = false;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// テスト用のボス画像をタイトルでアニメで左右移動させる<br>
+      &nbsp;&nbsp; &nbsp;int x = 0; //staticじゃないintはここで=0で初期化できる<br>
+      &nbsp;&nbsp; &nbsp;int vx = 0;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;TitleScene() : Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;tag = "TitleScene";<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 初期化処理<br>
+      &nbsp;&nbsp; &nbsp;void Initialize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Image::Load("TitleScene"); //画像の読込みとメモリ開放<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>Sound::Load("TitleScene"); //音声の読込みとメモリ開放</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::PlayMusic(<em>Sound::title</em>); //タイトルBGMを再生<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isStartPushed = false; // ボタンのフラグをリセット<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// テスト用のボス画像をタイトルでアニメで左右移動させる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x = 100; // Xの初期位置<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;vx = 10; // ボスの初期速度<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;void Finalize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// ボタン入力に応じた処理<br>
+      &nbsp;&nbsp; &nbsp;void HandleInput()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// ボタンを押したらスタート音声を再生<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::Play(Sound::start);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isStartPushed = true; // 画面遷移トリガーON<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>if (Input::GetButtonDown(PAD_INPUT_LEFT))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;//左を押すと設定モードを-1する<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int index = ((int)settingMode - 1);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (index &lt; 0) //↓番号ループ 0→最大数-1<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;index = ((int)SettingMode::NUM) - 1;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;settingMode = (SettingMode)index;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (Input::GetButtonDown(PAD_INPUT_RIGHT))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;//右を押すと設定モードを+1する<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int index = ((int)settingMode + 1);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (index &gt;= ((int)SettingMode::NUM))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;index = 0; //番号ループ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;settingMode = (SettingMode)index;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (settingMode == SettingMode::BGM)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeBGM++;//音量をプラス<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Sound::volumeBGM &gt; 100)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeBGM = 100;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (settingMode == SettingMode::SE)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeSE++;//音量をプラス<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Sound::volumeSE &gt; 100)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeSE = 100;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_UP))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::Play(Sound::bomb); //効果音を聞きながら調節<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::UpdateMusicVolume(); //再生中の音量の更新<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (settingMode == SettingMode::BGM)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeBGM--;//音量をマイナス<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Sound::volumeBGM &lt; 0)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeBGM = 0;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (settingMode == SettingMode::SE)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeSE--;//音量をマイナス<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Sound::volumeSE &lt;0)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeSE = 0;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_DOWN))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::Play(Sound::bomb); //効果音を聞きながら調節<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::UpdateMusicVolume(); //再生中の音量の更新<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 更新処理<br>
+      &nbsp;&nbsp; &nbsp;void Update() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スタートの効果音の再生中は遷移を待つ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isStartPushed &amp;&amp; CheckSoundMem(Sound::start) == 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// スタート音声再生終了をトリガーとして画面遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene", { "stage1" }); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;HandleInput(); // キー入力処理<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// テスト用のボス画像をタイトルでアニメで左右移動させる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (x &lt; 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;vx = 10; //速度の変更<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (x &gt; Screen::Width)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;vx = -10; //画面端で移動方向反転<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x += vx; // ボス画像のX位置の更新<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 0, "TitleSceneです。ボタン押下でPlaySceneへ。", GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (sm.scoreMax &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 200, "MAXスコア: " + sm.scoreMax, GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// 音量設定モードの表示<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string volumeDisplay = "";<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (settingMode == SettingMode::BGM)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;volumeDisplay = "↑↓BGM音量設定モード: " + std::to_string((int)Sound::volumeBGM);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (settingMode == SettingMode::SE)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;volumeDisplay = "↑↓SE音量設定モード: " + std::to_string((int)Sound::volumeSE);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, Screen::Height - 100, volumeDisplay.c_str(), GetColor(255, 255, 255));</em><br>
+      <br>
+      <br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// テスト用のボス画像をタイトルでアニメで左右移動させる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawRotaGraphF((float)x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <p><code>Game.cppからSoundのロード処理を削除</code>します(シーンごとのロードに変更)。<br>
+    </p>
+    <p class="source">#include "Game.h"<br>
+      <br>
+      #include "MyRandom.h"<br>
+      <u>#include "Sound.h"</u><br>
+      <br>
+      void Game::Init()<br>
+      {// Init処理<br>
+      &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数シードの初期化<br>
+      &nbsp;&nbsp;&nbsp; <u>Sound::Load(); //音声の読込み</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ゲーム開始して最初はタイトルシーンに遷移<br>
+      &nbsp;&nbsp;&nbsp; sm.LoadScene("TitleScene");<br>
+      }<br>
+      <br>
+      void Game::Update()<br>
+      {// 更新処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // シーンの更新処理<br>
+      &nbsp;&nbsp;&nbsp; sm.currentScene-&gt;Update();<br>
+      }<br>
+      <br>
+      void Game::Draw()<br>
+      {// 描画処理<br>
+      &nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // シーンの描画処理<br>
+      &nbsp;&nbsp;&nbsp; sm.currentScene-&gt;Draw();<br>
+      }<br>
+    </p>
+    <br>
+    <p><code>PlayScene.hに画面ごとのサウンドのロード処理を追加しBGM再生をBGM番号経由に変更</code>します。<br>
+    </p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "Sound.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      #include "Player.h"<br>
+      #include "Boss.h"<br>
+      #include "PlayerBullet.h"<br>
+      #include "EnemyBullet.h"<br>
+      #include "Explosion.h"<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp;&nbsp; GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; int score = 0; // プレイ中のゲームのスコア:短期的数値でシーン遷移ごとにリセットされる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; PlayScene() : Scene()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;tag = "PlayScene";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; void Initialize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Image::Load("PlayScene"); //画像の読込みとメモリ開放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>Sound::Load("PlayScene"); //音声の読込みとメモリ開放</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::PlayMusic(<em>Sound::gameplay</em>); //プレイ画面BGMを再生<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここでプレイヤの初期化などのプレイ開始時の処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵の仮生成<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemies.push_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      (中略)...................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (中略)...................<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲームオーバー判定と画面チェンジ処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bool isGameover = (gm.player == nullptr);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isGameover &amp;&amp; gm.player-&gt;isDead) isGameover = true;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isGameover)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::PlayMusic(<em>Sound::ending</em>);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (中略)...................<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <p>いかがでしょうか？これでタイトル画面で音量調整ができ、<br>
+      画面が変わるタイミングでシーンで使わない音声のメモリを解放する処理を実現できました。<br>
+    一度実行して試してみましょう。</p>
+    <br>
+    <br>
+    
   </body>
 </html>
