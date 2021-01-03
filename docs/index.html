@@ -7181,9 +7181,296 @@
     <br>
     <p>いかがでしょうか？これでタイトル画面で音量調整ができ、<br>
       画面が変わるタイミングでシーンで使わない音声のメモリを解放する処理を実現できました。<br>
-    一度実行して試してみましょう。</p>
+      一度実行して試してみましょう。</p>
     <br>
     <br>
-    
+    <h1><a id="mozTocId4002" class="mozTocH1"></a>CSVを読み込んで敵を生成するプログラム</h1>
+    <p>C#でやったようにTiledエディタで敵マップを作成して、<br>
+      stage1.csvを<br>
+      <code>Map/stage1.csv</code>にcsv形式でエクスポートしましょう。<br>
+      <br>
+      csvファイルの準備ができたらマップの読込みプログラムを作成します。</p>
+    <p><code>Map.hを新規作成</code>してマップのCSVファイルの読込みとスクロールを作成しましょう。</p>
+    <p class="source">#ifndef MAP_H_<br>
+      #define MAP_H_<br>
+      <br>
+      #include &lt;assert.h&gt; // 読込み失敗表示用<br>
+      #include &lt;memory&gt; // 回し読みポインタをザコやボスの生成に使う<br>
+      #include &lt;vector&gt; // csvを2次元vector配列に格納<br>
+      #include &lt;string&gt; // 文字列に必要<br>
+      #include &lt;fstream&gt; // ファイル読み出しifstreamに必要<br>
+      #include &lt;sstream&gt; // 文字列ストリームに必要<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "GameManager.h"<br>
+      #include "Zako0.h"<br>
+      #include "Zako1.h"<br>
+      #include "Zako2.h"<br>
+      #include "Boss.h"<br>
+      <br>
+      class Map<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;int CellSize = 32; // マップの1マスのピクセル数<br>
+      &nbsp;&nbsp; &nbsp;int Width = 0; // マップデータの横のマス数<br>
+      &nbsp;&nbsp; &nbsp;int Height = 0; // マップデータの縦のマス数<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;int&gt;&gt; enemyData;// 敵配置データ<br>
+      &nbsp;&nbsp; &nbsp;float position; // 現在の位置（画面左端の座標）<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;// filePath : CSVファイルのパス<br>
+      &nbsp;&nbsp; &nbsp;// startPosition : 開始位置（デバッグやリスタート時に、面の途中から開始できるように）<br>
+      &nbsp;&nbsp; &nbsp;Map(std::string filePath, float startPosition=0)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position = startPosition;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Load(filePath); // csvファイルをロード<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;//デストラクタ<br>
+      &nbsp;&nbsp; &nbsp;~Map()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (enemyData.size() &gt; 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// ★後ろ側からpop_backで削除しないとvectorは遅い<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemyData.back().clear();<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemyData.pop_back();//リストの一番後ろを削除するから次ループでは一番後ろ1ずれる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// csvファイルの読み込み<br>
+      &nbsp;&nbsp; &nbsp;void Load(std::string filePath)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 読み込むcsvファイルを開く(std::ifstreamのコンストラクタで開く)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::ifstream ifs_csv_file(filePath);<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string line; //1行単位でcsvファイルから文字列を読み込む<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Width = 0; //初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int MaxWidth = 0; // 1行の数字の最大個数<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Height = 0; //初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(ifs_csv_file, line)) // ファイルを行ごとに読み込む<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;int&gt; numlist; // 1行の数字リスト<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream linestream(line); // 各行の文字列ストリーム<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string splitted; // カンマで分割された文字列<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int widthCount = 0; //この行の幅をカウント<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(linestream, splitted, { ',' }))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream ss; //文字列ストリームの初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss = std::istringstream(splitted); //文字列ストリーム<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;numlist.push_back(num); // 数字をこの行のリスト(numlist)に追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;widthCount++; //この行のカンマで区切られた数字の数をカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行の数字の数が記録を更新してMAXになるかチェック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (widthCount &gt; MaxWidth) MaxWidth = widthCount; //暫定Max幅を更新<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 数字1行分をvectorに追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (numlist.size() != 0) enemyData.push_back(numlist);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Height++; //マップの高さをカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Width = MaxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(Width &gt; 0); // マップ幅がおかしい<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(Height &gt; 0); // マップ高さがおかしい<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 画面スクロール（位置の更新）<br>
+      &nbsp;&nbsp; &nbsp;void Scroll(float delta)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スクロールする前の、画面右端のセルの列番号（x）<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int prevRightCell = (int)(position + Screen::Width) / CellSize;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position += delta; // スクロールする<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スクロールした後の、画面右端のセルの列番号（x）<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int currentRightCell = (int)(position + Screen::Width) / CellSize;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スクロールした後の画面右端のセルがマップの範囲外に出ちゃったら何もしないで終了<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (currentRightCell &gt;= Width)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スクロールする前と後で、画面右端のセルが同じ場合は、何もしないで終了<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (prevRightCell == currentRightCell)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 画面右端のセルの左端のx座標<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float x = currentRightCell * CellSize - position;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 上端のセルから下端のセルまで舐めて、敵データが配置されていたら、敵を生成する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (int cellY = 0; cellY &lt; Height; cellY++)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float y = cellY * CellSize;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 2次元vectorではxとyがC#と逆！[行Y][列X]行列と覚えよう<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int id = enemyData[cellY][currentRightCell];<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 番号に応じて敵を生成する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (id == -1) continue; // -1は空白なので、何もしない<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 0) gm.enemies.push_back(std::make_shared&lt;Zako0&gt;(x + 32, y + 32));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 1) gm.enemies.push_back(std::make_shared&lt;Zako1&gt;(x + 32, y + 32));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; else if (id == 2) gm.enemies.push_back(std::make_shared&lt;Zako2&gt;(x + 32, y + 32));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 100) gm.enemies.push_back(std::make_shared&lt;Boss&gt;(x + 90, y + 32)); // ボスは横幅180pxだから90px右に生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else assert("未実装の敵IDがCSVにありました。"=="");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      #endif</p>
+    <br>
+    <br>
+    <p><code>GameManager.hにMapの回し読みポインタの参照リンクを追加</code>します。<br>
+    </p>
+    <p class="source">#ifndef GAMEMANAGER_H_<br>
+      #define GAMEMANAGER_H_<br>
+      <br>
+      #include &lt;memory&gt;<br>
+      #include &lt;vector&gt;<br>
+      <br>
+      #include "Singleton.h"<br>
+      <br>
+      <em>class Map; //クラス宣言だけでインクルードしないので循環しない(前方宣言)</em><br>
+      class Player;<br>
+      class PlayerBullet;<br>
+      class Enemy;<br>
+      class EnemyBullet;<br>
+      class Explosion;<br>
+      <br>
+      class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
+      <br>
+      <em>&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Map&gt; map{ nullptr }; // マップ</em><br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
+      &nbsp;&nbsp;&nbsp; // List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      <br>
+      <br>
+      &nbsp;&nbsp; (中略)..........<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; GameManager() {}; // 外部からのインスタンス作成は禁止<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <p><code>PlayScene.hにMapの初期化とメモリ参照クリアとスクロール処理を追加</code>します。<b>(シーン分けしていない人はGame.cppで)</b><br>
+    </p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      <em>#include "Map.h"</em><br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      #include "Player.h"<br>
+      #include "Boss.h"<br>
+      #include "PlayerBullet.h"<br>
+      #include "EnemyBullet.h"<br>
+      #include "Explosion.h"<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp; &nbsp;SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;int score = 0; // プレイ中のゲームのスコア:短期的数値でシーン遷移ごとにリセットされる<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<em>float scrollSpeed = 1.5f; // スクロール速度</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;PlayScene() : Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;tag = "PlayScene";<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 初期化処理<br>
+      &nbsp;&nbsp; &nbsp;void Initialize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Image::Load("PlayScene"); //画像の読込みとメモリ開放<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::Load("PlayScene"); //音声の読込みとメモリ開放<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::PlayMusic(Sound::gameplay); //プレイ画面BGMを再生<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// マップの初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.map = std::make_shared&lt;Map&gt;("Map/stage1.csv");</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここでプレイヤの初期化などのプレイ開始時の処理<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 敵の仮生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<u>//gm.enemies.push_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));</u><br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;void Finalize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ終了時のメモリのリセット処理(ゲームクリアやゲームオーバー時など)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>gm.map = nullptr; // マップのメモリからの解放</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player = nullptr; // プレイヤのメモリからの解放<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemies.clear(); // 敵のメモリからの解放<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.playerBullets.clear(); // プレイヤの弾のメモリからの解放<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemyBullets.clear(); // 敵弾のメモリからの解放<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.explosions.clear(); // 爆発エフェクトのメモリからの解放<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ゲーム終了時のスコアがMAXなら記録して終了<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(score &gt; sm.scoreMax) sm.scoreMax = score;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 更新処理<br>
+      &nbsp;&nbsp; &nbsp;void Update() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ中の更新処理を持ってくる<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// マップデータの読出し位置のスクロール<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.map-&gt;Scroll(scrollSpeed);</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (!gm.player-&gt;isDead) // 自機が死んでいなければ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; (中略)....................<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; (中略)....................<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <br>
+    さて、ここまでで敵が画面の右端から出て来たでしょうか？<br>
+    出てこない場合は、大抵以下の原因が多いです。<br>
+    <ul>
+      <li>【Mapフォルダ】にstage1.csvがありますか？</li>
+      <li>【stage1..csv】ドットが多くないですか</li>
+      <li>【mapのMが小文字】フォルダ名のMが小文字m</li>
+      <li>【別のプロジェクトのMapフォルダに間違って入ってた】</li>
+      <li>【敵を開始32マス内に配置してた】開始32マスは読込みしません</li>
+    </ul>
+    <br>
+    <br>
   </body>
 </html>
