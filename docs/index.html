@@ -6280,7 +6280,8 @@
     <br>
     <br>
     <p><code>Sound.cppを新規作成</code>します。<br>
-      C#の仕組みに加えて<b>すでにプレイ中のBGMは同じBGMをPlayMusicしようとしても再生し直さない工夫をしています。これで再生ボタンUpdate連打状態で重くなるストッパーになりますね</b>、C#でUpdateで同じBGMの再生連打して重くなった経験のある人は取り入れてみましょう。</p>
+      C#の仕組みに加えて<b>すでにプレイ中のBGMは同じBGMをPlayMusicしようとしても再生し直さない工夫をしています。<br>
+        これで再生ボタンUpdate連打状態で重くなるストッパーになりますね</b>、C#でUpdateで同じBGMの再生連打して重くなった経験のある人は取り入れてみましょう。</p>
     <p class="source">#include "Sound.h"<br>
       <br>
       // メモリ再生音源管理番号<br>
@@ -6886,7 +6887,7 @@
     <br>
     <br>
     <p><code>TitleScene.hにシーンごとのサウンドのロードと音量調節機能を追加</code>します。<br>
-      タイトル画面で<b>上下キーを押すと音量調整できるようになり左右キーでSE⇔BGM調整モードを切り替え</b>られます。</p>
+      タイトル画面で<b><b>左右</b>キーを押すと音量調整できるようになり</b><b><b>上下</b><b><b></b></b>キーでSE⇔BGM調整モードを切り替え</b>られます。</p>
     <p class="source">#ifndef TITLESCENE_H_<br>
       #define TITLESCENE_H_<br>
       <br>
@@ -7483,6 +7484,5 @@
     </ul>
     <br>
     <br>
-    
   </body>
 </html>
