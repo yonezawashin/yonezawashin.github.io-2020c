@@ -4998,7 +4998,15 @@
     <p>なぜなら<b>【画面チェンジは実質≒前の画面のメモリへの参照リンクお掃除】</b>に近いですから。</p>
     <p>気をつけてくださいね<b>【メモリの回し読みポインタの参照リンクお掃除しないと】</b>前の画面の<b>メモリはフリーになりません</b></p>
     <h2>シーンマネージャで画面遷移を作成する(Game.cppからコードを画面に分けて移植)</h2>
-    <p><code>Scene.hを新規作成</code>してベースとなるシーンの基底クラスを定義しましょう。</p>
+    <p>Scene.hを新規作成してベースとなるシーンの基底クラスを定義しましょう。<br>
+      <b>C++テキストの【クラスの基本④】17ページのファイナルファンタジーの構造</b>を取り入れてます。<br>
+      <b>ポイント要点は【開始Initialize()】と【終了Finalize()】を区別していることです。</b><br>
+      いままでもInit()や初期化コンストラクタはありましたが<br>
+      <b>【終了の Finalize() 】を分けることでシーンの切替えのタイミングで弾のメモリなどのリセットの処理を書けます。</b><br>
+      <b>【Initialize()には生成や初期化】【Finalize()にはメモリなどのリセット処理】</b>を書き分けましょう。<br>
+      つまり<b>【シーンの移り変わりが出てきたからこそ】【終了のFinalize()の概念も必要になってきた】</b>ということですね。<br>
+      逆に今までは1つの画面しかなかったので初期化のInit()だけでよかったわけですね。</p>
+    <p><code>Scene.hを新規作成</code>してベースとなるシーンの基底クラスを定義します。</p>
     <p class="source">#ifndef SCENE_H_<br>
       #define SCENE_H_<br>
       <br>
@@ -5030,7 +5038,7 @@
       &nbsp;&nbsp; &nbsp;// 初期化処理<br>
       &nbsp;&nbsp; &nbsp;virtual void Initialize() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
       &nbsp;&nbsp; &nbsp;<br>
-      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じくリセット処理を行うが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じくリセット処理を行うがInitと区別して終了時だけやりたいリセットもある)<br>
       &nbsp;&nbsp; &nbsp;virtual void Finalize() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 更新処理<br>
@@ -5105,7 +5113,7 @@
       <br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
-      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
       &nbsp;&nbsp; &nbsp;void Finalize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       <br>
@@ -5165,7 +5173,7 @@
       <br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
-      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
       &nbsp;&nbsp; &nbsp;void Finalize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       <br>
@@ -5228,7 +5236,7 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここでプレイヤの初期化などのプレイ開始時の処理<br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
-      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
       &nbsp;&nbsp; &nbsp;void Finalize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ終了時のメモリのリセット処理(ゲームクリアやゲームオーバーなど)<br>
@@ -5345,7 +5353,7 @@
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;vx = 10; // ボスの初期速度</em><br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
-      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
       &nbsp;&nbsp; &nbsp;void Finalize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       <br>
@@ -5507,7 +5515,7 @@
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemies.push_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));</em><br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
-      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
       &nbsp;&nbsp; &nbsp;void Finalize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ終了時のメモリのリセット処理(ゲームクリアやゲームオーバーなど)<br>
