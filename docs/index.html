@@ -6960,57 +6960,55 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isStartPushed = true; // 画面遷移トリガーON<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>if (Input::GetButtonDown(PAD_INPUT_LEFT))<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;//左を押すと設定モードを-1する<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int index = ((int)settingMode - 1);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (index &lt; 0) //↓番号ループ 0→最大数-1<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;index = ((int)SettingMode::NUM) - 1;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;settingMode = (SettingMode)index;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (Input::GetButtonDown(PAD_INPUT_RIGHT))<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;//右を押すと設定モードを+1する<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int index = ((int)settingMode + 1);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (index &gt;= ((int)SettingMode::NUM))<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;index = 0; //番号ループ<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;settingMode = (SettingMode)index;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; <em>if (Input::GetButtonDown(PAD_INPUT_UP))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //上を押すと設定モードを-1する<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int index = ((int)settingMode - 1);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (index &lt; 0) //↓番号ループ 0→最大数-1<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; index = ((int)SettingMode::NUM) - 1;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; settingMode = (SettingMode)index;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (Input::GetButtonDown(PAD_INPUT_DOWN))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //下を押すと設定モードを+1する<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int index = ((int)settingMode + 1);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (index &gt;= ((int)SettingMode::NUM))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; index = 0; //番号ループ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; settingMode = (SettingMode)index;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
         <br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (settingMode == SettingMode::BGM)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeBGM++;//音量をプラス<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Sound::volumeBGM &gt; 100)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeBGM = 100;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (settingMode == SettingMode::SE)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeSE++;//音量をプラス<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Sound::volumeSE &gt; 100)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeSE = 100;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_UP))<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::Play(Sound::bomb); //効果音を聞きながら調節<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::UpdateMusicVolume(); //再生中の音量の更新<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (settingMode == SettingMode::BGM)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeBGM--;//音量をマイナス<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Sound::volumeBGM &lt; 0)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeBGM = 0;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (settingMode == SettingMode::SE)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeSE--;//音量をマイナス<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Sound::volumeSE &lt;0)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::volumeSE = 0;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_DOWN))<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::Play(Sound::bomb); //効果音を聞きながら調節<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::UpdateMusicVolume(); //再生中の音量の更新<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (settingMode == SettingMode::BGM)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeBGM++;//音量をプラス<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Sound::volumeBGM &gt; 100)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeBGM = 100;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (settingMode == SettingMode::SE)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeSE++;//音量をプラス<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Sound::volumeSE &gt; 100)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeSE = 100;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Play(Sound::bomb); //効果音を聞きながら調節<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::UpdateMusicVolume(); //再生中の音量の更新<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (Input::GetButton(PAD_INPUT_LEFT))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (settingMode == SettingMode::BGM)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeBGM--;//音量をマイナス<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Sound::volumeBGM &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeBGM = 0;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (settingMode == SettingMode::SE)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeSE--;//音量をマイナス<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Sound::volumeSE &lt;0)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeSE = 0;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Play(Sound::bomb); //効果音を聞きながら調節<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::UpdateMusicVolume(); //再生中の音量の更新<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 更新処理<br>
@@ -7045,13 +7043,26 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 200, "MAXスコア: " + sm.scoreMax, GetColor(255, 255, 255));<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// 音量設定モードの表示<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string volumeDisplay = "";<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (settingMode == SettingMode::BGM)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;volumeDisplay = "↑↓BGM音量設定モード: " + std::to_string((int)Sound::volumeBGM);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (settingMode == SettingMode::SE)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;volumeDisplay = "↑↓SE音量設定モード: " + std::to_string((int)Sound::volumeSE);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, Screen::Height - 100, volumeDisplay.c_str(), GetColor(255, 255, 255));</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; <em>// 音量設定目盛りの文字列の生成<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::string volumeBGM = "　";<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (settingMode == SettingMode::BGM)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volumeBGM = "⇒"; //[選択中]⇒BGM音量設定モード<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volumeBGM += "BGM音量設定:" + std::to_string((int)Sound::volumeBGM);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int volBGM_NUM = (int)(Sound::volumeBGM / 10);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (volBGM_NUM != 10) volumeBGM += " ";<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; volBGM_NUM; i++) volumeBGM += "■";//音量目盛り表示<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::string volumeSE = "　";<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (settingMode == SettingMode::SE)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volumeSE = "⇒"; //[選択中]⇒BGM音量設定モード<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; volumeSE += " SE音量設定:" + std::to_string((int)Sound::volumeSE);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int volSE_NUM = (int)(Sound::volumeSE / 10);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (volSE_NUM != 10) volumeSE += " ";<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; volSE_NUM; i++) volumeSE += "■";//音量目盛り表示<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 音量設定の表示<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawString(0, Screen::Height - 60, volumeBGM.c_str(), GetColor(255, 255, 255));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawString(0, Screen::Height - 30, volumeSE.c_str(), GetColor(255, 255, 255));</em><br>
       <br>
       <br>
       <br>
@@ -7276,8 +7287,8 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Width = MaxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(Width &gt; 0); // マップ幅がおかしい<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(Height &gt; 0); // マップ高さがおかしい<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(Width &gt; 0 &amp;&amp;"マップ読込み失敗ファイル名間違いでは?"!="");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(Height &gt; 0 &amp;&amp;"マップ読込み失敗ファイル名間違いでは?"!="");<br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 画面スクロール（位置の更新）<br>
@@ -7307,7 +7318,7 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float y = cellY * CellSize;<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 2次元vectorではxとyがC#と逆！[行Y][列X]行列と覚えよう<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//【★注意!】2次元vectorではxとyがC#と逆！[行Y][列X]⇒行列の順と覚えよう<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int id = enemyData[cellY][currentRightCell];<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 番号に応じて敵を生成する<br>
@@ -7316,7 +7327,7 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 1) gm.enemies.push_back(std::make_shared&lt;Zako1&gt;(x + 32, y + 32));<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; else if (id == 2) gm.enemies.push_back(std::make_shared&lt;Zako2&gt;(x + 32, y + 32));<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 100) gm.enemies.push_back(std::make_shared&lt;Boss&gt;(x + 90, y + 32)); // ボスは横幅180pxだから90px右に生成<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else assert("未実装の敵IDがCSVにありました。"=="");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else assert("まだ追加してない敵IDがマップCSVにありました。"=="");<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
       };<br>
@@ -7412,7 +7423,7 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::PlayMusic(Sound::gameplay); //プレイ画面BGMを再生<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// マップの初期化<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.map = std::make_shared&lt;Map&gt;("Map/stage1.csv");</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.map = std::make_shared&lt;Map&gt;("Map/stage1.csv");</em><br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここでプレイヤの初期化などのプレイ開始時の処理<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
@@ -7441,7 +7452,7 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ中の更新処理を持ってくる<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// マップデータの読出し位置のスクロール<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.map-&gt;Scroll(scrollSpeed);</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.map-&gt;Scroll(scrollSpeed);</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (!gm.player-&gt;isDead) // 自機が死んでいなければ<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
@@ -7472,5 +7483,6 @@
     </ul>
     <br>
     <br>
+    
   </body>
 </html>
