@@ -4959,7 +4959,7 @@
         <a href="#mozTocId40014">画面やステージごとにサウンドをメモリ読込み・解放(音量調整機能も追加)</a><br>
       </li>
       <li><a href="#mozTocId4002">CSVを読み込んで敵を生成するプログラム</a><br>
-        <a href="#mozTocId40022">カスタムしたデータ構造DataCsv.hでデータ自身にLoadと幅高さを任せる</a><br>
+        <a href="#mozTocId40022">カスタムしたデータ構造DataCsv.hでデータ自身にLoadと幅高さ管理を任せる</a><br>
         <a href="#mozTocId40023">敵データの全方位読出しアルゴリズム</a><br>
       </li>
       <li><a href="#mozTocId4003">自機狙い弾</a></li>
@@ -5912,7 +5912,7 @@
       #include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
       <em>#include &lt;map&gt; // ロード済の画像辞書に使う</em><br>
       <em>#include &lt;string&gt; // 文字列string</em><em><br>
-         #include &lt;memory&gt; // 辞書の指す先を回し読みポインタにする<br>
+        #include &lt;memory&gt; // 辞書の指す先を回し読みポインタにする<br>
         #include &lt;vector&gt; // シーンのリストに使う<br>
         #include &lt;algorithm&gt; // シーンのリストからのfindに使う</em><br>
       #include "DivImage.h" // 分割画像の読込みに使う<br>
@@ -7255,11 +7255,8 @@
       &nbsp;&nbsp; &nbsp;//デストラクタ<br>
       &nbsp;&nbsp; &nbsp;~Map()<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (enemyData.size() &gt; 0)<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// ★後ろ側からpop_backで削除しないとvectorは遅い<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemyData.back().clear();<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemyData.pop_back();//リストの一番後ろを削除するから次ループでは一番後ろ1ずれる<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemyData.clear();<br>
+      <br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;// csvファイルの読み込み<br>
@@ -7491,6 +7488,267 @@
       <li>【別のプロジェクトのMapフォルダに間違って入ってた】</li>
       <li>【敵を開始32マス内に配置してた】開始32マスは読込みしません</li>
     </ul>
+    <br>
+    <br>
+    <br>
+    <h2><a id="mozTocId40022" class="mozTocH1"></a>カスタムしたデータ構造DataCsv.hでデータ自身にLoadと幅高さ管理を任せる</h2>
+    <p>さて、マップ読込みうまくいきましたか？<br>
+      現状のコードは敵のみ読込みですが<b>【地形やその他アイテムなどのデータが増えると面倒です】</b><br>
+      いちいち<b>Map.hにint stageWidth, int terrainWidth, int itemWidth...などと定義を増やしますか？</b><br>
+      いちいち<b>Map.hにLoadTerrain(),LoadItem()など長いロード処理を個別に書きますか？</b><br>
+      そんなの<b>僕は嫌だ！</b><br>
+      という人はDataCsv.hを取り入れましょう。<br>
+      データは<b>データ自身がLoad処理を持ち、幅Width高さHeightを持つ構造になればよい</b>のです。<br>
+      <br>
+      コードでは<b>【[]演算子を独自定義】</b>しています。<br>
+      これはぜひ勉強してほしいテクニックです。<br>
+      DataCsv型のデータは<b>[]演算子を使わないとenemyData.Data[y][x]といったアクセスの仕方</b>になってしまいます。<br>
+      すると、DataCsvを導入すると<b>すでに書いたコードすべてに.Data[y][x]の書き足しが必要になっちゃいます</b>よね(めんどくさい)。<br>
+      <b>[]演算子を間に噛ますだけで【既存のコードの書き直しがゼロ】</b>になるのです！<br>
+      <br>
+      どうでしょう？<b>[]演算子の威力を実感できそうですか？</b>(C#でも使えるテクニック)<br>
+      <br>
+      同じ目的で【関数名かぶらせテクニック】も使っています。<br>
+      clear()の定義も同様です。<b>enemyData.Data.clear()と書き直さずenemyData.clear()のままで済む</b>のです。<br>
+      size()の定義も同様です。<b>enemyData.Data.size()と書き直さずenemyData.size()のままで済む</b>のです。<br>
+      <br>
+      どうでしょう？<b>【関数名かぶらせテクニック】を実感できそうですか？</b>(C#でも使えるテクニック)<br>
+    </p>
+    <p><code>DataCsv.hを新規作成</code>します。</p>
+    <p class="source">#ifndef DATACSV_H_<br>
+      #define DATACSV_H_<br>
+      <br>
+      #include &lt;assert.h&gt; // 読込み失敗表示用<br>
+      #include &lt;vector&gt; // csvを2次元vector配列に格納<br>
+      #include &lt;string&gt; // 文字列に必要<br>
+      #include &lt;fstream&gt; // ファイル読み出しifstreamに必要<br>
+      #include &lt;sstream&gt; // 文字列ストリームに必要<br>
+      <br>
+      // CSVファイルを読込み幅や高さとデータ本体を保持するデータ型<br>
+      struct DataCsv // ←structはC++ではほぼclassと同じ【違いはデフォルトがpublic】<br>
+      {&nbsp;&nbsp; // 読込んだデータファイルの情報<br>
+      &nbsp;&nbsp; &nbsp;std::string FilePath = "";<br>
+      &nbsp;&nbsp; &nbsp;int Width = 0; // csvファイルの表の幅<br>
+      &nbsp;&nbsp; &nbsp;int Height = 0;// csvファイルの表の高さ<br>
+      &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;int&gt;&gt; Data;// csvデータ<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<b>// ★スムーズに[][]でアクセスできるように[]演算子を独自定義する<br>
+        &nbsp;&nbsp; &nbsp;std::vector&lt;int&gt;&amp; operator[](std::size_t index) { // ★ &amp;参照にしないといちいちデータのコピーを返すので遅くなるよ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data[index]; // 書き込み<br>
+        &nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;std::vector&lt;int&gt; operator[](std::size_t index) const { // ★constは添え字[]読み取りの処理を定義<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data[index]; // 読み取り<br>
+        &nbsp;&nbsp; &nbsp;}</b><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<b>std::size_t size()<br>
+        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // size()関数の名前をvectorと被らせることで使う側はvectorインvectorのままのコードで使える<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data.size();<br>
+        &nbsp;&nbsp; &nbsp;}</b><br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
+      &nbsp;&nbsp; &nbsp;DataCsv(std::string FilePath = "") :FilePath{ FilePath }<br>
+      &nbsp;&nbsp; &nbsp;{// csvファイルの読込み★【初期化と同時なのでファイルとデータ型が一心同体で使いやすい】<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (FilePath != "") Load(FilePath); // ファイル読込み<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      &nbsp;&nbsp; &nbsp;virtual ~DataCsv()<br>
+      &nbsp;&nbsp; &nbsp;{// 仮想デストラクタ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear();// 2次元配列データのお掃除<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<b>// データをクリアしてメモリを解放する<br>
+        &nbsp;&nbsp; &nbsp;virtual void clear()<br>
+        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // データをクリアしてメモリを解放する<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear();// 2次元配列データのお掃除<br>
+        &nbsp;&nbsp; &nbsp;}</b><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// csvファイルの読み込み<br>
+      &nbsp;&nbsp; &nbsp;void Load(std::string filePath)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filePath == "") return; //ファイル名がない<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;FilePath = filePath; // ファイル名を保管<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear(); //データを一旦クリア<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 読み込むcsvファイルを開く(std::ifstreamのコンストラクタで開く)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::ifstream ifs_csv_file(filePath);<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string line; //1行単位でcsvファイルから文字列を読み込む<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int readWidth = 0; //読込みデータの幅<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int maxWidth = 0; // 1行の数字の最大個数<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int readHeight = 0; //初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓2重while文でCSVファイルを読み取る<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(ifs_csv_file, line)) // ファイルを行ごとに読み込む<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;int&gt; numlist; // 1行の数字リスト<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream linestream(line); // 各行の文字列ストリーム<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string splitted; // カンマで分割された文字列<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int widthCount = 0; //この行の幅をカウント<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(linestream, splitted, { ',' }))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream ss; //文字列ストリームの初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss = std::istringstream(splitted); //文字列ストリーム<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;numlist.push_back(num); // 数字を数字のリスト(numlist)に追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;widthCount++; //この行のカンマで区切られた数字の数をカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行の幅の数が記録を更新してMAXになるかチェック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (widthCount &gt; maxWidth) maxWidth = widthCount; //暫定Max幅を更新<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行分をvectorに追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (numlist.size() != 0) Data.push_back(numlist);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readHeight++; //マップの高さをカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readWidth = maxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readWidth &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違いでは?" != "");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readHeight &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違いでは?" != "");<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Width = readWidth; // 読込み成功したデータの幅を記録<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Height = readHeight; // 読込み成功したデータの高さを記録<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <p><code>Map.hで敵データを2次元vectorからDataCsvの使用に変更</code>しましょう。</p>
+    <p class="source">#ifndef MAP_H_<br>
+      #define MAP_H_<br>
+      <br>
+      #include &lt;assert.h&gt; // 読込み失敗表示用<br>
+      #include &lt;memory&gt; // 回し読みポインタをザコやボスの生成に使う<br>
+      #include &lt;vector&gt; // csvを2次元vector配列に格納<br>
+      #include &lt;string&gt; // 文字列に必要<br>
+      #include &lt;fstream&gt; // ファイル読み出しifstreamに必要<br>
+      #include &lt;sstream&gt; // 文字列ストリームに必要<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "GameManager.h"<br>
+      #include "Zako0.h"<br>
+      #include "Zako1.h"<br>
+      #include "Zako2.h"<br>
+      #include "Boss.h"<br>
+      <br>
+      <em>#include "DataCsv.h"</em><br>
+      <br>
+      class Map<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;int CellSize = 32; // マップの1マスのピクセル数<br>
+      &nbsp;&nbsp; &nbsp;<u>int Width = 0; // マップデータの横のマス数<br>
+        &nbsp;&nbsp; &nbsp;int Height = 0; // マップデータの縦のマス数</u><br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;DataCsv enemyData;// 敵配置データ<br>
+      &nbsp;&nbsp; &nbsp;float position; // 現在の位置（画面左端の座標）<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;// filePath : CSVファイルのパス<br>
+      &nbsp;&nbsp; &nbsp;// startPosition : 開始位置（デバッグやリスタート時に、面の途中から開始できるように）<br>
+      &nbsp;&nbsp; &nbsp;Map(std::string filePath, float startPosition=0)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position = startPosition;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>enemyData.</em>Load(filePath); // csvファイルをロード<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;//デストラクタ<br>
+      &nbsp;&nbsp; &nbsp;~Map()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<b>enemyData.clear();</b><br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<u>// csvファイルの読み込み<br>
+        &nbsp;&nbsp; &nbsp;void Load(std::string filePath)<br>
+        &nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 読み込むcsvファイルを開く(std::ifstreamのコンストラクタで開く)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::ifstream ifs_csv_file(filePath);<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string line; //1行単位でcsvファイルから文字列を読み込む<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Width = 0; //初期化<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int MaxWidth = 0; // 1行の数字の最大個数<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Height = 0; //初期化<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(ifs_csv_file, line)) // ファイルを行ごとに読み込む<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;int&gt; numlist; // 1行の数字リスト<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream linestream(line); // 各行の文字列ストリーム<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string splitted; // カンマで分割された文字列<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int widthCount = 0; //この行の幅をカウント<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(linestream, splitted, { ',' }))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream ss; //文字列ストリームの初期化<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss = std::istringstream(splitted); //文字列ストリーム<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;numlist.push_back(num); // 数字をこの行のリスト(numlist)に追加<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;widthCount++; //この行のカンマで区切られた数字の数をカウントアップ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行の数字の数が記録を更新してMAXになるかチェック<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (widthCount &gt; MaxWidth) MaxWidth = widthCount; //暫定Max幅を更新<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 数字1行分をvectorに追加<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (numlist.size() != 0) enemyData.push_back(numlist);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Height++; //マップの高さをカウントアップ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Width = MaxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(Width &gt; 0 &amp;&amp;"マップ読込み失敗ファイル名間違いでは?"!="");<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(Height &gt; 0 &amp;&amp;"マップ読込み失敗ファイル名間違いでは?"!="");<br>
+        &nbsp;&nbsp; &nbsp;}</u><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 画面スクロール（位置の更新）<br>
+      &nbsp;&nbsp; &nbsp;void Scroll(float delta)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スクロールする前の、画面右端のセルの列番号（x）<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int prevRightCell = (int)(position + Screen::Width) / CellSize;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position += delta; // スクロールする<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スクロールした後の、画面右端のセルの列番号（x）<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int currentRightCell = (int)(position + Screen::Width) / CellSize;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スクロールした後の画面右端のセルがマップの範囲外に出ちゃったら何もしないで終了<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (currentRightCell &gt;= <em>enemyData.</em>Width)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スクロールする前と後で、画面右端のセルが同じ場合は、何もしないで終了<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (prevRightCell == currentRightCell)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 画面右端のセルの左端のx座標<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float x = currentRightCell * CellSize - position;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 上端のセルから下端のセルまで舐めて、敵データが配置されていたら、敵を生成する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (int cellY = 0; cellY &lt; <em>enemyData.</em>Height; cellY++)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float y = cellY * CellSize;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//【★注意!】2次元vectorではxとyがC#と逆！[行Y][列X]⇒行列の順と覚えよう<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int id = <b>enemyData[cellY][currentRightCell];</b><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 番号に応じて敵を生成する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (id == -1) continue; // -1は空白なので、何もしない<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 0) gm.enemies.push_back(std::make_shared&lt;Zako0&gt;(x + 32, y + 32));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 1) gm.enemies.push_back(std::make_shared&lt;Zako1&gt;(x + 32, y + 32));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; else if (id == 2) gm.enemies.push_back(std::make_shared&lt;Zako2&gt;(x + 32, y + 32));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 100) gm.enemies.push_back(std::make_shared&lt;Boss&gt;(x + 90, y + 32)); // ボスは横幅180pxだから90px右に生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else assert("まだ追加してない敵IDがマップCSVにありました。"=="");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      #endif</p>
+    <br>
+    <br>
+    <br>
+    さて、できるだけ最小限の変更でDataCsvを導入することができたのが実感できましたか？<br>
+    これで地形データやアイテムデータなどが増えてきてもすっきりするはずです。<br>
+    一度実行してみて、無事に敵が出てくるかは確認してみましょう。<br>
+    <br>
     <br>
     <br>
   </body>
