@@ -4954,13 +4954,13 @@
     <ol id="mozToc">
       <!--mozToc h1 1-->
       <li><a href="#mozTocId4001">シーンを分ける(循環インクルードを避けメモリも管理するには?)</a><br>
-        <a href="#mozTocId40012">画面やステージごとにImageのメモリを開放する</a><br>
-        <a href="#mozTocId40013">【簡易版】サウンドの読込みと再生機能</a><br>
-        <a href="#mozTocId40014">画面やステージごとにサウンドをメモリ読込み・解放(音量調整機能も追加)</a><br>
+        <a href="#mozTocId40012">【高難度】画面やステージごとにImageのメモリを開放する</a><br>
+        <a href="#mozTocId40013">サウンドの読込みと再生機能</a><br>
+        <a href="#mozTocId40014">【高難度】画面やステージごとにサウンドをメモリ読込み・解放(音量調整機能も追加)</a><br>
       </li>
       <li><a href="#mozTocId4002">CSVを読み込んで敵を生成するプログラム</a><br>
         <a href="#mozTocId40022">カスタムしたデータ構造DataCsv.hでデータ自身にLoadと幅高さ管理を任せる</a><br>
-        <a href="#mozTocId40023">敵データの全方位読出しアルゴリズム</a><br>
+        <a href="#mozTocId40023">【高難度】敵データの全方位読出しアルゴリズム</a><br>
       </li>
       <li><a href="#mozTocId4003">自機狙い弾</a></li>
       <li><a href="#mozTocId4004">自機に向かってくる敵</a></li>
@@ -5891,7 +5891,7 @@
     <br>
     <br>
     <br>
-    <h2><a id="mozTocId40012" class="mozTocH1"></a>画面やステージごとにImageのメモリを開放する</h2>
+    <h2><a id="mozTocId40012" class="mozTocH1"></a>【高難度】画面やステージごとにImageのメモリを開放する</h2>
     <p>さて、画面遷移は実現しましたが、<b>現状ではメモリの節約効果は薄いです</b>。<br>
       なぜか？ 答えはImageクラスではゲーム<b>開始時に全画像データを読み込んだままずっと持ち続け</b>てます。<br>
       ゆえにゲームが壮大になれば<b>【冒険で使う全画像データがメモリにのり続けてしまい】</b>ます。<br>
@@ -6235,7 +6235,7 @@
       でも、ほとんどメモリのグラフには変化がないかもしれません(<b>タイトル動画など重いデータあれば威力発揮</b>) </p>
     <br>
     <br>
-    <h2><a id="mozTocId40013" class="mozTocH1"></a>【簡易版】サウンドの読込みと再生機能</h2>
+    <h2>サウンドの読込みと再生機能</h2>
     <p>実は画像より音声のほうがメモリ消費が大きかったりします。<br>
       なぜか?画像はアニメしなければ1枚ですよね。<br>
       一方<b>【音声には時間の長さがあります】</b>再生時間が10分など長くなれば数MBになります。<br>
@@ -6586,7 +6586,7 @@
     <br>
     <br>
     <br>
-    <h2><a id="mozTocId40014" class="mozTocH1"></a>画面やステージごとにサウンドをメモリ読込み・解放(音量調整機能も追加)</h2>
+    <h2><a id="mozTocId40014" class="mozTocH1"></a>【高難度】画面やステージごとにサウンドをメモリ読込み・解放(音量調整機能も追加)</h2>
     <p>さて、一応基本的なサウンド再生機能は実現しました。<br>
       この項では<b>少し高度なサウンドの音量管理とメモリ管理を辞書配列で実現します。</b><br>
       とりあえず再生できればよいや、という人は<b>あとから取り入れる形でもよいかも</b>しれません。</p>
@@ -7241,7 +7241,8 @@
       &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
       <br>
       &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;int&gt;&gt; enemyData;// 敵配置データ<br>
-      &nbsp;&nbsp; &nbsp;float position; // 現在の位置（画面左端の座標）<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; float position = 0; // マップ読出し位置のスクロール量<br>
       <br>
       &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
       &nbsp;&nbsp; &nbsp;// filePath : CSVファイルのパス<br>
@@ -7617,12 +7618,12 @@
     <p class="source">#ifndef MAP_H_<br>
       #define MAP_H_<br>
       <br>
-      #include &lt;assert.h&gt; // 読込み失敗表示用<br>
+      #include &lt;assert.h&gt; // 失敗表示用<br>
       #include &lt;memory&gt; // 回し読みポインタをザコやボスの生成に使う<br>
-      #include &lt;vector&gt; // csvを2次元vector配列に格納<br>
+      <u>#include &lt;vector&gt; // csvを2次元vector配列に格納</u><br>
       #include &lt;string&gt; // 文字列に必要<br>
-      #include &lt;fstream&gt; // ファイル読み出しifstreamに必要<br>
-      #include &lt;sstream&gt; // 文字列ストリームに必要<br>
+      <u>#include &lt;fstream&gt; // ファイル読み出しifstreamに必要<br>
+        #include &lt;sstream&gt; // 文字列ストリームに必要</u><br>
       <br>
       #include "DxLib.h"<br>
       #include "Screen.h"<br>
@@ -7644,7 +7645,7 @@
       &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
       &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
       <br>
-      &nbsp;&nbsp; &nbsp;DataCsv enemyData;// 敵配置データ<br>
+      &nbsp;&nbsp; &nbsp;<em>DataCsv</em> enemyData;// 敵配置データ<br>
       &nbsp;&nbsp; &nbsp;float position; // 現在の位置（画面左端の座標）<br>
       <br>
       &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
@@ -7751,5 +7752,239 @@
     <br>
     <br>
     <br>
+    <h2><a id="mozTocId40023" class="mozTocH1"></a>【高難度】敵データの全方位読出しアルゴリズム</h2>
+    <p>さて現状のコードでは縦スクロールの一方向スクロール限定です。<br>
+      全方向進めるようなRPGや3Dゲームなどには今のままでは使いづらいです。<br>
+      C#のアクションゲームの敵のロードではステージの全敵キャラを開始時に読み込んでます。<br>
+      <b>開始時に全敵キャラを読み込むのも一つの手</b>です。<br>
+      ある程度<b>敵の数が限られるゲーム</b>であれば有効な策です。<br>
+      しかし広大なマップや大量の敵の出るゲームでやると<br>
+      <b>【大量の画面にいない敵の当たり判定計算などにより計算が追いつかなくなります】</b> ゆえにある程度の敵の規模のあるゲームのためには<b>【敵マップの全方向読み出し】</b>が必要です。 敵の読出しのアルゴリズムについては以下スライドを基本的な考え方としています。<br>
+      <a href="https://docs.google.com/presentation/d/11uHlDZGXokjbjiiHduRCHXR7ovXWqQWikwED4D1wk_o/edit?usp=sharing">https://docs.google.com/presentation/d/11uHlDZGXokjbjiiHduRCHXR7ovXWqQWikwED4D1wk_o/edit?usp=sharing</a> </p>
+    <p><code>Map.hで敵データを2次元vectorからDataCsvの使用に変更</code>しましょう。</p>
+    <p class="source">#ifndef MAP_H_<br>
+      #define MAP_H_<br>
+      <br>
+      #include &lt;assert.h&gt; // 読込み失敗表示用<br>
+      #include &lt;memory&gt; // 回し読みポインタをザコやボスの生成に使う<br>
+      #include &lt;string&gt; // 文字列に必要<br>
+      <em>#include &lt;map&gt; // 連想辞書配列に必要</em><br>
+      <em>#include &lt;cmath&gt; // 敵出現楕円射程のsin cos計算に</em><em></em><br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "GameManager.h"<br>
+      <em>#include "GameObject.h"</em><br>
+      #include "Zako0.h"<br>
+      #include "Zako1.h"<br>
+      #include "Zako2.h"<br>
+      #include "Boss.h"<br>
+      <br>
+      #include "DataCsv.h"<br>
+      <br>
+      <em>// マス目のXとYを保持するデータ型<br>
+        struct CellXY<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; int X = 0;<br>
+        &nbsp;&nbsp;&nbsp; int Y = 0;<br>
+        &nbsp;&nbsp;&nbsp; CellXY(int X, int Y) : X{ X }, Y{ Y }<br>
+        &nbsp;&nbsp;&nbsp; {}; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; // ★連想辞書配列で使うため &lt; 比較演算子(連想配列並べ替えのため)をカスタム定義<br>
+        &nbsp;&nbsp;&nbsp; // http://programming-tips.info/use_struct_as_key_of_map/cpp/index.html<br>
+        &nbsp;&nbsp;&nbsp; bool operator &lt; (const CellXY&amp; otherXY) const {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Y &lt; otherXY.Y) return true; // Y優先並べ替え<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Y &gt; otherXY.Y) return false;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (X &lt; otherXY.X) return true; // Yが同じ時はXを比較<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (X &gt; otherXY.X) return false;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 完全一致のときはfalse<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // A &lt; B と B &lt; A両方falseなら完全一致(だから==演算子の定義がいらない)<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        };</em><br>
+      <br>
+      <br>
+      class Map<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;int CellSize = 32; // マップの1マスのピクセル数<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>int SpawnRangeX = 0; // 敵出現射程スポーンレンジ【注意！Xの単位はマス目】<br>
+        &nbsp;&nbsp;&nbsp; int SpawnRangeY = 0; // 敵出現射程スポーンレンジ【注意！Yの単位はマス目】<br>
+        &nbsp;&nbsp;&nbsp; // ★【効率よく柔軟な連想配列】https://qiita.com/_EnumHack/items/f462042ec99a31881a81<br>
+        &nbsp;&nbsp;&nbsp; std::map&lt;CellXY, bool&gt; SpawnDic; // 辞書:SpawnDic["10,5"]==trueなら出現範囲</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DataCsv enemyData;// 敵配置データ<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <em>float positionX = 0; // X位置(マップ読出し位置のXスクロール量）<br>
+        &nbsp;&nbsp;&nbsp; float positionY = 0; // Y位置(マップ読出し位置のYスクロール量）</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;// filePath : CSVファイルのパス<br>
+      &nbsp;&nbsp; &nbsp;// startPosition : 開始位置（デバッグやリスタート時に、面の途中から開始できるように）<br>
+      &nbsp;&nbsp; &nbsp;Map(std::string filePath, float startPosition<em>X = 0, float startPositionY = 0</em>)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>positionX = startPositionX;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;positionX = startPositionY;</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemyData.Load(filePath); // csvファイルをロード<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// ★30 = 960/32 マス目のサイズ 960はスクリーンのサイズ！<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SpawnRangeX = 30; // 敵出現射程スポーンレンジ【注意！Xの単位はマス目】<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SpawnRangeY = 17; // 敵出現射程スポーンレンジ【注意！Yの単位はマス目】<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //【注意！】辞書の初期化をわすれると敵が出てこなくなる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; InitSpawnDic(SpawnRangeX, SpawnRangeY);</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;//デストラクタ<br>
+      &nbsp;&nbsp; &nbsp;~Map()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<b>enemyData.clear();</b><b></b><br>
+      &nbsp;&nbsp; &nbsp;}<b></b><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 敵出現射程の辞書初期化【先に計算して辞書化】すると計算が必要なくなり【高速化する】<br>
+        &nbsp;&nbsp;&nbsp; //【注意！XとYの単位はマス目】<br>
+        &nbsp;&nbsp;&nbsp; void InitSpawnDic(int rangeCellX, int rangeCellY)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SpawnDic.clear();//一旦辞書をクリアするのでゲーム中の再設定も可(だが処理時間はかかる)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 敵出現射程の辞書初期化<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★ X = A cosθ Y = B sinθ(←楕円の方程式)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★ 楕円の半径 r = √(A×A×cosθ×cosθ + B×B×sinθ×sinθ)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★ xの2乗 + yの2乗 &lt; rならば楕円の内側<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float A2 = (float)(rangeCellX * rangeCellX); // 2乗<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float B2 = (float)(rangeCellY * rangeCellY); // 2乗<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int x = -rangeCellX; x &lt;= rangeCellX; x++)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int y = -rangeCellY; y &lt;= rangeCellY; y++)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★[逆三角関数] https://cpprefjp.github.io/reference/cmath/atan2.html<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //float theta = (float)std::atan2(y, x); // ★[逆三角関数]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //float cos_t = std::cos(theta);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //float sin_t = std::sin(theta);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //float r2 = A2 * cos_t * cos_t + B2 * sin_t * sin_t;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (x * x + y * y &lt;= r2) // ★ xの2乗 + yの2乗 &lt; rならば楕円の内側<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //{&nbsp;&nbsp; //楕円の内側なら辞書SpawnDic[(x,y)] = true;として登録<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; //【★楕円にしたいときはこちら】SpawnDic[CellXY(x,y)] = true; //【例】SpawnDic[(3,2)] = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //}<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //【★四角形にしたいときはこちら】<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SpawnDic[CellXY(x, y)] = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>float deltaSumX = 0; // deltaXの変化が溜まってマス目が移動が発生するかの判定の計算に使う<br>
+        &nbsp;&nbsp;&nbsp; float deltaSumY = 0; // deltaYの変化が溜まってマス目が移動が発生するかの判定の計算に使う</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<em>// 画面スクロール（位置の更新）<br>
+        &nbsp;&nbsp; &nbsp;void Scroll(float deltaX, float deltaY=0, std::shared_ptr&lt;GameObject&gt; baseObj = NULL)<br>
+        &nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; bool isMoveCell = false; // マス目移動が発生するか？発生しないなら敵出現検索処理を回避したい<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 変化量を溜めてマス目移動以外のときは敵出現検索処理を省いて高速化<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumX += deltaX;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumY += deltaY;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (deltaSumX &lt;= -CellSize || CellSize &lt;= deltaSumX<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || deltaSumY &lt;= -CellSize || CellSize &lt;= deltaSumY)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isMoveCell = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // マス目移動以外のときは敵出現検索処理を省いて高速化<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isMoveCell)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 移動が1マス幅を超えれば敵新規出現判定<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float deltaMoveX = deltaSumX; // 溜まった移動量を移動量deltaMoveXとする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float deltaMoveY = deltaSumY; // 溜まった移動量を移動量deltaMoveYとする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int deltaCellX = (int)deltaMoveX / CellSize; // セル(マス目)単位での移動数(マス数)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int deltaCellY = (int)deltaMoveY / CellSize; // セル(マス目)単位での移動数(マス数)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //printfDx("\n%d %d", deltaCellX, deltaCellY);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // マス目移動CellSizeぶん移動変化量から差引いて次の移動量計算に備える <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (deltaSumX &lt;= -CellSize) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumX += CellSize; // マス目移動CellSizeぶん移動変化量から差引き<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (CellSize &lt;= deltaSumX) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumX -= CellSize; // マス目移動CellSizeぶん移動変化量から差引き<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (deltaSumY &lt;= -CellSize) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumY += CellSize; // マス目移動CellSizeぶん移動変化量から差引き<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (CellSize &lt;= deltaSumY) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumY -= CellSize; // マス目移動CellSizeぶん移動変化量から差引き<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int searchCount = 0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★連想配列で敵新規出現マスを探す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://qiita.com/_EnumHack/items/f462042ec99a31881a81<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://pyteyon.hatenablog.com/entry/2019/01/01/220850<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto iter = SpawnDic.begin(); iter != SpawnDic.end(); iter++)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★例 iter-&gt;firstが"3,1" iter-&gt;secondが[trueかfalse]の射程マスかどうかのペア<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (iter-&gt;second == true)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 例.(3,1)のマス目が出現射程マスか[trueかfalse]か？<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXY xy = iter-&gt;first; // iter-&gt;firstに(x,y)=(3,1)が入っている時<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 例.↑(3,1)のマス目xy.X = 3, xy.Y = 1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 例.deltaCellX = 1 deltaCellY = 2のとき<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int searchX = xy.X + deltaCellX; //例. 3+1 = 4 移動先は4<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int searchY = xy.Y + deltaCellY; //例. 1+2 = 3 移動先は3<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //例.↓もし(4,3)が未登録もしくはfalseなら【新規出現マス！】<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXY searchXY(searchX, searchY);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (SpawnDic.count(searchXY) == 1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 例.辞書に↑(4,3)登録があるならcount( (4,3) )は 1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★例.(4,3)がtrueなら↓【被りマス】移動前にすでに敵の出現判定【済】<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (SpawnDic[searchXY] == true) continue; // 敵を出現させず別マスの判定を続ける<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //↓↓↓↓↓ここより下は敵出現↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int mapX = 0, mapY = 0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (baseObj != NULL)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 基準となるオブジェクトがあるならその位置を基準に<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mapX = searchX + (int)(baseObj-&gt;x / CellSize); // セル(マス目)単位でのX位置<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mapY = searchY + (int)(baseObj-&gt;y / CellSize); // セル(マス目)単位でのY位置<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 特に基準オブジェクトの指定がなければ現状ポジションを基準に<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mapX = searchX + (int)(positionX / CellSize); // セル(マス目)単位でのX位置<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mapY = searchY + (int)(positionY / CellSize); // セル(マス目)単位でのY位置<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int objectID = -1;//出現させる敵ID<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt;= mapY &amp;&amp; 0 &lt;= mapX<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;&amp; mapY &lt; enemyData.size() &amp;&amp; mapX &lt; enemyData[mapY].size())<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //データがアクセスできればIDを取得<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; objectID = enemyData[mapY][mapX];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★一度出現させたマスはIDを上書きして二重に敵が出現しないように<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enemyData[mapY][mapX] = -1;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[コメント外すとテスト表示]if (objectID != -1)printfDx("newID %d (%d,%d)\n", objectID, mapX, mapY);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★(mapX,mapY)の位置のマップデータを読み出し！！<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SpawnObject(mapX, mapY, objectID);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; positionX += deltaX; // 現在の位置を更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; positionY += deltaY; // 現在の位置を更新<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;}</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// オブジェクトを生成・配置する<br>
+        &nbsp;&nbsp;&nbsp; void SpawnObject(int mapX, int mapY, int id)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 生成位置<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float x = (float)(mapX * CellSize);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float y = (float)(mapY * CellSize);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 番号に応じて敵を生成する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (id == -1) return; // -1は空白なので、何もしない<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 0) gm.enemies.push_back(std::make_shared&lt;Zako0&gt;(x + 32, y + 32));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 1) gm.enemies.push_back(std::make_shared&lt;Zako1&gt;(x + 32, y + 32));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 2) gm.enemies.push_back(std::make_shared&lt;Zako2&gt;(x + 32, y + 32));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 100) gm.enemies.push_back(std::make_shared&lt;Boss&gt;(x + 90, y + 32)); // ボスは横幅180pxだから90px右に生成<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else assert("まだ追加してない敵IDがマップCSVにありました。"=="");<br>
+        &nbsp;&nbsp; &nbsp;}</em><br>
+      };<br>
+      #endif</p>
+    <br>
+    <br>
+    <p>うまくいけば、これで全方向のスクロールが可能です。<br>
+      map-&gt;Scroll(x, y);でY方向のスクロールもできるようになりました。<br>
+    </p>
   </body>
 </html>
