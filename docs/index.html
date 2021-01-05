@@ -7759,7 +7759,9 @@
       <b>開始時に全敵キャラを読み込むのも一つの手</b>です。<br>
       ある程度<b>敵の数が限られるゲーム</b>であれば有効な策です。<br>
       しかし広大なマップや大量の敵の出るゲームでやると<br>
-      <b>【大量の画面にいない敵の当たり判定計算などにより計算が追いつかなくなります】</b> ゆえにある程度の敵の規模のあるゲームのためには<b>【敵マップの全方向読み出し】</b>が必要です。 敵の読出しのアルゴリズムについては以下スライドを基本的な考え方としています。<br>
+      <b>【大量の画面にいない敵の当たり判定計算などにより計算が追いつかなくなります】</b><br>
+      ゆえにある程度の敵の規模のあるゲームのためには<b>【敵マップの全方向読み出し】</b>が必要です。<br>
+      敵の読出しのアルゴリズムについては以下スライドを基本的な考え方としています。<br>
       <a href="https://docs.google.com/presentation/d/11uHlDZGXokjbjiiHduRCHXR7ovXWqQWikwED4D1wk_o/edit?usp=sharing">https://docs.google.com/presentation/d/11uHlDZGXokjbjiiHduRCHXR7ovXWqQWikwED4D1wk_o/edit?usp=sharing</a> </p>
     <p><code>Map.hで敵データを2次元vectorからDataCsvの使用に変更</code>しましょう。</p>
     <p class="source">#ifndef MAP_H_<br>
@@ -7984,7 +7986,7 @@
     <br>
     <br>
     <p>うまくいけば、これで全方向のスクロールが可能です。<br>
-      map-&gt;Scroll(x, y);でY方向のスクロールもできるようになりました。<br>
+      Game.cppやPlayScene.hで<b>map-&gt;Scroll(ScrollSpeedX, ScrollSpeedY);</b>でY方向のスクロールもできるようになりました。<br>
     </p>
   </body>
 </html>
