@@ -4965,9 +4965,9 @@
       <li><a href="#mozTocId4003">自機狙い弾</a></li>
       <li><a href="#mozTocId4004">自機に向かってくる敵</a></li>
       <br>
-      <p>次のテキスト5はこちら。</p>
+      <p>次のテキストはのちのち。</p>
       <br>
-      <a href="#mozTocId4000">[C++移植]シューティングゲーム 4</a><br>
+      <a href="#mozTocId4000"></a><br>
     </ol>
     <h1><a id="mozTocId4001" class="mozTocH1"></a>シーンを分ける(循環インクルードを避けメモリも管理するには?)</h1>
     <p>タイトルやプレイ画面やゲームオーバーのシーンを分けましょう。<br>
@@ -6235,7 +6235,7 @@
       でも、ほとんどメモリのグラフには変化がないかもしれません(<b>タイトル動画など重いデータあれば威力発揮</b>) </p>
     <br>
     <br>
-    <h2>サウンドの読込みと再生機能</h2>
+    <h2><a id="mozTocId40013" class="mozTocH1"></a>サウンドの読込みと再生機能</h2>
     <p>実は画像より音声のほうがメモリ消費が大きかったりします。<br>
       なぜか?画像はアニメしなければ1枚ですよね。<br>
       一方<b>【音声には時間の長さがあります】</b>再生時間が10分など長くなれば数MBになります。<br>
@@ -6719,9 +6719,9 @@
       <br>
       &nbsp;&nbsp;&nbsp; playingMusic = file; // プレイ中のBGM名を設定<br>
       <br>
-      &nbsp;&nbsp;&nbsp; <em>Sound::UpdateMusicVolume(); // 音量の更新</em><br>
-      <br>
       &nbsp;&nbsp;&nbsp; DxLib::PlayMusic(file.c_str(), PlayType); //ディスクから直接再生(メモリにのせない)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>Sound::UpdateMusicVolume(); // // 音量の更新(プレイ【中】の音楽だから↑PlayMusicしてから)</em><br>
       }<br>
       <br>
       <em>// IDからディスク上の音楽を直接再生する(メモリ上に展開しない)<br>
@@ -8065,7 +8065,7 @@
       #include "Image.h"<br>
       #include "MyMath.h"<br>
       <br>
-      <em>#include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意</em><br>
+      <em>#include "Player.h" // Player.hでもZako0.hをインクルードすると循環するので注意</em><br>
       <br>
       // ザコ0クラス<br>
       class Zako0 : public Enemy<br>
@@ -8127,7 +8127,7 @@
       #include "MyMath.h"<br>
       #include "MyRandom.h"<br>
       <br>
-      <em>#include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意</em><br>
+      <em>#include "Player.h" // Player.hでもZako2.hをインクルードすると循環するので注意</em><br>
       <br>
       // ザコ2クラス<br>
       class Zako2 : public Enemy<br>
@@ -8155,8 +8155,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (coolTime &lt;= 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 自機狙いばらまき弾<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float angle = MyMath::PointToPointAngle(x, y, gm.player-&gt;x, gm.player-&gt;y);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float randomAngle = MyRandom::Range(-15.0f, 15.0f); // ±15度の乱数の角度を取得</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float angle = MyMath::PointToPointAngle(x, y, gm.player-&gt;x, gm.player-&gt;y);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float randomAngle = MyRandom::Range(-15.0f, 15.0f); // ±15度の乱数の角度を取得</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.enemyBullets.push_back(std::make_shared&lt;EnemyBullet&gt;(x, y, <em>angle + randomAngle * MyMath::Deg2Rad</em>, 8));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime += 10;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
@@ -8176,8 +8176,114 @@
     <br>
     <p>さて、ザコ2の場合は画面内の200で止まるので削除処理を入れませんでした。<br>
       そう、<b>削除処理も敵により臨機応変にやるのですね。例えば下から出て上に向かう敵はyが0以下で削除です。</b><br>
-      つまり、<b>削除処理も敵の個性の一つの扱いというわけ</b>です。
-    </p>
+      つまり、<b>削除処理も敵の個性の一つの扱いというわけ</b>です。 </p>
+    <br>
+    <h1><a id="mozTocId4004" class="mozTocH1"></a>自機に向かってくる敵</h1>
+    <p>自機に向かってくる敵も基本は追尾弾と同じですね。</p>
+    <p><code>Zako1.hにプレイヤへ向かってくる処理を追加</code>しましょう。</p>
+    <p class="source">#ifndef ZAKO_1_H_<br>
+      #define ZAKO_1_H_<br>
+      <br>
+      #include "Enemy.h"<br>
+      <br>
+      #include &lt;cmath&gt; // Sinの計算に使う<br>
+      #include "MyMath.h"<br>
+      #include "Image.h"<br>
+      <br>
+      <em>#include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意</em><br>
+      <br>
+      // ザコ1クラス<br>
+      class Zako1 : public Enemy<br>
+      {<br>
+      public:<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Zako1(float x, float y, float z = 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako1";//オブジェクトの種類判別タグ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = 5;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// 自機をおいかけてくる処理<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angleToPlayer = MyMath::PointToPointAngle(x, y, gm.player-&gt;x, gm.player-&gt;y);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float speed = 3;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x += (float)std::cos(angleToPlayer) * speed;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;y += (float)std::sin(angleToPlayer) * speed;</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako1, TRUE);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <br>
+    <p>ゆらゆら向かってくる敵にしてみましょうか。</p>
+    <p><code>Zako1.hにSin波動でゆらゆら向かってくる処理を追加</code>しましょう。</p>
+    <p class="source">#ifndef ZAKO_1_H_<br>
+      #define ZAKO_1_H_<br>
+      <br>
+      #include "Enemy.h"<br>
+      <br>
+      #include &lt;cmath&gt; // Sinの計算に使う<br>
+      #include "MyMath.h"<br>
+      #include "Image.h"<br>
+      <br>
+      #include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意<br>
+      <br>
+      // ザコ1クラス<br>
+      class Zako1 : public Enemy<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;<em>float sinMove = 0; // Sinの動きをする際の0～360度<br>
+        &nbsp;&nbsp; &nbsp;float sinRadius = 70; // Sinの動きをするときの半径</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Zako1(float x, float y, float z = 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako1";//オブジェクトの種類判別タグ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = 5;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機をおいかけてくる処理<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angleToPlayer = MyMath::PointToPointAngle(x, y, gm.player-&gt;x, gm.player-&gt;y);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float speed = 3;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x += (float)std::cos(angleToPlayer) * speed;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;y += (float)std::sin(angleToPlayer) * speed;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>//ゆらゆらSin波動の動きをy上下方向にプラス<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sinMove += 2.5f; // Sinの波運動の角度を進める<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;y += currentSinY - prevSinY; // 上下方向のSinの波運動</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako1, TRUE);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <p>ゆらゆら向かってくるほうが<b>理論上は避けやすいはずなのに、見た目上は逆に怖く見えませんか？</b></p>
+    <br>
     <br>
   </body>
 </html>
