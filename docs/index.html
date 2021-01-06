@@ -7987,6 +7987,129 @@
     <br>
     <p>うまくいけば、これで全方向のスクロールが可能です。<br>
       Game.cppやPlayScene.hで<b>map-&gt;Scroll(ScrollSpeedX, ScrollSpeedY);</b>でY方向のスクロールもできるようになりました。<br>
+      今回はシューティングなのでY方向はデフォルトの0のままで大丈夫です。<br>
     </p>
+    <br>
+    <br>
+    <h1><a id="mozTocId4003" class="mozTocH1"></a>自機狙い弾</h1>
+    <h2>点と点を結んだ線の角度を調べる関数</h2>
+    <p>C#テキストからの変更はMath関連だけですね。<br>
+      インクルードするのは<b>#include &lt;cmath&gt;</b>になります。cmathはスタンダード(<b>ST</b>andar<b>D</b>)ライブラリ所属なので<br>
+      つかうときはstd::cos()とか<b>std::atan2()</b>になります。(stdはスタンダードの略)</p>
+    <p><code>MyMath.hに逆三角関数でプレイヤへの角度を求める関数を追加</code>しましょう。</p>
+    <p class="source">#ifndef _MYMATH_H<br>
+      #define _MYMATH_H<br>
+      <br>
+      <em>#include &lt;cmath&gt;</em><br>
+      <br>
+      // 数学関連クラス<br>
+      class MyMath<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // C ++標準では、静的static定数の【整数型】または【列挙型】のみをクラス内で初期化できます。<br>
+      &nbsp;&nbsp;&nbsp; // これが、一部の初期化が許可されているのに他のstatic floatなどが初期化できない理由です。<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // float小数を定義するためだけにcppファイルを作成しないと<br>
+      &nbsp;&nbsp;&nbsp; //static const float Sqrt2 =【このイコールでエラー】 1.41421356237f;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ルート2(変数名の定義だけ)<br>
+      &nbsp;&nbsp;&nbsp; static const float Sqrt2;// = 1.41421356237f;<br>
+      &nbsp;&nbsp;&nbsp; static const float PI; // 円周率 3.14159265359f;<br>
+      &nbsp;&nbsp;&nbsp; static const float Deg2Rad; // 度からラジアンに変換する定数 PI / 180f;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; /// &lt;summary&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// 円と円が重なっているかを調べる<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="x1"&gt;円1の中心x&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="y1"&gt;円1の中心y&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="radius1"&gt;円1の半径&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="x2"&gt;円2の中心x&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="y2"&gt;円2の中心y&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="radius2"&gt;円2の半径&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;returns&gt;重なっていればtrue、重なっていなければfalseを返却する&lt;/returns&gt;<br>
+      &nbsp;&nbsp;&nbsp; static bool CircleCircleIntersection(<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float x1, float y1, float radius1,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float x2, float y2, float radius2)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt; ((radius1 + radius2) * (radius1 + radius2));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<em>/// &lt;summary&gt;<br>
+        &nbsp;&nbsp; &nbsp;/// 点から点への角度（ラジアン）を求める。<br>
+        &nbsp;&nbsp; &nbsp;/// &lt;/summary&gt;<br>
+        &nbsp;&nbsp; &nbsp;/// &lt;param name="fromX"&gt;始点x&lt;/param&gt;<br>
+        &nbsp;&nbsp; &nbsp;/// &lt;param name="fromY"&gt;始点y&lt;/param&gt;<br>
+        &nbsp;&nbsp; &nbsp;/// &lt;param name="toX"&gt;終点x&lt;/param&gt;<br>
+        &nbsp;&nbsp; &nbsp;/// &lt;param name="toY"&gt;終点y&lt;/param&gt;<br>
+        &nbsp;&nbsp; &nbsp;/// &lt;returns&gt;&lt;/returns&gt;<br>
+        &nbsp;&nbsp; &nbsp;static float PointToPointAngle(float fromX, float fromY, float toX, float toY)<br>
+        &nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return (float)<b>std::atan2</b>(toY - fromY, toX - fromX);<br>
+        &nbsp;&nbsp; &nbsp;}</em><br>
+      <br>
+      }; // 【注意】セミコロン抜けで【宣言が必要ですエラー】<br>
+      <br>
+      #endif // 【宣言が必要ですエラーは上のセミコロン抜け】</p>
+    <br>
+    <br>
+    <h2>自機狙い弾を撃たせる</h2>
+    <p><code>Zako0</code>を改造して自機狙い弾を撃たせてみます（別に他の敵クラスでも構いません）。<br>
+      ついでにZako0の<b>画面外に出たら消す処理も入れましょう【敵が消えないとCPUが当たり判定で激重くなりますよ】</b><br>
+      これを機に<b>Zako1,Zako2,Zako3の画面外で消す判定も追加しておいた方がいい</b>ですよ。</p>
+    <p class="source">#ifndef ZAKO_0_H_<br>
+      #define ZAKO_0_H_<br>
+      <br>
+      #include "Enemy.h"<br>
+      #include "Image.h"<br>
+      #include "MyMath.h"<br>
+      <br>
+      <em>#include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意</em><br>
+      <br>
+      // ザコ0クラス<br>
+      class Zako0 : public Enemy<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Zako0(float x, float y, float z = 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako0";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x -= 1; // とりあえず左へ移動<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime--;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (coolTime &lt;= 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// 自機狙い弾<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(x, y, gm.player-&gt;x, gm.player-&gt;y);</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.enemyBullets.push_back(std::make_shared&lt;EnemyBullet&gt;(x, y, <em>angle</em>, 8));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime += 10;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// 【重要】画面外の削除処理【CPU処理重くなる原因】<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (x &lt; 0)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// 左端の画面外に出たらisDeadしないと<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 画面外の敵の当たり判定で【だんだん処理が重くなるZako1,Zako2..も】<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isDead = true;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif</p>
+    
   </body>
 </html>
