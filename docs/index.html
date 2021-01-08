@@ -3648,6 +3648,7 @@
       #include "Enemy.h"<br>
       #include "Image.h"<br>
       <em>#include "MyMath.h"</em><br>
+      <em>#include&nbsp;"EnemyBullet.h"&nbsp;// make_sharedなど【実際の弾を撃ち生成処理を行うのでインクルード必要】</em><br>
       <br>
       // ザコ0クラス<br>
       class Zako0 : public Enemy<br>
@@ -3691,6 +3692,7 @@
       #include "Enemy.h"<br>
       #include "Image.h"<br>
       <em>#include "MyMath.h"</em><br>
+      <em>#include&nbsp;"EnemyBullet.h"&nbsp;// make_sharedなど【実際の弾を撃ち生成処理を行うのでインクルード必要】</em><br>
       <br>
       // ザコ0クラス<br>
       class Zako0 : public Enemy<br>
@@ -3799,7 +3801,8 @@
       #include "Screen.h"<br>
       #include &lt;cmath&gt; // Sin Cosの計算に使う<br>
       #include "MyMath.h"<br>
-      #include "MyRandom.h"<br>
+      #include "MyRandom.h"<em></em><br>
+      #include&nbsp;"EnemyBullet.h"&nbsp;// make_sharedなど【実際の弾を撃ち生成処理を行うのでインクルード必要】<br>
       <br>
       // ザコ2クラス<br>
       class Zako2 : public Enemy<br>
@@ -3893,7 +3896,8 @@
       #include "Screen.h"<br>
       #include &lt;cmath&gt; // Sin Cosの計算に使う<br>
       #include "MyMath.h"<br>
-      #include "MyRandom.h"<br>
+      #include "MyRandom.h"<em></em><br>
+      #include&nbsp;"EnemyBullet.h"&nbsp;// make_sharedなど【実際の弾を撃ち生成処理を行うのでインクルード必要】<br>
       <br>
       // ザコ3クラス(自爆型機雷タイプの敵キャラ)<br>
       class Zako3 : public Enemy<br>
@@ -4965,9 +4969,9 @@
       <li><a href="#mozTocId4003">自機狙い弾</a></li>
       <li><a href="#mozTocId4004">自機に向かってくる敵</a></li>
       <br>
-      <p>次のテキストはのちのち。</p>
+      <p>次のテキスト5はこちら。</p>
       <br>
-      <a href="#mozTocId4000"></a><br>
+      <a href="#mozTocId5000"></a>次のテキスト5はこちら。<br>
     </ol>
     <h1><a id="mozTocId4001" class="mozTocH1"></a>シーンを分ける(循環インクルードを避けメモリも管理するには?)</h1>
     <p>タイトルやプレイ画面やゲームオーバーのシーンを分けましょう。<br>
@@ -8321,6 +8325,556 @@
       <b>x += 半径×cosθ1(←今の角度のX) - 半径×cosθ2(←前の角度のX)</b><br>
       気になった人は試してみてくださいね。<br>
     </p>
-    
+    <a id="mozTocId5000" class="mozTocH1"></a>
+    <p class="title">[C++移植]シューティングゲーム 5【応用1】</p>
+    <br>
+    <ol id="mozToc">
+      <!--mozToc h1 1-->
+      <li><a href="#mozTocId5001">複数コントローラでプレイ</a><br>
+        <a href="#mozTocId40012">【高難度】画面やステージごとにImageのメモリを開放する</a><br>
+        <a href="#mozTocId40013">サウンドの読込みと再生機能</a><br>
+        <a href="#mozTocId40014">【高難度】画面やステージごとにサウンドをメモリ読込み・解放(音量調整機能も追加)</a><br>
+      </li>
+      <li><a href="#mozTocId4002">CSVを読み込んで敵を生成するプログラム</a><br>
+        <a href="#mozTocId40022">カスタムしたデータ構造DataCsv.hでデータ自身にLoadと幅高さ管理を任せる</a><br>
+        <a href="#mozTocId40023">【高難度】敵データの全方位読出しアルゴリズム</a><br>
+      </li>
+      <li><a href="#mozTocId4003">自機狙い弾</a></li>
+      <li><a href="#mozTocId4004">自機に向かってくる敵</a></li>
+      <br>
+      <p>次のテキストは後々。</p>
+      <br>
+      <a href="#mozTocId6000"></a><br>
+    </ol>
+    <h1><a id="mozTocId5001" class="mozTocH1"></a>複数コントローラでプレイ</h1>
+    <p>複数コントローラーでプレイするためにはまずはInputクラスの改造が必要です。</p>
+    <p><code>Input.hのボタン状態を配列</code>にしてゆきましょう。</p>
+    <p class="source">#ifndef INPUT_H_<br>
+      #define INPUT_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      <br>
+      <em>// コントローラのパッド番号の列挙型enum<br>
+        enum class Pad<br>
+        {<br>
+        &nbsp;&nbsp; &nbsp;None=-1, // パッド割当て無(やられたり待機中のプレイヤに)<br>
+        &nbsp;&nbsp; &nbsp;Key=0, // キーボード<br>
+        &nbsp;&nbsp; &nbsp;One, // コントローラ1<br>
+        &nbsp;&nbsp; &nbsp;Two, // コントローラ2<br>
+        &nbsp;&nbsp; &nbsp;Three, // コントローラ3<br>
+        &nbsp;&nbsp; &nbsp;Four, // コントローラ4<br>
+        &nbsp;&nbsp; &nbsp;NUM, // コントローラの数NUM=5(ちょうど配列の数にもなる)<br>
+        };</em><br>
+      <br>
+      // 入力クラス<br>
+      class Input<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; static int prevState<em>s[(int)Pad::NUM]</em>; // 1フレーム前の状態<br>
+      &nbsp;&nbsp;&nbsp; static int currentState<em>s[(int)Pad::NUM]</em>; // 現在の状態<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化。タイトルなどキー入力状態リセット時に<br>
+      &nbsp;&nbsp;&nbsp; static void Init()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// キー状態をゼロリセット<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;prevStates[(int)Pad::Key] = currentStates[(int)Pad::Key] = 0;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;prevStates[(int)Pad::One] = currentStates[(int)Pad::One] = 0;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;prevStates[(int)Pad::Two] = currentStates[(int)Pad::Two] = 0;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;prevStates[(int)Pad::Three] = currentStates[(int)Pad::Three] = 0;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;prevStates[(int)Pad::Four] = currentStates[(int)Pad::Four] = 0;</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 最新の入力状況に更新する処理。<br>
+      &nbsp;&nbsp;&nbsp; // 毎フレームの最初に（ゲームの処理より先に）呼んでください。<br>
+      &nbsp;&nbsp;&nbsp; static void Update()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>prevStates[(int)Pad::Key] = currentStates[(int)Pad::Key];</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentStates[(int)Pad::Key] = GetJoypadInputState(DX_INPUT_KEY);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;prevStates[(int)Pad::One] = currentStates[(int)Pad::One];<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentStates[(int)Pad::One] = GetJoypadInputState(DX_INPUT_PAD1);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;prevStates[(int)Pad::Two] = currentStates[(int)Pad::Key];<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentStates[(int)Pad::Two] = GetJoypadInputState(DX_INPUT_PAD2);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;prevStates[(int)Pad::Three] = currentStates[(int)Pad::Key];<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentStates[(int)Pad::Three] = GetJoypadInputState(DX_INPUT_PAD3);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;prevStates[(int)Pad::Four] = currentStates[(int)Pad::Key];<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentStates[(int)Pad::Four] = GetJoypadInputState(DX_INPUT_PAD4);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; <em>// ↑ちょ！...ちょい待てーい！！待たれ給えよ！！<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // 【こんなのいちいち書いてられるかー！！！！！】</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      (以下略)..................</p>
+    <br>
+    <p>はい、<b>ダメでござる。こんなのいちいち拙者書きたくないでござる</b>よ！！<br>
+      こういう時こそ、<b>for文や辞書配列の出番でござるよ。絶対そのほうが良いでござるよ。</b></p>
+    <br>
+    <p><code>Input.hの複数プレイのボタン状態を辞書配列とfor文を駆使して書くでござるよ。</code></p>
+    <p class="source">#ifndef INPUT_H_<br>
+      #define INPUT_H_<br>
+      <br>
+      <em>#include &lt;unordered_map&gt; // 辞書配列【map高速版】https://qiita.com/sileader/items/a40f9acf90fbda16af51</em><br>
+      <br>
+      #include "DxLib.h"<br>
+      <br>
+      // コントローラのパッド番号の列挙型enum<br>
+      enum class Pad<br>
+      {<br>
+      &nbsp;&nbsp; &nbsp;None=-1, // パッド割当て無(やられたり待機中のプレイヤに)<br>
+      &nbsp;&nbsp; &nbsp;Key=0, // キーボード<br>
+      &nbsp;&nbsp; &nbsp;One, // コントローラ1<br>
+      &nbsp;&nbsp; &nbsp;Two, // コントローラ2<br>
+      &nbsp;&nbsp; &nbsp;Three, // コントローラ3<br>
+      &nbsp;&nbsp; &nbsp;Four, // コントローラ4<br>
+      &nbsp;&nbsp; &nbsp;NUM, // コントローラの数NUM=5(ちょうど配列の数にもなる)<br>
+      };<br>
+      <br>
+      // 入力クラス<br>
+      class Input<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; static int prevStates[(int)Pad::NUM]; // 1フレーム前の状態<br>
+      &nbsp;&nbsp;&nbsp; static int currentStates[(int)Pad::NUM]; // 現在の状態<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>static std::unordered_map&lt;int, int&gt; padDic; // パッド番号からDXの定義への変換辞書</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 初期化コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Input()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 辞書配列で対応関係の辞書を作成しておく<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Key] = DX_INPUT_KEY;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::One] = DX_INPUT_PAD1;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Two] = DX_INPUT_PAD2;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Three] = DX_INPUT_PAD3;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Four] = DX_INPUT_PAD4;<br>
+        &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化。タイトルなどキー入力状態リセット時に<br>
+      &nbsp;&nbsp;&nbsp; static void Init()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[i] = currentStates[i] = 0;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 最新の入力状況に更新する処理。<br>
+      &nbsp;&nbsp;&nbsp; // 毎フレームの最初に（ゲームの処理より先に）呼んでください。<br>
+      &nbsp;&nbsp;&nbsp; static void Update()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; <em>for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 現在の状態を一つ前の状態として保存してGetJoypad..</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[<em>i</em>] = currentStates[<em>i</em>];<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; currentStates[<em>i</em>] = GetJoypadInputState(<em>padDic[i]</em>);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>}</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタンが押されているか？<br>
+      &nbsp;&nbsp;&nbsp; static bool GetButton(<em>Pad pad, </em>int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if(pad == Pad::None) return false; // Noneなら判別不要</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今ボタンが押されているかどうかを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (currentState<em>s[(int)pad]</em> &amp; buttonId) != 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタンが押された瞬間か？<br>
+      &nbsp;&nbsp;&nbsp; static bool GetButtonDown(<em>Pad pad, </em>int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if(pad == Pad::None) return false; // Noneなら判別不要</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今は押されていて、かつ1フレーム前は押されていない場合はtrueを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((currentState<em>s[(int)pad]</em> &amp; buttonId) &amp; ~(prevState<em>s[(int)pad]</em> &amp; buttonId)) != 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタンが離された瞬間か？<br>
+      &nbsp;&nbsp;&nbsp; static bool GetButtonUp(<em>Pad pad, </em>int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if(pad == Pad::None) return false; // Noneなら判別不要</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 1フレーム前は押されていて、かつ今は押されている場合はtrueを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((prevState<em>s[(int)pad]</em> &amp; buttonId) &amp; ~(currentState<em>s[(int)pad]</em> &amp; buttonId)) != 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }; //←【注意】クラス定義の終わりにはコロンが必要だよ！<br>
+      <br>
+      #endif&nbsp; //ここでエラー出た人は↑【注意】の;コロン忘れ</p>
+    <br>
+    <p><code>Input.cppの変数定義を変更します。</code></p>
+    <p class="source">#include "Input.h"<br>
+      <br>
+      int Input::prevState<em>s[]</em>; // 1フレーム前の状態<br>
+      int Input::currentState<em>s[]</em>; // 現在の状態<br>
+      <br>
+      <em>std::unordered_map&lt;int, int&gt; Input::padDic; // パッド番号からDXの定義への辞書</em><br>
+    </p>
+    <br>
+    <p> これでボタン判定にはPad番号の指定が必須になりました。<br>
+      したがって既存のボタン入力コードにはエラーが出るはずです。<br>
+      むしろ出たほうが良いと思い <b>GetButtonDown(int buttonId<em>, Pad pad = Pad::key</em>)</b>みたいな<br>
+      <b>デフォルト = Pad::key設定</b>をしませんでした。(デフォルト=があれば省略できたが)<br>
+      なぜなら明確にエラーが出ないと<b>複数プレイ対応直し忘れ</b>がでちゃいますからね。<br>
+    </p>
+    <br>
+    <p><code>Player.hにそのプレイヤを操るコントローラpadの定義</code>を追加しましょう。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "GameObject.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      <br>
+      // 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意<br>
+      class Player : public GameObject<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; <em>Pad pad = Pad::None; // デフォルトは未割当て</em><br>
+      &nbsp;&nbsp;&nbsp; const float MoveSpeed = 6; // 移動速度<br>
+      &nbsp;&nbsp;&nbsp; int MutekiJikan = 120; // 無敵時間<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float collisionRadius = 32; // 当たり判定半径<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; int life = 3; // ライフ<br>
+      &nbsp;&nbsp;&nbsp; int mutekiTimer = 0; // 残り無敵時間。0以下なら無敵じゃないってこと<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //【★注意！】ここに【x,yの定義が残ってるとGameObjectと被る】ので<br>
+      &nbsp;&nbsp;&nbsp; // 名前の同じ変数が2つ【パラレルワールドに存在してしまう！】<br>
+      &nbsp;&nbsp;&nbsp; // Playerからx=13,y=5に変えたつもりでも【ベースのGameObjectはx=0,y=0のままの不思議バグで混乱！】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; <em>// pad : 対応するコントローラ</em><br>
+      &nbsp;&nbsp;&nbsp; // x : 初期位置x<br>
+      &nbsp;&nbsp;&nbsp; // y : 初期位置y<br>
+      &nbsp;&nbsp;&nbsp; Player(<em>Pad pad, </em>float x, float y, float z = 0) // z=0デフォルトにして2Dのときはzを省略できる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>this-&gt;pad = pad;</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;x = x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;y = y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;z = z;//[3D対応]<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 敵にぶつかった時の処理<br>
+      &nbsp;&nbsp;&nbsp; void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 敵弾とぶつかった時の処理<br>
+      &nbsp;&nbsp;&nbsp; void OnCollisionEnemyBullet(std::shared_ptr&lt;GameObject&gt; other);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ダメージを受ける処理<br>
+      &nbsp;&nbsp;&nbsp; void TakeDamage();<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>Player.cppのInput判定にコントローラpadの指定</code>を追加しましょう。<br>
+      なおデフォルトの<b>Pad::Noneの状態のままの時は反応しなくなります！</b></p>
+    <p class="source">#include "Player.h"<br>
+      <br>
+      #include "PlayerBullet.h" // ★弾を生成して【使う処理があるのでインクルード必要】<br>
+      <br>
+      #include "Explosion.h"<br>
+      <br>
+      // 更新処理<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; vx = 0; // x方向移動速度<br>
+      &nbsp;&nbsp;&nbsp; vy = 0; // y方向移動速度<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(<em>pad, </em>PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vx = -MoveSpeed; // 左<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (Input::GetButton(<em>pad, </em>PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vx = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(<em>pad, </em>PAD_INPUT_UP))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -MoveSpeed; // 上<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (Input::GetButton(<em>pad, </em>PAD_INPUT_DOWN))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 斜め移動も同じ速度になるように調整<br>
+      &nbsp;&nbsp;&nbsp; if (vx != 0 &amp;&amp; vy != 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vx /= MyMath::Sqrt2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy /= MyMath::Sqrt2;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 実際に位置を動かす<br>
+      &nbsp;&nbsp;&nbsp; x += vx;<br>
+      &nbsp;&nbsp;&nbsp; y += vy;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタン押下で自機弾を発射<br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(<em>pad, </em>PAD_INPUT_1))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 【C#版】game-&gt;playerBullets.Add(new PlayerBullet(x, y));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // C++ではAddがpush_backに↓ newがmake_shared↓に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, 0));//右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, -15 * MyMath::Deg2Rad));//右上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.playerBullets.push_back(std::make_shared&lt;PlayerBullet&gt;(x, y, +15 * MyMath::Deg2Rad));//右下<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; mutekiTimer--;// 無敵タイマーは無条件で毎フレームカウントダウン<br>
+      }<br>
+      <br>
+      (以下略)................<br>
+    </p>
+    <br>
+    <p><code>TitleScene.hのInput判定にコントローラpadの指定</code>を書換えましょう。</p>
+    <p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "Sound.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; (中略).....................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタン入力に応じた処理<br>
+      &nbsp;&nbsp;&nbsp; void HandleInput()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// 全部のパッドぶんボタンが押されてるか検査<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(<em>(Pad)i,</em> PAD_INPUT_1))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ボタンを押したらスタート音声を再生<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Play(Sound::start);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isStartPushed = true; // 画面遷移トリガーON<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>}</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// いや..ちょ、ちょい待たれよー！いちいちfor文書くの??</em><br>
+      <br>
+      (以下略)................<br>
+    </p>
+    <p>はい、来ました！<b>使い勝手の悪さを発見しましたね！</b><br>
+      <b>いちいち全部のコントローラ確かめるときはfor文で囲うのがめんどくさい</b>ですよね。<br>
+      よいアイデアがあります。Inputの方を改造しましょう。</p>
+    <br>
+    <br>
+    <p><code>Input.hのコントローラpadの種類にAll(すべての内どれか押されたら)を指定できるように</code>改造しましょう。</p>
+    <p class="source">#ifndef INPUT_H_<br>
+      #define INPUT_H_<br>
+      <br>
+      #include &lt;unordered_map&gt; // 辞書配列【map高速版】https://qiita.com/sileader/items/a40f9acf90fbda16af51<br>
+      <br>
+      #include "DxLib.h"<br>
+      <br>
+      // コントローラのパッド番号定義<br>
+      enum class Pad<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; <em>All = -2, // すべてのうちどれか1つでも押されたとき</em><br>
+      &nbsp;&nbsp;&nbsp; None = -1, // パッド割当て無(やられたり待機中のプレイヤに)<br>
+      &nbsp;&nbsp;&nbsp; Key=0, // キーボード<br>
+      &nbsp;&nbsp;&nbsp; One, // コントローラ1<br>
+      &nbsp;&nbsp;&nbsp; Two, // コントローラ2<br>
+      &nbsp;&nbsp;&nbsp; Three, // コントローラ3<br>
+      &nbsp;&nbsp;&nbsp; Four, // コントローラ4<br>
+      &nbsp;&nbsp;&nbsp; NUM, // コントローラの数=5<br>
+      };<br>
+      <br>
+      // 入力クラス<br>
+      class Input<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; static int prevStates[(int)Pad::NUM]; // 1フレーム前の状態<br>
+      &nbsp;&nbsp;&nbsp; static int currentStates[(int)Pad::NUM]; // 現在の状態<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;int, int&gt; padDic; // パッド番号からDXの定義への辞書<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Input()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 辞書配列で対応関係を結び付けておく<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Key] = DX_INPUT_KEY;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::One] = DX_INPUT_PAD1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Two] = DX_INPUT_PAD2;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Three] = DX_INPUT_PAD3;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Four] = DX_INPUT_PAD4;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化。タイトルなどキー入力状態リセット時に<br>
+      &nbsp;&nbsp;&nbsp; static void Init()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[i] = currentStates[i] = 0<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 最新の入力状況に更新する処理。<br>
+      &nbsp;&nbsp;&nbsp; // 毎フレームの最初に（ゲームの処理より先に）呼んでください。<br>
+      &nbsp;&nbsp;&nbsp; static void Update()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 現在の状態を一つ前の状態として保存してGetJoypad..<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[i] = currentStates[i];<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; currentStates[i] = GetJoypadInputState(padDic[i]);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタンが押されているか？<br>
+      &nbsp;&nbsp;&nbsp; static bool GetButton(Pad pad, int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // 全てAllの指定だった時は<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // GetButtonの中でGetButtonを呼ぶ再起呼出しテクニック<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButton((Pad)i, buttonId))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; //押されているPadを発見！<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 一つも押されていなかった<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今ボタンが押されているかどうかを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (currentStates[(int)pad] &amp; buttonId) != 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタンが押された瞬間か？<br>
+      &nbsp;&nbsp;&nbsp; static bool GetButtonDown(Pad pad, int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // 全てAllの指定だった時は<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonDown((Pad)i, buttonId))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; //押されているPadを発見！<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 一つも押されていなかった<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今は押されていて、かつ1フレーム前は押されていない場合はtrueを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((currentStates[(int)pad] &amp; buttonId) &amp; ~(prevStates[(int)pad] &amp; buttonId)) != 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタンが離された瞬間か？<br>
+      &nbsp;&nbsp;&nbsp; static bool GetButtonUp(Pad pad, int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // 全てAllの指定だった時は<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonUp((Pad)i, buttonId))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; //押されているPadを発見！<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 一つも押されていなかった<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 1フレーム前は押されていて、かつ今は押されている場合はtrueを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((prevStates[(int)pad] &amp; buttonId) &amp; ~(currentStates[(int)pad] &amp; buttonId)) != 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }; //←【注意】クラス定義の終わりにはコロンが必要だよ！<br>
+      <br>
+      #endif&nbsp; //ここでエラー出た人は↑【注意】の;コロン忘れ<br>
+    </p>
+    <p><b>極意【再起呼出し】(自分自身を呼び出すこと)が炸裂しましたね！(再起はきれいにハマると気持ちいいです)</b><br>
+      <b>自分自身を呼び出すなんてそんなのアリ!?</b>ですよね。<br>
+      でもこのテク便利です。上級者は結構使います<b>【if条件の絞りミスると呼出し無限ループしますがね】</b></p>
+    <br>
+    <br>
+    <p>さあ、これで<b>使う側はPad::Allを指定するだけ</b>でコントローラのどれか1つでもボタンが押されたことを検知できます。<br>
+    </p>
+    <p><code>TitleScene.hのInput判定にコントローラpadの指定</code>を書換えましょう。</p>
+    <p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "Sound.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; (中略)....................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタン入力に応じた処理<br>
+      &nbsp;&nbsp;&nbsp; void HandleInput()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(<em>Pad::All, </em>PAD_INPUT_1))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ボタンを押したらスタート音声を再生<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Play(Sound::start);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isStartPushed = true; // 画面遷移トリガーON<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(<em>Pad::All, </em>PAD_INPUT_UP))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //上を押すと設定モードを-1する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int index = ((int)settingMode - 1);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (index &lt; 0) //↓番号ループ 0→最大数-1<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; index = ((int)SettingMode::NUM) - 1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; settingMode = (SettingMode)index;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (Input::GetButtonDown(<em>Pad::All, </em>PAD_INPUT_DOWN))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //下を押すと設定モードを+1する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int index = ((int)settingMode + 1);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (index &gt;= ((int)SettingMode::NUM))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; index = 0; //番号ループ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; settingMode = (SettingMode)index;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(<em>Pad::All, </em>PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (settingMode == SettingMode::BGM)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeBGM++;//音量をプラス<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Sound::volumeBGM &gt; 100)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeBGM = 100;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (settingMode == SettingMode::SE)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeSE++;//音量をプラス<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Sound::volumeSE &gt; 100)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeSE = 100;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Play(Sound::bomb); //効果音を聞きながら調節<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::UpdateMusicVolume(); //再生中の音量の更新<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (Input::GetButton(<em>Pad::All, </em>PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (settingMode == SettingMode::BGM)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeBGM--;//音量をマイナス<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Sound::volumeBGM &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeBGM = 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (settingMode == SettingMode::SE)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeSE--;//音量をマイナス<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Sound::volumeSE &lt;0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::volumeSE = 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Play(Sound::bomb); //効果音を聞きながら調節<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::UpdateMusicVolume(); //再生中の音量の更新<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      (以下略).....................<br>
+    </p>
   </body>
 </html>
