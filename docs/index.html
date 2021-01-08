@@ -8440,8 +8440,8 @@
       <br>
       &nbsp;&nbsp;&nbsp; <em>static std::unordered_map&lt;int, int&gt; padDic; // パッド番号からDXの定義への変換辞書</em><br>
       <br>
-      &nbsp;&nbsp;&nbsp; <em>// 初期化コンストラクタ<br>
-        &nbsp;&nbsp;&nbsp; Input()<br>
+      &nbsp;&nbsp;&nbsp; <em>// 辞書配列の初期化<br>
+        &nbsp;&nbsp;&nbsp; static void InitPadDictionary()<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 辞書配列で対応関係の辞書を作成しておく<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Key] = DX_INPUT_KEY;<br>
@@ -8454,6 +8454,8 @@
       &nbsp;&nbsp;&nbsp; // 初期化。タイトルなどキー入力状態リセット時に<br>
       &nbsp;&nbsp;&nbsp; static void Init()<br>
       &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>InitPadDictionary() // パッドの辞書配列の初期化</em><br>
+      <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
@@ -8709,8 +8711,8 @@
       <br>
       &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;int, int&gt; padDic; // パッド番号からDXの定義への辞書<br>
       <br>
-      &nbsp;&nbsp;&nbsp; // 初期化コンストラクタ<br>
-      &nbsp;&nbsp;&nbsp; Input()<br>
+      &nbsp;&nbsp;&nbsp; // 辞書配列の初期化<br>
+      &nbsp;&nbsp;&nbsp; static void InitPadDictionary()<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 辞書配列で対応関係を結び付けておく<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Key] = DX_INPUT_KEY;<br>
@@ -8723,6 +8725,8 @@
       &nbsp;&nbsp;&nbsp; // 初期化。タイトルなどキー入力状態リセット時に<br>
       &nbsp;&nbsp;&nbsp; static void Init()<br>
       &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; InitPadDictionary() // パッドの辞書配列の初期化<br>
+      <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[i] = currentStates[i] = 0<br>
@@ -8744,7 +8748,7 @@
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // 全てAllの指定だった時は<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // GetButtonの中でGetButtonを呼ぶ再起呼出しテクニック<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // GetButtonの中でGetButtonを呼ぶ【再起呼出し】テクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButton((Pad)i, buttonId))<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; //押されているPadを発見！<br>
@@ -8792,10 +8796,16 @@
     </p>
     <p><b>極意【再起呼出し】(自分自身を呼び出すこと)が炸裂しましたね！(再起はきれいにハマると気持ちいいです)</b><br>
       <b>自分自身を呼び出すなんてそんなのアリ!?</b>ですよね。<br>
-      でもこのテク便利です。上級者は結構使います<b>【if条件の絞りミスると呼出し無限ループしますがね】</b></p>
+      でもこのテク便利です。上級者は結構使います<b>【if条件の絞りミスると呼出し無限ループしますがね】</b><br>
+      あと、もう一つのテク<b>【enumの種類をAll=-2でマイナス方向に拡張してます】</b><br>
+      生真面目な人は0から始めたらプラス方向しかできないと思いがちですよね。<br>
+      頭が固いです。<b>柔軟にマイナスの番号も有効活用すればいい</b>んです。<br>
+      0から上はコントローラ番号に割り当てることで<b>for(int i=0;i&lt; (int)Pad::NUM; i++)で全チェックのi</b>に使えます。<br>
+      <b>0から上の番号にALLとか例外の番号が割り込んでくるとforで回すのに邪魔</b>ですからね。<br>
+      だからマイナス番号って便利なんですよ。<b>普通はマイナス使わないからこそ【マイナス番号は空いてるんです】</b></p>
     <br>
     <br>
-    <p>さあ、これで<b>使う側はPad::Allを指定するだけ</b>でコントローラのどれか1つでもボタンが押されたことを検知できます。<br>
+    <p>さあ、これで<b>使う側はPad::Allを指定するだけ</b>でコントローラのどれか1つでもボタンが押されたら検知できます。<br>
     </p>
     <p><code>TitleScene.hのInput判定にコントローラpadの指定</code>を書換えましょう。</p>
     <p class="source">#ifndef TITLESCENE_H_<br>
@@ -8879,5 +8889,57 @@
       <br>
       (以下略).....................<br>
     </p>
+    <br>
+    <p><code>PlayScene.hのプレイヤの生成にパッド番号指定</code>を書き加えましょう。</p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      (中略)...........<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; (中略)............<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; void Initialize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略)....................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここでプレイヤの初期化などのプレイ開始時の処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;(<em>Pad::Key, </em>(float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵の仮生成<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //gm.enemies.push_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      (以下略).....................<br>
+    </p>
+    <br>
+    <br>
+    <p>さて、これで大丈夫か！...と思いきや反応しなくなりました。<br>
+      原因は<b>Input::Init(); // 入力コントローラの初期化</b> 忘れでした！<br>
+      逆にいままでなぜ大丈夫だったかというとint型や配列currentStatesの初期値は0だったからです(たまたま実質0初期化になってた)<br>
+    </p>
+    <p><code>Game.cppに忘れていたInputの初期化</code>を書き加えましょう。</p>
+    <p class="source">#include "Game.h"<br>
+      <br>
+      #include "MyRandom.h"<br>
+      <em>#include "Input.h"</em><br>
+      <br>
+      void Game::Init()<br>
+      {// Init処理<br>
+      &nbsp;&nbsp;&nbsp; <em>Input::Init(); // コントローラ入力の初期化</em><br>
+      &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数シードの初期化<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; (中略)............<br>
+      }<br>
+      <br>
+      (以下略).....................<br>
+    </p>
+    <br>
+    <p>これでコントローラをつなげばどのコントローラからでもタイトル画面を操作できます。<br>
+    なぜ各シーンではなくGame.cppでInput入力とMyRandom乱数はInit初期化するのか？<br>
+    それは<b>コントローラ入力と乱数はシーンによらない共通機能</b>だからです。</p>
+    <br>
   </body>
 </html>
