@@ -5072,7 +5072,10 @@
       &nbsp;&nbsp; &nbsp;friend class Singleton&lt;SceneManager&gt;; // Singleton でのインスタンス作成は許可<br>
       <br>
       &nbsp;&nbsp; &nbsp;std::string selectStage = "stage1"; // 選択中のステージ(タイトルでのデフォルト選択などもマネージャに保持できる)<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <b>// マネージャは【どこからでもアクセスしやすい「変数の掲示板」として気軽に使ってもよい】</b><br>
       &nbsp;&nbsp; &nbsp;int scoreMax = -1; // シーンをまたぐスコアなどはマネージャに定義すればシーンチェンジ後も消えない<br>
+      &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Scene&gt; prevScene{ nullptr }; // 一つ前のシーン<br>
       &nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Scene&gt; currentScene{ nullptr }; // 現在のシーン<br>
       &nbsp;&nbsp; &nbsp;// シーンをチェンジし遷移する(前のシーンのリセット処理もする) optionsはステージcsvなどの指定に使える<br>
