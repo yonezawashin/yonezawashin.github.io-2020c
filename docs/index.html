@@ -8915,6 +8915,44 @@
       (以下略).....................<br>
     </p>
     <br>
+    <p><code>GameOverScene.hのInputボタン判定にPad::Allの指定</code>を書き加えましょう。</p>
+    <p class="source">#ifndef GAMEOVERSCENE_H_<br>
+      #define GAMEOVERSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      class GameOverScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      (中略).....................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(<em>Pad::All, </em>PAD_INPUT_1))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.LoadScene("TitleScene"); //シーン遷移<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawString(0, 0, "GameOver....ボタン押下でPlaySceneへ", GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
     <br>
     <p>さて、これで大丈夫か！...と思いきや反応しなくなりました。<br>
       原因は<b>Input::Init(); // 入力コントローラの初期化</b> 忘れでした！<br>
@@ -8938,8 +8976,8 @@
     </p>
     <br>
     <p>これでコントローラをつなげばどのコントローラからでもタイトル画面を操作できます。<br>
-    なぜ各シーンではなくGame.cppでInput入力とMyRandom乱数はInit初期化するのか？<br>
-    それは<b>コントローラ入力と乱数はシーンによらない共通機能</b>だからです。</p>
+      なぜ各シーンではなくGame.cppでInput入力とMyRandom乱数はInit初期化するのか？<br>
+      それは<b>コントローラ入力と乱数はシーンによらない共通機能</b>だからです。</p>
     <br>
   </body>
 </html>
