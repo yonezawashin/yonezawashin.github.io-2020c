@@ -4971,7 +4971,7 @@
       <br>
       <p>次のテキスト5はこちら。</p>
       <br>
-      <a href="#mozTocId5000"></a>次のテキスト5はこちら。<br>
+      <a href="#mozTocId5000">[C++移植]シューティングゲーム 5【応用1】</a><br>
     </ol>
     <h1><a id="mozTocId4001" class="mozTocH1"></a>シーンを分ける(循環インクルードを避けメモリも管理するには?)</h1>
     <p>タイトルやプレイ画面やゲームオーバーのシーンを分けましょう。<br>
@@ -8745,7 +8745,7 @@
       &nbsp;&nbsp;&nbsp; static bool GetButton(Pad pad, int buttonId)<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // 全てAllの指定だった時は<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // GetButtonの中でGetButtonを呼ぶ【再起呼出し】テクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButton((Pad)i, buttonId))<br>
@@ -8761,7 +8761,7 @@
       &nbsp;&nbsp;&nbsp; static bool GetButtonDown(Pad pad, int buttonId)<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // 全てAllの指定だった時は<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonDown((Pad)i, buttonId))<br>
@@ -8777,7 +8777,7 @@
       &nbsp;&nbsp;&nbsp; static bool GetButtonUp(Pad pad, int buttonId)<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // 全てAllの指定だった時は<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonUp((Pad)i, buttonId))<br>
