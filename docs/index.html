@@ -8334,7 +8334,8 @@
     <ol id="mozToc">
       <!--mozToc h1 1-->
       <li><a href="#mozTocId5001">複数コントローラでプレイ</a><br>
-        <a href="#mozTocId40012">【高難度】画面やステージごとにImageのメモリを開放する</a><br>
+        <a href="#mozTocId50011">Inputクラスの複数プレイ対応</a><br>
+        <a href="#mozTocId50012">複数プレイヤの参加処理</a><br>
         <a href="#mozTocId40013">サウンドの読込みと再生機能</a><br>
         <a href="#mozTocId40014">【高難度】画面やステージごとにサウンドをメモリ読込み・解放(音量調整機能も追加)</a><br>
       </li>
@@ -8350,6 +8351,7 @@
       <a href="#mozTocId6000"></a><br>
     </ol>
     <h1><a id="mozTocId5001" class="mozTocH1"></a>複数コントローラでプレイ</h1>
+    <h2><a id="mozTocId50011" class="mozTocH1"></a>Inputクラスの複数プレイ対応</h2>
     <p>複数コントローラーでプレイするためにはまずはInputクラスの改造が必要です。</p>
     <p><code>Input.hのボタン状態を配列</code>にしてゆきましょう。</p>
     <p class="source">#ifndef INPUT_H_<br>
@@ -8978,6 +8980,8 @@
       それは<b>コントローラ入力と乱数はシーンによらない共通機能</b>だからです。</p>
     <br>
     <br>
+    
+    <h2><a id="mozTocId50012" class="mozTocH1"></a>複数プレイヤの参加処理</h2>
     <p>さて、次はプレイヤの参加処理を書いてゆきましょう。<br>
       プレイヤの<b>参加は色んな画面で使うのでInputクラスで共通処理</b>とした方が良さそうです。<br>
       すでに<b>Inputを使い慣れた人も辞書配列の使い道に注目</b>してください。<br>
