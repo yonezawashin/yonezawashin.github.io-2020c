@@ -8458,9 +8458,7 @@
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[i] = currentStates[i] = 0;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[i] = currentStates[i] = 0;</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 最新の入力状況に更新する処理。<br>
@@ -8802,7 +8800,7 @@
       頭が固いです。<b>柔軟にマイナスの番号も有効活用すればいい</b>んです。<br>
       0から上はコントローラ番号に割り当てることで<b>for(int i=0;i&lt; (int)Pad::NUM; i++)で全チェックのi</b>に使えます。<br>
       <b>0から上の番号にALLとか例外の番号が割り込んでくるとforで回すのに邪魔</b>ですからね。<br>
-      だからマイナス番号って便利なんですよ。<b>普通はマイナス使わないからこそ【マイナス番号は空いてるんです】</b></p>
+      だからマイナス番号って便利なんです。<b>普通はマイナス使わないからこそ【マイナス番号は空いてるんです】</b></p>
     <br>
     <br>
     <p>さあ、これで<b>使う側はPad::Allを指定するだけ</b>でコントローラのどれか1つでもボタンが押されたら検知できます。<br>
@@ -8978,6 +8976,293 @@
     <p>これでコントローラをつなげばどのコントローラからでもタイトル画面を操作できます。<br>
       なぜ各シーンではなくGame.cppでInput入力とMyRandom乱数はInit初期化するのか？<br>
       それは<b>コントローラ入力と乱数はシーンによらない共通機能</b>だからです。</p>
+    <br>
+    <br>
+    <p>さて、次はプレイヤの参加処理を書いてゆきましょう。<br>
+      プレイヤの<b>参加は色んな画面で使うのでInputクラスで共通処理</b>とした方が良さそうです。<br>
+      すでに<b>Inputを使い慣れた人も辞書配列の使い道に注目</b>してください。<br>
+      <b>辞書配列は【対応関係を結ぶのにめちゃ便利】</b>です。<br>
+      <b>辞書配列に慣れると【vector配列が辞書配列の劣化版のようにすら感じるほど】</b>です。<br>
+    </p>
+    <p><code>Input.hに参加中パッドの辞書と参加チェック処理</code>を書き加えましょう。</p>
+    <p class="source">#ifndef INPUT_H_<br>
+      #define INPUT_H_<br>
+      <br>
+      #include &lt;unordered_map&gt; // 辞書配列【map高速版】https://qiita.com/sileader/items/a40f9acf90fbda16af51<br>
+      <br>
+      #include "DxLib.h"<br>
+      <br>
+      // コントローラのパッド番号定義<br>
+      enum class Pad<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; All = -2, // すべてのうちどれか1つでも押されたとき<br>
+      &nbsp;&nbsp;&nbsp; None = -1, // パッド割当て無(やられたり待機中のプレイヤに)<br>
+      &nbsp;&nbsp;&nbsp; Key=0, // キーボード<br>
+      &nbsp;&nbsp;&nbsp; One, // コントローラ1<br>
+      &nbsp;&nbsp;&nbsp; Two, // コントローラ2<br>
+      &nbsp;&nbsp;&nbsp; Three, // コントローラ3<br>
+      &nbsp;&nbsp;&nbsp; Four, // コントローラ4<br>
+      &nbsp;&nbsp;&nbsp; NUM, // コントローラの数=5<br>
+      };<br>
+      <br>
+      // 入力クラス<br>
+      class Input<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; static int prevStates[(int)Pad::NUM]; // 1フレーム前の状態<br>
+      &nbsp;&nbsp;&nbsp; static int currentStates[(int)Pad::NUM]; // 現在の状態<br>
+      &nbsp;&nbsp;&nbsp; <em>static std::unordered_map&lt;Pad, bool&gt; isJoin; // 参加中のパッド番号辞書</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;int, int&gt; padDic; // パッド番号からDXの定義への辞書<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 辞書配列の初期化<br>
+      &nbsp;&nbsp;&nbsp; static void InitPadDictionary()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 辞書配列で対応関係を結び付けておく<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Key] = DX_INPUT_KEY;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::One] = DX_INPUT_PAD1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Two] = DX_INPUT_PAD2;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Three] = DX_INPUT_PAD3;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Four] = DX_INPUT_PAD4;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化。タイトルなどキー入力状態リセット時に<br>
+      &nbsp;&nbsp;&nbsp; static void Init()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; InitPadDictionary(); // 辞書配列の初期化<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[i] = currentStates[i] = 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 最新の入力状況に更新する処理。<br>
+      &nbsp;&nbsp;&nbsp; // 毎フレームの最初に（ゲームの処理より先に）呼んでください。<br>
+      &nbsp;&nbsp;&nbsp; static void Update()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 現在の状態を一つ前の状態として保存してGetJoypad..<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[i] = currentStates[i];<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; currentStates[i] = GetJoypadInputState(padDic[i]);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// プレイヤの参加処理(参加辞書登録して参加中の数も返す)<br>
+        &nbsp;&nbsp;&nbsp; static int JoinCheck()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int joinCount = 0;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加ボタンが押されたら<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_1))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>isJoin[(Pad)i] = true; // 参加パッド辞書に登録</b><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<b>isJoin.count((Pad)i) == 1 &amp;&amp; isJoin[(Pad)i] == true</b>)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; joinCount++; // 参加中の人数をカウント<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return joinCount; // 参加中のコントローラ数を返す<br>
+        &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      (以下略)...............<br>
+    </p>
+    <br>
+    <p>辞書配列、使う際にはvector配列のように<b>isJoin[(Pad)i] = true;</b>と書けば使えるんですね。<br>
+      if文の時はあえてcountを間にはさんでます。<b><br>
+        直接isJoin[(Pad)i] == trueの判別するとisJoin[(Pad)i]の登録がなかった時に辞書にfalseで登録が増えちゃうんです。</b><br>
+      辞書に未登録のものの<b>判定を行うと気を利かせてデフォルトのfalseとか0を勝手に登録してくれちゃう</b>のです。<br>
+      勝手に登録してくれて<b>ありがとうとはなりません。辞書の数が増えると検索数も増えるので無駄なん</b>です。<br>
+      <b>.count(～)==1のときだけ判定を行えば辞書に無駄なデフォルト登録が発生せずに済みます。</b> <b>【辞書配列の判定は.count(～)==1の時だけ行えば無駄な項目が増えずエコ】</b>と覚えておきましょう。<br>
+    </p>
+    <br>
+    <br>
+    <p>次に現状では、PAD_INPUT_1(Xボタン)にしか反応しないので他のボタンでも参加できるようにします。<br>
+      <code>Input.hのボタン判定処理を増やしましょう。</code></p>
+    <p class="source">(中略)..............<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // プレイヤの参加処理(参加辞書登録して参加中の数も返す)<br>
+      &nbsp;&nbsp;&nbsp; static int JoinCheck()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int joinCount = 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加ボタンが押されたら<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_1))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isJoin[(Pad)i] = true; // 参加パッド辞書に登録<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; <em>// 参加ボタンが押されたら<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_2))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isJoin[(Pad)i] = true; // 参加パッド辞書に登録</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// 参加ボタンが押されたら<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_3))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isJoin[(Pad)i] = true; // 参加パッド辞書に登録</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// 参加ボタンが押されたら<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_4))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isJoin[(Pad)i] = true; // 参加パッド辞書に登録</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// ちょ待ち！、あ、これボタンの数だけめっちゃif文増えるやつだ..やだな</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isJoin.count((Pad)i) == 1 &amp;&amp; isJoin[(Pad)i] == true)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; joinCount++; // 参加中の人数をカウント<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return joinCount; // 参加中のコントローラ数を返す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      (以下略)...............<br>
+    </p>
+    <br>
+    <br>
+    <p>あ、<b>このままだとif文ボタンの数だけめっちゃ増えちゃいますね。</b><br>
+      もっと良い書きかたが実はあります。<br>
+      こんな時のために<br>
+      PAD_INPUT_1,PAD_INPUT_2,...の定義は2進数に直すと以下のようになってます。</p>
+    <p class="source">パッドボタン&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← &nbsp; 16進数&nbsp;&nbsp; <br>
+      PAD_INPUT_1&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000 ← 0x00000010<br>
+      PAD_INPUT_2&nbsp;&nbsp; 00000000000000000000000000<em>1</em>00000 ← 0x00000020<br>
+      PAD_INPUT_3&nbsp;&nbsp; 0000000000000000000000000<em>1</em>000000 ← 0x00000040<br>
+      PAD_INPUT_4&nbsp;&nbsp; 000000000000000000000000<em>1</em>0000000 ← 0x00000080<br>
+      PAD_INPUT_5&nbsp;&nbsp; 00000000000000000000000<em>1</em>00000000 ← 0x00000100<br>
+      PAD_INPUT_6&nbsp;&nbsp; 0000000000000000000000<em>1</em>000000000 ← 0x00000200<br>
+      PAD_INPUT_7&nbsp;&nbsp; 000000000000000000000<em>1</em>0000000000 ← 0x00000400<br>
+      PAD_INPUT_8&nbsp;&nbsp; 00000000000000000000<em>1</em>00000000000 ← 0x00000800<br>
+      PAD_INPUT_9&nbsp;&nbsp; 0000000000000000000<em>1</em>000000000000 ← 0x00001000<br>
+      PAD_INPUT_10&nbsp; 000000000000000000<em>1</em>0000000000000 ← 0x00002000<br>
+      ............................................................<br>
+      PAD_INPUT_28&nbsp; <em>1</em>0000000000000000000000000000000 ← 0x80000000<br>
+    </p>
+    <p>おお！<b>見事に1が一つずつ左にずれていってますね。</b><br>
+      偶然ではありません。<b>人為的にこういう構造になっているのです。</b><br>
+      この左ビットシフト構造を<b>【うまくビット論理和で合体させてみましょう】</b><br>
+      <b>【ビット論理和「 | 」(または)演算子を使います】(ただの棒 | ではありませんよ！)</b><br>
+      ビット論理和<b>「 | 」は「または」の意味になりA | Bで AまたはB どちらかが1の場合に1となる</b>を表します。<br>
+      <b>ボタン1とボタン4をビット論理和「 | 」でかけ合わせると</b>以下のようになります！ </p>
+    <p class="source">パッドボタン&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      PAD_INPUT_1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000<br>
+      PAD_INPUT_4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000<em>1</em>0000000<br>
+      ............................................................<br>
+      PAD_INPUT_1&nbsp;|&nbsp;PAD_INPUT_4 00000000000000000000000<em>1</em>000<em>1</em>0000<br>
+    </p>
+    <p>はい、<b>うまいことビットが合成できて0..0<em>1</em>00<em>1</em>0000で1が2か所</b>にできました。 <br>
+      この<b>合成したビットの並びをPad::Joinと名付け</b>ましょう。</p>
+    <p class="source">パッドボタン&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp; <br>
+      PAD_INPUT_1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000<br>
+      PAD_INPUT_4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000<em>1</em>0000000<br>
+      .................................................<br>
+      Button::Join &nbsp; &nbsp; 00000000000000000000000<em>1</em>000<em>1</em>0000<br>
+    </p>
+    <br>
+    <p>そしてこの合成した<b>ビットを判定に使うときは【ビット論理積「 &amp; 」(かつ)演算子を使います】</b><br>
+      ビット論理積<b>「 &amp; 」は「かつ」の意味になりA &amp; Bで AかつB 両方が1の場合に1</b>を表します。<br>
+      <b>合成したビットPad::Join と PAD_INPUT_1 の【ビット論理積&amp;】をかけ合わせて</b>みましょう。</p>
+    <p class="source">パッドボタン&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp; <br>
+      Button::Join &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00000000000000000000000<em>1</em>000<em>1</em>0000<br>
+      PAD_INPUT_1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000<br>
+      ...........................................................<br>
+      Button::Join &amp; PAD_INPUT_1 000000000000000000000000000<em>1</em>0000 = true<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (1つでも1がある)</p>
+    <br>
+    <p>この<b>【ビット論理積「 &amp; 」(かつ)演算子】どこかで見たと思いませんか？</b><br>
+      そう<b>Input.hのGetButtonの中ボタン押し判定のreturnには【ビット論理積「 &amp; 」演算子】を使っていたのです。</b><br>
+      <code>Input.hのGetButtonを見てみてください。</code></p>
+    <p class="source">&nbsp;&nbsp;&nbsp; // ボタンが押されているか？<br>
+      &nbsp;&nbsp;&nbsp; static bool GetButton(Pad pad, int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (pad == Pad::All) // 全てAllの指定だった時は<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// GetButtonの中でGetButtonを呼ぶ再起呼出しテクニック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (GetButton((Pad)i, buttonId))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return true; //押されているPadを発見！<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return false; // 一つも押されていなかった<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今ボタンが押されているかどうかを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (currentStates[(int)pad]<em><b> &amp; </b></em>buttonId) != 0;<br>
+      &nbsp;&nbsp;&nbsp; }</p>
+    <br>
+    <p>ただ注意してください。<b>【「 &amp; 」マーク色んな異なる意味がありすぎ問題】</b><br>
+      ややこしいですね<b>【「&amp;&amp;」や「&amp;メモリ参照」など文脈によってビット論理積と勘違いしないように(文脈で判断)】</b><br>
+    </p>
+    <br>
+    <p>では【ビット合成】でボタンの種類を合成したButton::Joinを使って<br>
+      <code>Input.hのボタン判定処理をすっきり書きましょう。</code></p>
+    <p class="source">#ifndef INPUT_H_<br>
+      #define INPUT_H_<br>
+      <br>
+      #include &lt;unordered_map&gt; // 辞書配列【map高速版】https://qiita.com/sileader/items/a40f9acf90fbda16af51<br>
+      <br>
+      #include "DxLib.h"<br>
+      <br>
+      // コントローラのパッド番号定義<br>
+      enum class Pad<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; All = -2, // すべてのうちどれか1つでも押されたとき<br>
+      &nbsp;&nbsp;&nbsp; None = -1, // パッド割当て無(やられたり待機中のプレイヤに)<br>
+      &nbsp;&nbsp;&nbsp; Key=0, // キーボード<br>
+      &nbsp;&nbsp;&nbsp; One, // コントローラ1<br>
+      &nbsp;&nbsp;&nbsp; Two, // コントローラ2<br>
+      &nbsp;&nbsp;&nbsp; Three, // コントローラ3<br>
+      &nbsp;&nbsp;&nbsp; Four, // コントローラ4<br>
+      &nbsp;&nbsp;&nbsp; NUM, // コントローラの数=5<br>
+      };<br>
+      <br>
+      <em>// ある動作として反応するボタン一覧(ビット論理和「|または」)<br>
+        enum class Button<br>
+        {&nbsp;&nbsp;&nbsp; //[反応ボタン一覧定義] https://dixq.net/g/04_05.html<br>
+        &nbsp;&nbsp;&nbsp; // 参加ボタン 1=Z 2=X 3=C 4=A 5=S 6=D 7=Q 8=W 9=ESC 10=SPACE<br>
+        &nbsp;&nbsp;&nbsp; Join = PAD_INPUT_1 | PAD_INPUT_2 | PAD_INPUT_3 | PAD_INPUT_4<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;| PAD_INPUT_5 | PAD_INPUT_6 | PAD_INPUT_7 | PAD_INPUT_8<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;| PAD_INPUT_9 | PAD_INPUT_10, //1Z～10SPACEキー全て反応<br>
+        };</em><br>
+      <br>
+      // 入力クラス<br>
+      class Input<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (中略)..............<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // プレイヤの参加処理(参加辞書登録して参加中の数も返す)<br>
+      &nbsp;&nbsp;&nbsp; static int JoinCheck()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int joinCount = 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加ボタンが押されたら<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i<em>, (int)Button::Join</em>))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isJoin[(Pad)i] = true; // 参加パッド辞書に登録<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; <u>// 参加ボタンが押されたら<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_2))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isJoin[(Pad)i] = true; // 参加パッド辞書に登録<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 参加ボタンが押されたら<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_3))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isJoin[(Pad)i] = true; // 参加パッド辞書に登録<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 参加ボタンが押されたら<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_4))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isJoin[(Pad)i] = true; // 参加パッド辞書に登録<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ちょ待ち！、あ、これボタンの数だけめっちゃif文増えるやつだ..やだな</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isJoin.count((Pad)i) == 1 &amp;&amp; isJoin[(Pad)i] == true)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; joinCount++; // 参加中の人数をカウント<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return joinCount; // 参加中のコントローラ数を返す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      (以下略)...............<br>
+    </p>
+    <p>最終的に赤部分を消すと以下のようにすっきりします。<br>
+      一目瞭然、見事にすっきりしますね<b>【複数ボタンに反応させるときはビット合成テクニックを使いましょう】</b></p>
+    <p class="source"><br>
+      &nbsp;&nbsp;&nbsp; // プレイヤの参加処理(参加辞書登録して参加中の数も返す)<br>
+      &nbsp;&nbsp;&nbsp; static int JoinCheck()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int joinCount = 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加ボタンが押されたら<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i<em>, (int)Button::Join</em>))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isJoin[(Pad)i] = true; // 参加パッド辞書に登録<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isJoin.count((Pad)i) == 1 &amp;&amp; isJoin[(Pad)i] == true)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; joinCount++; // 参加中の人数をカウント<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return joinCount; // 参加中のコントローラ数を返す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+    </p>
+    <br>
     <br>
   </body>
 </html>
