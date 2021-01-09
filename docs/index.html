@@ -8980,7 +8980,6 @@
       それは<b>コントローラ入力と乱数はシーンによらない共通機能</b>だからです。</p>
     <br>
     <br>
-    
     <h2><a id="mozTocId50012" class="mozTocH1"></a>複数プレイヤの参加処理</h2>
     <p>さて、次はプレイヤの参加処理を書いてゆきましょう。<br>
       プレイヤの<b>参加は色んな画面で使うのでInputクラスで共通処理</b>とした方が良さそうです。<br>
@@ -9015,7 +9014,9 @@
       public:<br>
       &nbsp;&nbsp;&nbsp; static int prevStates[(int)Pad::NUM]; // 1フレーム前の状態<br>
       &nbsp;&nbsp;&nbsp; static int currentStates[(int)Pad::NUM]; // 現在の状態<br>
-      &nbsp;&nbsp;&nbsp; <em>static std::unordered_map&lt;Pad, bool&gt; isJoin; // 参加中のパッド番号辞書</em><br>
+      &nbsp;&nbsp;&nbsp; <em>static std::unordered_map&lt;Pad, bool&gt; isJoin; // 参加中のパッド番号辞書<br>
+        &nbsp;&nbsp;&nbsp; // 参加中のパッドかどうか?<br>
+        &nbsp;&nbsp;&nbsp; static bool IsJoin(Pad pad) { return isJoin.count(pad) == 1 &amp;&amp; Input::isJoin[pad]; };</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;int, int&gt; padDic; // パッド番号からDXの定義への辞書<br>
       <br>
@@ -9066,6 +9067,15 @@
         &nbsp;&nbsp;&nbsp; }</em><br>
       <br>
       (以下略)...............<br>
+    </p>
+    <p><code>Input.cppに変数定義を追加します。</code></p>
+    <p class="source">#include "Input.h"<br>
+      <br>
+      int Input::prevStates[]; // 1フレーム前の状態<br>
+      int Input::currentStates[]; // 現在の状態<br>
+      <em>std::unordered_map&lt;Pad, bool&gt; Input::isJoin; // 参加中のパッド番号辞書</em><br>
+      <br>
+      std::unordered_map&lt;int, int&gt; Input::padDic; // パッド番号からDXの定義への辞書<br>
     </p>
     <br>
     <p>辞書配列、使う際にはvector配列のように<b>isJoin[(Pad)i] = true;</b>と書けば使えるんですね。<br>
@@ -9142,7 +9152,7 @@
       PAD_INPUT_1&nbsp;|&nbsp;PAD_INPUT_4 00000000000000000000000<em>1</em>000<em>1</em>0000<br>
     </p>
     <p>はい、<b>うまいことビットが合成できて0..0<em>1</em>00<em>1</em>0000で1が2か所</b>にできました。 <br>
-      この<b>合成したビットの並びをPad::Joinと名付け</b>ましょう。</p>
+      この<b>合成したビットの並びをButton::Joinと名付け</b>ましょう。</p>
     <p class="source">パッドボタン&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp; <br>
       PAD_INPUT_1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000<br>
       PAD_INPUT_4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000<em>1</em>0000000<br>
@@ -9268,5 +9278,649 @@
     </p>
     <br>
     <br>
+    <p>今度は<b>プレイヤの数を増やすためにプレイヤをリスト化</b>しましょう。<br>
+      今までの敵リストのようにvector配列のリストでもいいですが<b>【使い勝手を考えて辞書配列に挑戦】</b>しましょう。<br>
+      <br>
+      <code>GameManager.hのプレイヤを複数にできるよう辞書配列に変更</code>します。</p>
+    <p class="source">#ifndef GAMEMANAGER_H_<br>
+      #define GAMEMANAGER_H_<br>
+      <br>
+      #include &lt;memory&gt;<br>
+      #include &lt;vector&gt;<br>
+      <em>#include &lt;unordered_map&gt; // 辞書配列【map高速版】</em><br>
+      <br>
+      #include "Singleton.h"<br>
+      <br>
+      class Map;<br>
+      class Player; //クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+      class PlayerBullet;<br>
+      class Enemy;<br>
+      class EnemyBullet;<br>
+      class Explosion;<br>
+      <br>
+      class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Map&gt; map{ nullptr }; // マップ<br>
+      &nbsp;&nbsp;&nbsp; <u>std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機の初期化</u><br>
+      &nbsp;&nbsp;&nbsp; <em>std::unordered_map&lt;int, std::shared_ptr&lt;Player&gt;&gt; players; // 自機の辞書配列(複数プレイ対応)</em><br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
+      &nbsp;&nbsp;&nbsp; // List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; (中略)....................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; GameManager() {}; // 外部からのインスタンス作成は禁止<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <p><b>playerをplayersに変えたので【つづりの変わった部分は全部エラーになるはず】</b>です。<br>
+      逆にいうと<b>【今から変えなきゃいけないとこがエラーになってくれた】</b>のです。<br>
+      <b>エラーが出ないと逆に【忘れて謎のバグの原因になりますからね】</b><br>
+      変更の必要なところの目印になってくれて逆に方針が立てやすいのです。</p>
+    <br>
+    <p>今度は<b>プレイヤの数を増やすためにプレイヤをリスト化</b>しましょう。<br>
+      今までの敵リストのようにvector配列のリストでもいいですが<b>【使い勝手を考えて辞書配列に挑戦】</b>しましょう。<br>
+      <br>
+    </p>
+    <p>まずはプレイヤをたくさん使ってるだけあってエラーもたくさん出ている<br>
+      <code>PlayScene.hのプレイヤを単数から複数に変更</code>するとこから修正始めましょう。</p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "Map.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      #include "Player.h"<br>
+      #include "Boss.h"<br>
+      #include "PlayerBullet.h"<br>
+      #include "EnemyBullet.h"<br>
+      #include "Explosion.h"<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp;&nbsp; GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; int score = 0; // プレイ中のゲームのスコア:短期的数値でシーン遷移ごとにリセットされる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float scrollSpeed = 1.5f; // スクロール速度<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; PlayScene() : Scene()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;tag = "PlayScene";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; void Initialize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Image::Load("PlayScene"); //画像の読込みとメモリ開放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Load("PlayScene"); //音声の読込みとメモリ開放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::PlayMusic(Sound::gameplay); //プレイ画面BGMを再生<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // マップの初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.map = std::make_shared&lt;Map&gt;("Map/stage1.csv");<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// ここでプレイヤの初期化などのプレイ開始時の処理<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int joinCount = Input::JoinCheck(); // プレイヤの参加検出処理<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(joinCount &gt; 0)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; MakePlayer(); // プレイヤの生成処理</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <u>//gm.player = std::make_shared&lt;Player&gt;(Pad::Key, (float)100, (float)(Screen::Height / 2)); // 自機の初期化</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵の仮生成<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //gm.enemies.push_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp;&nbsp; void Finalize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここにプレイ終了時のメモリのリセット処理(ゲームクリアやゲームオーバー時など)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.map = nullptr; // マップのメモリからの解放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.<em>players.</em>clear(); // プレイヤのメモリからの解放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemies.clear(); // 敵のメモリからの解放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.playerBullets.clear(); // プレイヤの弾のメモリからの解放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemyBullets.clear(); // 敵弾のメモリからの解放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.explosions.clear(); // 爆発エフェクトのメモリからの解放<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲーム終了時のスコアがMAXなら記録して終了<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(score &gt; sm.scoreMax) sm.scoreMax = score;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// プレイヤの生成処理<br>
+        &nbsp;&nbsp;&nbsp; void MakePlayer()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加辞書登録されたプレイヤの自機の生成<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::IsJoin((Pad)i) &amp;&amp; gm.players.count(i) == 0)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.players[i] = std::make_shared&lt;Player&gt;((Pad)i, (float)100, (float)(Screen::Height / 2));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここにプレイ中の更新処理を持ってくる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// プレイヤの参加検出処理<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int joinCount = Input::JoinCheck();<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (joinCount &gt; 0)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; MakePlayer(); // プレイヤの生成処理</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // マップデータの読出し位置のスクロール<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if(gm.players.size() &gt; 0) //プレイヤ配列0の内はスクロールしない</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.map-&gt;Scroll(scrollSpeed);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // プレイヤの描画処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (const auto&amp; pair : gm.players)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto player = pair.second;</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!<em>player</em>-&gt;isDead) // 自機が死んでいなければ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>}</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾の更新処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // C#のforeach文と同じく全自機弾を更新できる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; b : gm.playerBullets)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp; // autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; b-&gt;Update();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵弾の更新処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; b : gm.enemyBullets)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; b-&gt;Update();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機と敵弾の衝突判定<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; enemyBullet : gm.enemyBullets)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// 敵弾が死んでたらスキップ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (enemyBullet-&gt;isDead)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; continue;</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (const auto&amp; pair : gm.players)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto player = pair.second;</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機が死んでたらこれ以上判定しない<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<em>player</em>-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; break;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 円同士の衝突判定で調べる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;x, <em>player</em>-&gt;y, <em>player</em>-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemyBullet-&gt;x, enemyBullet-&gt;y, enemyBullet-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;OnCollisionEnemyBullet(enemyBullet);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>}</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵の更新処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; b : gm.enemies)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; b-&gt;Update();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾と敵の衝突判定<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; playerBullet : gm.playerBullets)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾が死んでたらスキップする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (playerBullet-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; continue;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; enemy : gm.enemies)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵が死んでたらスキップする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (enemy-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; continue;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾と敵が重なっているか？<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; playerBullet-&gt;OnCollisionEnemy(enemy);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Play(Sound::bomb); // 効果音の再生<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 衝突の結果、自機弾が死んだら、この弾のループはおしまい<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (playerBullet-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; break;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機と敵の衝突判定<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; enemy : gm.enemies)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// 敵が死んでたらスキップ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (enemy-&gt;isDead)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; continue;</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (const auto&amp; pair : gm.players)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto player = pair.second;</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機が死んでたらこれ以上判定しない<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<em>player</em>-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; break;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 円同士の衝突判定で調べる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;x, <em>player</em>-&gt;y, <em>player</em>-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;OnCollisionEnemy(enemy);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>}</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 爆発エフェクトの更新処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; e : gm.explosions)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; e-&gt;Update();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾の削除処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.EraseRemoveIf(gm.playerBullets,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; [](std::shared_ptr&lt;PlayerBullet&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵のリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.EraseRemoveIf(gm.enemies,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; [](std::shared_ptr&lt;Enemy&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵弾のリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.EraseRemoveIf(gm.enemyBullets,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; [](std::shared_ptr&lt;EnemyBullet&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //爆発エフェクトのリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.EraseRemoveIf(gm.explosions,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; [](std::shared_ptr&lt;Explosion&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>int aliveCount = 0; // 生きているプレイヤ数のカウント<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; pair : gm.players)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto player = pair.second;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (player-&gt;isDead != true)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; aliveCount++; // 生存プレイヤ数をカウント<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲームオーバー判定と画面チェンジ処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// プレイヤの数が0じゃないのに生存数が0ならゲームオーバー</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bool isGameover = (<em>gm.players.size() != 0 &amp;&amp; aliveCount == 0</em>);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isGameover)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::PlayMusic(Sound::ending); //BGMを変更する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここにプレイ画面の描画処理を持ってくる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵の描画処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; b : gm.enemies)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; b-&gt;Draw();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 爆発エフェクトの描画処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; e : gm.explosions)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; e-&gt;Draw();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// プレイヤの描画処理<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; pair : gm.players)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto player = pair.second;</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!<em>player</em>-&gt;isDead) // 自機が死んでいなければ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾の描画処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // C#のforeach文と同じく全自機弾を更新できる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; b : gm.playerBullets)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp; // autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; b-&gt;Draw();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵弾の描画処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; b : gm.enemyBullets)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; b-&gt;Draw();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <p>さてここで<b>辞書配列のfor文に慣れてしまいましょう。</b><br>
+      vector配列との違いは<b>【辞書のキーとバリューを各ループで得られること】</b>です。<br>
+      あいうえおの辞書を例にすると<b>【「あ」がキー、「アイス」がバリューですね】</b><br>
+      プログラム上では<b>【キーがfirst、バリューがsecondでアクセスできます】</b></p>
+    <p class="source">&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // プレイヤの描画処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; <em><b>pair</b></em> : gm.players)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto player = pair.<em><b>second</b></em>;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!player-&gt;isDead) // 自機が死んでいなければ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; player-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+    </p>
+    <br>
+    <p>もう一つ<b>辞書配列に登録する際の形も見ておきましょう。</b><br>
+      <b>players[i] = ～;のような配列に代入するような形で登録可能</b>です。<br>
+      すでに登録済か未登録かは<b>.count(キー)</b>で判別します。<br>
+      この<b>count()でキーがあるか探せるのがvector配列より手軽なところ</b><br>
+      <b>5文字ぐらいでさらっと登録済かわかるので。</b></p>
+    <p class="source">&nbsp;&nbsp;&nbsp; // プレイヤの生成処理<br>
+      &nbsp;&nbsp;&nbsp; void MakePlayer()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加辞書登録されたプレイヤの自機の生成<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::IsJoin((Pad)i) &amp;&amp; gm.players<em>.count(i) == 0</em>)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.<em>players[i] = </em>std::make_shared&lt;Player&gt;((Pad)i, (float)100, (float)(Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; } </p>
+    <br>
+    <br>
+    <br>
+    <p>さてタイトル画面などにもプレイヤ参加の検出処理を加えておきましょう。<br>
+      プレイに移る前に参加辞書Input::isJoinに1人は登録がないとプレイヤのいない空のプレイ画面から始まるので。<br>
+      <br>
+      <code>TitleScene.hにプレイヤの参加検出処理を追加</code>します。</p>
+    <p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      (中略)..................<br>
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; (中略)..................<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタン入力に応じた処理<br>
+      &nbsp;&nbsp;&nbsp; void HandleInput()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>Input::JoinCheck(); // プレイヤの参加検出処理</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(Pad::All, PAD_INPUT_1))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ボタンを押したらスタート音声を再生<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Play(Sound::start);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isStartPushed = true; // 画面遷移トリガーON<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp; (中略)..................<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      (以下略)..................</p>
+    <br>
+    <br>
+    <p>他にもザコにプレイヤの追撃弾を撃たせている人は単体のプレイヤを複数対応しなければなりません。<br>
+      プレイヤを追撃するにも<b>複数いるとどのプレイヤを追撃するかあいまいになるので。</b><br>
+      <b>ここからのザコの処理の修正は人それぞれ独自のザコを作成してる人は不要かもしれません。</b><br>
+      <br>
+      <code>Zako0.hに複数のプレイヤから一番近いプレイヤを追撃する処理を追加</code>します。</p>
+    <p class="source">#ifndef ZAKO_0_H_<br>
+      #define ZAKO_0_H_<br>
+      <br>
+      <em>#include &lt;memory&gt;</em><br>
+      <br>
+      #include "Enemy.h"<br>
+      #include "Image.h"<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意<br>
+      <br>
+      // ザコ0クラス<br>
+      class Zako0 : public Enemy<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Zako0(float x, float y, float z = 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako0";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x -= 1; // とりあえず左へ移動<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime--;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (coolTime &lt;= 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float minDistance = 1000000; // 最小の距離の2乗<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; player = nullptr; // 一番近いプレイヤを探す<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; pair : gm.players)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;auto p = pair.second;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist2 = MyMath::Distance2(x, y, p-&gt;x, p-&gt;y);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist2 &lt; minDistance)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// より小さい距離のプレイヤがいれば記録更新<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist2;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;player = p;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}&nbsp;&nbsp; &nbsp;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (player != nullptr)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em>&nbsp;&nbsp; &nbsp;// 自機狙い弾<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(x, y, <em>player</em>-&gt;x, <em>player</em>-&gt;y);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemyBullets.push_back(std::make_shared&lt;EnemyBullet&gt;(x, y, angle, 8));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;coolTime += 10;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 【重要】画面外の削除処理【CPU処理重くなる原因】<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (x &lt; 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// 左端の画面外に出たらisDeadしないと<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 画面外の敵の当たり判定で【だんだん処理が重くなるZako1,Zako2..も】<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isDead = true;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <p><code>Zako1.hに複数のプレイヤから一番近いプレイヤを追撃する処理を追加</code>します。</p>
+    <p class="source">#ifndef ZAKO_1_H_<br>
+      #define ZAKO_1_H_<br>
+      <br>
+      #include "Enemy.h"<br>
+      <br>
+      <em>#include &lt;memory&gt;</em><br>
+      #include &lt;cmath&gt; // Sinの計算に使う<br>
+      #include "MyMath.h"<br>
+      #include "Image.h"<br>
+      <br>
+      #include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意<br>
+      <br>
+      // ザコ1クラス<br>
+      class Zako1 : public Enemy<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;float sinMove = 0; // Sinの動きをする際の0～360度<br>
+      &nbsp;&nbsp; &nbsp;float sinRadius = 70; // Sinの動きをするときの半径<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Zako1(float x, float y, float z = 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako1";//オブジェクトの種類判別タグ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = 5;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float minDistance = 1000000; // 最小の距離<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; player = nullptr; // 一番近いプレイヤを探す<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; pair : gm.players)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;auto p = pair.second;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist2 = MyMath::Distance2(x, y, p-&gt;x, p-&gt;y);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist2 &lt; minDistance)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// より小さい距離のプレイヤがいれば記録更新<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist2;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;player = p;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (minDistance&gt;300*300+300*300)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><em><em><br>
+          &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; </em></em><em><em>x += 1; // 縦Y方向300,横X方向300以上の距離のときは</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (player != nullptr)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機をおいかけてくる処理<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angleToPlayer = MyMath::PointToPointAngle(x, y, <em>player</em>-&gt;x, <em>player</em>-&gt;y);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float speed = 3;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x += (float)std::cos(angleToPlayer) * speed;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;y += (float)std::sin(angleToPlayer) * speed;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//ゆらゆらSin波動の動きをy上下方向にプラス<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sinMove += 2.5f; // Sinの波運動の角度を進める<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;y += currentSinY - prevSinY; // 上下方向のSinの波運動<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako1, TRUE);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <p><code>Zako2.hに複数のプレイヤから一番近いプレイヤを追撃する処理を追加</code>します。</p>
+    <p class="source">#ifndef ZAKO_2_H_<br>
+      #define ZAKO_2_H_<br>
+      <br>
+      #include "Enemy.h"<br>
+      <br>
+      <em>#include &lt;memory&gt;</em><br>
+      #include &lt;cmath&gt; // Sin Cosの計算に使う<br>
+      <br>
+      #include "Image.h"<br>
+      #include "Screen.h"<br>
+      #include "MyMath.h"<br>
+      #include "MyRandom.h"<br>
+      <br>
+      #include "Player.h" // Player.hでもZako2.hをインクルードすると循環するので注意<br>
+      <br>
+      // ザコ2クラス<br>
+      class Zako2 : public Enemy<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Zako2(float x, float y, float z = 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako2";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (x &gt; Screen::Width - 200)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; { // スクリーンの端から200の位置で止まる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x -= 1; // とりあえず左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime--;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (coolTime &lt;= 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float minDistance = 1000000; // 最小の距離<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; player = nullptr; // 一番近いプレイヤを探す<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; pair : gm.players)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// より小さい距離のプレイヤがいれば記録更新<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;auto p = pair.second;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist2 = MyMath::Distance2(x, y, p-&gt;x, p-&gt;y);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist2 &lt; minDistance)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist2;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;player = p;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (player != nullptr)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機狙いばらまき弾<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(x, y, <em>player</em>-&gt;x, <em>player</em>-&gt;y);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float randomAngle = MyRandom::Range(-15.0f, 15.0f); // ±15度の乱数の角度を取得<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemyBullets.push_back(std::make_shared&lt;EnemyBullet&gt;(x, y, angle + randomAngle * MyMath::Deg2Rad, 8));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;coolTime += 10;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 200の位置で止まるので左端にこないから削除処理はなくて済む<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako2, TRUE);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <br>
+    <p>さて、これで独自のザコや弾など単数プレイヤを使用しているコードがなくなれば<br>
+    複数プレイヤでプレイできるようになるはずです。<br>
+    一度プレイして複数プレイヤでプレイできるか確かめてみましょう。</p>
+    <br>
+    <br>
+    <br>
+    
+    
   </body>
 </html>
