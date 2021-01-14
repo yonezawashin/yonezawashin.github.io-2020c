@@ -9683,10 +9683,9 @@
       プレイヤを追撃するにも<b>複数いるとどのプレイヤを追撃するかあいまいになるので。</b><br>
       <b>ここからのザコの処理の修正は人それぞれ独自のザコを作成してる人は不要かもしれません。</b><br>
       <br>
-      
-    <br>
-    <code>まずMyMath.hに距離の2乗を求める処理を追加</code>します。
-    <p></p>
+      <br>
+    </p>
+    <p><code>まずMyMath.hに距離の2乗を求める処理を追加</code>します。 </p>
     <p class="source">#ifndef _MYMATH_H<br>
       #define _MYMATH_H<br>
       <br>
@@ -9757,7 +9756,8 @@
       <br>
       #endif // 【宣言が必要ですエラーは上のセミコロン抜け】</p>
     <br>
-      <code>Zako0.hに複数のプレイヤから一番近いプレイヤを追撃する処理を追加</code>します。</p>
+    <code>Zako0.hに複数のプレイヤから一番近いプレイヤを追撃する処理を追加</code>します。
+    <p></p>
     <p class="source">#ifndef ZAKO_0_H_<br>
       #define ZAKO_0_H_<br>
       <br>
@@ -9947,19 +9947,19 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (coolTime &lt;= 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float minDistance = 1000000; // 最小の距離<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; player = nullptr; // 一番近いプレイヤを探す<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; pair : gm.players)<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// より小さい距離のプレイヤがいれば記録更新<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;auto p = pair.second;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist2 = MyMath::Distance2(x, y, p-&gt;x, p-&gt;y);<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist2 &lt; minDistance)<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist2;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;player = p;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (player != nullptr)<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; player = nullptr; // 一番近いプレイヤを探す<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; pair : gm.players)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// より小さい距離のプレイヤがいれば記録更新<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;auto p = pair.second;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist2 = MyMath::Distance2(x, y, p-&gt;x, p-&gt;y);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist2 &lt; minDistance)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist2;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;player = p;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (player != nullptr)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機狙いばらまき弾<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(x, y, <em>player</em>-&gt;x, <em>player</em>-&gt;y);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float randomAngle = MyRandom::Range(-15.0f, 15.0f); // ±15度の乱数の角度を取得<br>
@@ -9983,12 +9983,10 @@
     <br>
     <br>
     <p>さて、これで独自のザコや弾など単数プレイヤを使用しているコードがなくなれば<br>
-    複数プレイヤでプレイできるようになるはずです。<br>
-    一度プレイして複数プレイヤでプレイできるか確かめてみましょう。</p>
+      複数プレイヤでプレイできるようになるはずです。<br>
+      一度プレイして複数プレイヤでプレイできるか確かめてみましょう。</p>
     <br>
     <br>
     <br>
-    
-    
   </body>
 </html>
