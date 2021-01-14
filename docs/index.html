@@ -803,7 +803,7 @@
       {<br>
       public: <br>
       &nbsp; // C ++標準では、静的static定数の【整数型】または【列挙型】のみをクラス内で初期化できます。<br>
-      &nbsp; // これが、一部の初期化が許可されているのに他のstatic floatなどが初期化できない理由です。<br>
+      &nbsp; // これがintやenumの初期化が大丈夫だったのに他のstatic floatのときは初期化できない理由です。<br>
       <br>
       &nbsp; // 【OH,ノー】 float小数を定義するためだけにcppファイルを作成しないと<br>
       &nbsp; //static const float Sqrt2 =【このイコールでエラー】 1.41421356237f; <br>
@@ -8014,7 +8014,7 @@
       {<br>
       public:<br>
       &nbsp;&nbsp;&nbsp; // C ++標準では、静的static定数の【整数型】または【列挙型】のみをクラス内で初期化できます。<br>
-      &nbsp;&nbsp;&nbsp; // これが、一部の初期化が許可されているのに他のstatic floatなどが初期化できない理由です。<br>
+      &nbsp;&nbsp;&nbsp; // これがintやenumの初期化が大丈夫だったのに他のstatic floatのときは初期化できない理由です。<br>
       <br>
       &nbsp;&nbsp;&nbsp; // float小数を定義するためだけにcppファイルを作成しないと<br>
       &nbsp;&nbsp;&nbsp; //static const float Sqrt2 =【このイコールでエラー】 1.41421356237f;<br>
@@ -9696,7 +9696,7 @@
       {<br>
       public:<br>
       &nbsp;&nbsp;&nbsp; // C ++標準では、静的static定数の【整数型】または【列挙型】のみをクラス内で初期化できます。<br>
-      &nbsp;&nbsp;&nbsp; // これが、一部の初期化が許可されているのに他のstatic floatなどが初期化できない理由です。<br>
+      &nbsp;&nbsp;&nbsp; // これがintやenumの初期化が大丈夫だったのに他のstatic floatのときは初期化できない理由です。<br>
       <br>
       &nbsp;&nbsp;&nbsp; // float小数を定義するためだけにcppファイルを作成しないと<br>
       &nbsp;&nbsp;&nbsp; //static const float Sqrt2 =【このイコールでエラー】 1.41421356237f;<br>
