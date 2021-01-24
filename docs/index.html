@@ -6147,7 +6147,8 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; is3DTexture = divImage.is3DTexture;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ↓★この配列だけはデフォルトのコピーコンストラクタではコピーされない！<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; HandleArray = new int[AllNum]; //★[勉強]こちらでもnew確保<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; AllNum; i++) HandleArray[i] = divImage.HandleArray[i];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; AllNum; i++)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp; HandleArray[i] = divImage.HandleArray[i];<br>
         &nbsp;&nbsp;&nbsp; };</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; //【勉強 []添え字演算子を独自に定義】https://programming.pc-note.net/cpp/operator.html<br>
