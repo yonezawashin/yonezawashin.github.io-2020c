@@ -6140,6 +6140,7 @@
       &nbsp;&nbsp;&nbsp; <em>// コピーコンストラクタ(動的new配列をクラス内に持つ場合にはカスタムが必要)<br>
         &nbsp;&nbsp;&nbsp; // [解説スライド] https://docs.google.com/presentation/d/1m7LS913CRtCuFAz9-pbyWpka49vUoyqiL_n9h1kG_sY/edit?usp=sharing<br>
         &nbsp;&nbsp;&nbsp; DivImage(const DivImage&amp; divImage)<br>
+        &nbsp;&nbsp;&nbsp;{<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 基本はただのコピー書き移し<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; XNum = divImage.XNum; YNum = divImage.YNum;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; XSize = divImage.XSize; YSize = divImage.YSize;<br>
@@ -10002,5 +10003,6 @@
     <br>
     <br>
     <br>
+    
   </body>
 </html>
