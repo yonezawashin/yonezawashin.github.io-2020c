@@ -5132,6 +5132,7 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene", { "stage1" }); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
@@ -5192,6 +5193,7 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("TitleScene"); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
@@ -5265,6 +5267,7 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isGameover)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
@@ -5372,6 +5375,7 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene", { "stage1" }); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// テスト用のボス画像をタイトル画面で左右移動させる<br>
@@ -5663,6 +5667,7 @@
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isGameover)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
@@ -6140,7 +6145,7 @@
       &nbsp;&nbsp;&nbsp; <em>// コピーコンストラクタ(動的new配列をクラス内に持つ場合にはカスタムが必要)<br>
         &nbsp;&nbsp;&nbsp; // [解説スライド] https://docs.google.com/presentation/d/1m7LS913CRtCuFAz9-pbyWpka49vUoyqiL_n9h1kG_sY/edit?usp=sharing<br>
         &nbsp;&nbsp;&nbsp; DivImage(const DivImage&amp; divImage)<br>
-        &nbsp;&nbsp;&nbsp;{<br>
+        &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 基本はただのコピー書き移し<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; XNum = divImage.XNum; YNum = divImage.YNum;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; XSize = divImage.XSize; YSize = divImage.YSize;<br>
@@ -7774,7 +7779,7 @@
     <br>
     <br>
     <br>
-    <h2><a id="mozTocId40023" class="mozTocH1"></a>【高難度】敵データの全方位読出しアルゴリズム</h2>
+    <h2><a id="mozTocId40023" class="mozTocH1"></a>【3D向け】【高難度】敵データの全方位読出しアルゴリズム</h2>
     <p>さて現状のコードでは縦スクロールの一方向スクロール限定です。<br>
       全方向進めるようなRPGや3Dゲームなどには今のままでは使いづらいです。<br>
       C#のアクションゲームの敵のロードではステージの全敵キャラを開始時に読み込んでます。<br>
@@ -10003,6 +10008,5 @@
     <br>
     <br>
     <br>
-    
   </body>
 </html>
