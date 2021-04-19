@@ -133,7 +133,7 @@
       &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
       &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
@@ -194,7 +194,7 @@
       &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
       &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
       &nbsp;&nbsp;}<br>
       <br>
@@ -239,7 +239,7 @@
       &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
       &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
       &nbsp;&nbsp;}<br>
       <br>
@@ -358,7 +358,7 @@
       &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
       &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
       &nbsp;&nbsp;}<br>
       <br>
@@ -496,7 +496,7 @@
       &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
       &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// エラーが発生したら直ちに終了<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
       &nbsp;&nbsp;}<br>
       <br>
@@ -590,7 +590,7 @@
       &nbsp;&nbsp;// ボタンが離された瞬間か？<br>
       &nbsp;<em>&nbsp;</em>static bool GetButtonUp(int buttonId)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// 1フレーム前は押されていて、かつ今は押されている場合はtrueを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 1フレーム前は押されていて、かつ今は押されていない場合はtrueを返却<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return ((prevState &amp; buttonId) &amp; ~(currentState &amp; buttonId)) != 0;<br>
       &nbsp;&nbsp;}<br>
       }<em>;&nbsp;//←【注意】クラス定義の終わりにはコロンが必要だよ！</em><br>
@@ -1292,6 +1292,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;static T instance; //メモリ上にstatic変数確保(静かに常に待機するinstance)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return instance; //①=(常駐)②=(唯一) ①と②両方満たすinstanceは【メモリ上に唯一】<br>
       &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;//★【{}内のローカルstaticの特性:ラベル(上の例ではinstance)がリセットされずに常駐】https://monozukuri-c.com/langc-static-memory/<br>
+      &nbsp;&nbsp;//つまり、ゲームマネージャなどを★リセットされず常駐状態にできるわけです<br>
       <br>
       protected:<br>
       &nbsp;&nbsp;Singleton() {} // 外部でのインスタンス作成は禁止(protected:内部公開、外部禁止)<br>
