@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>ビット演算tips</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+      
+    </style>
+  </head>
+  <body>
+    <table border="1">
+      <tbody>
+        <tr>
+          <td>
+            <p><b><code>&amp;</code>とか<code>~</code>とかはなんだ？</b><br>
+              PAD_INPUT_1,PAD_INPUT_2,...の定義は2進数に直すと以下のようになってます。</p>
+            <p class="source">パッドボタン &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← &nbsp; 16進数&nbsp;&nbsp; <br>
+              PAD_INPUT_1&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000 ← 0x00000010<br>
+              PAD_INPUT_2&nbsp;&nbsp; 00000000000000000000000000<em>1</em>00000 ← 0x00000020<br>
+              PAD_INPUT_3&nbsp;&nbsp; 0000000000000000000000000<em>1</em>000000 ← 0x00000040<br>
+              PAD_INPUT_4&nbsp;&nbsp; 000000000000000000000000<em>1</em>0000000 ← 0x00000080<br>
+              PAD_INPUT_5&nbsp;&nbsp; 00000000000000000000000<em>1</em>00000000 ← 0x00000100<br>
+              PAD_INPUT_6&nbsp;&nbsp; 0000000000000000000000<em>1</em>000000000 ← 0x00000200<br>
+              PAD_INPUT_7&nbsp;&nbsp; 000000000000000000000<em>1</em>0000000000 ← 0x00000400<br>
+              PAD_INPUT_8&nbsp;&nbsp; 00000000000000000000<em>1</em>00000000000 ← 0x00000800<br>
+              PAD_INPUT_9&nbsp;&nbsp; 0000000000000000000<em>1</em>000000000000 ← 0x00001000<br>
+              PAD_INPUT_10&nbsp; 000000000000000000<em>1</em>0000000000000 ← 0x00002000<br>
+              ............................................................<br>
+              PAD_INPUT_28&nbsp; <em>1</em>0000000000000000000000000000000 ← 0x80000000<br>
+            </p>
+            <p>おお！<b>見事に1が一つずつ左にずれていってますね。</b><br>
+              偶然ではありません。<b>人為的にこういう構造になっているのです。</b><br>
+              currentStateには現在、prevStateには一つ前の【<b>それぞれのボタンの押されてるかどうか</b>の0と1の<b>ビッ ト列が格納</b>さ れてます】</p>
+            <p class="source">パッドボタン &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+              currentState&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000<em>1</em>00<em>1</em>0000←PAD_INPUT_1と PAD_INPUT_4 の2つボタンが押された状態<br>
+              PAD_INPUT_1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000<br>
+              ............................................................<br>
+              currentState&nbsp;<em>&amp;</em>&nbsp;PAD_INPUT_1 000000000000000000000000000<em>1</em>0000←<em>&amp;</em> でビット論理積すると両方1だと1になる<br>
+            </p>
+            <p>これが下記プログラムの黄色の行の正体です</p>
+            <p class="source">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ボタンが押されているか？<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static bool GetButton(int buttonId)<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今ボタンが押されているかどうかを返却<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return <em>(currentState &amp; buttonId) != 0;</em><br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+            </p>
+            <p>あ、<em>!=</em> 0は 【0と同じじゃないの意味 !=は同じじゃないの意味です】</p>
+            <p class="source">パッドボタン &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+              currentState&nbsp;&amp;&nbsp;buttonId 000000000000000000000000000<em>1</em>0000<br>
+              0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00000000000000000000000000000000<br>
+            </p>
+            <p>ではボタンの離されたときを見てみましょう【 <em>~</em> 】は0と1を全桁それぞれ反転させる【ビット反転演算子】です</p>
+            <p class="source">パッドボタン &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+              prevState&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000<em>1</em>00<em>1</em>0000←PAD_INPUT_1と PAD_INPUT_4 の2つボタンが押された状態<br>
+              PAD_INPUT_1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000<br>
+              ............................................................<br>
+              (prevState &amp; buttonId)&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000<br>
+              <br>
+              currentState&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000<em>1</em>0000000←PAD_INPUT_1が離され PAD_INPUT_4だけ押された状態<br>
+              PAD_INPUT_1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000<br>
+              ............................................................<br>
+              (currentState &amp; buttonId)&nbsp; 00000000000000000000000000000000<br>
+              <br>
+              <em>~</em>(currentState &amp; buttonId) <em>11111111111111111111111111111111</em>→<em>①</em>と する<br>
+              (prevState &amp; buttonId)&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000→<em>②</em>とする<br>
+              ............................................................<br>
+              ②&nbsp;&amp;&nbsp;①&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000←&amp; でビット論理積すると両方1だと1になる<br>
+            </p>
+            <p>これが下記プログラムの黄色の行の正体です</p>
+            <p class="source">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ボタンが離された瞬間か？<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static bool GetButtonUp(int buttonId)<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 1フレーム前は押されていて、かつ今は押されていない場合はtrueを返却<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return <em>((prevState &amp; buttonId) &amp; ~(currentState &amp; buttonId)) != 0;</em><br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+            </p>
+            <p>まぎらわしいのですが、後ほど出てくる<em>&amp;&amp;</em>は<em>&amp;</em>とは違います。<br>
+              <em>&amp;</em>は<b>【ビット単位】</b>ですが<em>&amp;&amp;</em>はビット単位ではないです。</p>
+            <p><a href="https://csharp.keicode.com/basic/bitwise-operators.php">C# でのビット演算子</a></p>
+            <table border="1">
+              <tbody>
+                <tr>
+                  <td><b>演算子</b></td>
+                  <td><b>効果</b></td>
+                </tr>
+                <tr>
+                  <td>&amp;(ビット論理積AND演算)</td>
+                  <td>桁ごとに両方が 1 の場合に 1 としそれ以外は 0</td>
+                </tr>
+                <tr>
+                  <td>| (ビット論理和OR演算)</td>
+                  <td>桁ごとに0と1比較 いずれかが1なら1 両方とも0 の場合に0</td>
+                </tr>
+                <tr>
+                  <td>^ (ビット排他論理和XOR演算)</td>
+                  <td>桁ごとに0と1比較 片方だけ1なら1 両方とも同じ値の場合に 0</td>
+                </tr>
+                <tr>
+                  <td>&lt;&lt;(ビット左シフト演算子)</td>
+                  <td>x &lt;&lt; 3の形式でシフトする数を指定(例.左に3桁シフト)</td>
+                </tr>
+                <tr>
+                  <td>&gt;&gt;(ビット右シフト演算子)</td>
+                  <td>x &gt;&gt; 4の形式でシフトする数を指定(例.右に4桁シフト)</td>
+                </tr>
+                <tr>
+                  <td>~ (ビット反転補数NOT演算)</td>
+                  <td>各ビットに対して1は0に 0は1に</td>
+                </tr>
+              </tbody>
+            </table>
+            <br>
+            <details>
+              <summary><font style="color:blue;"><u>[基礎教養]ビット反転~と引き算と電子回路</u></font></summary>
+              <table border="1">
+                <tbody>
+                  <tr>
+                    <td>
+                      <p>大学の情報学科ではおおむね最初に<br>
+                        【電子回路ではx&amp;~xは必ず1111になる性質を利用】して<br>
+                        引き算を【足し算とビット反転補数で代用してる】と習う<br>
+                        この際だからマイナスの数値をビットで見て実感してほしい(パズル感覚で)</p>
+                      <p class="source">10進数 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        整数の-1&nbsp;&nbsp; <em>11111111111111111111111111111111</em><br>
+                        ..........................................<br>
+                        整数の&nbsp;1&nbsp;&nbsp; 0000000000000000000000000000000<em>1</em><br>
+                        整数の-2&nbsp;&nbsp; <em>1111111111111111111111111111111</em>0<br>
+                        ..........................................<br>
+                        整数の&nbsp;2&nbsp;&nbsp; 000000000000000000000000000000<em>1</em>0<br>
+                        整数の-3&nbsp;&nbsp; <em>111111111111111111111111111111</em>0<em>1</em>→&nbsp;<em>~3 + 1</em> = <em>-4 + 1</em> = -3<br>
+                        ..........................................&nbsp;&nbsp;&nbsp;↑<br>
+                        整数の&nbsp;3&nbsp;&nbsp; 000000000000000000000000000000<em>11</em>&nbsp;&nbsp;&nbsp;↑<br>
+                        整数の-4&nbsp;&nbsp; <em>111111111111111111111111111111</em>00←&nbsp;3 を0,1反転<em>~3</em> = -4<br>
+                        ..........................................<br>
+                        整数の&nbsp;4&nbsp;&nbsp; 00000000000000000000000000000<em>1</em>00<br>
+                        整数の-5&nbsp;&nbsp; <em>11111111111111111111111111111</em>0<em>11</em><br>
+                      </p>
+                      <p>あれ..!?なんかキレイすぎない?と思った人、<br>
+                        そう、1+(-2) = -1(ビットで...111111)、2+(-3) = -1(ビットで...111111)<br>
+                        マイナスの数字は-1してビット反転した数字。<br>
+                        隣り合う数字のマイナス値と&amp;すると-1(ビットで...111111)&nbsp;になるようにつじ つまがあう0,1にしてる んです。<br>
+                        こうすることで、2 - 3 = 2 + (-3) = 2 + (<em>~</em>3 + 1)←最終的に足し算とビット反転の電子回路だけで引き算を実現⇒引き算回路がいらない<br>
+                        ビットの計算は単純な回路で済むので【非常に高速】なのでマイナスの数をビット反転をベースにするようになったという経緯です。 </p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </details>
+            <br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
