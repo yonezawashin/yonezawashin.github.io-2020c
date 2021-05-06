@@ -30,8 +30,8 @@
               偶然ではありません。<b>人為的にこういう構造になっているのです。</b><br>
               currentStateには現在、prevStateには一つ前の【<b>それぞれのボタンの押されてるかどうか</b>の0と1の<b>ビッ ト列が格納</b>さ れてます】</p>
             <p class="source">パッドボタン &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2進数(32ビット32桁)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-              currentState&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000<em>1</em>00<em>1</em>0000←PAD_INPUT_1と PAD_INPUT_4 の2つボタンが押された状態<br>
-              PAD_INPUT_1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000<br>
+              currentState&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000<em>1</em>00<em>1</em>0000←PAD_INPUT_1と PAD_INPUT_4 の2つボタンが押された状態<br>
+              PAD_INPUT_1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000<em>1</em>0000<br>
               ............................................................<br>
               currentState&nbsp;<em>&amp;</em>&nbsp;PAD_INPUT_1 000000000000000000000000000<em>1</em>0000←<em>&amp;</em> でビット論理積すると両方1だと1になる<br>
             </p>
