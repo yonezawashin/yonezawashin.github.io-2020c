@@ -4351,7 +4351,7 @@
       &nbsp;&nbsp;&nbsp; DivImage(const DivImage&amp; divImage) {};<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 代入演算子の禁止privateオーバーロード<br>
-      &nbsp;&nbsp;&nbsp; DivImage&amp; operator=(const DivImage&amp; divImage) {};<br>
+      &nbsp;&nbsp;&nbsp; void operator=(const DivImage&amp; divImage) {};<br>
       };<br>
       <br>
       #endif</p>
@@ -6202,7 +6202,7 @@
       &nbsp;&nbsp;&nbsp; <em>// いままでコピー禁止してたのはnew,deleteの面倒なデータと*ポインタ分離問題を察知するため</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; // 代入演算子の禁止privateオーバーロード<br>
-      &nbsp;&nbsp;&nbsp; DivImage&amp; operator=(const DivImage&amp; divImage) {};<br>
+      &nbsp;&nbsp;&nbsp; void operator=(const DivImage&amp; divImage) {};<br>
       };<br>
       <br>
       #endif</p>
