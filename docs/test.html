@@ -318,6 +318,7 @@ target.addEventListener('drop', function (e) {
 	
 	let veryLongText = ''; // 細切れの値をここに結合していく。
 	const decoder = new TextDecoder();
+	output.value = e.dataTransfer.files[0];
 	fetch(e.dataTransfer.files[0])
         .then((response) => response.body.getReader()) // ReadableStreamを取得する。
         .then((reader) => {
