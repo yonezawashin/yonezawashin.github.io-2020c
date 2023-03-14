@@ -319,7 +319,7 @@ target.addEventListener('drop', function (e) {
 		document.getElementById('preview').src = e.target.result;
 	}
 	//reader.readAsDataURL(e.dataTransfer.files[0]);
-	var blob = new Blob(e.dataTransfer.files[0]);
+	var blob = new Blob(e.dataTransfer.files[0],{type:{"text/plain"}});
 	output.value = blobStream(blob,blob.size).size;
 	let veryLongText = ''; // 細切れの値をここに結合していく。
 	
