@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Model Viewer-| Model Builder</title>
+    <title>/title>
     
 </head>
 <body>
@@ -299,6 +299,8 @@ class BlobStreamController {
 
 <script type="text/javascript">
 const output = document.body.querySelector('#output');
+let veryLongText = ''; // 細切れの値をここに結合していく。
+const decoder = new TextDecoder();
 
 var target = document.getElementById('target');
 target.addEventListener('dragover', function (e) {
