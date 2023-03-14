@@ -287,6 +287,10 @@ class BlobStreamController {
      });
    }
  }
+	
+ function blobStream(blob, size) {
+   return new ReadableStream(new BlobStreamController(blob, size));
+ }
  
 </script>
 
@@ -314,33 +318,35 @@ target.addEventListener('drop', function (e) {
 	reader.onload = function (e) {
 		document.getElementById('preview').src = e.target.result;
 	}
-	reader.readAsDataURL(e.dataTransfer.files[0]);
-	
+	//reader.readAsDataURL(e.dataTransfer.files[0]);
+	var blob = new Blob(e.dataTransfer.files[0]);
+	output.value = blobStream(blob,100).size;
 	let veryLongText = ''; // 細切れの値をここに結合していく。
-	const decoder = new TextDecoder();
-	output.value = e.dataTransfer.files[0];
-	fetch(e.dataTransfer.files[0])
-        .then((response) => response.body.getReader()) // ReadableStreamを取得する。
-        .then((reader) => {
+	
+	//const decoder = new TextDecoder();
+	//output.value = e.dataTransfer.files[0];
+	//fetch(e.dataTransfer.files[0])
+        //.then((response) => response.body.getReader()) // ReadableStreamを取得する。
+        //.then((reader) => {
           // ReadableStream.read()はPromiseを返す。
           // Promiseは{ done, value }として解決される。
           // データを読み込んだとき：doneはfalse, valueは値。
           // データを読み込み終わったとき：doneはtrue, valueはundefined。
-          function readChunk({done, value}) {
-            if(done) {
-              output.value = veryLongText;
-              return;
-            }
+       //   function readChunk({done, value}) {
+       //     if(done) {
+       //       output.value = veryLongText;
+       //       return;
+       //     }
 
-            veryLongText += decoder.decode(value);
+       //     veryLongText += decoder.decode(value);
 
             // 次の値を読みにいく。
-            reader.read().then(readChunk);
-          }
+       //     reader.read().then(readChunk);
+       //   }
 
           // 最初の値を読み込む。
-          reader.read().then(readChunk);
-        });
+       //   reader.read().then(readChunk);
+       // });
 });
 </script>
 
