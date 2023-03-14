@@ -301,8 +301,83 @@ class BlobStreamController {
 <output id="output"></output>
 <img id="preview">
 <input type="file" id="filedraged">
+<input type="number" id="max-show-byte" value="1024">
+<table id="viewer">
+	<thead>
+		<tr>
+			<th>#</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th>
+		</tr>
+	</thead>
+	<tbody>
+	</tbody>
+</table>
 
 <script type="text/javascript">
+	
+	function loadBinaryFile(table, raw, limit) {
+				const thead = table.getElementsByTagName('thead')[0];
+				// 一行当たりの表示数
+				const showNum = thead.getElementsByTagName('th').length;
+				
+				if (showNum < 1) {
+					alert('テーブルのフォーマットに誤りがあります');
+				}
+			
+				/**
+				 * 数値を16進数文字列に変換する
+				 * @param {number} val 16進数に変換する数値
+				 * @param {number} digits 桁数
+				 * @return {string}
+				 */
+				const toHex = (val, digits) => {
+					const hex = val.toString(16).toUpperCase();
+					return hex.length < digits ? '0'.repeat(digits - hex.length) + hex : hex; 
+				}
+
+				// 表示するバイト数
+				const bytes = Math.min(raw.length, limit);
+				// 行数
+				const rows = Math.ceil(bytes / (showNum - 1));
+				// 行数での表示上の桁数
+				const digitsOfRow = toHex(rows, 0).length;
+				// 現在の走査位置
+				let col = 0;
+				let row = 0;
+
+				// 現在表示されているもののクリア
+				table.removeChild(table.getElementsByTagName('tbody')[0]);
+
+				// 行の構築先
+				const tbody = document.createElement('tbody');
+
+				let tr = null;
+				let td = null;
+
+				for (let i = 0; i < bytes; ++i) {
+					const val = raw[i];
+
+					// 行番号の構築
+					if (col == 0) {
+						++row;
+						tr = document.createElement('tr');
+						tbody.appendChild(tr);
+						td = document.createElement('td');
+						td.innerText = toHex(row, digitsOfRow);
+						tr.appendChild(td);
+						++col;
+					}
+					// バイトの16進数値の挿入
+					td = document.createElement('td');
+					td.innerText = toHex(val, 2);
+					tr.appendChild(td);
+					// 列の位置の更新
+					col = (col + 1) % showNum;
+				}
+
+				// 構築した行をまとめて挿入
+				table.appendChild(tbody);
+			}
+	
 const output = document.body.querySelector('#output');
 const filedraged = document.body.querySelector('#filedraged');
 
@@ -317,13 +392,21 @@ target.addEventListener('drop', function (e) {
 	e.preventDefault();
 	
 	const reader = new FileReader();
-	reader.onload = function (e) {
-		document.getElementById('preview').src = e.target.result;
-	}
+	const maxShowByte = document.getElementById('max-show-byte').value;
+
+	reader.onload = e => loadBinaryFile(document.getElementById('viewer'), new Uint8Array(reader.result), maxShowByte);
+	reader.onerror = e => alert('ファイルの読み込みに失敗しました');
+
+	// ファイル読み込みの実施
+	reader.readAsArrayBuffer(e.dataTransfer.files[0]);
+	
+	//reader.onload = function (e) {
+	//	document.getElementById('preview').src = e.target.result;
+	//}
 	//reader.readAsDataURL(e.dataTransfer.files[0]);
-	filedraged.files = e.dataTransfer.files;
-	var blob = new Blob(e.dataTransfer.files[0], {type:'text/plain'});
-	output.value = blobStream(blob,blob.size).size;
+	//filedraged.files = e.dataTransfer.files;
+	//var blob = new Blob(e.dataTransfer.files[0], {type:'text/plain'});
+	//output.value = blobStream(blob,blob.size).size;
 	let veryLongText = ''; // 細切れの値をここに結合していく。
 	
 	//const decoder = new TextDecoder();
