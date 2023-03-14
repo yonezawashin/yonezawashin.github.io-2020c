@@ -299,8 +299,6 @@ class BlobStreamController {
 
 <script type="text/javascript">
 const output = document.body.querySelector('#output');
-let veryLongText = ''; // 細切れの値をここに結合していく。
-const decoder = new TextDecoder();
 
 var target = document.getElementById('target');
 target.addEventListener('dragover', function (e) {
@@ -311,6 +309,8 @@ target.addEventListener('dragover', function (e) {
 target.addEventListener('drop', function (e) {
 	e.stopPropagation();
 	e.preventDefault();
+	let veryLongText = ''; // 細切れの値をここに結合していく。
+	const decoder = new TextDecoder();
 	const reader = new FileReader();
 	reader.onload = function (e) {
 		document.getElementById('preview').src = e.target.result;
