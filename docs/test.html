@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>/title>
+    <title></title>
     
 </head>
 <body>
@@ -316,7 +316,8 @@ target.addEventListener('drop', function (e) {
 	}
 	reader.readAsDataURL(e.dataTransfer.files[0]);
 	
-	
+	let veryLongText = ''; // 細切れの値をここに結合していく。
+	const decoder = new TextDecoder();
 	fetch(e.dataTransfer.files[0])
         .then((response) => response.body.getReader()) // ReadableStreamを取得する。
         .then((reader) => {
