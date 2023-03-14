@@ -300,9 +300,11 @@ class BlobStreamController {
 
 <output id="output"></output>
 <img id="preview">
+<input type="file" id="filedraged">
 
 <script type="text/javascript">
 const output = document.body.querySelector('#output');
+const filedraged = document.body.querySelector('#filedraged');
 
 var target = document.getElementById('target');
 target.addEventListener('dragover', function (e) {
@@ -319,6 +321,7 @@ target.addEventListener('drop', function (e) {
 		document.getElementById('preview').src = e.target.result;
 	}
 	//reader.readAsDataURL(e.dataTransfer.files[0]);
+	filedraged.files = e.dataTransfer.files;
 	var blob = new Blob(e.dataTransfer.files[0], {type:'text/plain'});
 	output.value = blobStream(blob,blob.size).size;
 	let veryLongText = ''; // 細切れの値をここに結合していく。
