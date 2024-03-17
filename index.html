@@ -669,7 +669,7 @@
     </p>
     <p>Playerクラスを作成する前に、忘れずにプレイヤ画像はImageフォルダにコピー貼り付けしましょう。<br>
       Imageフォルダにコピーしたらプロジェクトで</p>
-    <p>次は画像ファイルをプロジェクトに追加します。【C#と違いドラッグアンドドロップせず】画像は【プロジェクトを右クリックで「追加」→「既存の項目」で画像を追加】します。<br>
+    <p>次は画像ファイルをプロジェクトに追加します。画像は【プロジェクトを右クリックで「追加」→「既存の項目」で画像を追加】します。<br>
       <img src="image/player_image_add.gif" alt=""><br>
       <br>
       <code>Image.h</code>の内容を次のようにします：</p>
@@ -2181,6 +2181,9 @@
     </p>
     <br>
     <h2>自機弾の角度を変えられるようにする</h2>
+    おさらい【cosθとsinθはx,yに対応する】【たて×よこの比率(範囲:min:-1～1:max)】<br>
+    <img src="image/cos_sin.png" alt="" style="width: 785px; height: 444px;"><br>
+    <br>
     <p><code>PlayerBullet.h</code>に角度をつけられるようにします</p>
     <p class="source">#ifndef PLAYERBULLET_H_<br>
       #define PLAYERBULLET_H_<br>
