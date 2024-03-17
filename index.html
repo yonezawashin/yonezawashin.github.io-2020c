@@ -2860,6 +2860,30 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       }<br>
       <br>
     </p>
+	<p>次にGame.cppファイルのPlayerの生成処理をVector3に対応する形に書き換えましょう。<br>
+      <br>
+      <code>Game.cpp</code>の内容を次のように変更します：</p>
+    <p class="source">#include "Game.h"<br>
+      <br>
+      #include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      <br>
+      void Game::Init()<br>
+      {// Init処理<br>
+      <br>
+      &nbsp;&nbsp;Image::Load(); //画像の読込み<br>
+      &nbsp;&nbsp;x = 100; // Xの初期位置<br>
+      &nbsp;&nbsp;vx = 10;<br>
+      <br>
+      &nbsp;&nbsp;gm.player = std::make_shared&lt;Player&gt;(<em>Vector3((float)100, (float)(Screen::Height / 2))</em>); // 自機の初期化<br>
+      };<br>
+      <br>
+      <br>
+      (中略)...<br>
+      <br>
+      };<br>
+    </p>
+	  
     <h1><a id="mozTocId0009" class="mozTocH1"></a>敵の作成【共通のGameObjectを継承する】</h1>
     <h2>Enemyクラスを作成するにあたってアクションゲームのGameObjectを導入する</h2>
     <p>前期はEnemyクラスを継承する形でZako0をつくりましたが<br>
