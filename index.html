@@ -2734,6 +2734,108 @@
       <br>
       #endif<br>
     </p><br>
+<br>
+	  
+      <code>Vector3.cppを新規作成して</code>その内容を次のようにします：<br>
+<p class="source">#include "Vector3.h"<br>
+      <br>
+// Unityのstatic変数を参考に https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
+Vector3 const Vector3::zero = Vector3(0.f,  0.f,  0.f );<br>
+Vector3 const Vector3::one  = Vector3(1.f,  1.f,  1.f );<br>
+Vector3 const Vector3::forward = Vector3(0.f,  0.f,  1.f );<br>
+Vector3 const Vector3::back    = Vector3(0.f,  0.f, -1.f );<br>
+Vector3 const Vector3::up   = Vector3(0.f,  1.f,  0.f );<br>
+Vector3 const Vector3::down = Vector3(0.f, -1.f,  0.f );<br>
+Vector3 const Vector3::left  = Vector3(-1.f,  0.f, 0.f );<br>
+Vector3 const Vector3::right = Vector3(1.f,  0.f,  0.f );<br>
+//[負の値の最小値] https://stackoverflow.com/questions/20016600/negative-infinity<br>
+Vector3 const Vector3::negativeInfinity = Vector3(-std::numeric_limits&lt;float&gt;::infinity(), -std::numeric_limits&lt;float&gt;::infinity(), -std::numeric_limits&lt;float&gt;::infinity() );<br>
+//[極大値]https://cpprefjp.github.io/reference/limits/numeric_limits/lowest.html<br>
+Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&gt;::infinity(), std::numeric_limits&lt;float&gt;::infinity(), std::numeric_limits&lt;float&gt;::infinity() );<br>
+</p>
+<br>
+	プレイヤや弾のクラスのx,yをVector3型に置きかえてみます<br>
+      <code>Player.h</code>の内容を次のようにします：<br>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "MyMath.h"<br>
+      <em>#include "Vector3.h"</em><br>
+      <br>
+      class Player<br>
+      {<br>
+      public:<br>
+      <br>
+      &nbsp;&nbsp;union&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;struct {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float x; // x座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float y; // y座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float z; // z座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;};// 匿名共用体<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>Vector3 position; // x座標<br>
+      };</em><br>
+      <br>
+      &nbsp;const float MoveSpeed = 6; // 移動速度<br>
+<br>      
+      &nbsp;<u>float x; // x座標<br>
+      &nbsp;float y; // y座標</u><br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;<em>// pos : 初期位置</em><br>
+      &nbsp;Player(<em>Vector3 pos</em>) <em>: position { pos }</em><br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>this-&gt;x = x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;</u><br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 更新処理<br>
+      &nbsp;void Update()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>float vx = 0; // x方向移動速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float vy = 0; // y方向移動速度</u><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>Vector3 v{0,0,0}; // xyz方向移動速度</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>v.x</em> = -MoveSpeed; // 左<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>v.x</em> = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>v.y</em> = -MoveSpeed; // 上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>v.y</em> = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 斜め移動も同じ速度になるように調整<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;if (<em>v.magnitude() > 0</em>)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<u>vx /= MyMath::Sqrt2;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy /= MyMath::Sqrt2;</u><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>v /= MyMath::Sqrt2;</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 実際に位置を動かす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>position += v;</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>x += vx;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;y += vy;</u><br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 描画処理<br>
+      &nbsp;void Draw()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(<em>position.x, position.y</em>, 1, 0, Image::player, TRUE);<br>
+      &nbsp;&nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
     
     <h1><a id="mozTocId0009" class="mozTocH1"></a>敵の作成【共通のGameObjectを継承する】</h1>
     <h2>Enemyクラスを作成するにあたってアクションゲームのGameObjectを導入する</h2>
