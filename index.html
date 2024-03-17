@@ -4471,8 +4471,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Zako2(float x, float y, float z=0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+      &nbsp;&nbsp;Zako2(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako2";<br>
       &nbsp;&nbsp;}<br>
@@ -4482,7 +4481,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(x &gt; Screen::Width - 200)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{ // スクリーンの端から200の位置で止まる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position.x -= 1; // とりあえず左へ移動<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;coolTime--;<br>
@@ -4490,7 +4489,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;if (coolTime &lt;= 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float bulletAngle = MyRandom::Range(-15.0f,15.0f); // ±15度の乱数の角度を取得<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(x, y, (180 + bulletAngle) * MyMath::Deg2Rad, 8));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, (180 + bulletAngle) * MyMath::Deg2Rad, 8));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;coolTime += 10;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;}<br>
@@ -4498,7 +4497,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 描画処理<br>
       &nbsp;&nbsp;void Draw() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako2, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako2, TRUE);<br>
       &nbsp;&nbsp;}<br>
       };<br>
       <br>
@@ -4522,10 +4521,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;(中略)..................<br>
       <br>
       &nbsp;&nbsp;// とりあえず適当に敵を生成<br>
-      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;((float)600, (float)100));<br>
-      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;((float)1000, (float)500));<br>
-      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;((float)1000, (float)150));<br>
-      &nbsp;&nbsp;<em>gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;((float)1200, (float)250));</em><br>
+      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3((float)600, (float)100)));<br>
+      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3((float)1000, (float)500)));<br>
+      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;(Vector3((float)1000, (float)150)));<br>
+      &nbsp;&nbsp;<em>gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;(Vector3((float)1200, (float)250)));</em><br>
       };<br>
       <br>
       void Game::Update()<br>
