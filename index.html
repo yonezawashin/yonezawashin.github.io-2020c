@@ -2292,6 +2292,61 @@
       }<br>
       <br>
       (以下略) </p>
+
+    <br>
+    
+    <h2>vectorとlistの性能考察</h2>
+    データのリスト(今回は弾のリスト)をどうデータ管理するかにはstd::vectorとstd::listの2パターンの格納方法が考えられます。
+    <img src="image/vector_vs_list.png" alt="" style="width: 799px; height: 439px;"><br>
+    <br>
+    ※vectorは大量の弾が増えてきたときにまとまったメモリの領域を割り当てる必要が出てくるので、ランダムアクセスしたいなどの用途がない場合は、<br>
+    list構造にしておくほうが、メモリの再確保などで遅くなる可能性を回避できるので、listに書き換えてみましょう。<br>
+    <br>
+    <p><code>GameManager.h</code>で管理しているPlayerBulletのvector配列をlist構造に変更してみましょう。</p>
+    <p class="source"> #ifndef GAMEMANAGER_H_<br>
+      #define GAMEMANAGER_H_<br>
+      <br>
+      #include &lt;memory&gt;<br>
+      #include &lt;vector&gt;<br>
+      #include &lt;list&gt;<br>
+      <br>
+      #include&nbsp;"Singleton.h"<br>
+      <br>
+      class&nbsp;Player;&nbsp;//&nbsp;クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+      class&nbsp;PlayerBullet;<br>
+      <br>
+      class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
+      <br>
+      &nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機の初期化<br>
+      <br>
+      &nbsp;&nbsp;std::<em>list</em>&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+      &nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      <br>
+      <br>
+      <br>
+      &nbsp;&nbsp;//&nbsp;★削除処理を共通テンプレート関数にする<br>
+        &nbsp;&nbsp;//&nbsp;[共通テンプレート関数]https://programming-place.net/ppp/contents/cpp/language/009.html#function_template<br>
+        &nbsp;&nbsp;template&nbsp;&lt;typename&nbsp;T,&nbsp;class&nbsp;T_if&gt;<br>
+        &nbsp;&nbsp;void&nbsp;EraseRemoveIf(std::<em>vector</em>&lt;T&gt;&nbsp;&amp;v,&nbsp;T_if&nbsp;if_condition)<br>
+        &nbsp;&nbsp;{&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;特定のタイプT↑&nbsp;&nbsp;↑配列v&nbsp;&nbsp;&nbsp;↑条件式if_condition<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;v.erase(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::remove_if(v.begin(),&nbsp;v.end(),if_condition),<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.end()&nbsp;//&nbsp;<em>&nbsp;</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;);<em>&nbsp;</em><br>
+        &nbsp;&nbsp;};<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;GameManager() {}; // 外部からのインスタンス作成は禁止<br>
+      &nbsp;&nbsp;virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    
     <h1><a id="mozTocId0008" class="mozTocH1"></a>敵の作成【共通のGameObjectを継承する】</h1>
     <h2>Enemyクラスを作成するにあたってアクションゲームのGameObjectを導入する</h2>
     <p>前期はEnemyクラスを継承する形でZako0をつくりましたが<br>
