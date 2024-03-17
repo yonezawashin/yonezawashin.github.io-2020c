@@ -2795,6 +2795,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;<u>this-&gt;x = x;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;</u><br>
       &nbsp;&nbsp;}<br>
+	    <br>
+      &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ ※無いと【削除された関数を参照しようとしてますエラー】が出るかも
+
       <br>
       &nbsp;&nbsp;// 更新処理の関数定義<br>
       &nbsp;&nbsp;void Update();<br>
