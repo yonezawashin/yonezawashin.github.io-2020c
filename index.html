@@ -2957,11 +2957,11 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     </p>
 	  
     <h1><a id="mozTocId0009" class="mozTocH1"></a>敵の作成【共通のGameObjectを継承する】</h1>
-    <h2>Enemyクラスを作成するにあたってアクションゲームのGameObjectを導入する</h2>
-    <p>前期はEnemyクラスを継承する形でZako0をつくりましたが<br>
-      この構造のままで作り進めると循環参照インクルードが起こってしまいます。<br>
-      なぜなら、衝突判定で【PlayerBullet⇔Enemy⇔Playerの相互の矢印の参照が生まれざる負えません】<br>
-      そこでアクションゲームのGameObject、すなわち全てのものが継承する【ベースとなる継承元】を導入します。<br>
+    <h2>Enemyクラスを作成するにあたって共通の基底(ベース)クラスとなるGameObjectを導入する</h2>
+    <p>Enemyクラスを定義してそれを継承する形でZako0をつくることもできますが<br>
+      その構造で作り進めると循環参照インクルードが起こってしまいがちです。<br>
+      なぜなら、衝突判定で【PlayerBullet⇔Enemy⇔Playerの相互の矢印の参照ループが生まれやすくなります】<br>
+      そこで共通の基底(ベース)クラスとなるGameObject、すなわち全てのものが継承する【ベースとなる継承元】を導入します。<br>
       これで矢印はGameObjectにまとまりオブジェクト同士の参照をせずに済みます。<br>
     </p>
     <p> <img src="image/include_base_gameobject.png" alt="" style="width: 702px; height: 758px;"></p>
@@ -3154,8 +3154,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;float angle; // 移動角度<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;PlayerBullet(Vector3 pos, float angle)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>: GameObject( pos )</em><br>
+      &nbsp;&nbsp;PlayerBullet(Vector3 pos, float angle) <em>: GameObject( pos )</em><br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;tag = "PlayerBullet";</em><br>
       <br>
@@ -3192,8 +3191,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       {<br>
       public:<br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Zako0(float x, float y, float z=0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+      &nbsp;&nbsp;Zako0(Vector3 pos)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;: Enemy( pos )<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako0";<br>
       &nbsp;&nbsp;}<br>
@@ -3328,10 +3327,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;x = 100; // Xの初期位置<br>
       &nbsp;&nbsp;vx = 10;<br>
       <br>
-      &nbsp;&nbsp;gm.player = std::make_shared&lt;Player&gt;((float)100, (float)Screen::Height / 2); // 自機の初期化<br>
+      &nbsp;&nbsp;gm.player = std::make_shared&lt;Player&gt;(Vector3((float)100, (float)Screen::Height / 2)); // 自機の初期化<br>
       &nbsp;&nbsp;<em>// とりあえず適当に敵を生成</em><br>
-      &nbsp;&nbsp;<em>gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;((float)600, (float)100));</em><br>
-      &nbsp;&nbsp;<em>gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;((float)1000, (float)500));</em><br>
+      &nbsp;&nbsp;<em>gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3((float)600, (float)100)));</em><br>
+      &nbsp;&nbsp;<em>gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3((float)1000, (float)500)));</em><br>
       };<br>
       <br>
       void Game::Update()<br>
