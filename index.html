@@ -2764,6 +2764,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "DxLib.h"<br>
       #include "Image.h"<br>
       #include "Screen.h"<br>
+      <em>#include "Vector3.h"</em><br>
       <br>
       // 自機弾クラス<br>
       class PlayerBullet<br>
@@ -3083,6 +3084,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "Input.h"<br>
       #include "Image.h"<br>
       #include "MyMath.h"<br>
+      #include "Vector3.h"<br>
       <br>
       <em>#include&nbsp;"GameObject.h"</em><br>
       <br>
@@ -3092,28 +3094,26 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       class Player <em>: public GameObject</em><br>
       {<br>
       public:<br>
-      &nbsp;&nbsp;const float MoveSpeed = 6; // 移動速度<br>
-      <br>
-      &nbsp;&nbsp;<em>//【★注意！】ここに【x,yの定義が残ってるとGameObjectと被る】ので<br>
+	    <br>
+      &nbsp;&nbsp;<em>//【★注意！】ここに【positionの定義が残ってるとGameObjectと被る】ので<br>
         &nbsp;&nbsp;// 名前の同じ変数が2つ【パラレルワールドに存在してしまう！】<br>
         &nbsp;&nbsp;// Playerからx=13,y=5に変えたつもりでも【ベースのGameObjectはx=0,y=0のままの不思議バグで混乱！】</em><br>
-      &nbsp;&nbsp;<u>float x; // x座標<br>
-        &nbsp;&nbsp;float y; // y座標</u><br>
+      &nbsp;&nbsp;<u>Vector3 position; // xyz座標</u><br>
+	          <br>
+      &nbsp;&nbsp;const float MoveSpeed = 6; // 移動速度<br>
+      <br>
       <br>
       &nbsp;&nbsp;//【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
       &nbsp;&nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;// x : 初期位置x<br>
-      &nbsp;&nbsp;// y : 初期位置y<br>
-      &nbsp;&nbsp;Player(float x, float y<em>, float z=0</em>) <em>// z=0デフォルトにして2Dのときはzを省略できる</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>: GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！</em><br>
+      &nbsp;&nbsp;// pos : 初期位置<br>
+      &nbsp;&nbsp;Player(Vector3 pos) : <em>GameObject( pos ) //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！</em><br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;z = z;//[3D対応]</em><br>
       &nbsp;&nbsp;}<br>
       <br>
+      &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ<br>
+	    <br>
       &nbsp;&nbsp;// 更新処理の関数定義<br>
       &nbsp;&nbsp;void Update();<br>
       <br>
@@ -3132,6 +3132,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "DxLib.h"<br>
       #include "Image.h"<br>
       #include "Screen.h"<br>
+      #include "Vector3.h"<br>
       <br>
       <em>#include "GameObject.h"</em><br>
       <br>
@@ -3140,49 +3141,28 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       class PlayerBullet<em>: public GameObject</em><br>
       {<br>
       public:<br>
+	    &nbsp;&nbsp;<em>//【★注意！GameObjectと被る変数は全部消す】</em><br>
+      &nbsp;&nbsp;<u>Vector3 position; // xyz座標<br>
+        &nbsp;&nbsp;Vector3 v; // xyz方向移動速度</u><br>
+        <br>
       &nbsp;&nbsp;const float Speed = 25; // 移動速度<br>
       &nbsp;&nbsp;const int VisibleRadius = 16; // 見た目の半径<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// ↓【使用要注意！(テスト用！！)】メモリ消費弾(4MB)撃つたびに4MB消費(下の行のコメント外すと)<br>
-      &nbsp;&nbsp;//【実験コード】int memMUDA[1000000]; // 4バイト×1000000= 4MBの無駄メモリ<br>
       <br>
-      &nbsp;&nbsp;<em>//【★注意！GameObjectと被る変数は全部消す】</em><br>
-      &nbsp;&nbsp;<u>float x; // x座標<br>
-        &nbsp;&nbsp;float y; // y座標<br>
-        &nbsp;&nbsp;bool isDead = false; // 死亡フラグ<br>
-        <br>
-        &nbsp;&nbsp;float vx; // x方向移動速度<br>
-        &nbsp;&nbsp;float vy; // y方向移動速度</u><br>
+	    &nbsp;&nbsp;<u>bool isDead = false; // 死亡フラグ</u><br>
+      <br>
       &nbsp;&nbsp;float angle; // 移動角度<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;PlayerBullet(float x, float y, float angle)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>: GameObject()</em><br>
+      &nbsp;&nbsp;PlayerBullet(Vector3 pos, float angle)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>: GameObject( pos )</em><br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;tag = "PlayerBullet";</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angle;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vx = (float)std::cos(angle) * Speed;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * Speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v = Vector3((float)std::cos(angle) * Speed, (float)std::sin(angle) * Speed, 0);<br>
       &nbsp;&nbsp;}<br>
       <br>
-      <br>
-      &nbsp;&nbsp;<em>//【★勉強】初期化は何種類も【別窓口を】用意できる<br>
-        &nbsp;&nbsp;//マニアックな初期設定は【①別窓口】【②デフォルト=0で省略可にする】<br>
-        &nbsp;&nbsp;// [3D用]コンストラクタ(引数4つの別窓口の初期化を用意)<br>
-        &nbsp;&nbsp;PlayerBullet(float x, float y, float z, float angle)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
-        &nbsp;&nbsp;{<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angle;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;vx = (float)std::cos(angle) * Speed;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;vz = (float)std::sin(angle) * Speed;//Y平面固定で弾を撃つ<br>
-        &nbsp;&nbsp;}</em><br>
       <br>
       &nbsp;&nbsp;// 更新処理<br>
       &nbsp;&nbsp;void Update()<br>
@@ -3193,7 +3173,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 描画処理<br>
       &nbsp;&nbsp;void Draw()<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, angle, Image::playerBullet,TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, angle, Image::playerBullet,TRUE);<br>
       &nbsp;&nbsp;}<br>
       };<br>
       <br>
