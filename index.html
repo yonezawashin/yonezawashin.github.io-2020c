@@ -2771,14 +2771,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       {<br>
       public:<br>
       <br>
-      &nbsp;&nbsp;<em>union&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;struct {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float x; // x座標<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float y; // y座標<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float z; // z座標<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;};// 匿名共用体<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;Vector3 position; // xyz座標<br>
-      &nbsp;&nbsp;};</em><br>
+      &nbsp;&nbsp;<em>Vector3 position; // xyz座標</em><br>
       <br>
       &nbsp;const float MoveSpeed = 6; // 移動速度<br>
       <br> 
@@ -2796,7 +2789,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;</u><br>
       &nbsp;&nbsp;}<br>
 	    <br>
-      &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ ※無いと【削除された関数を参照しようとしてますエラー】が出るかも
+      &nbsp;&nbsp;<em>virtual ~Player() {}; // 仮想デストラクタ ※無いと【削除された関数を参照しようとしてますエラー】が出るかも</em><br>
 
       <br>
       &nbsp;&nbsp;// 更新処理の関数定義<br>
