@@ -3626,6 +3626,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     <h1><a id="mozTocId2002" class="mozTocH1"></a>敵に耐久力を持たせる(おまけでSinの波運動のコード例も)</h1>
     <p><code>Zako1.h</code>のlifeを5にすることでZako1を硬くしてみましょう。<br>
       ついでにsinの波運動も試してみましょう。</p>
+<p><code>Zako1.hを新規作成</code>します。黄色の部分がZako0との違いです。</p>
     <p class="source">#ifndef ZAKO_1_H_<br>
       #define ZAKO_1_H_<br>
       <br>
@@ -3797,6 +3798,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       #include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako1.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       <br>
       void Game::Init()<br>
       {// Init処理<br>
@@ -3939,14 +3941,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;// x : 初期位置x<br>
-      &nbsp;&nbsp;// y : 初期位置y<br>
-      &nbsp;&nbsp;Player(float x, float y, float z=0) // z=0デフォルトにして2Dのときはzを省略できる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
+      &nbsp;&nbsp;// pos : 初期位置<br>
+      &nbsp;&nbsp;Player(Vector3 pos) : GameObject( pos ) //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;//[3D対応]<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 更新処理の関数定義<br>
@@ -3971,46 +3968,43 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       // 更新処理<br>
       void Player::Update()<br>
       {<br>
-      &nbsp;&nbsp;// 継承したGameObjectにvx,vyがあるのでvx,vyをfloatで定義し直さないように修正<br>
-      &nbsp;&nbsp;<u>float </u>vx = 0; // x方向移動速度<br>
-      &nbsp;&nbsp;<u>float </u>vy = 0; // y方向移動速度<br>
+      &nbsp;&nbsp;// 継承したGameObjectにvがあるのでvをfloatで定義し直さないように修正<br>
+      &nbsp;&nbsp;v = Vector3(0,0,0); // xyz方向移動速度<br>
       <br>
       &nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vx = -MoveSpeed; // 左<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.x = -MoveSpeed; // 左<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vx = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.x = MoveSpeed; // 右<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vy = -MoveSpeed; // 上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.y = -MoveSpeed; // 上<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vy = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.y = MoveSpeed; // 下<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 斜め移動も同じ速度になるように調整<br>
-      &nbsp;&nbsp;if (vx != 0 &amp;&amp; vy != 0)<br>
+      &nbsp;&nbsp;if (v.magnitude() > 0)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vx /= MyMath::Sqrt2;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vy /= MyMath::Sqrt2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v /= MyMath::Sqrt2;<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 実際に位置を動かす<br>
-      &nbsp;&nbsp;x += vx;<br>
-      &nbsp;&nbsp;y += vy;<br>
+      &nbsp;&nbsp;position += v;<br>
       <br>
       &nbsp;&nbsp;// ボタン押下で自機弾を発射<br>
       &nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;C++ではAddがemplace_backに↓&nbsp;newがmake_shared↓に<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;x, y, 0));//右<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(x, y, -15 * MyMath::Deg2Rad));//右上<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(x, y, +15 * MyMath::Deg2Rad));//右下<br>
-      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// C++ではAddがpush_backに↓ newがmake_shared↓に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(position, 0));//右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(position, -15 * MyMath::Deg2Rad));//右上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(position, +15 * MyMath::Deg2Rad));//右下<br>
+      &nbsp;&nbsp;}
       <br>
       &nbsp;&nbsp;<em>mutekiTimer--; // 無敵タイマーは無条件で毎フレームカウントダウン</em><br>
       }<br>
@@ -4021,7 +4015,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;<em>// 無敵ではない場合は描画<br>
         &nbsp;&nbsp;// 無敵中は2フレームに1回描画（点滅）<br>
         &nbsp;&nbsp;if (mutekiTimer &lt;= 0 || mutekiTimer % 2 == 0)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;</em>DrawRotaGraphF(x, y, 1, 0, Image::player, TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;</em>DrawRotaGraphF(position.x, position.y, 1, 0, Image::player, TRUE);<br>
       }<br>
       <br>
       // 敵にぶつかった時の処理<br>
