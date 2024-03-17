@@ -2981,14 +2981,15 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       public:<br>
       &nbsp;&nbsp;Vector3 position {0,0,0}; // xyz座標<br>
       &nbsp;&nbsp;Vector3 v{0,0,0}; //xyz方向の速度<br>
+	    <br>
+      &nbsp;&nbsp;bool isDead = false; // 死んだ（削除対象）フラグ<br>
+	    <br>
       &nbsp;&nbsp;std::string tag = ""; // Zako0やBossやPlayerなど小カテゴリ<br>
       &nbsp;&nbsp;std::string typeTag = ""; // EnemyやPlayerなど大カテゴリ<br>
       &nbsp;&nbsp;std::string statusTag = ""; // 爆発状態やアイテムゲット状態など自由に使えばよい<br>
       <br>
-      &nbsp;&nbsp;bool isDead = false; // 死んだ（削除対象）フラグ<br>
-      <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;GameObject()<br>
+      &nbsp;&nbsp;GameObject(Vector3 pos) : position{ pos }<br>
       &nbsp;&nbsp;{<br>
       <br>
       &nbsp;&nbsp;} <br>
@@ -3040,8 +3041,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;float life = 1; // 耐久力<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Enemy(Vector3 pos) : position { pos }<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;, GameObject() // GameObjectをベースとして初期化処理を継承する<br>
+      &nbsp;&nbsp;Enemy(Vector3 pos) :  GameObject( pos ) // GameObjectをベースとして初期化処理を継承する<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Enemy";<br>
       &nbsp;&nbsp;}<br>
