@@ -4568,7 +4568,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;int life = 10; // 敵ライフ<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Zako3(Vector3 position) : Enemy( pos )<br>
+      &nbsp;&nbsp;Zako3(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako3";<br>
       &nbsp;&nbsp;}<br>
@@ -4840,8 +4840,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる<br>
         &nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemyBullet-&gt;x, enemyBullet-&gt;y, enemyBullet-&gt;collisionRadius))<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;position, gm.player-&gt;collisionRadius,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemyBullet-&gt;position, enemyBullet-&gt;collisionRadius))<br>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;OnCollisionEnemyBullet(enemyBullet);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -4868,8 +4868,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 自機弾と敵が重なっているか？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;position, playerBullet-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;position, enemy-&gt;collisionRadius))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
@@ -4895,8 +4895,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;position, gm.player-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;position, enemy-&gt;collisionRadius))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;OnCollisionEnemy(enemy);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -5116,13 +5116,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;int imageIndex = 0; // 表示すべき画像の番号<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Explosion(float x, float y, float z=0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
+      &nbsp;&nbsp;Explosion(Vector3 pos) : GameObject( pos )<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Explosion";<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z; // [3D対応]<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 更新処理<br>
@@ -5146,7 +5142,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// Image.explosionは配列であり、<br>
       &nbsp;&nbsp;// 分割して読み込んだ絵のハンドルが各要素に格納されているので、<br>
       &nbsp;&nbsp;// 要素番号を指定してハンドルを取り出して使う。<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::explosion[imageIndex], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, 0, Image::explosion[imageIndex], TRUE);<br>
       &nbsp;&nbsp;}<br>
       };<br>
       <br>
@@ -5174,11 +5170,11 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
       <br>
       &nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機のポインタ<br>
-      &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
-      &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
-      &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
-      &nbsp;&nbsp;<em>std::vector&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト</em><br>
-      &nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+      &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+      &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
+      &nbsp;&nbsp;<em>std::list&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト</em><br>
+      &nbsp;&nbsp;// List↑と同じlist ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
       (中略).............. <br>
@@ -5226,8 +5222,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;position, gm.player-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;position, enemy-&gt;collisionRadius))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;OnCollisionEnemy(enemy);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -5278,7 +5274,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       };<br>
     </p>
     <h2><a id="mozTocId30024" class="mozTocH1"></a>爆発を出す処理(Enemyで敵の共通の爆発を生成)</h2>
-    <p><code>Enemy.h</code>を改修して、敵が死んだときに爆発エフェクトを出すようにしましょう。</p>
+    <p><code>Enemy.h</code>を新規作成して、敵が死んだときに爆発エフェクトを出すようにしましょう。</p>
     <p class="source">#ifndef ENEMY_H_<br>
       #define ENEMY_H_<br>
       <br>
@@ -5303,13 +5299,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;float life = 1; // 耐久力<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Enemy(float x, float y, float z=0)//★z=0をデフォルトとすることでx,yだけでも初期化でき2Dと3D両立<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: GameObject() // GameObjectをベースとして初期化処理を継承する<br>
+      &nbsp;&nbsp;Enemy(Vector3 pos) : GameObject( pos ) // GameObjectをベースとして初期化処理を継承する<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Enemy";<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 更新処理。派生クラスでオーバーライドして使う<br>
@@ -5318,13 +5310,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 描画処理。派生クラスでオーバーライドして使う<br>
       &nbsp;&nbsp;virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
       <br>
-      &nbsp;&nbsp;//【勉強】関数 = 0って何?と思った人は【関数もメモリ上では住所アドレスに過ぎない】ことを知ろう<br>
-      &nbsp;&nbsp;// ★関数 = 0はつまり関数の住所ポインタの針が【メモリ上の何かを針で参照してない(住所不定無処理)】<br>
-      &nbsp;&nbsp;// つまり【関数が未定義ってこと】＝【あいまい部分があるabstractクラスってこと】<br>
-      &nbsp;&nbsp;//http://etc2myday.jugem.jp/?eid=204<br>
-      &nbsp;&nbsp;//http://wisdom.sakura.ne.jp/programming/c/c54.html<br>
-      &nbsp;&nbsp;//逆にいうと【関数を配列】にするっていうトリッキーなこともできる!<br>
-      &nbsp;&nbsp;//http://www.ced.is.utsunomiya-u.ac.jp/lecture/2012/prog/p3/kadai3/virtualfunc2.php<br>
       <br>
       &nbsp;&nbsp;// 自機弾に当たったときの処理<br>
       &nbsp;&nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet)<br>
@@ -5497,8 +5482,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; int dyingTime = 180; // 死亡時のアニメーション時間<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
-      &nbsp;&nbsp;&nbsp; Boss(float x, float y, float z = 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; Boss(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Boss"; // オブジェクトの種類判別タグ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = 100; // ライフ<br>
@@ -5510,9 +5494,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (state == State::Appear) // 登場状態<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x -= 1; // 左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; position.x -= 1; // 左へ移動<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (x &lt;= 750) // x座標が750以下になったら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (position.x &lt;= 750) // x座標が750以下になったら<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; state = State::Normal; // 通常状態へ移行<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
@@ -5548,19 +5532,19 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (state == State::Appear || state == State::Normal) // 登場時と通常時<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::boss1, TRUE); // 普通の画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::boss1, TRUE); // 普通の画像<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Swoon) // 気絶時<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::boss2, TRUE); // 気絶時の画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::boss2, TRUE); // 気絶時の画像<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Angry) // 発狂モード<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::boss3, TRUE); // 怒ってる画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::boss3, TRUE); // 怒ってる画像<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Dying) // 死亡中<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::boss2, TRUE); // 気絶時の画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::boss2, TRUE); // 気絶時の画像<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
@@ -5607,9 +5591,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp;&nbsp; (中略).................<br>
       <br>
-      &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;(Vector3((float)100, (float)(Screen::Height / 2))); // 自機の初期化<br>
       &nbsp;&nbsp;&nbsp; // とりあえず適当に敵を生成<br>
-      &nbsp;&nbsp;&nbsp; <em>gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));</em><br>
+      &nbsp;&nbsp;&nbsp; <em>gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(Screen::Width + 90, Screen::Height / 2)));</em><br>
       }<br>
       <br>
       (以下略).................</p>
@@ -5735,7 +5719,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp; &nbsp;std::string selectStage = "stage1"; // 選択中のステージ(タイトルでのデフォルト選択などもマネージャに保持できる)<br>
       &nbsp;&nbsp;&nbsp; <br>
-      &nbsp;&nbsp;&nbsp; <b>// マネージャは【どこからでもアクセスしやすい「変数の掲示板」として気軽に使ってもよい】</b><br>
+      &nbsp;&nbsp;&nbsp; <b>// マネージャを【どこからでもアクセスしやすい「変数の掲示板」として使う】</b><br>
       &nbsp;&nbsp; &nbsp;int scoreMax = -1; // シーンをまたぐスコアなどはマネージャに定義すればシーンチェンジ後も消えない<br>
       &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Scene&gt; prevScene{ nullptr }; // 一つ前のシーン<br>
@@ -6183,9 +6167,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;void Initialize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// ここでプレイヤの初期化などのプレイ開始時の処理<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player = std::make_shared&lt;Player&gt;(Vector3((float)100, (float)(Screen::Height / 2))); // 自機の初期化<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 敵の仮生成<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(Screen::Width + 90, Screen::Height / 2)));</em><br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
@@ -6236,8 +6220,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         <br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 円同士の衝突判定で調べる<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (MyMath::CircleCircleIntersection(<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemyBullet-&gt;x, enemyBullet-&gt;y, enemyBullet-&gt;collisionRadius))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player-&gt;position, gm.player-&gt;collisionRadius,<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemyBullet-&gt;position, enemyBullet-&gt;collisionRadius))<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player-&gt;OnCollisionEnemyBullet(enemyBullet);<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
@@ -6264,8 +6248,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         <br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機弾と敵が重なっているか？<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (MyMath::CircleCircleIntersection(<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;playerBullet-&gt;position, playerBullet-&gt;collisionRadius,<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemy-&gt;position, enemy-&gt;collisionRadius))<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
@@ -6291,8 +6275,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         <br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 円同士の衝突判定で調べる<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (MyMath::CircleCircleIntersection(<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player-&gt;position, gm.player-&gt;collisionRadius,<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemy-&gt;position, enemy-&gt;collisionRadius))<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player-&gt;OnCollisionEnemy(enemy);<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
@@ -6427,8 +6411,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 円同士の衝突判定で調べる<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.player-&gt;position, gm.player-&gt;collisionRadius,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enemy-&gt;position, enemy-&gt;collisionRadius))<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.player-&gt;OnCollisionEnemy(enemy);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
@@ -6584,7 +6568,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #include "DxLib.h"<br>
       #include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
-      <em>#include &lt;map&gt; // ロード済の画像辞書に使う</em><br>
+      <em>#include &lt;unordered_map&gt; // ロード済の画像辞書に使う</em><br>
       <em>#include &lt;string&gt; // 文字列string</em><em><br>
         #include &lt;memory&gt; // 辞書の指す先を回し読みポインタにする<br>
         #include &lt;vector&gt; // シーンのリストに使う<br>
@@ -6622,7 +6606,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     <p><code>Image.cppにロード済み画像を辞書に登録しシーンで使わない画像を開放する処理</code>を追加しましょう。</p>
     <p class="source">#include "Image.h"<br>
       <br>
-      <em>std::map&lt;std::string, DivImage*&gt; Image::loadDic;</em><br>
+      <em>std::unordered_map&lt;std::string, DivImage*&gt; Image::loadDic;</em><br>
       <br>
       int Image::bossImage{ -1 }; // Load終わっても-1(初期値)のままだと画像ロードが失敗してますね<br>
       int Image::player{ -1 };<br>
@@ -6935,7 +6919,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       以下リンクの変換ツールで<b>mp3などを.wavの非圧縮の音声ファイルに変換</b>して使いましょう。<br>
       <a href="https://forest.watch.impress.co.jp/library/software/flicaudiocon/">https://forest.watch.impress.co.jp/library/software/flicaudiocon/</a> <br>
       <br>
-      今回はまず<b>「C#のおいかけ」</b>から音声ファイルを取ってきてSoundクラスを作成してみましょう。<br>
+      今回はまず<b>「webでさがしたBGM素材サイト」</b>から音声ファイルを取ってきてSoundクラスを作成してみましょう。<br>
       以下のファイルを作成中のC++の「SEフォルダ」や「BGMフォルダ」にコピーしておきましょう。</p>
     <ul>
       <li>start.ogg&nbsp;&nbsp; ⇒ SE/start.oggに移動</li>
@@ -6944,7 +6928,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <li>gameplay.ogg ⇒ BGM/gameplay.mp3に移動</li>
       <li>ending.ogg &nbsp;&nbsp;&nbsp; ⇒ BGM/ending.mp3に移動</li>
     </ul>
-    <p>まずは簡易版のSoundクラスを作ってC#の復習としましょう。</p>
+    <p>まずは簡易版のSoundクラスを作ってみましょう。基本はImage.hと似ています。</p>
     <p><code>Sound.hを新規作成</code>します。</p>
     <p class="source">#ifndef SOUND_H_<br>
       #define SOUND_H_<br>
@@ -6978,8 +6962,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     <br>
     <br>
     <p><code>Sound.cppを新規作成</code>します。<br>
-      C#の仕組みに加えて<b>すでにプレイ中のBGMは同じBGMをPlayMusicしようとしても再生し直さない工夫をしています。<br>
-        これで再生ボタンUpdate連打状態で重くなるストッパーになりますね</b>、C#でUpdateで同じBGMの再生連打して重くなった経験のある人は取り入れてみましょう。</p>
+      <b>すでにプレイ中のBGMは同じBGMをPlayMusicしようとしても再生し直さない工夫をしています。<br>
+        これで再生ボタンUpdate連打状態で重くなるストッパーになります</b>。</p>
     <p class="source">#include "Sound.h"<br>
       <br>
       // メモリ再生音源管理番号<br>
@@ -7199,9 +7183,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>Sound::PlayMusic("BGM/gameplay.mp3"); //プレイ画面BGMを再生</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここでプレイヤの初期化などのプレイ開始時の処理<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;(Vector3((float)100, (float)(Screen::Height / 2))); // 自機の初期化<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵の仮生成<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(Screen::Width + 90, Screen::Height / 2)));<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       (中略)...................<br>
@@ -7227,8 +7211,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾と敵が重なっているか？<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; playerBullet-&gt;position, playerBullet-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;position, enemy-&gt;collisionRadius))<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
@@ -7852,9 +7836,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::PlayMusic(<em>Sound::gameplay</em>); //プレイ画面BGMを再生<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここでプレイヤの初期化などのプレイ開始時の処理<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;(Vector3((float)100, (float)(Screen::Height / 2))); // 自機の初期化<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵の仮生成<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(Screen::Width + 90, Screen::Height / 2)));<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       (中略)...................<br>
@@ -7895,7 +7879,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     <br>
     <br>
     <h1><a id="mozTocId4002" class="mozTocH1"></a>CSVを読み込んで敵を生成するプログラム</h1>
-    <p>C#でやったようにTiledエディタで敵マップを作成して、<br>
+	  <a href="https://qiita.com/muzudho1/items/ac3602a29f8536031fe4">https://qiita.com/muzudho1/items/ac3602a29f8536031fe4</a><br>
+    <p>Tiledエディタで敵マップを作成して、<br>
       stage1.csvを<br>
       <code>Map/stage1.csv</code>にcsv形式でエクスポートしましょう。<br>
       <br>
@@ -8020,10 +8005,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 番号に応じて敵を生成する<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (id == -1) continue; // -1は空白なので、何もしない<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 0) gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(x + 32, y + 32));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 1) gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;(x + 32, y + 32));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; else if (id == 2) gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;(x + 32, y + 32));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 100) gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(x + 90, y + 32)); // ボスは横幅180pxだから90px右に生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 0) gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3(x + 32, y + 32)));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 1) gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;(Vector3(x + 32, y + 32)));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; else if (id == 2) gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;(Vector3(x + 32, y + 32)));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 100) gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(x + 90, y + 32))); // ボスは横幅180pxだから90px右に生成<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else assert("まだ追加してない敵IDがマップCSVにありました。"=="");<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
@@ -8123,9 +8108,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.map = std::make_shared&lt;Map&gt;("Map/stage1.csv");</em><br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここでプレイヤの初期化などのプレイ開始時の処理<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player = std::make_shared&lt;Player&gt;((float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player = std::make_shared&lt;Player&gt;(Vector3((float)100, (float)(Screen::Height / 2))); // 自機の初期化<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 敵の仮生成<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<u>//gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));</u><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<u>//gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(Screen::Width + 90, Screen::Height / 2)));</u><br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
@@ -8423,10 +8408,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 番号に応じて敵を生成する<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (id == -1) continue; // -1は空白なので、何もしない<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 0) gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(x + 32, y + 32));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 1) gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;(x + 32, y + 32));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; else if (id == 2) gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;(x + 32, y + 32));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 100) gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(x + 90, y + 32)); // ボスは横幅180pxだから90px右に生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 0) gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3(x + 32, y + 32)));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 1) gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;(Vector3(x + 32, y + 32)));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; else if (id == 2) gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;(Vector3(x + 32, y + 32)));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (id == 100) gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(x + 90, y + 32))); // ボスは横幅180pxだから90px右に生成<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else assert("まだ追加してない敵IDがマップCSVにありました。"=="");<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
@@ -8664,10 +8649,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 番号に応じて敵を生成する<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (id == -1) return; // -1は空白なので、何もしない<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 0) gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(x + 32, y + 32));<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 1) gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;(x + 32, y + 32));<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 2) gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;(x + 32, y + 32));<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 100) gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(x + 90, y + 32)); // ボスは横幅180pxだから90px右に生成<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 0) gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3(x + 32, y + 32)));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 1) gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;(Vector3(x + 32, y + 32)));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 2) gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;(Vector3(x + 32, y + 32)));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (id == 100) gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(x + 90, y + 32))); // ボスは横幅180pxだから90px右に生成<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else assert("まだ追加してない敵IDがマップCSVにありました。"=="");<br>
         &nbsp;&nbsp; &nbsp;}</em><br>
       };<br>
@@ -8709,19 +8694,17 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; /// &lt;summary&gt;<br>
       &nbsp;&nbsp;&nbsp; /// 円と円が重なっているかを調べる<br>
       &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;param name="x1"&gt;円1の中心x&lt;/param&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;param name="y1"&gt;円1の中心y&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="pos1"&gt;円1の中心&lt;/param&gt;<br>
       &nbsp;&nbsp;&nbsp; /// &lt;param name="radius1"&gt;円1の半径&lt;/param&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;param name="x2"&gt;円2の中心x&lt;/param&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;param name="y2"&gt;円2の中心y&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="pos2"&gt;円2の中心&lt;/param&gt;<br>
       &nbsp;&nbsp;&nbsp; /// &lt;param name="radius2"&gt;円2の半径&lt;/param&gt;<br>
       &nbsp;&nbsp;&nbsp; /// &lt;returns&gt;重なっていればtrue、重なっていなければfalseを返却する&lt;/returns&gt;<br>
       &nbsp;&nbsp;&nbsp; static bool CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float x1, float y1, float radius1,<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float x2, float y2, float radius2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 pos1, float radius1,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 pos2, float radius2)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt; ((radius1 + radius2) * (radius1 + radius2));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((pos1 - pos2).sqrMagnitude()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt; (radius1 + radius2) * (radius1 + radius2));<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp; &nbsp;<em>/// &lt;summary&gt;<br>
