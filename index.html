@@ -2393,7 +2393,7 @@
     基本的にはX,Y,Zを上記コードでVector3型で一つの定義にまとめることができます。<br>
     <br>
     次に少し便利にすべく少しトリッキーですが、共用体を使ってx,y,zをstd::array型でxyzとしてまとめて扱えるようにしてみましょう<br>
-    <p><code>Vector3.h</code>を作成します(拡張も見越して3DのZ座標も導入しておきます)</p>
+    <p><code>Vector3.h</code>を書き換えます。</p>
     <p class="source">#ifndef VECTOR3_H_<br>
       #define VECTOR3_H_<br>
       <br>
@@ -2414,11 +2414,11 @@
       <br>
       &nbsp;&nbsp;union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
 		  &nbsp;&nbsp;&nbsp;&nbsp;struct { // [参考ビットサイズ] https://marycore.jp/prog/c-lang/data-type-ranges-and-bit-byte-sizes/<br>
-			&nbsp;&nbsp;&nbsp;&nbsp;float x;<br>
-			&nbsp;&nbsp;&nbsp;&nbsp;float y;<br>
-			&nbsp;&nbsp;&nbsp;&nbsp;float z;<br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float x;// x座標<br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float y;// y座標<br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float z;// z座標<br>
 		  &nbsp;&nbsp;&nbsp;&nbsp;}; //[匿名共用体とは] https://zenn.dev/block/articles/beda29f11f05afc147ef<br>
-		  &nbsp;&nbsp;std::array<float, 3> xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
+		  &nbsp;&nbsp;&nbsp;&nbsp;std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
 	    &nbsp;&nbsp;}; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる</em><br>
 
       &nbsp;&nbsp;Vector3() = default; // デフォルト初期化コンストラクタ<br>
@@ -2434,6 +2434,296 @@
       <br>
       &nbsp;&nbsp;}<br>
       <br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p><br>
+	  
+    <h2>ベクトルの計算</h2>
+    次にベクトル同士を足したり引いたり割ったりできるように、ベクトルの計算関数を追加しましょう。<br>
+    <p><code>Vector3.h</code>を書き換えます。</p>
+    <p class="source">#ifndef VECTOR3_H_<br>
+      #define VECTOR3_H_<br>
+      <br>
+      #include &lt;array&gt; //vector配列と基本同じだが【有限】の個数である違いがあるxyzなど3つ固定の個数ならstd::vectorよりstd::array型がよい<br>
+      #include &lt;cmath&gt;<br>
+      #include &lt;limits&gt; // 無限大などをstd::numeric_limits&lt;float&gt;::infinity()で取得<br>
+      <br>
+      //★【UnityのVector演算コード】<br>
+      // https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+      <br>
+      // 3変数x,y,zを持つ構造体。3つの数字をまとめて扱うならXYZ座標以外にも使えるよ。x,y,z別々に足したり引いたり面倒でしょう。<br>
+      struct Vector3<br>
+      {<br>
+      // struct型はpublic:がなくてもデフォルトがpublic:&nbsp;&nbsp;private:を書けばプライベートにもできる<br>
+      &nbsp;&nbsp;<em>//float x = 0; // x座標<br>
+      &nbsp;&nbsp;//float y = 0; // y座標<br>
+      &nbsp;&nbsp;//float z = 0; // z座標&nbsp;3つの定義をunionで配列xyzと共用することでxyz[1]=5.5f;とすると yも5.5となる【運命共用体】(メモリ上は同じ位置になる)<br>
+      <br>
+      &nbsp;&nbsp;union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+		  &nbsp;&nbsp;&nbsp;&nbsp;struct { // [参考ビットサイズ] https://marycore.jp/prog/c-lang/data-type-ranges-and-bit-byte-sizes/<br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float x;// x座標<br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float y;// y座標<br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float z;// z座標<br>
+		  &nbsp;&nbsp;&nbsp;&nbsp;}; //[匿名共用体とは] https://zenn.dev/block/articles/beda29f11f05afc147ef<br>
+		  &nbsp;&nbsp;&nbsp;&nbsp;std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
+	    &nbsp;&nbsp;}; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる</em><br>
+
+      &nbsp;&nbsp;Vector3() = default; // デフォルト初期化コンストラクタ<br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;Vector3(float x, float y, float z = 0.f) //初期化 z = 0.fでzのデフォルト値があるので2Dとしても使える<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;xyz = { x,y,z };// たった1行で書ける</em><br>
+      &nbsp;&nbsp;} <br>
+      &nbsp;&nbsp;//仮想デストラクタ<br>
+      &nbsp;&nbsp;virtual ~Vector3()<br>
+      &nbsp;&nbsp;{<br>
+      <br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// Unityのstatic変数を参考に https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
+      &nbsp;&nbsp;static const Vector3 zero;// = { 0.f,  0.f,  0.f };<br>
+      &nbsp;&nbsp;static const Vector3 one; // = { 1.f,  1.f,  1.f };<br>
+      &nbsp;&nbsp;static const Vector3 forward;// = { 0.f,  0.f,  1.f };<br>
+      &nbsp;&nbsp;static const Vector3 back;   // = { 0.f,  0.f, -1.f };<br>
+      &nbsp;&nbsp;static const Vector3 up;  // = { 0.f,  1.f,  0.f };<br>
+      &nbsp;&nbsp;static const Vector3 down;// = { 0.f, -1.f,  0.f };<br>
+      &nbsp;&nbsp;static const Vector3 left; // = {-1.f, 0.f,  0.f };<br>
+      &nbsp;&nbsp;static const Vector3 right;// = { 1.f, 0.f,  0.f };<br>
+      &nbsp;&nbsp;//[負の値の最小値] https://stackoverflow.com/questions/20016600/negative-infinity<br>
+      &nbsp;&nbsp;static const Vector3 negativeInfinity;<br>
+      &nbsp;&nbsp;//[極大値]https://cpprefjp.github.io/reference/limits/numeric_limits/lowest.html<br>
+      &nbsp;&nbsp;static const Vector3 positiveInfinity;<br>
+<br>
+<br>
+      &nbsp;&nbsp;// 2つのベクトルの内積<br>
+      &nbsp;&nbsp;static float dot(const Vector3& leftVec, const Vector3& rightVec)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return leftVec.x * rightVec.x + leftVec.y * rightVec.y + leftVec.z * rightVec.z; //普通にx同士,y同士,z同士掛けるだけ<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// 2つのベクトルの外積<br>
+      &nbsp;&nbsp;static Vector3 cross(const Vector3& leftVec, const Vector3& rightVec)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return Vector3{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;leftVec.y * rightVec.z - leftVec.z * rightVec.y,  // x = 左y * 右z - 左z * 右y<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;leftVec.z * rightVec.x - leftVec.x * rightVec.z,  // y = 左z * 右x - 左x * 右z<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;leftVec.x * rightVec.y - leftVec.y * rightVec.x };// z = 左x * 右y - 左y * 右x //行列独特の特殊な掛け方<br>
+      &nbsp;&nbsp;}<br>
+<br>
+<br>
+      &nbsp;&nbsp;// ベクトルの 2 乗の長さを返します(平方根しないぶん計算速い)(スタティック版)<br>
+      &nbsp;&nbsp;static float _sqrMagnitude(const Vector3& _vec)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return _vec.x * _vec.x + _vec.y * _vec.y + _vec.z * _vec.z; // x*x + y*y + z*z<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// ベクトルの長さ(0から点(x,y,z)までの距離)(スタティック版)<br>
+      &nbsp;&nbsp;static float _magnitude(const Vector3& _vec)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return std::sqrt(_sqrMagnitude(_vec)); // √x*x + y*y + z*z<br>
+      &nbsp;&nbsp;}<br>
+<br>
+<br>
+      &nbsp;&nbsp;// destArrayにデータを保管しておく<br>
+      &nbsp;&nbsp;Vector3& copyToArray(std::array&lt;float, 3&gt;& destArray)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;destArray = this-&gt;xyz;//配列としてコピー<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;// sourceArray配列からVector3データを生成<br>
+      &nbsp;&nbsp;Vector3 fromArray(std::array&lt;float, 3&gt;& sourceArray)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return Vector3{ sourceArray[0], sourceArray[1], sourceArray[2] }; //配列から初期化 <br>
+      &nbsp;&nbsp;}<br>
+<br>
+<br>
+      &nbsp;&nbsp;// ベクトルの長さ(0から点(x,y,z)までの距離)<br>
+      &nbsp;&nbsp;float magnitude()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return std::sqrt(x * x + y * y + z * z); // √(x*x + y*y + z*z)<br>
+      &nbsp;&nbsp;};<br>
+<br>
+      &nbsp;&nbsp;// ベクトルの 2 乗の長さを返します(平方根しないぶん計算速い)<br>
+      &nbsp;&nbsp;float sqrMagnitude()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return x * x + y * y + z * z; // x*x + y*y + z*z <br>
+      &nbsp;&nbsp;};<br>
+<br>
+<br>
+      &nbsp;&nbsp;// 正規化したベクトルを返す<br>
+      &nbsp;&nbsp;Vector3 normalized()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float mag = magnitude();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (mag &lt; 0.00001f) // ほぼ0ベクトルか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return Vector3{ x / mag, y / mag, z / mag }; // x / |x|, y / |y|, z / |z|<br>
+      &nbsp;&nbsp;}<br>
+<br>
+<br>
+<br>
+      &nbsp;&nbsp;/*-----　演算子オーバーロード　-----*/<br>
+<br>
+      &nbsp;&nbsp;// 逆ベクトル<br>
+      &nbsp;&nbsp;Vector3 operator - (const Vector3& _this)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return Vector3{ -_this.x, -_this.y, -_this.z };<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// Vector同士の足し算 x,y,z個別に足し合わせる<br>
+      &nbsp;&nbsp;Vector3 operator + (const Vector3 add_v3) const<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Vector3 v3; //★*thisじゃダメな理由 a = vec1 + vec2のとき vec1の数値が書き変わったらあかんから<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.x = this-&gt;x + add_v3.x; //[コレはダメ] this->x = this->x + add_v3.x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.y = this-&gt;y + add_v3.y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.z = this-&gt;z + add_v3.z;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return v3;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// Vector同士の引き算 x,y,z個別に引き合わせる<br>
+      &nbsp;&nbsp;Vector3 operator - (const Vector3 minus_v3) const<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Vector3 v3;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.x = this-&gt;x - minus_v3.x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.y = this-&gt;y - minus_v3.y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.z = this-&gt;z - minus_v3.z;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return v3;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// Vector同士の掛け算 x,y,z個別に掛け合わせる<br>
+      &nbsp;&nbsp;Vector3 operator * (float multiply_num) const<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Vector3 v3;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.x = this-&gt;x * multiply_num;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.y = this-&gt;y * multiply_num;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.z = this-&gt;z * multiply_num;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return v3;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// Vector同士の割り算 x,y,z個別に割り合わせる<br>
+      &nbsp;&nbsp;// 0.fでは割れないようにしてある<br>
+      &nbsp;&nbsp;Vector3 operator / (float divide_num) const<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (divide_num == 0.0f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Vector3 v3;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.x = this-&gt;x / divide_num;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.y = this-&gt;y / divide_num;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v3.z = this-&gt;z / divide_num;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return v3;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;Vector3& operator += (const Vector3 add_v3)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x += add_v3.x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y += add_v3.y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z += add_v3.z;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return *this; //*thisを返すことで v1 + v2 + v3見たく数珠繋ぎできる<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;Vector3& operator -= (const Vector3 minus_v3)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x -= minus_v3.x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y -= minus_v3.y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z -= minus_v3.z;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;Vector3& operator *= (float multiply_num)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x *= multiply_num;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y *= multiply_num;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z *= multiply_num;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// 0.fでは割れないようにしてある<br>
+      &nbsp;&nbsp;Vector3& operator /= (float divide_num)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (divide_num == 0.0f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x /= divide_num;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y /= divide_num;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z /= divide_num;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// 代入演算子 x,y,zを全部 change_numに変える<br>
+      &nbsp;&nbsp;Vector3& operator = (float change_num)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = change_num;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = change_num;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = change_num;<br>
+<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// 一致演算子 x,y,zを全部一致するか 一つでも違えばfalse
+      &nbsp;&nbsp;bool operator == (const Vector3& v3_other)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (this-&gt;x != v3_other.x) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (this-&gt;y != v3_other.y) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (this-&gt;z != v3_other.z) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// 不一致演算子 x,y,zを全部不一致か 一つでも同じならfalse<br>
+      &nbsp;&nbsp;bool operator != (const Vector3& v3_other)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (this-&gt;x == v3_other.x) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (this-&gt;y == v3_other.y) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (this-&gt;z == v3_other.z) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;/*---- 以下 DXライブラリ向けにVector3とDX版Vectorの変換方法を用意  ---------------*/<br>
+<br>
+// DXlibを#includeしていればDX_LIB_Hも定義済みなので下記関数も定義される VECTORの定義はDXライブラリ版のVector3<br>
+#ifdef DX_LIB_H<br>
+      &nbsp;&nbsp;// Vector3からDxLibのVECTORへの変換<br>
+      &nbsp;&nbsp;VECTOR Vec3ToVec()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;VECTOR Result;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Result.x = this-&gt;x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Result.y = this-&gt;y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Result.z = this-&gt;z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return Result;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// 左辺値がDXのVECTOR型のときの=代入対応<br>
+      &nbsp;&nbsp;inline operator VECTOR() const<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;VECTOR Result;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Result.x = this-&gt;x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Result.y = this-&gt;y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Result.z = this-&gt;z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return Result;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// 右辺値がDXのVECTOR型のときの=代入対応
+      &nbsp;&nbsp;Vector3 operator=(const VECTOR& other)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = other.x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = other.y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = other.z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
+      &nbsp;&nbsp;}<br>
+#endif<br>
       <br>
       };<br>
       <br>
