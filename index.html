@@ -2755,6 +2755,76 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 </p>
 <br>
 	プレイヤや弾のクラスのx,yをVector3型に置きかえてみます<br>
+	  <p><code>PlayerBullet.h</code>のx,yをVector3型におきかえます。</p>
+    <p class="source">#ifndef PLAYERBULLET_H_<br>
+      #define PLAYERBULLET_H_<br>
+      <br>
+      #include &lt;cmath&gt;&nbsp;//sin,cosを使うのに必要<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Image.h"<br>
+      #include "Screen.h"<br>
+      <br>
+      // 自機弾クラス<br>
+      class PlayerBullet<br>
+      {<br>
+      public:<br>
+	    <br>
+      &nbsp;&nbsp;<em>Vector3 position; // xyz座標</em><br>
+      &nbsp;&nbsp;<em>Vector3 v; // xyz方向移動速度</em><br>
+	    <br>
+      &nbsp;&nbsp;const float Speed = 25; // 移動速度<br>
+      &nbsp;&nbsp;const int VisibleRadius = 16; // 見た目の半径<br>
+      &nbsp;&nbsp;<br>
+      <br>
+      <br> 
+      &nbsp;<u>float x; // x座標<br>
+      &nbsp;float y; // y座標</u><br>
+      <br>
+      &nbsp;&nbsp;bool isDead = false; // 死亡フラグ<br>
+      <br>
+      &nbsp;&nbsp;<u>float vx; // x方向移動速度<br>
+      &nbsp;&nbsp;float vy; // y方向移動速度</u><br>
+      &nbsp;&nbsp;float angle; // 移動角度<br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;PlayerBullet(<em>Vector3 pos</em>, float angle) : position { pos }<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>this-&gt;x = x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;angle = angle;</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>v = Vector3((float)std::cos(angle) * Speed,(float)std::sin(angle) * Speed, 0);</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>vx = (float)std::cos(angle) * Speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * Speed;</u><br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 更新処理<br>
+      &nbsp;&nbsp;void Update()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>position += v;</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>x += vx;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;y += vy;</u><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 画面外に出たら、死亡フラグを立てる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (<em>position.x + VisibleRadius &lt; 0 || position.x - VisibleRadius &gt; Screen::Width || <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position.y + VisibleRadius &lt; 0 || position.y - VisibleRadius &gt; Screen::Height</em>)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;void Draw()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(<em>position.x, position.y</em>, 1, angle, Image::playerBullet,TRUE);<br>
+      &nbsp;&nbsp;}<br>
+      };<br>
+      <br>
+      <br>
+      #endif</p>
+    <br>
       <code>Player.h</code>の内容を次のようにします：<br>
     <p class="source">#ifndef PLAYER_H_<br>
       #define PLAYER_H_<br>
