@@ -606,21 +606,21 @@
       「Input.h」という名前でヘッダファイルを作り、クラスを定義します。<br>
       <br>
       <code>Input.h</code>に以下を実装</p>
-    <p class="source"><em>#ifndef INPUT_H_<br>
+    <p class="source">#ifndef INPUT_H_<br>
         #define INPUT_H_<br>
         <br>
-        #include "DxLib.h"</em><br>
+        #include "DxLib.h"<br>
       <br>
       <br>
       // 入力クラス<br>
       class Input<br>
       {<br>
-      <em>public:</em><br>
-      &nbsp;<em>&nbsp;</em>static int prevState; // 1フレーム前の状態<br>
-      &nbsp;<em>&nbsp;</em>static int currentState; // 現在の状態<br>
+      public:<br>
+      &nbsp;&nbsp;static int prevState; // 1フレーム前の状態<br>
+      &nbsp;&nbsp;static int currentState; // 現在の状態<br>
       <br>
       &nbsp;&nbsp;// 初期化。最初に1回だけ呼んでください。<br>
-      &nbsp;<em>&nbsp;</em>static void Init()<br>
+      &nbsp;&nbsp;static void Init()<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;prevState = 0;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;currentState = 0;<br>
@@ -628,11 +628,11 @@
       <br>
       &nbsp;&nbsp;// 最新の入力状況に更新する処理。<br>
       &nbsp;&nbsp;// 毎フレームの最初に（ゲームの処理より先に）呼んでください。<br>
-      &nbsp;<em>&nbsp;</em>static void Update()<br>
+      &nbsp;&nbsp;static void Update()<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;prevState = currentState;<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;currentState = <em>&nbsp;</em>GetJoypadInputState(<em>&nbsp;</em>DX_INPUT_KEY_PAD1);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;currentState = &nbsp;GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// ボタンが押されているか？<br>
@@ -643,14 +643,14 @@
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// ボタンが押された瞬間か？<br>
-      &nbsp;<em>&nbsp;</em>static bool GetButtonDown(int buttonId)<br>
+      &nbsp;&nbsp;static bool GetButtonDown(int buttonId)<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 今は押されていて、かつ1フレーム前は押されていない場合はtrueを返却<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return ((currentState &amp; buttonId) &amp; ~(prevState &amp; buttonId)) != 0;<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// ボタンが離された瞬間か？<br>
-      &nbsp;<em>&nbsp;</em>static bool GetButtonUp(int buttonId)<br>
+      &nbsp;&nbsp;static bool GetButtonUp(int buttonId)<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 1フレーム前は押されていて、かつ今は押されていない場合はtrueを返却<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return ((prevState &amp; buttonId) &amp; ~(currentState &amp; buttonId)) != 0;<br>
