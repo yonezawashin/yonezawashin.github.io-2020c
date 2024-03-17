@@ -2346,6 +2346,50 @@
       #endif<br>
     </p>
     <br>
+
+    <h1><a id="mozTocId0008" class="mozTocH1"></a>ベクトル構造体でX,Y,ZをVector3型でまとめて管理する</h1>
+    <h2>ベクトルの基本</h2>
+    <p>現状ではX,Yは別々の変数として定義していますが、これを数学のベクトルを扱うVector3型を定義してそちらに置き換えましょう(std::vectorとはつづりが同じだけどまったく別のもの)<br>
+
+    <p><code>Vector3.h</code>を作成します(拡張も見越して3DのZ座標も導入しておきます)</p>
+    <p class="source">#ifndef VECTOR3_H_<br>
+      #define VECTOR3_H_<br>
+      <br>
+      #include &lt;array&gt; //vector配列と基本同じだが【有限】の個数である違いがあるxyzなど3つ固定の個数ならstd::vectorよりstd::array型がよい<br>
+      #include &lt;cmath&gt;<br>
+      #include &lt;limits&gt; // 無限大などをstd::numeric_limits&lt;float&gt;::infinity()で取得<br>
+      <br>
+      //★【UnityのVector演算コード】https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+      <br>
+      // 3変数x,y,zを持つ構造体。3つの数字をまとめて扱うならXYZ座標以外にも使えるよ。x,y,z別々に足したり引いたり面倒でしょう。<br>
+      struct Vector3<br>
+      {<br>
+      // struct型はpublic:がなくてもデフォルトがpublic:<br> private:にもできる
+      &nbsp;&nbsp;float x = 0; // x座標<br>
+      &nbsp;&nbsp;float y = 0; // y座標<br>
+      &nbsp;&nbsp;float z = 0; //【3D】z座標<br>
+      <br>
+      &nbsp;&nbsp;Vector3() = default; // デフォルト初期化コンストラクタ<br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;Vector3(float x, float y, float z = 0.f) //初期化 z = 0.fでzのデフォルト値があるので2Dとしても使える<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;<br>
+      &nbsp;&nbsp;} <br>
+      &nbsp;&nbsp;//★仮想デストラクタ【忘れるとメモリがヤバいダメ絶対】<br>
+      &nbsp;&nbsp;//【注意！】ベースの基底では必ず定義しないとstringなどが浪費され極悪なメモリ被害に発展<br>
+      &nbsp;&nbsp;virtual ~Vector3()<br>
+      &nbsp;&nbsp;{<br>
+      <br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
     
     <h1><a id="mozTocId0008" class="mozTocH1"></a>敵の作成【共通のGameObjectを継承する】</h1>
     <h2>Enemyクラスを作成するにあたってアクションゲームのGameObjectを導入する</h2>
