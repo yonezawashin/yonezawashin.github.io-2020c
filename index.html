@@ -9,7 +9,7 @@
     </style>
   </head>
   <body>
-    <p class="title">[C++移植]シューティングゲーム 1</p>
+    <p class="title">[C++]シューティングゲーム 1</p>
     <br>
     <ol id="mozToc">
       <!--mozToc h1 1-->
@@ -541,8 +541,8 @@
     <p><br>
     </p>
     <h1><a id="mozTocId0006" class="mozTocH1">自機の作成</a></h1>
-    <h2>プレイヤを操作するには便利クラスInputクラスの移植が必須！</h2>
-    <p>Inputクラスを作成しましょう。InputクラスをC#から移植するときの落とし穴に注意。</p>
+    <h2>プレイヤを操作するには便利クラスInputクラスが必須！</h2>
+    <p>Inputクラスを作成しましょう。</p>
     <ul>
       <li>static int のstaticタイプの変数は.hだけではシンボリックエラーになるのでこのためだけに最低限.cppファイルを作成する必要がある</li>
     </ul>
@@ -550,7 +550,7 @@
     <p>ソリューションエクスプローラーからプロジェクトを右クリックし、追加＞ヘッダファイル<br>
       「Input.h」という名前でヘッダファイルを作り、クラスを定義します。<br>
       <br>
-      <code>Input.h</code>にC#のInput.csをコピーし、以下のC++移植の修正をします：</p>
+      <code>Input.h</code>に以下を実装</p>
     <p class="source"><em>#ifndef INPUT_H_<br>
         #define INPUT_H_<br>
         <br>
@@ -2701,7 +2701,7 @@
     <br>
     <br>
     <a id="mozTocId2000" class="mozTocH1"></a>
-    <p class="title">[C++移植]シューティングゲーム 2</p>
+    <p class="title">[C++]シューティングゲーム 2</p>
     <br>
     <ol id="mozToc">
       <!--mozToc h1 1-->
@@ -2715,7 +2715,7 @@
       <br>
       <p>次のテキスト3はこちら。</p>
       <br>
-      <a href="#mozTocId3000">[C++移植]シューティングゲーム 3</a><br>
+      <a href="#mozTocId3000">[C++]シューティングゲーム 3</a><br>
     </ol>
     <h1><a id="mozTocId2001" class="mozTocH1"></a>敵と自機弾の当たり判定の作成</h1>
     <p>当たり判定を移植してゆきます。</p>
@@ -4002,7 +4002,7 @@
     <p> <img src="image/zako3_selfbomb.gif" alt=""></p>
     <br>
     <a id="mozTocId3000" class="mozTocH1"></a>
-    <p class="title">[C++移植]シューティングゲーム 3</p>
+    <p class="title">[C++]シューティングゲーム 3</p>
     <br>
     <ol id="mozToc">
       <!--mozToc h1 1-->
@@ -4016,7 +4016,7 @@
       <br>
       <p>次のテキスト4はこちら。</p>
       <br>
-      <a href="#mozTocId4000">[C++移植]シューティングゲーム 4</a><br>
+      <a href="#mozTocId4000">[C++]シューティングゲーム 4</a><br>
     </ol>
     <h1><a id="mozTocId3001" class="mozTocH1"></a>自機と敵弾の当たり判定</h1>
     <p>自機と敵弾がぶつかったら、自機がダメージを受けるようにしましょう。</p>
@@ -4951,7 +4951,7 @@
       (以下略).................</p>
     <br>
     <a id="mozTocId4000" class="mozTocH1"></a>
-    <p class="title">[C++移植]シューティングゲーム 4</p>
+    <p class="title">[C++]シューティングゲーム 4</p>
     <br>
     <ol id="mozToc">
       <!--mozToc h1 1-->
@@ -4969,7 +4969,7 @@
       <br>
       <p>次のテキスト5はこちら。</p>
       <br>
-      <a href="#mozTocId5000">[C++移植]シューティングゲーム 5【応用1】</a><br>
+      <a href="#mozTocId5000">[C++]シューティングゲーム 5【応用1】</a><br>
     </ol>
     <h1><a id="mozTocId4001" class="mozTocH1"></a>シーンを分ける(循環インクルードを避けメモリも管理するには?)</h1>
     <p>タイトルやプレイ画面やゲームオーバーのシーンを分けましょう。<br>
@@ -8347,7 +8347,7 @@
       気になった人は試してみてくださいね。<br>
     </p>
     <a id="mozTocId5000" class="mozTocH1"></a>
-    <p class="title">[C++移植]シューティングゲーム 5【応用1】</p>
+    <p class="title">[C++]シューティングゲーム 5【応用1】</p>
     <br>
     <ol id="mozToc">
       <!--mozToc h1 1-->
