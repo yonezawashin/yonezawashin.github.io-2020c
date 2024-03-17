@@ -2678,7 +2678,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
       &nbsp;&nbsp;}<br>
 <br>
-      &nbsp;&nbsp;// 一致演算子 x,y,zを全部一致するか 一つでも違えばfalse
+      &nbsp;&nbsp;// 一致演算子 x,y,zを全部一致するか 一つでも違えばfalse<br>
       &nbsp;&nbsp;bool operator == (const Vector3& v3_other)<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (this-&gt;x != v3_other.x) return false;<br>
@@ -2777,18 +2777,16 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float y; // y座標<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float z; // z座標<br>
       &nbsp;&nbsp;&nbsp;&nbsp;};// 匿名共用体<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;Vector3 position; // x座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Vector3 position; // xyz座標<br>
       &nbsp;&nbsp;};</em><br>
       <br>
       &nbsp;const float MoveSpeed = 6; // 移動速度<br>
-	    
-      <br>
-      &nbsp;&nbsp;<em>//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
-        &nbsp;&nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る</em><br>
-      <br>
-<br>      
+      <br> 
       &nbsp;<u>float x; // x座標<br>
       &nbsp;float y; // y座標</u><br>
+      <br>
+      &nbsp;&nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+        &nbsp;&nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
       &nbsp;&nbsp;<em>// pos : 初期位置</em><br>
@@ -2810,7 +2808,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     <p><code>Player.cpp</code>もVector3での処理に書き換えます</p>
     <p class="source"> #include&nbsp;"Player.h"<br>
       <br>
-      <u>#include "Game.h"</u><br>
       #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★弾を生成して【使う処理があるのでインクルード必要】<br>
       <br>
       // 更新処理【書き移す際にはPlayer::という形で::所属が必要になります】<br>
@@ -2850,13 +2847,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;<u>x += vx;<br>
       &nbsp;&nbsp;y += vy;</u><br>
       <br>
-      &nbsp;&nbsp;// ボタン押下で自機弾を発射<br>
-      &nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
-      &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;【C#版→】game-&gt;playerBullets.Add(new PlayerBullet(x, y));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;C++ではAddがemplace_backに↓&nbsp;newがmake_shared↓に<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>gm.</em>playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(x, y));<br>
-      &nbsp;&nbsp;}<br>
+	    <br>
+      .... (中略)
+	    <br>
+	    <br>
       }<br>
       <br>
       // 描画処理<br>
