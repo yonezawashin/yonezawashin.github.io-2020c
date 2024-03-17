@@ -2769,13 +2769,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       {<br>
       public:<br>
       <br>
-      &nbsp;&nbsp;union&nbsp;{<br>
+      &nbsp;&nbsp;<em>union&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;struct {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float x; // x座標<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float y; // y座標<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float z; // z座標<br>
       &nbsp;&nbsp;&nbsp;&nbsp;};// 匿名共用体<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>Vector3 position; // x座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Vector3 position; // x座標<br>
       };</em><br>
       <br>
       &nbsp;const float MoveSpeed = 6; // 移動速度<br>
