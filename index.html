@@ -4315,6 +4315,7 @@
     <h1><a id="mozTocId3002" class="mozTocH1"></a>爆発エフェクトの作成(分割画像DivImage型の定義)</h1>
     <h2>分割画像DivImage型でデータ内部に分割画像の分割XY数や画像サイズ、画像数も覚えておく</h2>
     <p><code>DivImage.h</code>を新規作成して、カスタムしたデータタイプ【DivImage型】を定義して縦2×横8の分割された爆発画像を読込みましょう。</p>
+    爆発画像は <a href="https://twitter.com/jetyam/status/887664013936541696">https://twitter.com/jetyam/status/887664013936541696</a>の縦2×横8の64pixの画像を想定<br>
     <p class="source">#ifndef DIVIMAGE_H_<br>
       #define DIVIMAGE_H_<br>
       <br>
@@ -4443,6 +4444,9 @@
       int Image::zako3{-1};<br>
       <em>// ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定</em><br>
       <em>DivImage Image::explosion{ 8, 2, 64, 64 };</em><br>
+      //↑どのような画像を使うかで変わる<br>
+      // 例えば https://pipoya.net/sozai/assets/effects/effect-event-1/ のイベントエフェクト.zipの
+      // 1800×180の縦一列のみなら DivImage Image::explosion{ 10, 1, 180, 180 };となる
       <br>
       void Image::Load()<br>
       {<br>
