@@ -4081,9 +4081,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angle;<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 角度からx方向の移動速度を算出<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vx = (float)std::cos(angle) * speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.x = (float)std::cos(angle) * speed;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 角度からy方向の移動速度を算出<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.y = (float)std::sin(angle) * speed;<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
