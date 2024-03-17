@@ -2779,6 +2779,11 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       };</em><br>
       <br>
       &nbsp;const float MoveSpeed = 6; // 移動速度<br>
+	    
+      <br>
+      &nbsp;&nbsp;<em>//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+        &nbsp;&nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る</em><br>
+      <br>
 <br>      
       &nbsp;<u>float x; // x座標<br>
       &nbsp;float y; // y座標</u><br>
@@ -2791,52 +2796,74 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;</u><br>
       &nbsp;&nbsp;}<br>
       <br>
-      &nbsp;&nbsp;// 更新処理<br>
-      &nbsp;void Update()<br>
-      &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<u>float vx = 0; // x方向移動速度<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;float vy = 0; // y方向移動速度</u><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>Vector3 v{0,0,0}; // xyz方向移動速度</em><br>
+      &nbsp;&nbsp;// 更新処理の関数定義<br>
+      &nbsp;&nbsp;void Update();<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>v.x</em> = -MoveSpeed; // 左<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_RIGHT))<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>v.x</em> = MoveSpeed; // 右<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>v.y</em> = -MoveSpeed; // 上<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>v.y</em> = MoveSpeed; // 下<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;// 描画処理の関数定義<br>
+      &nbsp;&nbsp;void Draw();<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// 斜め移動も同じ速度になるように調整<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;if (<em>v.magnitude() > 0</em>)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<u>vx /= MyMath::Sqrt2;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy /= MyMath::Sqrt2;</u><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>v /= MyMath::Sqrt2;</em><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// 実際に位置を動かす<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>position += v;</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<u>x += vx;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;y += vy;</u><br>
-      &nbsp;&nbsp;}<br>
-      <br>
-      &nbsp;&nbsp;// 描画処理<br>
-      &nbsp;void Draw()<br>
-      &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(<em>position.x, position.y</em>, 1, 0, Image::player, TRUE);<br>
-      &nbsp;&nbsp;}<br>
       };<br>
       <br>
       #endif</p>
-    
+    <p><code>Player.cpp</code>もVector3での処理に書き換えます</p>
+    <p class="source"> #include&nbsp;"Player.h"<br>
+      <br>
+      <u>#include "Game.h"</u><br>
+      #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★弾を生成して【使う処理があるのでインクルード必要】<br>
+      <br>
+      // 更新処理【書き移す際にはPlayer::という形で::所属が必要になります】<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;<u>float vx = 0; // x方向移動速度<br>
+      &nbsp;&nbsp;float vy = 0; // y方向移動速度</u><br>
+      &nbsp;&nbsp;<em>Vector3 v{0,0,0}; // xyz方向移動速度</em><br>
+      <br>
+      &nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>v.x</em> = -MoveSpeed; // 左<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>v.x</em> = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>v.y</em> = -MoveSpeed; // 上<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>v.y</em> = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 斜め移動も同じ速度になるように調整<br>
+      &nbsp;&nbsp;if (<em>v.magnitude() > 0</em>)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>v /= MyMath::Sqrt2;</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>vx /= MyMath::Sqrt2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vy /= MyMath::Sqrt2;</u><br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 実際に位置を動かす<br>
+      &nbsp;&nbsp;<em>position += v;</em><br>
+      &nbsp;&nbsp;<u>x += vx;<br>
+      &nbsp;&nbsp;y += vy;</u><br>
+      <br>
+      &nbsp;&nbsp;// ボタン押下で自機弾を発射<br>
+      &nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;【C#版→】game-&gt;playerBullets.Add(new PlayerBullet(x, y));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;C++ではAddがemplace_backに↓&nbsp;newがmake_shared↓に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>gm.</em>playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(x, y));<br>
+      &nbsp;&nbsp;}<br>
+      }<br>
+      <br>
+      // 描画処理<br>
+      void Player::Draw()<br>
+      {<br>
+      &nbsp;&nbsp;DrawRotaGraphF(<em>position.x, position.y</em>, 1, 0, Image::player, TRUE);<br>
+      }<br>
+      <br>
+    </p>
     <h1><a id="mozTocId0009" class="mozTocH1"></a>敵の作成【共通のGameObjectを継承する】</h1>
     <h2>Enemyクラスを作成するにあたってアクションゲームのGameObjectを導入する</h2>
     <p>前期はEnemyクラスを継承する形でZako0をつくりましたが<br>
