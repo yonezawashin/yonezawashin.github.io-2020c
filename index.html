@@ -2457,7 +2457,7 @@
       struct Vector3<br>
       {<br>
       // struct型はpublic:がなくてもデフォルトがpublic:&nbsp;&nbsp;private:を書けばプライベートにもできる<br>
-      &nbsp;&nbsp;<em>//float x = 0; // x座標<br>
+      &nbsp;&nbsp;//float x = 0; // x座標<br>
       &nbsp;&nbsp;//float y = 0; // y座標<br>
       &nbsp;&nbsp;//float z = 0; // z座標&nbsp;3つの定義をunionで配列xyzと共用することでxyz[1]=5.5f;とすると yも5.5となる【運命共用体】(メモリ上は同じ位置になる)<br>
       <br>
@@ -2468,7 +2468,7 @@
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float z;// z座標<br>
 		  &nbsp;&nbsp;&nbsp;&nbsp;}; //[匿名共用体とは] https://zenn.dev/block/articles/beda29f11f05afc147ef<br>
 		  &nbsp;&nbsp;&nbsp;&nbsp;std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
-	    &nbsp;&nbsp;}; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる</em><br>
+	    &nbsp;&nbsp;}; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる<br>
 
       &nbsp;&nbsp;Vector3() = default; // デフォルト初期化コンストラクタ<br>
       <br>
@@ -2483,7 +2483,7 @@
       <br>
       &nbsp;&nbsp;}<br>
       <br>
-      &nbsp;&nbsp;// Unityのstatic変数を参考に https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
+      &nbsp;&nbsp;<em>// Unityのstatic変数を参考に https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
       &nbsp;&nbsp;static const Vector3 zero;// = { 0.f,  0.f,  0.f };<br>
       &nbsp;&nbsp;static const Vector3 one; // = { 1.f,  1.f,  1.f };<br>
       &nbsp;&nbsp;static const Vector3 forward;// = { 0.f,  0.f,  1.f };<br>
@@ -2723,7 +2723,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = other.z;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
       &nbsp;&nbsp;}<br>
-#endif<br>
+#endif</em>em><br>
       <br>
       };<br>
       <br>
