@@ -2573,9 +2573,15 @@
       &nbsp;&nbsp;/*-----　演算子オーバーロード　-----*/<br>
 <br>
       &nbsp;&nbsp;// 逆ベクトル<br>
-      &nbsp;&nbsp;Vector3 operator - (const Vector3& _this)<br>
+      &nbsp;&nbsp;inline Vector3 operator - () const<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;return Vector3{ -_this.x, -_this.y, -_this.z };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return *this*-1;<br>
+      &nbsp;&nbsp;}<br>
+<br>
+      &nbsp;&nbsp;// Vectorをそのまま足し合わせる<br>
+      &nbsp;&nbsp;inline Vector3 operator + () const<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return *this;<br>
       &nbsp;&nbsp;}<br>
 <br>
       &nbsp;&nbsp;// Vector同士の足し算 x,y,z個別に足し合わせる<br>
