@@ -3722,6 +3722,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;Player(Vector3 pos) : GameObject( pos ) //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;}<br>
+	    <br>
+      &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ ※無いと【削除された関数を参照しようとしてますエラー】が出るかも
       <br>
       &nbsp;&nbsp;// 更新処理の関数定義<br>
       &nbsp;&nbsp;void Update();<br>
@@ -3946,6 +3948,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;}<br>
       <br>
+      &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ ※無いと【削除された関数を参照しようとしてますエラー】が出るかも
+	    <br>
       &nbsp;&nbsp;// 更新処理の関数定義<br>
       &nbsp;&nbsp;void Update();<br>
       <br>
