@@ -3043,9 +3043,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;//【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
       &nbsp;&nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
       <br>
-      &nbsp;&nbsp;float collisionRadius = 32; // 当たり判定の半径<br>
-      &nbsp;&nbsp;bool isDead = false; // 死亡フラグ<br>
-      &nbsp;&nbsp;float life = 1; // 耐久力<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
       &nbsp;&nbsp;Enemy(Vector3 pos) :  GameObject( pos ) // GameObjectをベースとして初期化処理を継承する<br>
@@ -3070,13 +3067,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 自機弾に当たったときの処理<br>
       &nbsp;&nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;life -= 1; // ライフを減らす<br>
-      <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// ライフが無くなったら、死亡<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (life &lt;= 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;}<br>
       };<br>
       <br>
@@ -3444,7 +3434,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp;&nbsp;&nbsp;Vector3 pos1, float radius1,<br>
         &nbsp;&nbsp;&nbsp;&nbsp;Vector3 pos2, float radius2)<br>
         &nbsp;&nbsp;{<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;return ((pos1 - pos2).magnitude()<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;return ((pos1 - pos2)sqrMagnitude()<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; (radius1 + radius2) * (radius1 + radius2));<br>
         &nbsp;&nbsp;}</em><br>
       }; // 【注意】セミコロン抜けで【宣言が必要ですエラー】<br>
