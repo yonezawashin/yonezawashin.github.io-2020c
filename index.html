@@ -4479,7 +4479,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 更新処理<br>
       &nbsp;&nbsp;void Update() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if(x &gt; Screen::Width - 200)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if(position.x &gt; Screen::Width - 200)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{ // スクリーンの端から200の位置で止まる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position.x -= 1; // とりあえず左へ移動<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -4555,6 +4555,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "Screen.h"<br>
       #include &lt;cmath&gt; // Sin Cosの計算に使う<br>
       #include "MyMath.h"<br>
+      #include "Vector3.h"<br>
       #include "MyRandom.h"<em></em><br>
       #include&nbsp;"EnemyBullet.h"&nbsp;// make_sharedなど【実際の弾を撃ち生成処理を行うのでインクルード必要】<br>
       <br>
@@ -4567,8 +4568,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;int life = 10; // 敵ライフ<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Zako3(float x, float y, float z=0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+      &nbsp;&nbsp;Zako3(Vector3 position) : Enemy( pos )<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako3";<br>
       &nbsp;&nbsp;}<br>
@@ -4576,9 +4576,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 更新処理<br>
       &nbsp;&nbsp;void Update() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if(x &gt; Screen::Width - 350)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if(position.x &gt; Screen::Width - 350)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{ // スクリーンの端から350の位置で止まる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position.x -= 1; // とりあえず左へ移動<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;else<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{ // スクリーン端から350の位置で自爆モードに入る<br>
@@ -4594,7 +4594,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for(int i=0; i &lt; 360; i = i+10) //【勉強】for文は1ずつプラスじゃなくてもよい<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(x, y, (180 + i) * MyMath::Deg2Rad, 6));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, (180 + i) * MyMath::Deg2Rad, 6));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // 爆発カウンタ==0で初めてisDead状態に<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -4616,7 +4616,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;//【勉強】条件【または||】は条件【かつ&amp;&amp;】の(life &lt;= 0 &amp;&amp; bombCounter &gt; 0)のちょうど逆条件！<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(life &gt; 0 || bombCounter &lt;= 0<br>
       &nbsp;&nbsp;&nbsp;&nbsp; || (bombCounter % 8 &lt; 4) ) //[点滅]パラパラ8枚の周期で余り4以下の時だけ描く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako3, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako3, TRUE);<br>
       &nbsp;&nbsp;}<br>
       };<br>
       <br>
@@ -4638,11 +4638,11 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;(中略)..................<br>
       <br>
       &nbsp;&nbsp;// とりあえず適当に敵を生成<br>
-      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;((float)600, (float)100));<br>
-      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;((float)1000, (float)500));<br>
-      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;((float)1000, (float)150));<br>
-      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;((float)1200, (float)250));<br>
-      &nbsp;&nbsp;<em>gm.enemies.emplace_back(std::make_shared&lt;Zako3&gt;((float)1300, (float)400));</em><br>
+      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3((float)600, (float)100)));<br>
+      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3((float)1000, (float)500)));<br>
+      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;(Vector3((float)1000, (float)150)));<br>
+      &nbsp;&nbsp;gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;(Vector3((float)1200, (float)250)));<br>
+      &nbsp;&nbsp;<em>gm.enemies.emplace_back(std::make_shared&lt;Zako3&gt;(Vector3((float)1300, (float)400)));</em><br>
       };<br>
       <br>
       void Game::Update()<br>
