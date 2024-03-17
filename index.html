@@ -2843,13 +2843,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;<u>x += vx;<br>
       &nbsp;&nbsp;y += vy;</u><br>
       <br>
-      &nbsp;&nbsp;// ボタン押下で自機弾を発射
-      &nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_1))
-      &nbsp;&nbsp;{
-      &nbsp;&nbsp;&nbsp;&nbsp;// C++ではAddがpush_backに↓ newがmake_shared↓に
-      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(<em>position.x, position.y</em>, 0));//右
-      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(<em>position.x, position.y</em>, -15 * MyMath::Deg2Rad));//右上
-      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(<em>position.x, position.y</em>, +15 * MyMath::Deg2Rad));//右下
+      &nbsp;&nbsp;// ボタン押下で自機弾を発射<br>
+      &nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// C++ではAddがpush_backに↓ newがmake_shared↓に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(<em>position.x, position.y</em>, 0));//右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(<em>position.x, position.y</em>, -15 * MyMath::Deg2Rad));//右上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(<em>position.x, position.y</em>, +15 * MyMath::Deg2Rad));//右下<br>
       &nbsp;&nbsp;}
 	    <br>
       }<br>
