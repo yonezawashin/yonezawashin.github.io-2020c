@@ -2359,12 +2359,13 @@
       #include &lt;cmath&gt;<br>
       #include &lt;limits&gt; // 無限大などをstd::numeric_limits&lt;float&gt;::infinity()で取得<br>
       <br>
-      //★【UnityのVector演算コード】https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+      //★【UnityのVector演算コード】<br>
+      // https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
       <br>
       // 3変数x,y,zを持つ構造体。3つの数字をまとめて扱うならXYZ座標以外にも使えるよ。x,y,z別々に足したり引いたり面倒でしょう。<br>
       struct Vector3<br>
       {<br>
-      // struct型はpublic:がなくてもデフォルトがpublic:<br> private:にもできる
+      // struct型はpublic:がなくてもデフォルトがpublic:&nbsp;&nbsp;private:を書けばプライベートにもできる<br>
       &nbsp;&nbsp;float x = 0; // x座標<br>
       &nbsp;&nbsp;float y = 0; // y座標<br>
       &nbsp;&nbsp;float z = 0; //【3D】z座標<br>
@@ -2378,8 +2379,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;<br>
       &nbsp;&nbsp;} <br>
-      &nbsp;&nbsp;//★仮想デストラクタ【忘れるとメモリがヤバいダメ絶対】<br>
-      &nbsp;&nbsp;//【注意！】ベースの基底では必ず定義しないとstringなどが浪費され極悪なメモリ被害に発展<br>
+      &nbsp;&nbsp;//仮想デストラクタ<br>
       &nbsp;&nbsp;virtual ~Vector3()<br>
       &nbsp;&nbsp;{<br>
       <br>
@@ -2389,7 +2389,9 @@
       };<br>
       <br>
       #endif<br>
-    </p>
+    </p><br>
+    基本的にはX,Y,Zを上記コードでまとめることができます。<br>
+    
     
     <h1><a id="mozTocId0008" class="mozTocH1"></a>敵の作成【共通のGameObjectを継承する】</h1>
     <h2>Enemyクラスを作成するにあたってアクションゲームのGameObjectを導入する</h2>
