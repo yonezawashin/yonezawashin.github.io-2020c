@@ -3200,13 +3200,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 更新処理<br>
       &nbsp;&nbsp;void Update() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;position.x -= 1; // とりあえず左へ移動<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 描画処理<br>
       &nbsp;&nbsp;void Draw() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako0, TRUE);<br>
       &nbsp;&nbsp;}<br>
       };<br>
       <br>
