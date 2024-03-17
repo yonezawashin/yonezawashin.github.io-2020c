@@ -3456,7 +3456,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       // 敵の基底クラス。<br>
       // 全ての敵は、このクラスを継承して作る。<br>
       // ★【勉強】abstract型はC++にない!!【純粋仮想関数】を使って作る<br>
-      // クラスの基本(C++11).pdfの17ページの下のほう(クラスの基本④)<br>
       class Enemy : public GameObject<br>
       {<br>
       public:<br>
@@ -3468,13 +3467,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;<em>float life = 1; // 耐久力</em><br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Enemy(float x, float y, float z=0)//★z=0をデフォルトとすることでx,yだけでも初期化でき2Dと3D両立<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: GameObject() // GameObjectをベースとして初期化処理を継承する<br>
+      &nbsp;&nbsp;Enemy(Vector3 pos) : GameObject( pos ) // GameObjectをベースとして初期化処理を継承する<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Enemy";<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 更新処理。派生クラスでオーバーライドして使う<br>
@@ -3526,8 +3521,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;const float Speed = 25; // 移動速度<br>
       &nbsp;&nbsp;const int VisibleRadius = 16; // 見た目の半径<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// ↓【使用要注意！(テスト用！！)】メモリ消費弾(4MB)撃つたびに4MB消費(下の行のコメント外すと)<br>
-      &nbsp;&nbsp;//【実験コード】int memMUDA[1000000]; // 4バイト×1000000= 4MBの無駄メモリ<br>
       <br>
       &nbsp;&nbsp;<em>float collisionRadius = 16; // 当たり判定の半径</em><br>
       &nbsp;&nbsp;float angle; // 移動角度<br>
@@ -3604,8 +3597,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 自機弾と敵が重なっているか？<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;position, playerBullet-&gt;collisionRadius,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;position, enemy-&gt;collisionRadius))<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
