@@ -27,15 +27,14 @@
         <a href="#mozTocId00074">- 【※メモリから弾を削除】自機弾PlayerBulletの削除処理</a><br>
         <a href="#mozTocId00075">- 共通削除機能を【テンプレートとして定義】</a><br>
         <a href="#mozTocId00076">- 【実験】メモリ浪費弾の実験</a> </li>
-      <li><a href="#mozTocId0008">vectorとlistの性能考察</a><br>
-        <a href="#mozTocId00081">- 循環参照・インクルードの罠</a><br>
-        <a href="#mozTocId00082">- シングルトン型:唯一物体タイプの追加</a><br>
-      <li><a href="#mozTocId0009">ベクトル構造体でX,Y,ZをVector3型でまとめて管理する</a><br>
-        <a href="#mozTocId00091">- ベクトルの基本</a><br>
-        <a href="#mozTocId00092">- ベクトルの計算</a><br>
-      <li><a href="#mozTocId0010">敵の作成</a><br>
-        <a href="#mozTocId00101">- 共通のベースとなるGameObjectを作成する</a><br>
-        <a href="#mozTocId00102">- Zako0クラスの作成</a><br>
+        <a href="#mozTocId00077">- 自機弾の角度を変えられるようにする</a> </li>
+        <a href="#mozTocId00078">- vectorとlistの性能考察</a> </li>
+      <li><a href="#mozTocId0008">ベクトル構造体でX,Y,ZをVector3型でまとめて管理する</a><br>
+        <a href="#mozTocId00081">- ベクトルの基本</a><br>
+        <a href="#mozTocId00082">- ベクトルの計算</a><br>
+      <li><a href="#mozTocId0009">敵の作成</a><br>
+        <a href="#mozTocId00091">- 共通のベースとなるGameObjectを作成する</a><br>
+        <a href="#mozTocId00092">- Zako0クラスの作成</a><br>
       </li>
       <br>
       <p>テキスト2もこのファイル内にまとめた。</p>
@@ -2190,7 +2189,7 @@
       };<br>
     </p>
     <br>
-    <h2>自機弾の角度を変えられるようにする</h2>
+    <h2><a id="mozTocId00077" class="mozTocH1"></a>自機弾の角度を変えられるようにする</h2>
     数学の基礎のおさらい【cosθとsinθはx,yに対応する】【たて×よこの比率(範囲:min:-1～1:max)】<br>
     <img src="image/cos_sin.png" alt="" style="width: 785px; height: 444px;"><br>
     <br>
@@ -2301,7 +2300,7 @@
 
     <br>
     
-    <h2><a id="mozTocId0008" class="mozTocH1"></a>vectorとlistの性能考察</h2>
+    <h2><a id="mozTocId00078" class="mozTocH1"></a>vectorとlistの性能考察</h2>
     データのリスト(今回は弾のリスト)をどうデータ管理するかにはstd::vectorとstd::listの2パターンの格納方法が考えられます。
     <img src="image/vector_vs_list.png" alt="" style="width: 799px; height: 439px;"><br>
     <br>
@@ -2353,8 +2352,8 @@
     </p>
     <br>
 
-    <h1><a id="mozTocId0009" class="mozTocH1"></a>ベクトル構造体でX,Y,ZをVector3型でまとめて管理する</h1>
-    <h2><a id="mozTocId00091" class="mozTocH1">ベクトルの基本</h2>
+    <h1><a id="mozTocId0008" class="mozTocH1"></a>ベクトル構造体でX,Y,ZをVector3型でまとめて管理する</h1>
+    <h2><a id="mozTocId00081" class="mozTocH1">ベクトルの基本</h2>
     <p>現状ではX,Yは別々の変数として定義していますが、これを数学のベクトルを扱うVector3型を定義してそちらに置き換えましょう(std::vectorとはつづりが同じだけどまったく別のもの)<br>
 
     <p><code>Vector3.h</code>を作成します(拡張も見越して3DのZ座標も導入しておきます)</p>
@@ -2446,7 +2445,7 @@
       #endif<br>
     </p><br>
 	  
-    <h2><a id="mozTocId00092" class="mozTocH1">ベクトルの計算</h2>
+    <h2><a id="mozTocId00082" class="mozTocH1">ベクトルの計算</h2>
     次にベクトル同士を足したり引いたり割ったりできるように、ベクトルの計算関数を追加しましょう。<br>
     <p><code>Vector3.h</code>を書き換えます。</p>
     <p class="source">#ifndef VECTOR3_H_<br>
@@ -2736,7 +2735,7 @@
       #endif<br>
     </p><br>
     
-    <h1><a id="mozTocId0010" class="mozTocH1"></a>敵の作成【共通のGameObjectを継承する】</h1>
+    <h1><a id="mozTocId0009" class="mozTocH1"></a>敵の作成【共通のGameObjectを継承する】</h1>
     <h2>Enemyクラスを作成するにあたってアクションゲームのGameObjectを導入する</h2>
     <p>前期はEnemyクラスを継承する形でZako0をつくりましたが<br>
       この構造のままで作り進めると循環参照インクルードが起こってしまいます。<br>
@@ -2745,7 +2744,7 @@
       これで矢印はGameObjectにまとまりオブジェクト同士の参照をせずに済みます。<br>
     </p>
     <p> <img src="image/include_base_gameobject.png" alt="" style="width: 702px; height: 758px;"></p>
-    <h2><a id="mozTocId00101" class="mozTocH1">共通のベースとなるGameObjectを作成する</h2>
+    <h2><a id="mozTocId00091" class="mozTocH1">共通のベースとなるGameObjectを作成する</h2>
     <p><code>GameObject.h</code>を作成します(拡張も見越して3DのZ座標も導入しておきます)。</p>
     <p class="source">#ifndef GAMEOBJECT_H_<br>
       #define GAMEOBJECT_H_<br>
@@ -2986,7 +2985,7 @@
       <br>
       <br>
       #endif</p>
-    <h2><a id="mozTocId00102" class="mozTocH1"></a>Zako0クラスの作成</h2>
+    <h2><a id="mozTocId00092" class="mozTocH1"></a>Zako0クラスの作成</h2>
     <p><code>Zako0.h</code>を作成します。</p>
     <p class="source">#ifndef ZAKO_0_H_<br>
       #define ZAKO_0_H_<br>
