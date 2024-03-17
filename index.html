@@ -2390,8 +2390,55 @@
       <br>
       #endif<br>
     </p><br>
-    基本的にはX,Y,Zを上記コードでまとめることができます。<br>
-    
+    基本的にはX,Y,Zを上記コードでVector3型で一つの定義にまとめることができます。<br>
+    <br>
+    次に少し便利にすべく少しトリッキーですが、共用体を使ってx,y,zをstd::array型でxyzとしてまとめて扱えるようにしてみましょう<br>
+    <p><code>Vector3.h</code>を作成します(拡張も見越して3DのZ座標も導入しておきます)</p>
+    <p class="source">#ifndef VECTOR3_H_<br>
+      #define VECTOR3_H_<br>
+      <br>
+      #include &lt;array&gt; //vector配列と基本同じだが【有限】の個数である違いがあるxyzなど3つ固定の個数ならstd::vectorよりstd::array型がよい<br>
+      #include &lt;cmath&gt;<br>
+      #include &lt;limits&gt; // 無限大などをstd::numeric_limits&lt;float&gt;::infinity()で取得<br>
+      <br>
+      //★【UnityのVector演算コード】<br>
+      // https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+      <br>
+      // 3変数x,y,zを持つ構造体。3つの数字をまとめて扱うならXYZ座標以外にも使えるよ。x,y,z別々に足したり引いたり面倒でしょう。<br>
+      struct Vector3<br>
+      {<br>
+      // struct型はpublic:がなくてもデフォルトがpublic:&nbsp;&nbsp;private:を書けばプライベートにもできる<br>
+      &nbsp;&nbsp;<em>//float x = 0; // x座標<br>
+      &nbsp;&nbsp;//float y = 0; // y座標<br>
+      &nbsp;&nbsp;//float z = 0; // z座標&nbsp;3つの定義をunionで配列xyzと共用することでxyz[1]=5.5f;とすると yも5.5となる【運命共用体】(メモリ上は同じ位置になる)<br>
+      <br>
+      &nbsp;&nbsp;union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+		  &nbsp;&nbsp;&nbsp;&nbsp;struct { // [参考ビットサイズ] https://marycore.jp/prog/c-lang/data-type-ranges-and-bit-byte-sizes/<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;float x;<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;float y;<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;float z;<br>
+		  &nbsp;&nbsp;&nbsp;&nbsp;}; //[匿名共用体とは] https://zenn.dev/block/articles/beda29f11f05afc147ef<br>
+		  &nbsp;&nbsp;std::array<float, 3> xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
+	    &nbsp;&nbsp;}; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる</em><br>
+
+      &nbsp;&nbsp;Vector3() = default; // デフォルト初期化コンストラクタ<br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;Vector3(float x, float y, float z = 0.f) //初期化 z = 0.fでzのデフォルト値があるので2Dとしても使える<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;xyz = { x,y,z };// たった1行で書ける</em><br>
+      &nbsp;&nbsp;} <br>
+      &nbsp;&nbsp;//仮想デストラクタ<br>
+      &nbsp;&nbsp;virtual ~Vector3()<br>
+      &nbsp;&nbsp;{<br>
+      <br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p><br>
     
     <h1><a id="mozTocId0008" class="mozTocH1"></a>敵の作成【共通のGameObjectを継承する】</h1>
     <h2>Enemyクラスを作成するにあたってアクションゲームのGameObjectを導入する</h2>
