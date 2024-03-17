@@ -2970,6 +2970,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #define GAMEOBJECT_H_<br>
       <br>
       #include "DxLib.h"<br>
+      #include "Vector3.h"<br>
       #include &lt;string&gt; //文字タグのため<br>
       #include &lt;memory&gt; //回し読みポインタの定義のため<br>
       <br>
@@ -2978,15 +2979,11 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       class GameObject<br>
       {<br>
       public:<br>
+      &nbsp;&nbsp;Vector3 position {0,0,0}; // xyz座標<br>
+      &nbsp;&nbsp;Vector3 v{0,0,0}; //xyz方向の速度<br>
       &nbsp;&nbsp;std::string tag = ""; // Zako0やBossやPlayerなど小カテゴリ<br>
       &nbsp;&nbsp;std::string typeTag = ""; // EnemyやPlayerなど大カテゴリ<br>
       &nbsp;&nbsp;std::string statusTag = ""; // 爆発状態やアイテムゲット状態など自由に使えばよい<br>
-      &nbsp;&nbsp;float x = 0; // x座標<br>
-      &nbsp;&nbsp;float y = 0; // y座標<br>
-      &nbsp;&nbsp;float z = 0; //【3D】z座標<br>
-      &nbsp;&nbsp;float vx = 0; // x方向の速度<br>
-      &nbsp;&nbsp;float vy = 0; // y方向の速度<br>
-      &nbsp;&nbsp;float vz = 0; //【3D】z方向の速度<br>
       <br>
       &nbsp;&nbsp;bool isDead = false; // 死んだ（削除対象）フラグ<br>
       <br>
@@ -3043,13 +3040,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;float life = 1; // 耐久力<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Enemy(float x, float y, float z=0)//★z=0をデフォルトとすることでx,yだけでも初期化でき2Dと3D両立<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: GameObject() // GameObjectをベースとして初期化処理を継承する<br>
+      &nbsp;&nbsp;Enemy(Vector3 pos) : position { pos }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;, GameObject() // GameObjectをベースとして初期化処理を継承する<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Enemy";<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z;<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 更新処理。派生クラスでオーバーライドして使う<br>
