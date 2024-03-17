@@ -4060,6 +4060,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "DxLib.h"<br>
       #include "Image.h"<br>
       #include "Screen.h"<br>
+      #include "Vector3.h"<br>
       <br>
       #include "GameObject.h"<br>
       <br>
@@ -4069,19 +4070,14 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       public:<br>
       &nbsp;&nbsp;const int VisibleRadius = 8; // 見た目の半径<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// ↓【使用要注意！(テスト用！！)】メモリ消費弾(4MB)撃つたびに4MB消費(下の行のコメント外すと)<br>
-      &nbsp;&nbsp;//【実験コード】int memMUDA[1000000]; // 4バイト×1000000= 4MBの無駄メモリ<br>
       <br>
       &nbsp;&nbsp;float angle; // 移動角度(垂直Vertical)<br>
       &nbsp;&nbsp;float angleH=0; // 移動角度(水平Horizontal)<br>
       <br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;EnemyBullet(float x, float y, float angle, float speed)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
+      &nbsp;&nbsp;EnemyBullet(Vector3 pos, float angle, float speed) : GameObject( pos )<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angle;<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 角度からx方向の移動速度を算出<br>
@@ -4090,36 +4086,31 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * speed;<br>
       &nbsp;&nbsp;}<br>
       <br>
-      &nbsp;&nbsp;// [3D版]コンストラクタ<br>
-      &nbsp;&nbsp;EnemyBullet(float x, float y, float z, float angleV, float angleH, float speed)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: GameObject()<br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;EnemyBullet(Vector3 pos, float angleV, float angleH, float speed) : GameObject( pos )<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;z = z; // [3D版]<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angleV;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angleH = angleH;<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [3Dの角度は水平・垂直に分割]https://teratail.com/questions/126004<br>
       &nbsp;&nbsp;&nbsp;&nbsp;float cosAngleV = (float)std::cos(angle);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 角度からx方向の移動速度を算出<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vx = cosAngleV * (float)std::sin(angleH) * speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.x = cosAngleV * (float)std::sin(angleH) * speed;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 角度からy方向の移動速度を算出<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.y = (float)std::sin(angle) * speed;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 角度からz方向の移動速度を算出<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vz = cosAngleV * (float)std::cos(angleH) * speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.z = cosAngleV * (float)std::cos(angleH) * speed;<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 更新処理<br>
       &nbsp;&nbsp;void Update()<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度の分だけ移動<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;x += vx;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;position += v;<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 画面外に出たら死亡フラグを立てる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (y + VisibleRadius &lt; 0 || y - VisibleRadius &gt; Screen::Height ||<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x + VisibleRadius &lt; 0 || x - VisibleRadius &gt; Screen::Width)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (position.y + VisibleRadius &lt; 0 || position.y - VisibleRadius &gt; Screen::Height ||<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position.x + VisibleRadius &lt; 0 || position.x - VisibleRadius &gt; Screen::Width)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -4128,7 +4119,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 描画処理<br>
       &nbsp;&nbsp;void Draw()<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, angle, Image::enemyBullet16,TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, angle, Image::enemyBullet16,TRUE);<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// プレイヤにぶつかった時の処理<br>
@@ -4231,8 +4222,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 自機弾と敵が重なっているか？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;playerBullet-&gt;position, playerBullet-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;position, enemy-&gt;collisionRadius))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
@@ -4258,8 +4249,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;x, gm.player-&gt;y, gm.player-&gt;collisionRadius,<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;position, gm.player-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enemy-&gt;position, enemy-&gt;collisionRadius))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.player-&gt;OnCollisionEnemy(enemy);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -4328,8 +4319,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;<em>int counter = 0;</em><br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Zako0(float x, float y, float z=0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+      &nbsp;&nbsp;Zako0(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako0";<br>
       &nbsp;&nbsp;}<br>
@@ -4337,20 +4327,20 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 更新処理<br>
       &nbsp;&nbsp;void Update() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;position.x -= 1; // とりあえず左へ移動<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>counter++;</em><br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>if (counter % 10 == 0)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(x, y, 180 * MyMath::Deg2Rad, 8));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, 180 * MyMath::Deg2Rad, 8));<br>
         &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 描画処理<br>
       &nbsp;&nbsp;void Draw() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako0, TRUE);<br>
       &nbsp;&nbsp;}<br>
       };<br>
       <br>
@@ -4372,8 +4362,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;<em>int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）</em><br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Zako0(float x, float y, float z=0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;: Enemy(x, y, z)<br>
+      &nbsp;&nbsp;Zako0(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako0";<br>
       &nbsp;&nbsp;}<br>
@@ -4381,13 +4370,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 更新処理<br>
       &nbsp;&nbsp;void Update() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;x -= 1; // とりあえず左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;position.x -= 1; // とりあえず左へ移動<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>coolTime--;</em><br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>if (coolTime &lt;= 0)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(x, y, 180 * MyMath::Deg2Rad, 8));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, 180 * MyMath::Deg2Rad, 8));<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;coolTime += 10;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;}<br>
@@ -4395,7 +4384,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 描画処理<br>
       &nbsp;&nbsp;void Draw() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1, 0, Image::zako0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako0, TRUE);<br>
       &nbsp;&nbsp;}<br>
       };<br>
       <br>
