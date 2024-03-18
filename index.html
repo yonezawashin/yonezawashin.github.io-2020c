@@ -5139,7 +5139,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 描画処理<br>
       &nbsp;&nbsp;void Draw() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;// Image.explosionは配列であり、<br>
       &nbsp;&nbsp;// 分割して読み込んだ絵のハンドルが各要素に格納されているので、<br>
       &nbsp;&nbsp;// 要素番号を指定してハンドルを取り出して使う。<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, 0, Image::explosion[imageIndex], TRUE);<br>
@@ -5187,6 +5186,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     </p>
     <p><code>Game.cpp</code>に当たり判定の処理を追加します。</p>
     <p class="source">#include "Game.h"<br>
+	    <br>
+      #include&nbsp;"MyRandom.h"<br>
+	    <br>
       #include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       #include&nbsp;"EnemyBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
@@ -5274,7 +5276,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       };<br>
     </p>
     <h2><a id="mozTocId30024" class="mozTocH1"></a>爆発を出す処理(Enemyで敵の共通の爆発を生成)</h2>
-    <p><code>Enemy.h</code>を新規作成して、敵が死んだときに爆発エフェクトを出すようにしましょう。</p>
+    <p><code>Enemy.h</code>を改修して、敵が死んだときに爆発エフェクトを出すようにしましょう。</p>
     <p class="source">#ifndef ENEMY_H_<br>
       #define ENEMY_H_<br>
       <br>
@@ -5321,15 +5323,16 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>// 爆発を出す<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.explosions.emplace_back(std::make_shared&lt;Explosion&gt;(x, y));</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.explosions.emplace_back(std::make_shared&lt;Explosion&gt;(Vector3(position.x, position.y)));</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;}<br>
       };<br>
       <br>
       #endif<br>
-    </p>
+    </p><br>
+	  ここまでで、実行して爆発が出るか試してみましょう！<br>
     <h1><a id="mozTocId3003" class="mozTocH1"></a>ボスの作成</h1>
-    <p>まずはボスの3状態の画像をImageフォルダにコピーしておきましょう。</p>
+    <p>まずはボスの3状態の画像をImageフォルダに用意しておきましょう。</p>
     <ul>
       <li>boss1.png</li>
       <li>boss2.png</li>
@@ -5573,6 +5576,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #endif</p>
     <p><code>Game.cpp</code>にボスの生成処理を追加してボスが期待通りに状態遷移することを確認しましょう。</p>
     <p class="source">#include "Game.h"<br>
+	    <br>
+      #include "MyRandom.h"<br>
       <br>
       #include "Player.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       #include "PlayerBullet.h"<br>
@@ -5649,7 +5654,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     <p>気をつけてくださいね<b>【メモリの回し読みポインタの参照リンクお掃除しないと】</b>前の画面の<b>メモリはフリーになりません</b></p>
     <h2>シーンマネージャで画面遷移を作成する(Game.cppからコードを画面に分けて移植)</h2>
     <p>Scene.hを新規作成してベースとなるシーンの基底クラスを定義しましょう。<br>
-      <b>C++テキストの【クラスの基本④】17ページのファイナルファンタジーの構造</b>を取り入れてます。<br>
       <b>ポイント要点は【開始Initialize()】と【終了Finalize()】を区別していることです。</b><br>
       いままでもInit()や初期化コンストラクタはありましたが<br>
       <b>【終了の Finalize() 】を分けることでシーンの切替えのタイミングで弾のメモリなどのリセットの処理を書けます。</b><br>
@@ -5707,6 +5711,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include &lt;vector&gt;<br>
       #include &lt;memory&gt;<br>
       #include &lt;string&gt;<br>
+      #include &lt;assert.h&gt; // シーン読み込みの失敗表示用<br>
       <br>
       #include "Singleton.h"<br>
       <br>
@@ -5719,13 +5724,21 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp; &nbsp;std::string selectStage = "stage1"; // 選択中のステージ(タイトルでのデフォルト選択などもマネージャに保持できる)<br>
       &nbsp;&nbsp;&nbsp; <br>
-      &nbsp;&nbsp;&nbsp; <b>// マネージャを【どこからでもアクセスしやすい「変数の掲示板」として使う】</b><br>
-      &nbsp;&nbsp; &nbsp;int scoreMax = -1; // シーンをまたぐスコアなどはマネージャに定義すればシーンチェンジ後も消えない<br>
+      &nbsp;&nbsp;&nbsp; <b>// マネージャを【どこからでもアクセスしやすい「変数の掲示板」として使えばシーンをまたぐ変数も定義できる】</b><br>
+      &nbsp;&nbsp;&nbsp; std::string selectStage = "stage1"; // 選択中のステージ名など
+      &nbsp;&nbsp; &nbsp;int scoreMax = -1; // 【シーンをまたぐスコアなど】はマネージャに定義すれば【シーンをまたいだあとも】消えず残る<br>
       &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Scene&gt; prevScene{ nullptr }; // 一つ前のシーン<br>
       &nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Scene&gt; currentScene{ nullptr }; // 現在のシーン<br>
-      &nbsp;&nbsp; &nbsp;// シーンをチェンジし遷移する(前のシーンのリセット処理もする) optionsはステージcsvなどの指定に使える<br>
-      &nbsp;&nbsp; &nbsp;void LoadScene(std::string sceneName, std::vector&lt;std::string&gt; options = { "" });<br>
+	    <br>
+      &nbsp;&nbsp; &nbsp;std::string currentSceneName = ""; // 現在のシーン名を保管しておく<br>
+      &nbsp;&nbsp; &nbsp;std::string changingSceneName = ""; // 予約された次のシーンのクラス名(次に移動予定のシーン名を保管しておく)<br>
+      &nbsp;&nbsp; &nbsp;// シーン名を比較、何の変化もなければfalseでシーン移動不必要の判定<br>
+      &nbsp;&nbsp; &nbsp;bool isChanging(std::string&amp; nextSceneName);<br>
+      &nbsp;&nbsp; &nbsp;// 次のシーンの予約だけして、元のシーンのUpdateが終わるまで待つUpdateが終わったらシーンを遷移する<br>
+      &nbsp;&nbsp; &nbsp;void NextScene(std::string&amp; nextSceneName);<br>
+      &nbsp;&nbsp; &nbsp;// シーンをチェンジし遷移する(前のシーンのリセット処理もする)<br>
+      &nbsp;&nbsp; &nbsp;void LoadScene(std::string&amp; sceneName);<br>
       <br>
       protected:<br>
       &nbsp;&nbsp; &nbsp;SceneManager() {}; // 外部からのインスタンス作成は禁止<br>
@@ -5777,7 +5790,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene", { "stage1" }); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene"); //シーン遷移<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
@@ -5934,7 +5947,23 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "PlayScene.h"<br>
       #include "GameOverScene.h"<br>
       <br>
-      void SceneManager::LoadScene(std::string sceneName, std::vector&lt;std::string&gt; options)<br>
+      bool SceneManager::isChanging(std::string&amp; nextSceneName)<br>
+      {<br>
+      &nbsp;&nbsp; &nbsp;if (currentSceneName != nextSceneName) //シーン名不一致<br>
+      &nbsp;&nbsp; &nbsp;return true; // シーン名が変更<br>
+<br>
+      &nbsp;&nbsp; &nbsp;return false; // シーン名に変更無し<br>
+      }<br>
+<br>
+      void SceneManager::NextScene(std::string&amp; nextSceneName)<br>
+      {<br>
+      &nbsp;&nbsp; &nbsp;// シーン名とオプションを比較、何の変化もなければfalseでシーン移動不必要の判定<br>
+      &nbsp;&nbsp; &nbsp;if (isChanging(nextSceneName) == false) return; //特に変更なしでシーン移動の必要なし<br>
+
+      &nbsp;&nbsp; &nbsp;changingSceneName = nextSceneName; // 次に移動予定のシーン名を保管しておく<br>
+      }<br>
+<br>
+      void SceneManager::LoadScene(std::string&amp; sceneName, std::vector&lt;std::string&gt; options)<br>
       {<br>
       &nbsp;&nbsp; &nbsp;// 現在のシーンの終了処理<br>
       &nbsp;&nbsp; &nbsp;if(currentScene !=nullptr)<br>
