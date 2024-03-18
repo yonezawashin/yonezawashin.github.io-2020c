@@ -5903,13 +5903,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;// 初期化処理<br>
       &nbsp;&nbsp; &nbsp;void Initialize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここでプレイヤの初期化などのプレイ開始時の処理<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;</em>// ここでプレイヤの初期化などのプレイ開始時の処理<br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
       &nbsp;&nbsp; &nbsp;void Finalize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ終了時のメモリのリセット処理(ゲームクリアやゲームオーバーなど)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;</em>// ここにプレイ終了時のメモリのリセット処理(ゲームクリアやゲームオーバーなど)<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ゲーム終了時のスコアがMAXなら記録して終了<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(score &gt; sm.scoreMax) sm.scoreMax = score;<br>
@@ -5919,7 +5919,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;void Update() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ中の更新処理を持ってくる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;</em>// ここにプレイ中の更新処理を持ってくる<br>
       <br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ゲームオーバー判定と画面チェンジ処理<br>
@@ -5935,7 +5935,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;// 描画処理<br>
       &nbsp;&nbsp; &nbsp;void Draw() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ画面の描画処理を持ってくる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;</em>// ここにプレイ画面の描画処理を持ってくる<br>
       &nbsp;&nbsp; &nbsp;}<br>
       };<br>
       <br>
@@ -5995,7 +5995,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;else<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert("指定されたシーン名の生成処理が見つからなかった→SceneManager.cppを見直しましょう" == "");<br>
 <br>
-    currentSceneName = sceneName; // 現在のシーン名の更新<br>
+      &nbsp;&nbsp; &nbsp;currentSceneName = sceneName; // 現在のシーン名の更新<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 次のシーンの初期化<br>
       &nbsp;&nbsp; &nbsp;currentScene-&gt;Initialize(); // 初期化を呼び出す<br>
