@@ -7292,6 +7292,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>Sound::PlayMusic("BGM/ending.mp3");</em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -7934,8 +7935,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     <br>
     <br>
     <h1><a id="mozTocId4002" class="mozTocH1"></a>CSVを読み込んで敵を生成するプログラム</h1>
-	  <a href="https://qiita.com/muzudho1/items/ac3602a29f8536031fe4">https://qiita.com/muzudho1/items/ac3602a29f8536031fe4</a><br>
+	  Tiledエディタ: <a href="https://qiita.com/muzudho1/items/ac3602a29f8536031fe4">https://qiita.com/muzudho1/items/ac3602a29f8536031fe4</a><br>
     <p>Tiledエディタで敵マップを作成して、<br>
+    <code>MapフォルダをImageのフォルダを作ったときのように新規作成して</code>その中に<br>
       stage1.csvを<br>
       <code>Map/stage1.csv</code>にcsv形式でエクスポートしましょう。<br>
       <br>
@@ -8123,6 +8125,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "Screen.h"<br>
       #include "Input.h"<br>
       #include "Image.h"<br>
+      #include "Sound.h"<br>
       <em>#include "Map.h"</em><br>
       <br>
       #include "GameManager.h"<br>
@@ -8154,8 +8157,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;// 初期化処理<br>
       &nbsp;&nbsp; &nbsp;void Initialize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Image::Load("PlayScene"); //画像の読込みとメモリ開放<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::Load("PlayScene"); //音声の読込みとメモリ開放<br>
+(中略)......<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sound::PlayMusic(Sound::gameplay); //プレイ画面BGMを再生<br>
       <br>
@@ -8212,6 +8214,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     さて、ここまでで敵が画面の右端から出て来たでしょうか？<br>
     出てこない場合は、大抵以下の原因が多いです。<br>
     <ul>
+      <li>【Mapフォルダ】をImageフォルダと同じように新規作成しましたか？</li>
       <li>【Mapフォルダ】にstage1.csvがありますか？</li>
       <li>【stage1..csv】ドットが多くないですか</li>
       <li>【mapのMが小文字】フォルダ名のMが小文字m</li>
@@ -8478,6 +8481,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     さて、できるだけ最小限の変更でDataCsvを導入することができたのが実感できましたか？<br>
     これで地形データやアイテムデータなどが増えてきてもすっきりするはずです。<br>
     一度実行してみて、無事に敵が出てくるかは確認してみましょう。<br>
+    サンプルのstage.csvを下記に置いておくのでうまくTileMapエディタで書き出せない人やとりあえずプレイしてみたい人はダウンロードしてMapフォルダにコピーしてプレイしてみましょう。<br>
+    <a href="image/stage1.csv">サンプルのstage1.csv</a><br>
+
     <br>
     <br>
     <br>
