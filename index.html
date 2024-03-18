@@ -8499,7 +8499,69 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       ゆえにある程度の敵の規模のあるゲームのためには<b>【敵マップの全方向読み出し】</b>が必要です。<br>
       敵の読出しのアルゴリズムについては以下スライドを基本的な考え方としています。<br>
       <img src="image/cell_search_spawn.png" alt="" style="width: 581px; height: 462px;"><br> </p>
-    <p><code>Map.hで敵データを2次元vectorからDataCsvの使用に変更</code>しましょう。</p>
+	  <p><code>CellXY.hを新規作成して</code>マス目の型を定義して、std::unordered_map辞書配列のキーにできるように独自operatorを定義しましょう。</p>
+    <p class="source">#ifndef CELLXY_H_<br>
+#define CELLXY_H_<br>
+<br>
+#include &lt;unordered_map&gt; // ハッシュ値計算 std::hashに必要<br>
+<br>
+#include &lt;cmath&gt;<br>
+#include &lt;algorithm&gt; // std::maxに必要<br>
+<br>
+<br>
+// マス目のXとYを保持するデータ型(std::mapやstd::unordered_mapのキーにするためのoperator定義を持つ)<br>
+struct CellXY<br>
+{<br>
+&nbsp;&nbsp;&nbsp; int X = 0, Y = 0, dist = 0; bool distModeOn = false;<br>
+&nbsp;&nbsp;&nbsp; CellXY() = default;<br>
+<br>
+&nbsp;&nbsp;&nbsp; ~CellXY() {};<br>
+<br>
+&nbsp;&nbsp;&nbsp; CellXY(int X, int Y, bool distModeOn = false) : X{ X }, Y{ Y }, distModeOn{ distModeOn }<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (distModeOn == true) dist = X * X + Y * Y; // 原点(0,0)からの距離比較機能オンの時<br>
+&nbsp;&nbsp;&nbsp; };<br>
+<br>
+&nbsp;&nbsp;&nbsp; // ★連想配列mapのキーで使うため &lt; 比較演算子(連想配列並べ替えのため)をカスタム定義 http://programming-tips.info/use_struct_as_key_of_map/cpp/index.html<br>
+&nbsp;&nbsp;&nbsp; virtual bool operator &lt; (const CellXY& other) const {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //★原点からの距離dist順になるようにするとstd::mapにいれれば自動で原点からの距離順にならぶ(敵の近い順に使える)<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;distModeOn &amp;&amp; other.distModeOn) return this-&gt;dist &lt; other.dist;<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;Y &lt; other.Y) return true; // Yを比較CSVのように左上から列→行の順にならぶ<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (this-&gt;Y &gt; other.Y) return false;<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;X &lt; other.X) return true; // Yが同じ時はXを比較<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (this-&gt;X &gt; other.X) return false;<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // X と Yがすべて等しい場合<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; //★std::unordered_map のキーで使うため == 比較演算子カスタム定義 https://sygh.hatenadiary.jp/entry/2014/02/13/222356<br>
+&nbsp;&nbsp;&nbsp; virtual inline bool operator==(const CellXY&amp; other) const {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; const CellXY&amp; self = *this;<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return self.X == other.X && self.Y == other.Y;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; virtual inline bool operator!=(const CellXY&amp; other) const {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return !(this-&gt;operator==(other));<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; virtual size_t GetHashCode() const //X,Yの値からハッシュ値を計算 https://sygh.hatenadiary.jp/entry/2014/02/13/222356<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::hash&lt;decltype(X)&gt;()(this-&gt;X) ^<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::hash&lt;decltype(Y)&gt;()(this-&gt;Y);<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; struct Hash // ハッシュ値取得用の関数オブジェクト(std::unordered_map のキーで使うため) https://sygh.hatenadiary.jp/entry/2014/02/13/222356<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; size_t operator ()(const CellXY&amp; cellXY) const<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return cellXY.GetHashCode();<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; };<br>
+};<br>
+<br>
+#endif</p>
+	  <br>
+    <p><code>Map.hで敵データを全方位読み出しできるように変更</code>しましょう。</p>
     <p class="source">#ifndef MAP_H_<br>
       #define MAP_H_<br>
       <br>
