@@ -6412,6 +6412,17 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       {// Init処理<br>
       &nbsp;&nbsp;&nbsp; Image::Load("PlayScene"); //画像の読込み<br>
       &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数シードの初期化<br>
+	    <br>
+      &nbsp;&nbsp;&nbsp; <u>gm.player = std::make_shared&lt;Player&gt;(Vector3((float)100, (float)(Screen::Height / 2))); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp; // とりあえず適当に敵を生成<br>
+      &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3((float)600, (float)100)));<br>
+      &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3((float)1000, (float)500)));<br>
+      &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Zako1&gt;(Vector3((float)1000, (float)150)));<br>
+      &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Zako2&gt;(Vector3((float)1200, (float)250)));<br>
+      &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Zako3&gt;(Vector3((float)1300, (float)400)));<br>
+<br>
+      &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(Screen::Width + 90, Screen::Height / 2)));</u><br>
+	    <br>
       }<br>
       <br>
       void Game::Update()<br>
