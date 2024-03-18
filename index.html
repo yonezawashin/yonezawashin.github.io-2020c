@@ -6793,7 +6793,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       };</p>
     <br>
     <p><code>DivImage.hにコピーコンストラクタをpublic定義にして</code>画像辞書に分割画像のコピーへのポインタを保存できるようにする。<br>
-      <a href="https://docs.google.com/presentation/d/1m7LS913CRtCuFAz9-pbyWpka49vUoyqiL_n9h1kG_sY/edit?usp=sharing">スライドで変更理由に目を通しておきましょう(C++の根の深いコピー時の*ポインタとデータ分離問題)。</a></p>
+      下記スライドで変更理由に目を通しておきましょう(C++でクラス内でnewやdeleteのした際の根の深いコピー時の*ポインタとデータ分離問題)。</p>
+      <img src="image/copy_new_delete.png" alt="" style="width: 766px; height: 421px;"><br>
     <p class="source">#ifndef DIVIMAGE_H_<br>
       #define DIVIMAGE_H_<br>
       <br>
@@ -6839,7 +6840,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; };<br>
       <br>
       &nbsp;&nbsp;&nbsp; <em>// コピーコンストラクタ(動的new配列をクラス内に持つ場合にはカスタムが必要)<br>
-        &nbsp;&nbsp;&nbsp; // [解説スライド] https://docs.google.com/presentation/d/1m7LS913CRtCuFAz9-pbyWpka49vUoyqiL_n9h1kG_sY/edit?usp=sharing<br>
         &nbsp;&nbsp;&nbsp; DivImage(const DivImage&amp; divImage)<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 基本はただのコピー書き移し<br>
