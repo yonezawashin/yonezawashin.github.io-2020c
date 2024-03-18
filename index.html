@@ -8094,10 +8094,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       <em>&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Map&gt; map{ nullptr }; // マップ</em><br>
       &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機<br>
-      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
-      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
-      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
-      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
       &nbsp;&nbsp;&nbsp; // List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
