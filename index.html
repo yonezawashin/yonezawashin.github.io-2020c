@@ -8634,10 +8634,9 @@ public:<br>
       &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
       &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
       <br>
-      &nbsp;&nbsp;&nbsp; <em>int SpawnRangeX = 0; // 敵出現射程スポーンレンジ【注意！Xの単位はマス目】<br>
-        &nbsp;&nbsp;&nbsp; int SpawnRangeY = 0; // 敵出現射程スポーンレンジ【注意！Yの単位はマス目】<br>
-        &nbsp;&nbsp;&nbsp; // ★【効率よく柔軟な連想配列】https://qiita.com/_EnumHack/items/f462042ec99a31881a81<br>
-        &nbsp;&nbsp;&nbsp; std::map&lt;CellXY, bool&gt; SpawnDic; // 辞書:SpawnDic["10,5"]==trueなら出現範囲</em><br>
+      &nbsp;&nbsp;&nbsp; <em>int spawnRangeX = 0; // 敵出現射程スポーンレンジ【注意！Xの単位はマス目】<br>
+        &nbsp;&nbsp;&nbsp; int spawnRangeY = 0; // 敵出現射程スポーンレンジ【注意！Yの単位はマス目】<br>
+        &nbsp;&nbsp;&nbsp; MapGridXY spawnGrid{ CellSize, CellSize }; // 敵データの読み込み済のマス目を管理するグリッド</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; DataCsv enemyData;// 敵配置データ<br>
       &nbsp;&nbsp;&nbsp; <br>
@@ -8653,12 +8652,11 @@ public:<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;positionX = startPositionY;</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enemyData.Load(filePath); // csvファイルをロード<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// ★30 = 960/32 マス目のサイズ 960はスクリーンのサイズ！<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SpawnRangeX = 30; // 敵出現射程スポーンレンジ【注意！Xの単位はマス目】<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SpawnRangeY = 17; // 敵出現射程スポーンレンジ【注意！Yの単位はマス目】<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>spawnRangeX = Screen::Width / CellSize; // 敵出現射程スポーンレンジ【注意！Xの単位はマス目】<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spawnRangeY = Screen::Height / CellSize; // 敵出現射程スポーンレンジ【注意！Yの単位はマス目】<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //【注意！】辞書の初期化をわすれると敵が出てこなくなる<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; InitSpawnDic(SpawnRangeX, SpawnRangeY);</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; InitSpawnGrid(spawnRangeX, spawnRangeY);</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp; &nbsp;//デストラクタ<br>
@@ -8669,9 +8667,9 @@ public:<br>
       <br>
       &nbsp;&nbsp;&nbsp; <em>// 敵出現射程の辞書初期化【先に計算して辞書化】すると計算が必要なくなり【高速化する】<br>
         &nbsp;&nbsp;&nbsp; //【注意！XとYの単位はマス目】<br>
-        &nbsp;&nbsp;&nbsp; void InitSpawnDic(int rangeCellX, int rangeCellY)<br>
+        &nbsp;&nbsp;&nbsp; void InitSpawnGrid(int rangeCellX, int rangeCellY)<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SpawnDic.clear();//一旦辞書をクリアするのでゲーム中の再設定も可(だが処理時間はかかる)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spawnGrid.clear();//一旦辞書をクリアするのでゲーム中の再設定も可(だが処理時間はかかる)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 敵出現射程の辞書初期化<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★ X = A cosθ Y = B sinθ(←楕円の方程式)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★ 楕円の半径 r = √(A×A×cosθ×cosθ + B×B×sinθ×sinθ)<br>
@@ -8687,104 +8685,61 @@ public:<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //float sin_t = std::sin(theta);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //float r2 = A2 * cos_t * cos_t + B2 * sin_t * sin_t;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (x * x + y * y &lt;= r2) // ★ xの2乗 + yの2乗 &lt; rならば楕円の内側<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //{&nbsp;&nbsp; //楕円の内側なら辞書SpawnDic[(x,y)] = true;として登録<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; //【★楕円にしたいときはこちら】SpawnDic[CellXY(x,y)] = true; //【例】SpawnDic[(3,2)] = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //{&nbsp;&nbsp; //楕円の内側なら辞書spawnGrid.rangeXY[(x,y)] = true;として登録<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; //【★楕円にしたいときはこちら】spawnGrid.rangeXY[CellXY(x,y)] = true; //【例】spawnGrid.rangeXY[(3,2)] = true;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //}<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //【★四角形にしたいときはこちら】<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SpawnDic[CellXY(x, y)] = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spawnGrid.rangeXY[CellXY(x, y)] = true;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp; }</em><br>
       <br>
-      &nbsp;&nbsp;&nbsp; <em>float deltaSumX = 0; // deltaXの変化が溜まってマス目が移動が発生するかの判定の計算に使う<br>
-        &nbsp;&nbsp;&nbsp; float deltaSumY = 0; // deltaYの変化が溜まってマス目が移動が発生するかの判定の計算に使う</em><br>
       <br>
       &nbsp;&nbsp; &nbsp;<em>// 画面スクロール（位置の更新）<br>
         &nbsp;&nbsp; &nbsp;void Scroll(float deltaX, float deltaY=0, std::shared_ptr&lt;GameObject&gt; baseObj = NULL)<br>
         &nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; bool isMoveCell = false; // マス目移動が発生するか？発生しないなら敵出現検索処理を回避したい<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 変化量を溜めてマス目移動以外のときは敵出現検索処理を省いて高速化<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumX += deltaX;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumY += deltaY;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (deltaSumX &lt;= -CellSize || CellSize &lt;= deltaSumX<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || deltaSumY &lt;= -CellSize || CellSize &lt;= deltaSumY)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isMoveCell = true;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; int diffX = spawnGrid.cellX(positionX + deltaX) - spawnGrid.cellX(positionX);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; int diffY = spawnGrid.cellY(positionY + deltaY) - spawnGrid.cellY(positionY);<br>
+	      <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; float prevPosX = positionX; // デルタの変化を足す前の位置を保管する<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; float prevPosY = positionY;<br>
+	      <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; positionX += deltaX; // 現在の位置を更新<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; positionY += deltaY; // 現在の位置を更新<br>
+	      <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; if (diffX == 0 && diffY == 0)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; return; // 同じマス目のままなら何も変化なし<br>
+	      <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // 読み込むマス目の絞り込み判定 (参考:説明スライド)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;CellXY&gt; targetCells;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; for (auto iter = spawnGrid.rangeXY.begin(); iter != spawnGrid.rangeXY.end(); ++iter)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; {&nbsp; // ★連想辞書配列のfor文 https://qiita.com/_EnumHack/items/f462042ec99a31881a81<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; CellXY cell = iter->first;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; CellXY target = CellXY(cell.X + diffX, cell.Y + diffY);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; if (spawnGrid.rangeXY.count(target) == 0)<br>
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; targetCells.emplace_back(target); // 移動後にレンジの外側にはみ出たマス目を収集<br>
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // マス目移動以外のときは敵出現検索処理を省いて高速化<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isMoveCell)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 移動が1マス幅を超えれば敵新規出現判定<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float deltaMoveX = deltaSumX; // 溜まった移動量を移動量deltaMoveXとする<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float deltaMoveY = deltaSumY; // 溜まった移動量を移動量deltaMoveYとする<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int deltaCellX = (int)deltaMoveX / CellSize; // セル(マス目)単位での移動数(マス数)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int deltaCellY = (int)deltaMoveY / CellSize; // セル(マス目)単位での移動数(マス数)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //printfDx("\n%d %d", deltaCellX, deltaCellY);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // マス目移動CellSizeぶん移動変化量から差引いて次の移動量計算に備える <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (deltaSumX &lt;= -CellSize) {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumX += CellSize; // マス目移動CellSizeぶん移動変化量から差引き<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (CellSize &lt;= deltaSumX) {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumX -= CellSize; // マス目移動CellSizeぶん移動変化量から差引き<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (deltaSumY &lt;= -CellSize) {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumY += CellSize; // マス目移動CellSizeぶん移動変化量から差引き<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (CellSize &lt;= deltaSumY) {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaSumY -= CellSize; // マス目移動CellSizeぶん移動変化量から差引き<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int searchCount = 0;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★連想配列で敵新規出現マスを探す<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://qiita.com/_EnumHack/items/f462042ec99a31881a81<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://pyteyon.hatenablog.com/entry/2019/01/01/220850<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto iter = SpawnDic.begin(); iter != SpawnDic.end(); iter++)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★例 iter-&gt;firstが"3,1" iter-&gt;secondが[trueかfalse]の射程マスかどうかのペア<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (iter-&gt;second == true)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 例.(3,1)のマス目が出現射程マスか[trueかfalse]か？<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXY xy = iter-&gt;first; // iter-&gt;firstに(x,y)=(3,1)が入っている時<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 例.↑(3,1)のマス目xy.X = 3, xy.Y = 1<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 例.deltaCellX = 1 deltaCellY = 2のとき<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int searchX = xy.X + deltaCellX; //例. 3+1 = 4 移動先は4<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int searchY = xy.Y + deltaCellY; //例. 1+2 = 3 移動先は3<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //例.↓もし(4,3)が未登録もしくはfalseなら【新規出現マス！】<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXY searchXY(searchX, searchY);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (SpawnDic.count(searchXY) == 1)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 例.辞書に↑(4,3)登録があるならcount( (4,3) )は 1<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★例.(4,3)がtrueなら↓【被りマス】移動前にすでに敵の出現判定【済】<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (SpawnDic[searchXY] == true) continue; // 敵を出現させず別マスの判定を続ける<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //↓↓↓↓↓ここより下は敵出現↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int mapX = 0, mapY = 0;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (baseObj != NULL)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 基準となるオブジェクトがあるならその位置を基準に<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mapX = searchX + (int)(baseObj-&gt;x / CellSize); // セル(マス目)単位でのX位置<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mapY = searchY + (int)(baseObj-&gt;y / CellSize); // セル(マス目)単位でのY位置<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 特に基準オブジェクトの指定がなければ現状ポジションを基準に<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mapX = searchX + (int)(positionX / CellSize); // セル(マス目)単位でのX位置<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mapY = searchY + (int)(positionY / CellSize); // セル(マス目)単位でのY位置<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int objectID = -1;//出現させる敵ID<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt;= mapY &amp;&amp; 0 &lt;= mapX<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;&amp; mapY &lt; enemyData.size() &amp;&amp; mapX &lt; enemyData[mapY].size())<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //データがアクセスできればIDを取得<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; objectID = enemyData[mapY][mapX];<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★一度出現させたマスはIDを上書きして二重に敵が出現しないように<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enemyData[mapY][mapX] = -1;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[コメント外すとテスト表示]if (objectID != -1)printfDx("newID %d (%d,%d)\n", objectID, mapX, mapY);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★(mapX,mapY)の位置のマップデータを読み出し！！<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SpawnObject(mapX, mapY, objectID);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; positionX += deltaX; // 現在の位置を更新<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; positionY += deltaY; // 現在の位置を更新<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // 敵新規出現マスを探す<br>
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; target : targetCells)<br>
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; {<br>
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; CellXY cell = CellXY(spawnGrid.cellX(prevPosX) + target.X, spawnGrid.cellY(prevPosY) + target.Y);<br>
+	      <br>
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; // [判定] count(cell) == 0なら未ロードマス、count(cell) == 1 && cellXY[cell] == falseならロード後falseに戻されたマス<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; if (spawnGrid.cellXY.count(cell) == 0 || spawnGrid.cellXY.count(cell) == 1 && spawnGrid.cellXY[cell] == false)<br>
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; {<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; int objectID = -1;//出現させる敵ID<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; if (0 <= cell.Y && 0 <= cell.X && cell.Y < enemyData.size() && cell.X < enemyData[cell.Y].size())<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; {&nbsp;&nbsp; //データがアクセスできればIDを取得<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; objectID = enemyData[cell.Y][cell.X];<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; // ★一度出現させたマスはIDを上書きして二重に敵が出現しないように<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; enemyData[cell.Y][cell.X] = -1;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; }<br>
+		<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; // ★(cell.X,cell.Y)の位置のマップデータを読み出し！！<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; SpawnObject(cell.X, cell.Y, objectID);<br>
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; }<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp; &nbsp;}</em><br>
       <br>
