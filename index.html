@@ -8747,6 +8747,8 @@ public:<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 生成位置<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float x = (float)(mapX * CellSize);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float y = (float)(mapY * CellSize);<br>
+<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[コメント外すとテスト表示]if (objectID != -1)printfDx("newID %d (%d,%d,%f,%f)\n", id, mapX, mapY, x, y);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 番号に応じて敵を生成する<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (id == -1) return; // -1は空白なので、何もしない<br>
