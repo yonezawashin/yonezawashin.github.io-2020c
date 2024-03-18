@@ -5722,10 +5722,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       public:<br>
       &nbsp;&nbsp; &nbsp;friend class Singleton&lt;SceneManager&gt;; // Singleton でのインスタンス作成は許可<br>
       <br>
-      &nbsp;&nbsp; &nbsp;std::string selectStage = "stage1"; // 選択中のステージ(タイトルでのデフォルト選択などもマネージャに保持できる)<br>
       &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; <b>// マネージャを【どこからでもアクセスしやすい「変数の掲示板」として使えばシーンをまたぐ変数も定義できる】</b><br>
-      &nbsp;&nbsp;&nbsp; std::string selectStage = "stage1"; // 選択中のステージ名など
+      &nbsp;&nbsp;&nbsp; std::string selectStage = "stage1"; // 選択中のステージ名など<br>
       &nbsp;&nbsp; &nbsp;int scoreMax = -1; // 【シーンをまたぐスコアなど】はマネージャに定義すれば【シーンをまたいだあとも】消えず残る<br>
       &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Scene&gt; prevScene{ nullptr }; // 一つ前のシーン<br>
@@ -5733,10 +5732,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 	    <br>
       &nbsp;&nbsp; &nbsp;std::string currentSceneName = ""; // 現在のシーン名を保管しておく<br>
       &nbsp;&nbsp; &nbsp;std::string changingSceneName = ""; // 予約された次のシーンのクラス名(次に移動予定のシーン名を保管しておく)<br>
+	    <br>
       &nbsp;&nbsp; &nbsp;// シーン名を比較、何の変化もなければfalseでシーン移動不必要の判定<br>
       &nbsp;&nbsp; &nbsp;bool isChanging(std::string&amp; nextSceneName);<br>
+	    <br>
       &nbsp;&nbsp; &nbsp;// 次のシーンの予約だけして、元のシーンのUpdateが終わるまで待つUpdateが終わったらシーンを遷移する<br>
       &nbsp;&nbsp; &nbsp;void NextScene(std::string&amp; nextSceneName);<br>
+	    <br>
       &nbsp;&nbsp; &nbsp;// シーンをチェンジし遷移する(前のシーンのリセット処理もする)<br>
       &nbsp;&nbsp; &nbsp;void LoadScene(std::string&amp; sceneName);<br>
       <br>
@@ -5965,7 +5967,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 <br>
       void SceneManager::LoadScene(std::string&amp; sceneName, std::vector&lt;std::string&gt; options)<br>
       {<br>
+      &nbsp;&nbsp; &nbsp;// sceneNameの指定が空の場合にはNextScene()での事前のシーン変更予約があるかチェック<br>
+      &nbsp;&nbsp; &nbsp;if (sceneName == "" &amp;&amp; changingSceneName != "")<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sceneName = changingSceneName;<br>
+<br>
+          &nbsp;&nbsp; &nbsp;if (sceneName == "") return; // シーン指定がないときは終了<br>
       &nbsp;&nbsp; &nbsp;// 現在のシーンの終了処理<br>
+	    <br>
       &nbsp;&nbsp; &nbsp;if(currentScene !=nullptr)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene-&gt;Finalize(); // 終了処理を呼び出す<br>
       <br>
@@ -5975,10 +5983,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene = std::make_shared&lt;TitleScene&gt;();<br>
       &nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;else if (sceneName == "PlayScene")<br>
-      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;//オプション指定があればそれを選択ステージ名とする<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (options.size()&gt;0 &amp;&amp; options[0] != "")<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;selectStage = options[0]; // オプション配列の0番目を選ぶステージ名に指定<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 次のシーンの生成<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene = std::make_shared&lt;PlayScene&gt;();<br>
       &nbsp;&nbsp; &nbsp;}<br>
@@ -5987,6 +5992,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 次のシーンの生成<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene = std::make_shared&lt;GameOverScene&gt;();<br>
       &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;else<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert("指定されたシーン名の生成処理が見つからなかった→SceneManager.cppを見直しましょう" == "");<br>
+<br>
+    currentSceneName = sceneName; // 現在のシーン名の更新<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 次のシーンの初期化<br>
       &nbsp;&nbsp; &nbsp;currentScene-&gt;Initialize(); // 初期化を呼び出す<br>
