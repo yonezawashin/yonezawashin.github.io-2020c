@@ -8498,7 +8498,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <b>【大量の画面にいない敵の当たり判定計算などにより計算が追いつかなくなります】</b><br>
       ゆえにある程度の敵の規模のあるゲームのためには<b>【敵マップの全方向読み出し】</b>が必要です。<br>
       敵の読出しのアルゴリズムについては以下スライドを基本的な考え方としています。<br>
-      <a href="https://docs.google.com/presentation/d/11uHlDZGXokjbjiiHduRCHXR7ovXWqQWikwED4D1wk_o/edit?usp=sharing">https://docs.google.com/presentation/d/11uHlDZGXokjbjiiHduRCHXR7ovXWqQWikwED4D1wk_o/edit?usp=sharing</a> </p>
+      <img src="image/cell_search_spawn.png" alt="" style="width: 581px; height: 462px;"><br> </p>
     <p><code>Map.hで敵データを2次元vectorからDataCsvの使用に変更</code>しましょう。</p>
     <p class="source">#ifndef MAP_H_<br>
       #define MAP_H_<br>
