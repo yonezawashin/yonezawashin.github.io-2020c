@@ -5734,13 +5734,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;std::string changingSceneName = ""; // 予約された次のシーンのクラス名(次に移動予定のシーン名を保管しておく)<br>
 	    <br>
       &nbsp;&nbsp; &nbsp;// シーン名を比較、何の変化もなければfalseでシーン移動不必要の判定<br>
-      &nbsp;&nbsp; &nbsp;bool isChanging(std::string&amp; nextSceneName);<br>
+      &nbsp;&nbsp; &nbsp;bool isChanging(const std::string&amp; nextSceneName);<br>
 	    <br>
       &nbsp;&nbsp; &nbsp;// 次のシーンの予約だけして、元のシーンのUpdateが終わるまで待つUpdateが終わったらシーンを遷移する<br>
-      &nbsp;&nbsp; &nbsp;void NextScene(std::string&amp; nextSceneName);<br>
+      &nbsp;&nbsp; &nbsp;void NextScene(const std::string&amp; nextSceneName);<br>
 	    <br>
       &nbsp;&nbsp; &nbsp;// シーンをチェンジし遷移する(前のシーンのリセット処理もする)<br>
-      &nbsp;&nbsp; &nbsp;void LoadScene(std::string&amp; sceneName);<br>
+      &nbsp;&nbsp; &nbsp;void LoadScene(const std::string&amp; sceneName);<br>
       <br>
       protected:<br>
       &nbsp;&nbsp; &nbsp;SceneManager() {}; // 外部からのインスタンス作成は禁止<br>
@@ -5949,7 +5949,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "PlayScene.h"<br>
       #include "GameOverScene.h"<br>
       <br>
-      bool SceneManager::isChanging(std::string&amp; nextSceneName)<br>
+      bool SceneManager::isChanging(const std::string&amp; nextSceneName)<br>
       {<br>
       &nbsp;&nbsp; &nbsp;if (currentSceneName != nextSceneName) //シーン名不一致<br>
       &nbsp;&nbsp; &nbsp;return true; // シーン名が変更<br>
@@ -5957,7 +5957,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;return false; // シーン名に変更無し<br>
       }<br>
 <br>
-      void SceneManager::NextScene(std::string&amp; nextSceneName)<br>
+      void SceneManager::NextScene(const std::string&amp; nextSceneName)<br>
       {<br>
       &nbsp;&nbsp; &nbsp;// シーン名とオプションを比較、何の変化もなければfalseでシーン移動不必要の判定<br>
       &nbsp;&nbsp; &nbsp;if (isChanging(nextSceneName) == false) return; //特に変更なしでシーン移動の必要なし<br>
@@ -5965,7 +5965,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;changingSceneName = nextSceneName; // 次に移動予定のシーン名を保管しておく<br>
       }<br>
 <br>
-      void SceneManager::LoadScene(std::string&amp; sceneName, std::vector&lt;std::string&gt; options)<br>
+      void SceneManager::LoadScene(const std::string&amp; sceneName, std::vector&lt;std::string&gt; options)<br>
       {<br>
       &nbsp;&nbsp; &nbsp;// sceneNameの指定が空の場合にはNextScene()での事前のシーン変更予約があるかチェック<br>
       &nbsp;&nbsp; &nbsp;if (sceneName == "" &amp;&amp; changingSceneName != "")<br>
