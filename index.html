@@ -8581,25 +8581,49 @@ struct CellXY<br>
       #include "Boss.h"<br>
       <br>
       #include "DataCsv.h"<br>
+	    <br>
+#include "CellXY.h"<br>
       <br>
-      <em>// マス目のXとYを保持するデータ型<br>
-        struct CellXY<br>
-        {<br>
-        &nbsp;&nbsp;&nbsp; int X = 0;<br>
-        &nbsp;&nbsp;&nbsp; int Y = 0;<br>
-        &nbsp;&nbsp;&nbsp; CellXY(int X, int Y) : X{ X }, Y{ Y }<br>
-        &nbsp;&nbsp;&nbsp; {}; // コンストラクタ<br>
-        &nbsp;&nbsp;&nbsp; // ★連想辞書配列で使うため &lt; 比較演算子(連想配列並べ替えのため)をカスタム定義<br>
-        &nbsp;&nbsp;&nbsp; // http://programming-tips.info/use_struct_as_key_of_map/cpp/index.html<br>
-        &nbsp;&nbsp;&nbsp; bool operator &lt; (const CellXY&amp; otherXY) const {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Y &lt; otherXY.Y) return true; // Y優先並べ替え<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Y &gt; otherXY.Y) return false;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (X &lt; otherXY.X) return true; // Yが同じ時はXを比較<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (X &gt; otherXY.X) return false;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 完全一致のときはfalse<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // A &lt; B と B &lt; A両方falseなら完全一致(だから==演算子の定義がいらない)<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        };</em><br>
+      <em>// 空間をグリッドでマス目として分割する(世界位置worldXをマス目位置番号cellXに変換したりできる)<br>
+class MapGridXY<br>
+{<br>
+public:<br>
+&nbsp;&nbsp;&nbsp; int cellWidth = 32; // マス目セルのサイズ<br>
+&nbsp;&nbsp;&nbsp; int cellHeight = 32; // マス目セルのサイズ<br>
+<br>
+&nbsp;&nbsp;&nbsp; // CellXYZをキーにそのマス目にあるboolを得る辞書配列<br>
+&nbsp;&nbsp;&nbsp; std::unordered_map&lt;CellXY, bool, CellXY::Hash&gt; cellXY; // 読み込み済マス目の辞書<br>
+&nbsp;&nbsp;&nbsp; std::unordered_map&lt;CellXY, bool, CellXY::Hash&gt; rangeXY; // 視界レンジは読み込み済cellXYと別に保管<br>
+<br>
+&nbsp;&nbsp;&nbsp; virtual int cellX(float worldX)<br>
+&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // マイナス方向にも対応<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return (worldX &gt;= 0) ? (int)worldX / cellWidth : (int)worldX / cellWidth - 1;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; virtual int cellY(float worldY)<br>
+&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // マイナス方向にも対応<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return (worldY &gt;= 0) ? (int)worldY / cellHeight : (int)worldY / cellHeight - 1;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; bool& operator[](CellXY searchXYZ) { // マス目に入っている先頭の参照を得る<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return cellXY[searchXYZ];<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; virtual void clear()<br>
+&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 空のテンポラリオブジェクトでリセット https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory/42115076<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::unordered_map&lt;CellXY, bool, CellXY::Hash&gt;().swap(cellXY);<br>
+&nbsp;&nbsp;&nbsp; };<br>
+<br>
+&nbsp;&nbsp;&nbsp; MapGridXY(int cellWidth = 32, int cellHeight = 32)<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : cellWidth{ cellWidth }, cellHeight{ cellHeight }<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; clear();<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; virtual ~MapGridXY()<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; clear();<br>
+&nbsp;&nbsp;&nbsp; }<br>
+};</em><br>
       <br>
       <br>
       class Map<br>
