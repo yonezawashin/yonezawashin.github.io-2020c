@@ -5050,10 +5050,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       int Image::zako2{-1};<br>
       int Image::zako3{-1};<br>
       <em>// ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定</em><br>
-      <em>DivImage Image::explosion{ 8, 2, 64, 64 };</em><br>
+      <em>DivImage Image::explosion{ 8, 2, 64, 64 };<br>
       //↑どのような画像を使うかで変わる<br>
-      // 例えば https://pipoya.net/sozai/assets/effects/effect-event-1/ のイベントエフェクト.zipの
-      // 1800×180の縦一列のみなら DivImage Image::explosion{ 10, 1, 180, 180 };となる
+      // 例えば https://pipoya.net/sozai/assets/effects/effect-event-1/ のイベントエフェクト.zipの<br>
+      // 1800×180の縦一列のみなら DivImage Image::explosion{ 10, 1, 180, 180 };となる</em><br>
       <br>
       void Image::Load()<br>
       {<br>
