@@ -6970,13 +6970,17 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <a href="https://forest.watch.impress.co.jp/library/software/flicaudiocon/">https://forest.watch.impress.co.jp/library/software/flicaudiocon/</a> <br>
       <br>
       今回はまず<b>「webでさがしたBGM素材サイト」</b>から音声ファイルを取ってきてSoundクラスを作成してみましょう。<br>
-      以下のファイルを作成中のC++の「SEフォルダ」や「BGMフォルダ」にコピーしておきましょう。</p>
+	    素材サイト例)<br>
+	    <a href="https://maou.audio/category/bgm/">https://maou.audio/category/bgm/</a> <br>
+	    <a href="https://maou.audio/category/se/">https://maou.audio/category/se/</a> <br>
+	<br>
+      以下のファイルを作成中のC++のプロジェクト下にImageフォルダの時のように「SEフォルダ」や「BGMフォルダ」を作成してコピーしておきましょう。</p>
     <ul>
-      <li>start.ogg&nbsp;&nbsp; ⇒ SE/start.oggに移動</li>
-      <li>bomb.wav&nbsp; ⇒ SE/bomb.wavに移動</li>
-      <li>title.ogg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⇒ BGM/title.mp3に移動</li>
-      <li>gameplay.ogg ⇒ BGM/gameplay.mp3に移動</li>
-      <li>ending.ogg &nbsp;&nbsp;&nbsp; ⇒ BGM/ending.mp3に移動</li>
+      <li>start.ogg&nbsp; スタート時に鳴らす&nbsp;&nbsp; ⇒ SE/start.oggに移動</li>
+      <li>bomb.wav&nbsp; 爆発時に鳴らす&nbsp;&nbsp; ⇒ SE/bomb.wavに移動</li>
+      <li>title.ogg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; タイトル画面で流れる&nbsp;&nbsp; ⇒ BGM/title.mp3に移動</li>
+      <li>gameplay.ogg プレイ画面で流れる&nbsp;&nbsp; ⇒ BGM/gameplay.mp3に移動</li>
+      <li>ending.ogg &nbsp;&nbsp;&nbsp; ゲームオーバ画面で流れる&nbsp;&nbsp; ⇒ BGM/ending.mp3に移動</li>
     </ul>
     <p>まずは簡易版のSoundクラスを作ってみましょう。基本はImage.hと似ています。</p>
     <p><code>Sound.hを新規作成</code>します。</p>
