@@ -5965,7 +5965,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;changingSceneName = nextSceneName; // 次に移動予定のシーン名を保管しておく<br>
       }<br>
 <br>
-      void SceneManager::LoadScene(const std::string&amp; sceneName, std::vector&lt;std::string&gt; options)<br>
+      void SceneManager::LoadScene(const std::string&amp; sceneName)<br>
       {<br>
       &nbsp;&nbsp; &nbsp;// sceneNameの指定が空の場合にはNextScene()での事前のシーン変更予約があるかチェック<br>
       &nbsp;&nbsp; &nbsp;if (sceneName == "" &amp;&amp; changingSceneName != "")<br>
@@ -6058,7 +6058,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(PAD_INPUT_1))<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene", { "stage1" }); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene"); //シーン遷移<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       <br>
@@ -7142,7 +7142,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// スタートの効果音の再生が終わるまで画面遷移を待つ<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isStartPushed &amp;&amp; CheckSoundMem(Sound::start) == 0)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// スタート音声再生終了をトリガーとして画面遷移<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene", { "stage1" }); //シーン遷移<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene"); //シーン遷移<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         <br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;HandleInput(); // キー入力処理</em><br>
@@ -7738,7 +7738,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スタートの効果音の再生中は遷移を待つ<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isStartPushed &amp;&amp; CheckSoundMem(Sound::start) == 0)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// スタート音声再生終了をトリガーとして画面遷移<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene", { "stage1" }); //シーン遷移<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sm.LoadScene("PlayScene"); //シーン遷移<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;HandleInput(); // キー入力処理<br>
