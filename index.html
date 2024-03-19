@@ -10744,6 +10744,10 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; static int prevStates[(int)Pad::NUM]; // 1フレーム前の状態<br>
       &nbsp;&nbsp;&nbsp; static int currentStates[(int)Pad::NUM]; // 現在の状態<br>
       <br>
+      &nbsp;&nbsp;&nbsp; <static std::unordered_map&lt;Pad, bool&gt; isJoin; // 参加中のパッド番号辞書<br>
+      &nbsp;&nbsp;&nbsp; // 参加中のパッドかどうか?<br>
+      &nbsp;&nbsp;&nbsp; static bool IsJoin(Pad pad) { return isJoin.count(pad) == 1 &amp;&amp; Input::isJoin[pad]; };<br>
+      <br>
       &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;int, int&gt; padDic; // パッド番号からDXの定義への辞書<br>
 	    <br>
       &nbsp;&nbsp;&nbsp; <em>//★【DXコントローラバグ検知】初回プッシュが被ればDXバグで同一コントローラ<br>
@@ -10773,6 +10777,20 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; timing = 0, isBugCheckMode = false; //バグチェック</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // プレイヤの参加処理(参加辞書登録して参加中の数も返す)<br>
+        &nbsp;&nbsp;&nbsp; static int JoinCheck()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int joinCount = 0;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加ボタンが押されたら<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_1))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>isJoin[(Pad)i] = true; // 参加パッド辞書に登録</b><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<b>isJoin.count((Pad)i) == 1 &amp;&amp; isJoin[(Pad)i] == true</b>)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; joinCount++; // 参加中の人数をカウント<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return joinCount; // 参加中のコントローラ数を返す<br>
+        &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 最新の入力状況に更新する処理。<br>
       &nbsp;&nbsp;&nbsp; // 毎フレームの最初に（ゲームの処理より先に）呼んでください。<br>
@@ -10874,6 +10892,22 @@ Update()関数内にX方向の動きも追加すると..<br>
       }; //←【注意】クラス定義の終わりにはコロンが必要だよ！<br>
       <br>
       #endif&nbsp; //ここでエラー出た人は↑【注意】の;コロン忘れ<br>
+    </p>
+    <br>
+	      <p><code>Input.cppに変数定義を追加します。</code></p>
+    <p class="source">#include "Input.h"<br>
+      <br>
+      int Input::prevStates[]; // 1フレーム前の状態<br>
+      int Input::currentStates[]; // 現在の状態<br>
+      <em>std::unordered_map&lt;Pad, bool&gt; Input::isJoin; // 参加中のパッド番号辞書</em><br>
+      <br>
+      std::unordered_map&lt;int, int&gt; Input::padDic; // パッド番号からDXの定義への辞書<br>
+<br>
+<em>//★【DXコントローラバグ検知】初回プッシュが被ればDXバグで同一コントローラ<br>
+int Input::firstPushTiming[(int)Pad::NUM - 1]; // マウスのぶんの配列はいらないから-1<br>
+int Input::timing{ 0 };<br>
+bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><br>
+	    <br>
     </p>
     <br>
     <br>
