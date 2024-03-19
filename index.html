@@ -10966,7 +10966,7 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><
       int Image::player{ -1 };<br>
 (中略)..........<br>
       <br>
-      void Image::Load(<em>std::string scene</em>)<br>
+      void Image::Load()<br>
       {<br>
 (中略)..........<br>
       &nbsp;&nbsp;&nbsp; background = LoadGraph("Image/background.jpg");<br>
@@ -11017,6 +11017,80 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><
 		<br>
 		はい、実行してみて、これで静止した状態で背景が表示されたら一旦は成功です。<br>
 		うまく表示されない場合は、background.jpgのつづりは合ってますか?、もしくはImageフォルダにあるかちゃんと確認してくださいね。<br>
-	    
+		<br>
+		<br>
+		<br>
+		うまく表示出来たら今度は背景をスクロールさせる処理に挑戦してみます。<br>
+		<br>
+		<br>
+		<br>
+		<br>
+	    <p><code>PlayScene.hに背景をスクロールさせる処理を追加</code>します。ポイントは背景を<b>2枚、画像の幅だけずらして描いている</b>ことです。<br>
+    </p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "Sound.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      #include "Player.h"<br>
+      #include "Boss.h"<br>
+      #include "PlayerBullet.h"<br>
+      #include "EnemyBullet.h"<br>
+      #include "Explosion.h"<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp;&nbsp; GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; int score = 0; // プレイ中のゲームのスコア:短期的数値でシーン遷移ごとにリセットされる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float scrollSpeed = 1.5f; // スクロール速度<br>
+      <em><br>
+      &nbsp;&nbsp;&nbsp; float bgX = 0.0f; // 背景のスクロール位置<br>
+      &nbsp;&nbsp;&nbsp; float bgSpeed = 1.5f; // 背景のスクロールスピード<br>
+      </em><br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; PlayScene() : Scene()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;tag = "PlayScene";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+(中略)..........<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float bgWidth, bgHeight; // 画像の幅と高さ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // &amp;で&amp;bgWidth と &amp;bgHeightを参照渡し↓することでGetGraphSizeF内部で書き換えてもらう(&をつけない渡し方は変数のコピーを渡しだから関数が終わっても書き変わらない)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; GetGraphSizeF(Image::background, &amp;bgWidth, &amp;bgHeight); // 画像の縦横のピクセルサイズを取得する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bgX -= bgSpeed; // マイナスで左方向にスクロール<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (bgX &lt; -bgWidth) bgX = 0; // 画像サイズの幅ぶんスクロールしたら0に戻してループ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 背景の描画(一番後ろに表示させるものから最初に描く、描く順が早い方が後ろのレイヤー)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawGraphF(0, 0, Image::background, TRUE); // DrawGraphF関数はDrawRotaGraphFと違い(0,0)を指定すると左上が(0,0)になるように描く。<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// <b>2枚背景を画像の幅のぶんだけ右端にずらして描くことで無限にループしてるようにみせる</b><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawGraphF(bgX + bgWidth, 0, Image::background, TRUE);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (中略)...................<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+      <br>
+      <br>
+	      いかがですか？背景がスクロールすると画面に動きが出て少し気持ちよさが増したように感じませんか？<br>
+<br>
   </body>
 </html>
