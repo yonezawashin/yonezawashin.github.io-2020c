@@ -9129,6 +9129,7 @@ Update()関数内にX方向の動きも追加すると..<br>
         <a href="#mozTocId50011">Inputクラスの複数プレイ対応</a><br>
         <a href="#mozTocId50012">複数プレイヤの参加処理</a><br>
         <a href="#mozTocId50013">[DXのバグ!?仕様?]複数コントローラは4以降があやしい件</a><br>
+	<a href="#mozTocId50014">背景画像を作ってループ表示させてみる</a><br>
       </li>
       <br>
       <p>次のテキストは後々。</p>
@@ -10915,5 +10916,22 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><
 		<br>
     <br>
     <br>
+		<h2><a id="mozTocId50014" class="mozTocH1"></a>背景画像を作ってループ表示させてみる</h2>
+<br>
+      まずはGIMPでループさせる背景画像を作ってみましょう。<br>
+      GIMPを開いてスクリーンのサイズと合わせて960×540でキャンバスをつくる(横スクロールするなら960より大きくしてみてもよい)。<br>
+      <img src="image/bg_gimp1.png" alt="" style="width: 859px; height: 659px;"><br>
+      <br>
+		
+      空の色をイメージして水色でぬりつぶします。<br>
+      <img src="image/bg_gimp2.png" alt="" style="width: 617px; height: 667px;"><br>
+      <br>
+	ブラシを使って白色で雲をえがきます。<br>
+      <img src="image/bg_gimp3.png" alt="" style="width: 775px; height: 697px;"><br>
+      <br>
+	背景画像をエクスポートでImageフォルダにbackground.jpgと名前をつけて保存します。(背景画像は縦×横サイズが大きいのでjpg形式にすることで圧縮して保存サイズが小さくなるようにした)<br>
+      <img src="image/bg_gimp4.png" alt="" style="width: 891px; height: 662px;"><br>
+      <br>
+		<br>
   </body>
 </html>
