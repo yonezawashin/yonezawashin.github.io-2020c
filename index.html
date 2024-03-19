@@ -8837,6 +8837,7 @@ public:<br>
       #include "Enemy.h"<br>
       #include "Image.h"<br>
       #include "MyMath.h"<br>
+      #include "EnemyBullet.h" // make_sharedなど【実際の弾を撃ち生成処理を行うのでインクルード必要】<br>
       <br>
       <em>#include "Player.h" // Player.hでもZako0.hをインクルードすると循環するので注意</em><br>
       <br>
@@ -8868,7 +8869,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// 【重要】画面外の削除処理【CPU処理重くなる原因】<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (x &lt; 0)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (position.x &lt; 0)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// 左端の画面外に出たらisDeadしないと<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 画面外の敵の当たり判定で【だんだん処理が重くなるZako1,Zako2..も】<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isDead = true;<br>
@@ -8898,6 +8899,7 @@ public:<br>
       #include "Screen.h"<br>
       #include "MyMath.h"<br>
       #include "MyRandom.h"<br>
+      #include "EnemyBullet.h" // make_sharedなど【実際の弾を撃ち生成処理を行うのでインクルード必要】<br>
       <br>
       <em>#include "Player.h" // Player.hでもZako2.hをインクルードすると循環するので注意</em><br>
       <br>
@@ -8960,7 +8962,6 @@ public:<br>
       #include &lt;cmath&gt; // Sinの計算に使う<br>
       #include "MyMath.h"<br>
       #include "Image.h"<br>
-      #include "Vector3.h"<br>
       <br>
       <em>#include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意</em><br>
       <br>
@@ -8970,7 +8971,7 @@ public:<br>
       public:<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
-      &nbsp;&nbsp;&nbsp; Zako1(Vector3 pos) : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; Zako1(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako1";//オブジェクトの種類判別タグ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = 5;<br>
@@ -9071,11 +9072,11 @@ public:<br>
     <p class="source">y += 1; // 【メイン】の動き(少しづつ下に行く)<br>
       <b>y += (今の角度のY) - (前の角度のY); // これなら y += 1;の効果が消えない！</b></p>
     <p>これなら色々な動きを<b>【合成した動きなのに】【お互いの動きを消す心配】がなくなります。</b></p>
-    <p> これが<b>±プラマイ0で合成テクニック⇒実質微分•積分テクニック</b>です。<br>
+    <p> これが<b>±プラマイ0で合成テクニック⇒微分•積分的テクニック</b>です。<br>
       え、<b>微分積分て難しい式なんじゃなかったっけ？</b>って思うでしょうが<br>
-      これも<b>まごうことなき積分の式です。</b><br>
+      これも<b>すこしトリッキーですが積分的な式です。<a href="https://www.momoyama-usagi.com/entry/math-sabun1#i">(離散数学的に n と n-1 の漸化式を使っている感じ?)</a></b><br>
       積分は<b>【ちりが積もれば山となる式】</b>です。<br>
-      で、この場合<b>【「ちり」が微分です】</b><br>
+      で、この場合<b>【「ちり」が微分です】(1フレームごとの値、それを0～60フレーム1秒間ぶん足し合わせるとの移動量が積分されて求まる)</b><br>
       今回の例では<b>【yが山です】</b><br>
       そして<b>【「ちり」が(今の角度のY) - (前の角度のY)です】</b><br>
       これを<b>【(今の角度のsin) - (前の角度のsin)の積分がsinθになった】</b><br>
