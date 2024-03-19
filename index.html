@@ -10588,23 +10588,23 @@ Update()関数内にX方向の動きも追加すると..<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (minDistance&gt;300)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
           &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; position.x += 1; // XY方向300以上の距離のときは<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (player != nullptr)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (minPlayer != nullptr)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機をおいかけてくる処理<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angleToPlayer = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float speed = 3;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position += Vector3((float)std::cos(angleToPlayer) * speed, (float)std::sin(angleToPlayer) * speed);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;// 自機をおいかけてくる処理<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float angleToPlayer = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float speed = 3;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;position += Vector3((float)std::cos(angleToPlayer) * speed, (float)std::sin(angleToPlayer) * speed);<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//ゆらゆらSin波動の動きをy上下方向にプラス<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sinMove += 2.5f; // Sinの波運動の角度を進める<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;//ゆらゆらSin波動の動きをy上下方向にプラス<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;sinMove += 2.5f; // Sinの波運動の角度を進める<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position.y += currentSinY - prevSinY; // 上下方向のSinの波運動<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;position.y += currentSinY - prevSinY; // 上下方向のSinの波運動<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
