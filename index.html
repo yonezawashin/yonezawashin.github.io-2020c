@@ -10933,5 +10933,90 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><
       <img src="image/bg_gimp4.png" alt="" style="width: 891px; height: 662px;"><br>
       <br>
 		<br>
+		<p><code>Image.hに背景画像の読み込み定義</code>を追加しましょう。</p>
+    <p class="source">#ifndef IMAGE_H_<br>
+      #define IMAGE_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
+(中略)..........<br>
+      <br>
+      class Image<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; Image() {}; // 初期化コンストラクタの定義だけ<br>
+      &nbsp;&nbsp;&nbsp; ~Image() {}; // 破棄する処理デストラクタの定義だけ<br>
+(中略)..........<br>
+      <br>
+      <em>&nbsp;&nbsp;&nbsp; static int background; //背景画像のハンドラ(読込画像番号)</em><br>
+      &nbsp;&nbsp;&nbsp; static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;&nbsp; static int player; //プレイヤ画像のハンドラ<br>
+(中略)..........<br>
+      <br>
+      };<br>
+      #endif</p>
+    <br>
+    <p><code>Image.cppにも背景画像の読み込みの処理</code>を追加しましょう。</p>
+    <p class="source">#include "Image.h"<br>
+      <br>
+(中略)..........<br>
+      <br>
+      <em>int Image::background{ -1 };</em><br>
+      int Image::bossImage{ -1 }; // Load終わっても-1(初期値)のままだと画像ロードが失敗してますね<br>
+      int Image::player{ -1 };<br>
+(中略)..........<br>
+      <br>
+      void Image::Load(<em>std::string scene</em>)<br>
+      {<br>
+(中略)..........<br>
+      &nbsp;&nbsp;&nbsp; background = LoadGraph("Image/background.jpg");<br>
+      &nbsp;&nbsp;&nbsp; assert(background != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+(中略)..........<br>
+	    <br>
+      }<br>
+    </p>
+<p><code>PlayScene.hに背景をえがく処理を追加</code>します。<br>
+    </p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "Sound.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      #include "Player.h"<br>
+      #include "Boss.h"<br>
+      #include "PlayerBullet.h"<br>
+      #include "EnemyBullet.h"<br>
+      #include "Explosion.h"<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+(中略)..........<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 背景の描画(<b>一番後ろに表示させるものから最初に描く、描く順が早い方が後ろのレイヤー</b>)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawGraphF(0, 0, Image::background, TRUE); // <b>DrawGraphF関数</b>は<b>DrawRotaGraphFと違い</b>(0,0)を指定すると<b>左上が(0,0)になるように描く。</b><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (中略)...................<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+		<br>
+		はい、実行してみて、これで静止した状態で背景が表示されたら一旦は成功です。<br>
+		うまく表示されない場合は、background.jpgのつづりは合ってますか?、もしくはImageフォルダにあるかちゃんと確認してくださいね。<br>
+	    
   </body>
 </html>
