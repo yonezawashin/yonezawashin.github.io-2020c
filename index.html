@@ -10795,13 +10795,13 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // GetButtonの中でGetButtonを呼ぶ【再起呼出し】テクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButton((Pad)i, buttonId))<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; //押されているPadを発見！<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 一つも押されていなかった<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今ボタンが押されているかどうかを返却<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (currentStates[(int)pad] &amp; buttonId) != 0;<br>
@@ -10809,15 +10809,17 @@ Update()関数内にX方向の動きも追加すると..<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ボタンが押された瞬間か？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButtonDown(Pad pad, int buttonId)<br>
-      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; {<em>   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonDown((Pad)i, buttonId))<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; //押されているPadを発見！<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 一つも押されていなかった<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今は押されていて、かつ1フレーム前は押されていない場合はtrueを返却<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((currentStates[(int)pad] &amp; buttonId) &amp; ~(prevStates[(int)pad] &amp; buttonId)) != 0;<br>
@@ -10825,19 +10827,50 @@ Update()関数内にX方向の動きも追加すると..<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ボタンが離された瞬間か？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButtonUp(Pad pad, int buttonId)<br>
-      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; {<em>   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonUp((Pad)i, buttonId))<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; //押されているPadを発見！<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 一つも押されていなかった<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 1フレーム前は押されていて、かつ今は押されている場合はtrueを返却<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((prevStates[(int)pad] &amp; buttonId) &amp; ~(currentStates[(int)pad] &amp; buttonId)) != 0;<br>
       &nbsp;&nbsp;&nbsp; }<br>
+      <em>&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; //コントローラのボタンの初回プッシュを検知し<br>
+      &nbsp;&nbsp;&nbsp; //他コントローラと初回タイミングが完全被りかチェックして重複コントローラの判定処理をスルーする対策<br>
+      &nbsp;&nbsp;&nbsp; //★コントローラ3を押すと7も反応するなどコントローラ4以降の動作が怪しいのでその対策(DXのバグ?仕様?)<br>
+      &nbsp;&nbsp;&nbsp; static bool ControllerBugCheck(Pad pad, int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 今は押されていて、かつ1フレーム前は押されていない場合<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bool buttonDown = ((currentStates[(int)pad] & buttonId) & ~(prevStates[(int)pad] & buttonId)) != 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //if (isBugCheckMode == false) return false; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //コントローラの初回ボタンプッシュを検知<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (buttonDown && firstPushTiming[(int)pad] == 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i < (int)Pad::NUM - 1; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //全コントローラ初回プッシュ被りがないかチェック完全同時は怪しいので-1<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bool isDown = ((currentStates[i] & buttonId) & ~(prevStates[i] & buttonId)) != 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if ((Pad)i != pad && isDown ////初回プッシュ被り検出<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; && (timing == firstPushTiming[i] || firstPushTiming[i] == 0))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //初回プッシュのタイミング被りは-1フラグを記録<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; firstPushTiming[i] = -1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (firstPushTiming[(int)pad] != -1)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; firstPushTiming[(int)pad] = timing;//初回プッシュを記録<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (firstPushTiming[(int)pad] == -1) return true; //DXのコントローラ被りバグ！<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else return false; //コントローラ被りOK!<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; </em><br>
       }; //←【注意】クラス定義の終わりにはコロンが必要だよ！<br>
       <br>
       #endif&nbsp; //ここでエラー出た人は↑【注意】の;コロン忘れ<br>
