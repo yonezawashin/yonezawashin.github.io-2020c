@@ -9130,6 +9130,7 @@ Update()関数内にX方向の動きも追加すると..<br>
         <a href="#mozTocId50012">複数プレイヤの参加処理</a><br>
         <a href="#mozTocId50013">[DXのバグ!?仕様?]複数コントローラは4以降があやしい件</a><br>
 	<a href="#mozTocId50014">背景画像を作ってループ表示させてみる</a><br>
+	<a href="#mozTocId50015">スコアを画面表示させてみる</a><br>
       </li>
       <br>
       <p>次のテキストは後々。</p>
@@ -11092,5 +11093,135 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><
       <br>
 	      いかがですか？背景がスクロールすると画面に動きが出て少し気持ちよさが増したように感じませんか？<br>
 <br>
+		<br>
+		<br>
+		<h2><a id="mozTocId50015" class="mozTocH1"></a>スコアを画面表示させてみる</h2>
+
+		<p><code>TitleScene.hには実はすでにスコアを表示するコードがありますが</code>します。<br></p>
+    <p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      (中略)...........<br>
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      (中略)...........<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 0, "TitleSceneです。ボタン押下でPlaySceneへ。", GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (sm.scoreMax &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 200, <em>"MAXスコア: " + sm.scoreMax</em>, GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      
+      (中略)...........<br>
+	    <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+	    <br>
+<p>TitleScene.hには実はすでにスコアを表示するコードがありますが実は文字列の扱い方が間違っていて表示されていません。<br></p>
+    <p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      (中略)...........<br>
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      (中略)...........<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 0, "TitleSceneです。ボタン押下でPlaySceneへ。", GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (sm.scoreMax &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 200, <em>"MAXスコア: " + sm.scoreMax</em>, GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      
+      (中略)...........<br>
+	    <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+		<br>
+		DrawStringの関数の上で右クリックして「定義をここに表示」してみてください。<br>
+		<p class="source">
+		// 文字列描画関数<br>
+extern	int	DrawString( int x, int y, <b>const TCHAR *String</b>,      unsigned int Color, unsigned int EdgeColor DEFAULTPARAM( = 0 ) ) ;</p>
+		<br>
+		const TCHAR *String、つまりはconst TCHAR *型ですね<br>
+		さらにTCHARの上で右クリックして「定義をここに表示」してみてください。<br>
+		<p class="source">typedef char TCHAR, *PTCHAR;</p>
+		typedef char ～,～...; つまりはchar型です(C言語の1byteの1文字の<a href="https://www.k-cube.co.jp/wakaba/server/ascii_code.html">アスキーコード</a>型もしくは<a href="https://pg-learning.com/c-lang/type-range/#google_vignette">-127 〜 128の1byteの整数型</a>)<br>
+		<br>
+		さて、ここまではC++なので使いやすいstd::string型でコードを書いてきました。<br>
+		一方、DXライブラリはC言語時代から作られており、C言語でも動かせるように文字列はchar型の*ポインタとして表現されています。<br>
+		char *型でなぜ、文字列として扱えているのでしょうか？<br>
+		それはC言語時代から文字列は<b>char型の配列</b>として表現されてきており、char*型はその<b>配列の先頭を指すポインタ</b>としての意味を持っているのです。<br>
+		下記のスライドでポインタや文字列、ヌルnullptrの概念、データの読み出し方と型の定義の関連、参照&amp;、CDやメモリなど物理データとプログラムのつながりを確認しましょう<br>
+		<img src="image/pointer_string.png" alt="" style="width: 1081px; height: 608px;"><br>
+		<br>
+		
+		
+<br>
+	<br>	
+<p><code>TitleScene.hには実はすでにスコアを表示するコードがありますが実は文字列の扱い方が間違っていて表示されていません</code><br></p>
+    <p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      (中略)...........<br>
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      (中略)...........<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 0, "TitleSceneです。ボタン押下でPlaySceneへ。", GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (sm.scoreMax &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 200, <em>"MAXスコア: " + sm.scoreMax</em>, GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      
+      (中略)...........<br>
+	    <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+		<br>
+		<br>
   </body>
 </html>
