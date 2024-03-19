@@ -10593,18 +10593,18 @@ Update()関数内にX方向の動きも追加すると..<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (minPlayer != nullptr)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;// 自機をおいかけてくる処理<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float angleToPlayer = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float speed = 3;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;position += Vector3((float)std::cos(angleToPlayer) * speed, (float)std::sin(angleToPlayer) * speed);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>// 自機をおいかけてくる処理<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>float angleToPlayer = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>float speed = 3;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>position += Vector3((float)std::cos(angleToPlayer) * speed, (float)std::sin(angleToPlayer) * speed);<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;//ゆらゆらSin波動の動きをy上下方向にプラス<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;sinMove += 2.5f; // Sinの波運動の角度を進める<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>//ゆらゆらSin波動の動きをy上下方向にプラス<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>sinMove += 2.5f; // Sinの波運動の角度を進める<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;position.y += currentSinY - prevSinY; // 上下方向のSinの波運動<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>position.y += currentSinY - prevSinY; // 上下方向のSinの波運動<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
@@ -10672,11 +10672,11 @@ Update()関数内にX方向の動きも追加すると..<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (minPlayer != nullptr)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;// 自機狙いばらまき弾<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float angle = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float randomAngle = MyRandom::Range(-15.0f, 15.0f); // ±15度の乱数の角度を取得<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, angle + randomAngle * MyMath::Deg2Rad, 8));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;coolTime += 10;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>// 自機狙いばらまき弾<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>float angle = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>float randomAngle = MyRandom::Range(-15.0f, 15.0f); // ±15度の乱数の角度を取得<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, angle + randomAngle * MyMath::Deg2Rad, 8));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>coolTime += 10;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       <br>
