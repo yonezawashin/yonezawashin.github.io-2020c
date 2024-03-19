@@ -10182,7 +10182,7 @@ Update()関数内にX方向の動きも追加すると..<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加辞書登録されたプレイヤの自機の生成<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::IsJoin((Pad)i) &amp;&amp; gm.players.count(i) == 0)<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.players[i] = std::make_shared&lt;Player&gt;(Vector3((Pad)i, (float)100, (float)(Screen::Height / 2)));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.players[i] = std::make_shared&lt;Player&gt;((Pad)i, Vector3((float)100, (float)(Screen::Height / 2)));<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp; }</em><br>
       <br>
