@@ -11150,13 +11150,14 @@ extern	int	DrawString( int x, int y, <b>const TCHAR *String</b>,      unsigned i
 		<img src="image/pointer_string.png" alt="" style="width: 1081px; height: 608px;"><br>
 		<br>
 		上記を踏まえて、<em>"MAXスコア: " + sm.scoreMax</em>の意味を考えると..<br>
-		あ、スコアが2だとするとchar*型"MAXスコア: "に+2すると..ポインタの先頭位置が+2ずれるだけ..つまり[M][A][X]..のXをポインタが指すようになるだけ..<br>
-		つまり、文字列char*型に+で数字を足しても文字のアクセス位置が変わるだけという処理になり、バグってしまうコードになるわけです。<br>
+		あ、スコアが2だとすると<b>char*型"MAXスコア: "に+2しても..ポインタの先頭位置が+2ずれるだけ</b>..つまり[M][A][X]..のXをポインタが指すようになるだけ..<br>
+		つまり、文字列<b>char*型に+で数字を足したところで文字のアクセス位置が変わるだけ</b>という処理になり、バグってしまうコードになるわけです。<br>
 		<br>
-		ではどうするかというと <b>std::string("MAXスコア: ")</b> としてC++のstd::string型に変換してから<b>std::to_string(sm.scoreMax)で数字を文字列型に変換</b>したうえで、<br>
-		<em>std::string("MAXスコア: ") + std::to_string(sm.scoreMax)</em>として足し合わせて、<br>
+		ではどうするかというと <b><em>std::string("MAXスコア: ")</em></b> としてC++のstd::string型に変換してから<b><em>std::to_string(sm.scoreMax)</em>で数字を文字列型に変換</b>したうえで、<br>
+		<p class="source"><em>std::string("MAXスコア: ") + std::to_string(sm.scoreMax)</em></p>
+		として足し合わせて、<br>
 		さらに.c_str()関数でもとのchar*型へ戻してやる必要があります。<br>
-		<em>( std::string("MAXスコア: ") + std::to_string(sm.scoreMax) ).c_str()</em>
+		<p class="source"><em>( std::string("MAXスコア: ") + std::to_string(sm.scoreMax) ).c_str()</em></p>
 		<br>
 	<br>	
 <p><code>TitleScene.hのスコアを表示するコードを修正します。</code><br></p>
