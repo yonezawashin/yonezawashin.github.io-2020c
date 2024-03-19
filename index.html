@@ -10904,7 +10904,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       std::unordered_map&lt;int, int&gt; Input::padDic; // パッド番号からDXの定義への辞書<br>
 <br>
 <em>//★【DXコントローラバグ検知】初回プッシュが被ればDXバグで同一コントローラ<br>
-int Input::firstPushTiming[(int)Pad::NUM - 1]; // マウスのぶんの配列はいらないから-1<br>
+int Input::firstPushTiming[(int)Pad::Four]; // Pad::Fourが最後だから8とかに増やすなら要書き換え<br>
 int Input::timing{ 0 };<br>
 bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><br>
 	    <br>
