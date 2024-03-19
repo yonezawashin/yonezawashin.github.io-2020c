@@ -9513,8 +9513,8 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; // ボタンが押されているか？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButton(Pad pad, int buttonId)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // GetButtonの中でGetButtonを呼ぶ【再起呼出し】テクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButton((Pad)i, buttonId))<br>
@@ -9529,8 +9529,8 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; // ボタンが押された瞬間か？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButtonDown(Pad pad, int buttonId)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonDown((Pad)i, buttonId))<br>
@@ -9545,8 +9545,8 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; // ボタンが離された瞬間か？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButtonUp(Pad pad, int buttonId)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonUp((Pad)i, buttonId))<br>
@@ -9734,7 +9734,6 @@ Update()関数内にX方向の動きも追加すると..<br>
       void Game::Init()<br>
       {// Init処理<br>
       &nbsp;&nbsp;&nbsp; <em>Input::Init(); // コントローラ入力の初期化</em><br>
-      &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数シードの初期化<br>
       <br>
       &nbsp;&nbsp;&nbsp; (中略)............<br>
       }<br>
@@ -9753,6 +9752,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       すでに<b>Inputを使い慣れた人も辞書配列の使い道に注目</b>してください。<br>
       <b>辞書配列は【対応関係を結ぶのにめちゃ便利】</b>です。<br>
       <b>辞書配列に慣れると【vector配列が辞書配列の劣化版のようにすら感じるほど】</b>です。<br>
+      <b>ですがvector配列はデータがぎっしりとかっつめられているというメモリ節約の利点があります、機動力とメモリ節約の両観点から選択しましょう。<br>
     </p>
     <p><code>Input.hに参加中パッドの辞書と参加チェック処理</code>を書き加えましょう。</p>
     <p class="source">#ifndef INPUT_H_<br>
@@ -10055,6 +10055,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       #define GAMEMANAGER_H_<br>
       <br>
       #include &lt;memory&gt;<br>
+      #include &lt;vector&gt;<br>
       #include &lt;list&gt;<br>
       <em>#include &lt;unordered_map&gt; // 辞書配列【map高速版】</em><br>
       <br>
@@ -10165,7 +10166,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここにプレイ終了時のメモリのリセット処理(ゲームクリアやゲームオーバー時など)<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.map = nullptr; // マップのメモリからの解放<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.<em>players.</em>clear(); // プレイヤのメモリからの解放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.<em>players.clear()</em>; // プレイヤのメモリからの解放<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemies.clear(); // 敵のメモリからの解放<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.playerBullets.clear(); // プレイヤの弾のメモリからの解放<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemyBullets.clear(); // 敵弾のメモリからの解放<br>
@@ -10199,11 +10200,11 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if(gm.players.size() &gt; 0) //プレイヤ配列0の内はスクロールしない</em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.map-&gt;Scroll(scrollSpeed);<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // プレイヤの描画処理<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (const auto&amp; pair : gm.players)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// プレイヤの更新処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; pair : gm.players)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto player = pair.second;</em><br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!<em>player</em>-&gt;isDead) // 自機が死んでいなければ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto player = pair.second;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!player-&gt;isDead) // 自機が死んでいなければ</em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>}</em><br>
       <br>
@@ -10230,17 +10231,21 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (const auto&amp; pair : gm.players)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto player = pair.second;</em><br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機が死んでたらこれ以上判定しない<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<em>player</em>-&gt;isDead)<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; break;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>// 自機が死んでたらこれ以上判定しない<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>if (<em>player</em>-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;&nbsp;&nbsp; break;<br>
       <br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 円同士の衝突判定で調べる<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <u>// 敵弾が死んでたらスキップ
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (enemyBullet->isDead)
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; continue;</u>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>// 円同士の衝突判定で調べる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>if (MyMath::CircleCircleIntersection(<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player-&gt;position, <em>player</em>-&gt;collisionRadius,<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemyBullet-&gt;position, enemyBullet-&gt;collisionRadius))<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;OnCollisionEnemyBullet(enemyBullet);<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>}<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>}</em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
       <br>
