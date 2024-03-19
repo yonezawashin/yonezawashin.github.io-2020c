@@ -11183,11 +11183,17 @@ extern	int	DrawString( int x, int y, <b>const TCHAR *String</b>,      unsigned i
 		下記のスライドでポインタや文字列、ヌルnullptrの概念、データの読み出し方と型の定義の関連、参照&amp;、CDやメモリなど物理データとプログラムのつながりを確認しましょう<br>
 		<img src="image/pointer_string.png" alt="" style="width: 1081px; height: 608px;"><br>
 		<br>
-		
-		
-<br>
+		上記を踏まえて、<em>"MAXスコア: " + sm.scoreMax</em>の意味を考えると..<br>
+		あ、スコアが2だとするとchar*型"MAXスコア: "に+2すると..ポインタの先頭位置が+2ずれるだけ..つまり[M][A][X]..のXをポインタが指すようになるだけ..<br>
+		つまり、文字列char*型に+で数字を足しても文字のアクセス位置が変わるだけという処理になり、バグってしまうコードになるわけです。<br>
+		<br>
+		ではどうするかというと <b>std::string("MAXスコア: ")</b> としてC++のstd::string型に変換してから<b>std::to_string(sm.scoreMax)で数字を文字列型に変換</b>したうえで、<br>
+		<em>std::string("MAXスコア: ") + std::to_string(sm.scoreMax)</em>として足し合わせて、<br>
+		さらに.c_str()関数でもとのchar*型へ戻してやる必要があります。<br>
+		<em>( std::string("MAXスコア: ") + std::to_string(sm.scoreMax) ).c_str()</em>
+		<br>
 	<br>	
-<p><code>TitleScene.hには実はすでにスコアを表示するコードがありますが実は文字列の扱い方が間違っていて表示されていません</code><br></p>
+<p><code>TitleScene.hのスコアを表示するコードを修正します。</code><br></p>
     <p class="source">#ifndef TITLESCENE_H_<br>
       #define TITLESCENE_H_<br>
       <br>
@@ -11210,7 +11216,7 @@ extern	int	DrawString( int x, int y, <b>const TCHAR *String</b>,      unsigned i
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 0, "TitleSceneです。ボタン押下でPlaySceneへ。", GetColor(255, 255, 255));<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (sm.scoreMax &gt;= 0)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 200, <em>"MAXスコア: " + sm.scoreMax</em>, GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 200, <em>(std::string("MAXスコア: ") + std::to_string(sm.scoreMax)).c_str()</em>, GetColor(255, 255, 255));<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       <br>
       
