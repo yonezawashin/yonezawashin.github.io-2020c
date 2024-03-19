@@ -10744,7 +10744,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; static int prevStates[(int)Pad::NUM]; // 1フレーム前の状態<br>
       &nbsp;&nbsp;&nbsp; static int currentStates[(int)Pad::NUM]; // 現在の状態<br>
       <br>
-      &nbsp;&nbsp;&nbsp; <static std::unordered_map&lt;Pad, bool&gt; isJoin; // 参加中のパッド番号辞書<br>
+      &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;Pad, bool&gt; isJoin; // 参加中のパッド番号辞書<br>
       &nbsp;&nbsp;&nbsp; // 参加中のパッドかどうか?<br>
       &nbsp;&nbsp;&nbsp; static bool IsJoin(Pad pad) { return isJoin.count(pad) == 1 &amp;&amp; Input::isJoin[pad]; };<br>
       <br>
@@ -10899,7 +10899,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       <br>
       int Input::prevStates[]; // 1フレーム前の状態<br>
       int Input::currentStates[]; // 現在の状態<br>
-      <em>std::unordered_map&lt;Pad, bool&gt; Input::isJoin; // 参加中のパッド番号辞書</em><br>
+      std::unordered_map&lt;Pad, bool&gt; Input::isJoin; // 参加中のパッド番号辞書<br>
       <br>
       std::unordered_map&lt;int, int&gt; Input::padDic; // パッド番号からDXの定義への辞書<br>
 <br>
