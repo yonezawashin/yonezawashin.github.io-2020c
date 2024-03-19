@@ -8770,7 +8770,6 @@ public:<br>
     <br>
     <h1><a id="mozTocId4003" class="mozTocH1"></a>自機狙い弾</h1>
     <h2>点と点を結んだ線の角度を調べる関数</h2>
-    <p>C#テキストからの変更はMath関連だけですね。<br>
       インクルードするのは<b>#include &lt;cmath&gt;</b>になります。cmathはスタンダード(<b>ST</b>andar<b>D</b>)ライブラリ所属なので<br>
       つかうときはstd::cos()とか<b>std::atan2()</b>になります。(stdはスタンダードの略)</p>
     <p><code>MyMath.hに逆三角関数でプレイヤへの角度を求める関数を追加</code>しましょう。</p>
@@ -8778,6 +8777,7 @@ public:<br>
       #define _MYMATH_H<br>
       <br>
       <em>#include &lt;cmath&gt;</em><br>
+      #include "Vector3.h"<br>
       <br>
       // 数学関連クラス<br>
       class MyMath<br>
@@ -8813,14 +8813,12 @@ public:<br>
       &nbsp;&nbsp; &nbsp;<em>/// &lt;summary&gt;<br>
         &nbsp;&nbsp; &nbsp;/// 点から点への角度（ラジアン）を求める。<br>
         &nbsp;&nbsp; &nbsp;/// &lt;/summary&gt;<br>
-        &nbsp;&nbsp; &nbsp;/// &lt;param name="fromX"&gt;始点x&lt;/param&gt;<br>
-        &nbsp;&nbsp; &nbsp;/// &lt;param name="fromY"&gt;始点y&lt;/param&gt;<br>
-        &nbsp;&nbsp; &nbsp;/// &lt;param name="toX"&gt;終点x&lt;/param&gt;<br>
-        &nbsp;&nbsp; &nbsp;/// &lt;param name="toY"&gt;終点y&lt;/param&gt;<br>
+        &nbsp;&nbsp; &nbsp;/// &lt;param name="fromXY"&gt;始点&lt;/param&gt;<br>
+        &nbsp;&nbsp; &nbsp;/// &lt;param name="toXY"&gt;終点&lt;/param&gt;<br>
         &nbsp;&nbsp; &nbsp;/// &lt;returns&gt;&lt;/returns&gt;<br>
-        &nbsp;&nbsp; &nbsp;static float PointToPointAngle(float fromX, float fromY, float toX, float toY)<br>
+        &nbsp;&nbsp; &nbsp;static float PointToPointAngle(Vector3 fromXY, Vector3 toXY)<br>
         &nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return (float)<b>std::atan2</b>(toY - fromY, toX - fromX);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return (float)<b>std::atan2</b>(toXY.y - fromXY.y, toXY.x - fromXY.x);<br>
         &nbsp;&nbsp; &nbsp;}</em><br>
       <br>
       }; // 【注意】セミコロン抜けで【宣言が必要ですエラー】<br>
@@ -8849,8 +8847,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
-      &nbsp;&nbsp;&nbsp; Zako0(float x, float y, float z = 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; Zako0(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako0";<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -8858,15 +8855,15 @@ public:<br>
       &nbsp;&nbsp;&nbsp; // 更新処理<br>
       &nbsp;&nbsp;&nbsp; void Update() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x -= 1; // とりあえず左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; position.x -= 1; // とりあえず左へ移動<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime--;<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (coolTime &lt;= 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// 自機狙い弾<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(x, y, gm.player-&gt;x, gm.player-&gt;y);</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(x, y, <em>angle</em>, 8));<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(position, gm.player-&gt;position);</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, <em>angle</em>, 8));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime += 10;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       <br>
@@ -8881,7 +8878,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; // 描画処理<br>
       &nbsp;&nbsp;&nbsp; void Draw() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako0, TRUE);<br>
       &nbsp;&nbsp;&nbsp; }<br>
       };<br>
       <br>
@@ -8911,8 +8908,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
-      &nbsp;&nbsp;&nbsp; Zako2(float x, float y, float z = 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; Zako2(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako2";<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -8920,9 +8916,9 @@ public:<br>
       &nbsp;&nbsp;&nbsp; // 更新処理<br>
       &nbsp;&nbsp;&nbsp; void Update() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (x &gt; Screen::Width - 200)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (position.x &gt; Screen::Width - 200)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; { // スクリーンの端から200の位置で止まる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x -= 1; // とりあえず左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; position.x -= 1; // とりあえず左へ移動<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime--;<br>
@@ -8930,9 +8926,9 @@ public:<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (coolTime &lt;= 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 自機狙いばらまき弾<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float angle = MyMath::PointToPointAngle(x, y, gm.player-&gt;x, gm.player-&gt;y);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float angle = MyMath::PointToPointAngle(position, gm.player-&gt;position);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float randomAngle = MyRandom::Range(-15.0f, 15.0f); // ±15度の乱数の角度を取得</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(x, y, <em>angle + randomAngle * MyMath::Deg2Rad</em>, 8));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, <em>angle + randomAngle * MyMath::Deg2Rad</em>, 8));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime += 10;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       <br>
@@ -8942,7 +8938,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; // 描画処理<br>
       &nbsp;&nbsp;&nbsp; void Draw() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako2, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako2, TRUE);<br>
       &nbsp;&nbsp;&nbsp; }<br>
       };<br>
       <br>
@@ -8964,6 +8960,7 @@ public:<br>
       #include &lt;cmath&gt; // Sinの計算に使う<br>
       #include "MyMath.h"<br>
       #include "Image.h"<br>
+      #include "Vector3.h"<br>
       <br>
       <em>#include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意</em><br>
       <br>
@@ -8973,8 +8970,7 @@ public:<br>
       public:<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
-      &nbsp;&nbsp;&nbsp; Zako1(float x, float y, float z = 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; Zako1(Vector3 pos) : Enemy(x, y, z)<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako1";//オブジェクトの種類判別タグ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = 5;<br>
@@ -8984,16 +8980,15 @@ public:<br>
       &nbsp;&nbsp;&nbsp; void Update() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// 自機をおいかけてくる処理<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angleToPlayer = MyMath::PointToPointAngle(x, y, gm.player-&gt;x, gm.player-&gt;y);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angleToPlayer = MyMath::PointToPointAngle(position, gm.player-&gt;position);<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float speed = 3;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x += (float)std::cos(angleToPlayer) * speed;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;y += (float)std::sin(angleToPlayer) * speed;</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position += Vector3((float)std::cos(angleToPlayer) * speed, (float)std::sin(angleToPlayer) * speed);</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 描画処理<br>
       &nbsp;&nbsp;&nbsp; void Draw() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako1, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako1, TRUE);<br>
       &nbsp;&nbsp;&nbsp; }<br>
       };<br>
       <br>
@@ -9001,8 +8996,8 @@ public:<br>
     <br>
     <br>
     <br>
-    <p>ゆらゆら向かってくる敵にしてみましょうか。</p>
-    <p><code>Zako1.hにSin波動でゆらゆら向かってくる処理を追加</code>しましょう。</p>
+    <p>ゆらゆらしながら【自機に】向かってくる敵にしてみましょうか。</p>
+    <p><code>Zako1.hにSin波動でゆらゆら【自機に向かってくる】処理を追加</code>しましょう。</p>
     <p class="source">#ifndef ZAKO_1_H_<br>
       #define ZAKO_1_H_<br>
       <br>
@@ -9022,8 +9017,7 @@ public:<br>
         &nbsp;&nbsp; &nbsp;float sinRadius = 70; // Sinの動きをするときの半径</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
-      &nbsp;&nbsp;&nbsp; Zako1(float x, float y, float z = 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; Zako1(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako1";//オブジェクトの種類判別タグ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = 5;<br>
@@ -9033,10 +9027,9 @@ public:<br>
       &nbsp;&nbsp;&nbsp; void Update() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機をおいかけてくる処理<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angleToPlayer = MyMath::PointToPointAngle(x, y, gm.player-&gt;x, gm.player-&gt;y);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angleToPlayer = MyMath::PointToPointAngle(position, gm.player-&gt;position);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float speed = 3;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x += (float)std::cos(angleToPlayer) * speed;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;y += (float)std::sin(angleToPlayer) * speed;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position += Vector3((float)std::cos(angleToPlayer) * speed, (float)std::sin(angleToPlayer) * speed);<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>//ゆらゆらSin波動の動きをy上下方向にプラス<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
@@ -9044,13 +9037,13 @@ public:<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
         <br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;y += currentSinY - prevSinY; // 上下方向のSinの波運動</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position.y += currentSinY - prevSinY; // 上下方向のSinの波運動</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 描画処理<br>
       &nbsp;&nbsp;&nbsp; void Draw() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako1, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako1, TRUE);<br>
       &nbsp;&nbsp;&nbsp; }<br>
       };<br>
       <br>
@@ -9312,15 +9305,10 @@ public:<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
       &nbsp;&nbsp;&nbsp; <em>// pad : 対応するコントローラ</em><br>
-      &nbsp;&nbsp;&nbsp; // x : 初期位置x<br>
-      &nbsp;&nbsp;&nbsp; // y : 初期位置y<br>
-      &nbsp;&nbsp;&nbsp; Player(<em>Pad pad, </em>float x, float y, float z = 0) // z=0デフォルトにして2Dのときはzを省略できる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
+      &nbsp;&nbsp;&nbsp; // pos : 初期位置<br>
+      &nbsp;&nbsp;&nbsp; Player(<em>Pad pad, </em>Vector3 pos, float z = 0) : GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>this-&gt;pad = pad;</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;x = x;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;y = y;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;z = z;//[3D対応]<br>
       &nbsp;&nbsp;&nbsp; };<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 更新処理<br>
@@ -9353,45 +9341,42 @@ public:<br>
       // 更新処理<br>
       void Player::Update()<br>
       {<br>
-      &nbsp;&nbsp;&nbsp; vx = 0; // x方向移動速度<br>
-      &nbsp;&nbsp;&nbsp; vy = 0; // y方向移動速度<br>
+      &nbsp;&nbsp;&nbsp; v = Vector3(0, 0, 0); // xyz方向移動速度<br>
       <br>
       &nbsp;&nbsp;&nbsp; if (Input::GetButton(<em>pad, </em>PAD_INPUT_LEFT))<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vx = -MoveSpeed; // 左<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; v.x = -MoveSpeed; // 左<br>
       &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; else if (Input::GetButton(<em>pad, </em>PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vx = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; v.x = MoveSpeed; // 右<br>
       &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; if (Input::GetButton(<em>pad, </em>PAD_INPUT_UP))<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -MoveSpeed; // 上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; v.y = -MoveSpeed; // 上<br>
       &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; else if (Input::GetButton(<em>pad, </em>PAD_INPUT_DOWN))<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; v.y = MoveSpeed; // 下<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 斜め移動も同じ速度になるように調整<br>
-      &nbsp;&nbsp;&nbsp; if (vx != 0 &amp;&amp; vy != 0)<br>
+      &nbsp;&nbsp;&nbsp; if (v.magnitude() > 0)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vx /= MyMath::Sqrt2;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy /= MyMath::Sqrt2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; v /= MyMath::Sqrt2;<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 実際に位置を動かす<br>
-      &nbsp;&nbsp;&nbsp; x += vx;<br>
-      &nbsp;&nbsp;&nbsp; y += vy;<br>
+      &nbsp;&nbsp;&nbsp; position += v;<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ボタン押下で自機弾を発射<br>
       &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(<em>pad, </em>PAD_INPUT_1))<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 【C#版】game-&gt;playerBullets.Add(new PlayerBullet(x, y));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // C++ではAddがemplace_backに↓ newがmake_shared↓に<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(x, y, 0));//右<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(x, y, -15 * MyMath::Deg2Rad));//右上<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(x, y, +15 * MyMath::Deg2Rad));//右下<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(position, 0));//右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(position, -15 * MyMath::Deg2Rad));//右上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gm.playerBullets.emplace_back(std::make_shared&lt;PlayerBullet&gt;(position, +15 * MyMath::Deg2Rad));//右下<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; mutekiTimer--;// 無敵タイマーは無条件で毎フレームカウントダウン<br>
@@ -9667,9 +9652,9 @@ public:<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略)....................<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここでプレイヤの初期化などのプレイ開始時の処理<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;(<em>Pad::Key, </em>(float)100, (float)(Screen::Height / 2)); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.player = std::make_shared&lt;Player&gt;(<em>Pad::Key, </em>Vector3((float)100, (float)(Screen::Height / 2))); // 自機の初期化<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵の仮生成<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(Screen::Width + 90, Screen::Height / 2)));<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       (以下略).....................<br>
@@ -10048,7 +10033,7 @@ public:<br>
       #define GAMEMANAGER_H_<br>
       <br>
       #include &lt;memory&gt;<br>
-      #include &lt;vector&gt;<br>
+      #include &lt;list&gt;<br>
       <em>#include &lt;unordered_map&gt; // 辞書配列【map高速版】</em><br>
       <br>
       #include "Singleton.h"<br>
@@ -10068,11 +10053,11 @@ public:<br>
       &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Map&gt; map{ nullptr }; // マップ<br>
       &nbsp;&nbsp;&nbsp; <u>std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機の初期化</u><br>
       &nbsp;&nbsp;&nbsp; <em>std::unordered_map&lt;int, std::shared_ptr&lt;Player&gt;&gt; players; // 自機の辞書配列(複数プレイ対応)</em><br>
-      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
-      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
-      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
-      &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
-      &nbsp;&nbsp;&nbsp; // List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
+      &nbsp;&nbsp;&nbsp; // List↑と同じlist ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
       &nbsp;&nbsp;&nbsp; (中略)....................<br>
@@ -10137,10 +10122,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; // 初期化処理<br>
       &nbsp;&nbsp;&nbsp; void Initialize() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Image::Load("PlayScene"); //画像の読込みとメモリ開放<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Load("PlayScene"); //音声の読込みとメモリ開放<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::PlayMusic(Sound::gameplay); //プレイ画面BGMを再生<br>
+(中略).........<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // マップの初期化<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.map = std::make_shared&lt;Map&gt;("Map/stage1.csv");<br>
@@ -10150,10 +10132,10 @@ public:<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(joinCount &gt; 0)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; MakePlayer(); // プレイヤの生成処理</em><br>
       <br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <u>//gm.player = std::make_shared&lt;Player&gt;(Pad::Key, (float)100, (float)(Screen::Height / 2)); // 自機の初期化</u><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <u>//gm.player = std::make_shared&lt;Player&gt;(Pad::Key, Vector3((float)100, (float)(Screen::Height / 2))); // 自機の初期化</u><br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵の仮生成<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Screen::Width + 90, Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(Screen::Width + 90, Screen::Height / 2)));<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
@@ -10177,7 +10159,7 @@ public:<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加辞書登録されたプレイヤの自機の生成<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::IsJoin((Pad)i) &amp;&amp; gm.players.count(i) == 0)<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.players[i] = std::make_shared&lt;Player&gt;((Pad)i, (float)100, (float)(Screen::Height / 2));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.players[i] = std::make_shared&lt;Player&gt;(Vector3((Pad)i, (float)100, (float)(Screen::Height / 2)));<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp; }</em><br>
       <br>
@@ -10232,8 +10214,8 @@ public:<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 円同士の衝突判定で調べる<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;x, <em>player</em>-&gt;y, <em>player</em>-&gt;collisionRadius,<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemyBullet-&gt;x, enemyBullet-&gt;y, enemyBullet-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player-&gt;position, <em>player</em>-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemyBullet-&gt;position, enemyBullet-&gt;collisionRadius))<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;OnCollisionEnemyBullet(enemyBullet);<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
@@ -10261,8 +10243,8 @@ public:<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾と敵が重なっているか？<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; playerBullet-&gt;x, playerBullet-&gt;y, playerBullet-&gt;collisionRadius,<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; playerBullet-&gt;position, playerBullet-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;position, enemy-&gt;collisionRadius))<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
@@ -10293,8 +10275,8 @@ public:<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 円同士の衝突判定で調べる<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;x, <em>player</em>-&gt;y, <em>player</em>-&gt;collisionRadius,<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;x, enemy-&gt;y, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;position, <em>player</em>-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;position, enemy-&gt;collisionRadius))<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;OnCollisionEnemy(enemy);<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
@@ -10413,7 +10395,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加辞書登録されたプレイヤの自機の生成<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::IsJoin((Pad)i) &amp;&amp; gm.players<em>.count(i) == 0</em>)<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.<em>players[i] = </em>std::make_shared&lt;Player&gt;((Pad)i, (float)100, (float)(Screen::Height / 2));<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.<em>players[i] = </em>std::make_shared&lt;Player&gt;((Pad)i, Vector3((float)100, (float)(Screen::Height / 2)));<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; } </p>
     <br>
@@ -10452,81 +10434,10 @@ public:<br>
     <br>
     <p>他にもザコにプレイヤの追撃弾を撃たせている人は単体のプレイヤを複数対応しなければなりません。<br>
       プレイヤを追撃するにも<b>複数いるとどのプレイヤを追撃するかあいまいになるので。</b><br>
-      <b>ここからのザコの処理の修正は人それぞれプレイヤを追っかけない独自のザコを作成してる人は不要かもしれません。</b><br>
+      <b>ここからのザコの処理の修正は人それぞれです。プレイヤを追っかけない独自のザコのままがいい！という人は不要かもしれません。</b><br>
       <br>
       <br>
     </p>
-    <p><code>まずMyMath.hに距離の2乗を求める処理を追加</code>します。 </p>
-    <p class="source">#ifndef _MYMATH_H<br>
-      #define _MYMATH_H<br>
-      <br>
-      #include &lt;cmath&gt;<br>
-      <br>
-      // 数学関連クラス<br>
-      class MyMath<br>
-      {<br>
-      public:<br>
-      &nbsp;&nbsp;&nbsp; // C ++標準では、静的static定数の【整数型】または【列挙型】のみをクラス内で初期化できます。<br>
-      &nbsp;&nbsp;&nbsp; // これが、一部の初期化が許可されているのに他のstatic floatなどが初期化できない理由です。<br>
-      <br>
-      &nbsp;&nbsp;&nbsp; // float小数を定義するためだけにcppファイルを作成しないと<br>
-      &nbsp;&nbsp;&nbsp; //static const float Sqrt2 =【このイコールでエラー】 1.41421356237f;<br>
-      <br>
-      &nbsp;&nbsp;&nbsp; // ルート2(変数名の定義だけ)<br>
-      &nbsp;&nbsp;&nbsp; static const float Sqrt2;// = 1.41421356237f;<br>
-      &nbsp;&nbsp;&nbsp; static const float PI; // 円周率 3.14159265359f;<br>
-      &nbsp;&nbsp;&nbsp; static const float Deg2Rad; // 度からラジアンに変換する定数 PI / 180f;<br>
-      <br>
-      &nbsp;&nbsp; &nbsp;<em>/// &lt;summary&gt;<br>
-        &nbsp;&nbsp; &nbsp;/// 点から点への距離の2乗を求める(最小距離なら2乗のままで√計算省く)<br>
-        &nbsp;&nbsp; &nbsp;/// &lt;/summary&gt;<br>
-        &nbsp;&nbsp; &nbsp;/// &lt;param name="fromX"&gt;始点x&lt;/param&gt;<br>
-        &nbsp;&nbsp; &nbsp;/// &lt;param name="fromY"&gt;始点y&lt;/param&gt;<br>
-        &nbsp;&nbsp; &nbsp;/// &lt;param name="toX"&gt;終点x&lt;/param&gt;<br>
-        &nbsp;&nbsp; &nbsp;/// &lt;param name="toY"&gt;終点y&lt;/param&gt;<br>
-        &nbsp;&nbsp; &nbsp;/// &lt;returns&gt;&lt;/returns&gt;<br>
-        &nbsp;&nbsp; &nbsp;static float Distance2(float fromX, float fromY, float toX, float toY)<br>
-        &nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float distX = toX - fromX;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float distY = toY - fromY;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return distX * distX + distY * distY;<br>
-        &nbsp;&nbsp; &nbsp;}</em><br>
-      <br>
-      &nbsp;&nbsp;&nbsp; /// &lt;summary&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// 円と円が重なっているかを調べる<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;param name="x1"&gt;円1の中心x&lt;/param&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;param name="y1"&gt;円1の中心y&lt;/param&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;param name="radius1"&gt;円1の半径&lt;/param&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;param name="x2"&gt;円2の中心x&lt;/param&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;param name="y2"&gt;円2の中心y&lt;/param&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;param name="radius2"&gt;円2の半径&lt;/param&gt;<br>
-      &nbsp;&nbsp;&nbsp; /// &lt;returns&gt;重なっていればtrue、重なっていなければfalseを返却する&lt;/returns&gt;<br>
-      &nbsp;&nbsp;&nbsp; static bool CircleCircleIntersection(<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float x1, float y1, float radius1,<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float x2, float y2, float radius2)<br>
-      &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt; ((radius1 + radius2) * (radius1 + radius2));<br>
-      &nbsp;&nbsp;&nbsp; }<br>
-      <br>
-      &nbsp;&nbsp; &nbsp;/// &lt;summary&gt;<br>
-      &nbsp;&nbsp; &nbsp;/// 点から点への角度（ラジアン）を求める。<br>
-      &nbsp;&nbsp; &nbsp;/// &lt;/summary&gt;<br>
-      &nbsp;&nbsp; &nbsp;/// &lt;param name="fromX"&gt;始点x&lt;/param&gt;<br>
-      &nbsp;&nbsp; &nbsp;/// &lt;param name="fromY"&gt;始点y&lt;/param&gt;<br>
-      &nbsp;&nbsp; &nbsp;/// &lt;param name="toX"&gt;終点x&lt;/param&gt;<br>
-      &nbsp;&nbsp; &nbsp;/// &lt;param name="toY"&gt;終点y&lt;/param&gt;<br>
-      &nbsp;&nbsp; &nbsp;/// &lt;returns&gt;&lt;/returns&gt;<br>
-      &nbsp;&nbsp; &nbsp;static float PointToPointAngle(float fromX, float fromY, float toX, float toY)<br>
-      &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return (float)std::atan2(toY - fromY, toX - fromX);<br>
-      &nbsp;&nbsp; &nbsp;}<br>
-      <br>
-      }; // 【注意】セミコロン抜けで【宣言が必要ですエラー】<br>
-      <br>
-      #endif // 【宣言が必要ですエラーは上のセミコロン抜け】</p>
-    <br>
     <code>Zako0.hに複数のプレイヤから一番近いプレイヤを追撃する処理を追加</code>します。
     <p></p>
     <p class="source">#ifndef ZAKO_0_H_<br>
@@ -10547,8 +10458,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
-      &nbsp;&nbsp;&nbsp; Zako0(float x, float y, float z = 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; Zako0(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako0";<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -10556,28 +10466,28 @@ public:<br>
       &nbsp;&nbsp;&nbsp; // 更新処理<br>
       &nbsp;&nbsp;&nbsp; void Update() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x -= 1; // とりあえず左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; position.x -= 1; // とりあえず左へ移動<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime--;<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (coolTime &lt;= 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float minDistance = 1000000; // 最小の距離の2乗<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; player = nullptr; // 一番近いプレイヤを探す<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float minDistance = 1000000; // 最小の距離<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; minPlayer = nullptr; // 一番近いプレイヤを探す<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; pair : gm.players)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;auto p = pair.second;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist2 = MyMath::Distance2(x, y, p-&gt;x, p-&gt;y);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist2 &lt; minDistance)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist = (position - p-&gt;position).magnitude();<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist &lt; minDistance)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// より小さい距離のプレイヤがいれば記録更新<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist2;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;player = p;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minPlayer = p;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}&nbsp;&nbsp; &nbsp;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (player != nullptr)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (minPlayer != nullptr)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em>&nbsp;&nbsp; &nbsp;// 自機狙い弾<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(x, y, <em>player</em>-&gt;x, <em>player</em>-&gt;y);<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(x, y, angle, 8));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(x, y, <em>minPlayer</em>-&gt;x, <em>minPlayer</em>-&gt;y);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, angle, 8));<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;coolTime += 10;<br>
@@ -10594,7 +10504,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; // 描画処理<br>
       &nbsp;&nbsp;&nbsp; void Draw() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako0, TRUE);<br>
       &nbsp;&nbsp;&nbsp; }<br>
       };<br>
       <br>
@@ -10622,8 +10532,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp;float sinRadius = 70; // Sinの動きをするときの半径<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
-      &nbsp;&nbsp;&nbsp; Zako1(float x, float y, float z = 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; Zako1(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako1";//オブジェクトの種類判別タグ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = 5;<br>
@@ -10633,28 +10542,27 @@ public:<br>
       &nbsp;&nbsp;&nbsp; void Update() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float minDistance = 1000000; // 最小の距離<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; player = nullptr; // 一番近いプレイヤを探す<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; minPlayer = nullptr; // 一番近いプレイヤを探す<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; pair : gm.players)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;auto p = pair.second;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist2 = MyMath::Distance2(x, y, p-&gt;x, p-&gt;y);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist2 &lt; minDistance)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist = (position - p-&gt;position).magnitude();<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist &lt; minDistance)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// より小さい距離のプレイヤがいれば記録更新<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist2;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;player = p;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minPlayer = p;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (minDistance&gt;300*300+300*300)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><em><em><br>
-          &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; </em></em><em><em>x += 1; // 縦Y方向300,横X方向300以上の距離のときは</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (minDistance&gt;300)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
+          &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; position.x += 1; // XY方向300以上の距離のときは</em><br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (player != nullptr)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機をおいかけてくる処理<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angleToPlayer = MyMath::PointToPointAngle(x, y, <em>player</em>-&gt;x, <em>player</em>-&gt;y);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angleToPlayer = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float speed = 3;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x += (float)std::cos(angleToPlayer) * speed;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;y += (float)std::sin(angleToPlayer) * speed;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position += Vector3((float)std::cos(angleToPlayer) * speed, (float)std::sin(angleToPlayer) * speed);<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//ゆらゆらSin波動の動きをy上下方向にプラス<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
@@ -10662,14 +10570,14 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;y += currentSinY - prevSinY; // 上下方向のSinの波運動<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position.y += currentSinY - prevSinY; // 上下方向のSinの波運動<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 描画処理<br>
       &nbsp;&nbsp;&nbsp; void Draw() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako1, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako1, TRUE);<br>
       &nbsp;&nbsp;&nbsp; }<br>
       };<br>
       <br>
@@ -10699,8 +10607,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; int coolTime = 0; // クールタイム（冷却時間。0になるまで次の弾が撃てない）<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
-      &nbsp;&nbsp;&nbsp; Zako2(float x, float y, float z = 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Enemy(x, y, z)<br>
+      &nbsp;&nbsp;&nbsp; Zako2(Vector3 pos) : Enemy( pos )<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Zako2";<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -10708,9 +10615,9 @@ public:<br>
       &nbsp;&nbsp;&nbsp; // 更新処理<br>
       &nbsp;&nbsp;&nbsp; void Update() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (x &gt; Screen::Width - 200)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (position.x &gt; Screen::Width - 200)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; { // スクリーンの端から200の位置で止まる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x -= 1; // とりあえず左へ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; position.x -= 1; // とりあえず左へ移動<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; coolTime--;<br>
@@ -10718,23 +10625,23 @@ public:<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (coolTime &lt;= 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float minDistance = 1000000; // 最小の距離<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; player = nullptr; // 一番近いプレイヤを探す<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::shared_ptr&lt;Player&gt; minPlayer = nullptr; // 一番近いプレイヤを探す<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; pair : gm.players)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// より小さい距離のプレイヤがいれば記録更新<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;auto p = pair.second;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist2 = MyMath::Distance2(x, y, p-&gt;x, p-&gt;y);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist2 &lt; minDistance)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float dist = (position - p-&gt;position).magnitude();<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (dist &lt; minDistance)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist2;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;player = p;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minDistance = dist;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;minPlayer = p;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (player != nullptr)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (minPlayer != nullptr)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機狙いばらまき弾<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(x, y, <em>player</em>-&gt;x, <em>player</em>-&gt;y);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float randomAngle = MyRandom::Range(-15.0f, 15.0f); // ±15度の乱数の角度を取得<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(x, y, angle + randomAngle * MyMath::Deg2Rad, 8));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, angle + randomAngle * MyMath::Deg2Rad, 8));<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;coolTime += 10;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
@@ -10745,7 +10652,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; // 描画処理<br>
       &nbsp;&nbsp;&nbsp; void Draw() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(x, y, 1, 0, Image::zako2, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako2, TRUE);<br>
       &nbsp;&nbsp;&nbsp; }<br>
       };<br>
       <br>
