@@ -9228,7 +9228,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; <em>static std::unordered_map&lt;int, int&gt; padDic; // パッド番号からDXの定義への変換辞書</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; <em>// 辞書配列の初期化<br>
-        &nbsp;&nbsp;&nbsp; static void InitPadDictionary();<br>
+        &nbsp;&nbsp;&nbsp; static void InitPadDictionary()<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 辞書配列で対応関係の辞書を作成しておく<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Key] = DX_INPUT_KEY;<br>
@@ -9241,7 +9241,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; // 初期化。タイトルなどキー入力状態リセット時に<br>
       &nbsp;&nbsp;&nbsp; static void Init()<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>InitPadDictionary() // パッドの辞書配列の初期化</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>InitPadDictionary(); // パッドの辞書配列の初期化</em><br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
@@ -9502,7 +9502,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; // 初期化。タイトルなどキー入力状態リセット時に<br>
       &nbsp;&nbsp;&nbsp; static void Init()<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; InitPadDictionary() // パッドの辞書配列の初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; InitPadDictionary(); // パッドの辞書配列の初期化<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
@@ -10765,7 +10765,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; // 初期化。タイトルなどキー入力状態リセット時に<br>
       &nbsp;&nbsp;&nbsp; static void Init()<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; InitPadDictionary() // パッドの辞書配列の初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; InitPadDictionary(); // パッドの辞書配列の初期化<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
