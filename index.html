@@ -9100,7 +9100,7 @@ public:<br>
 <br>
       &nbsp;&nbsp;&nbsp; <em>float cosMove = 0; // cosの動きをする際の0～360度<br>
       &nbsp;&nbsp;&nbsp; float cosRadius = 70; // cosの動きをするときの半径</em><br></p>
-Update()関数内にX方向の動きを追加すると..<br>
+Update()関数内にX方向の動きも追加すると..<br>
 		<p class="source"><em>
 &nbsp;&nbsp;&nbsp; &nbsp; //ゆらゆらCos波動の動きをx左右方向にプラス<br>
 &nbsp;&nbsp;&nbsp; &nbsp; float prevCosX = std::cos(cosMove * MyMath::Deg2Rad) * cosRadius;<br>
@@ -9218,7 +9218,7 @@ Update()関数内にX方向の動きを追加すると..<br>
       &nbsp;&nbsp;&nbsp; <em>static std::unordered_map&lt;int, int&gt; padDic; // パッド番号からDXの定義への変換辞書</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; <em>// 辞書配列の初期化<br>
-        &nbsp;&nbsp;&nbsp; static void InitPadDictionary()<br>
+        &nbsp;&nbsp;&nbsp; static void InitPadDictionary();<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 辞書配列で対応関係の辞書を作成しておく<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Key] = DX_INPUT_KEY;<br>
@@ -9328,7 +9328,7 @@ Update()関数内にX方向の動きを追加すると..<br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
       &nbsp;&nbsp;&nbsp; <em>// pad : 対応するコントローラ</em><br>
       &nbsp;&nbsp;&nbsp; // pos : 初期位置<br>
-      &nbsp;&nbsp;&nbsp; Player(<em>Pad pad, </em>Vector3 pos, float z = 0) : GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
+      &nbsp;&nbsp;&nbsp; Player(<em>Pad pad, </em>Vector3 pos) : GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>this-&gt;pad = pad;</em><br>
       &nbsp;&nbsp;&nbsp; };<br>
@@ -9513,8 +9513,8 @@ Update()関数内にX方向の動きを追加すると..<br>
       &nbsp;&nbsp;&nbsp; // ボタンが押されているか？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButton(Pad pad, int buttonId)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // GetButtonの中でGetButtonを呼ぶ【再起呼出し】テクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButton((Pad)i, buttonId))<br>
@@ -9529,8 +9529,8 @@ Update()関数内にX方向の動きを追加すると..<br>
       &nbsp;&nbsp;&nbsp; // ボタンが押された瞬間か？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButtonDown(Pad pad, int buttonId)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonDown((Pad)i, buttonId))<br>
@@ -9545,8 +9545,8 @@ Update()関数内にX方向の動きを追加すると..<br>
       &nbsp;&nbsp;&nbsp; // ボタンが離された瞬間か？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButtonUp(Pad pad, int buttonId)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonUp((Pad)i, buttonId))<br>
