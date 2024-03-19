@@ -9089,7 +9089,28 @@ public:<br>
       たとえばxも同じようにすれば、円を描きながら追ってくる敵も作れます。<br>
       <b>x += 半径×cosθ1(←今の角度のX) - 半径×cosθ2(←前の角度のX)</b><br>
       気になった人は試してみてくださいね。<br>
+      
     </p>
+追加でcosMove,cosRadiusを定義して..<br>
+<p class="source">class Zako1 : public Enemy<br>
+{<br>
+public:<br>
+      &nbsp;&nbsp;&nbsp; float sinMove = 0; // Sinの動きをする際の0～360度<br>
+      &nbsp;&nbsp;&nbsp; float sinRadius = 70; // Sinの動きをするときの半径<br>
+<br>
+      &nbsp;&nbsp;&nbsp; <em>float cosMove = 0; // cosの動きをする際の0～360度<br>
+      &nbsp;&nbsp;&nbsp; float cosRadius = 70; // cosの動きをするときの半径</em><br></p>
+
+		<p class="source"><em>
+&nbsp;&nbsp;&nbsp; &nbsp; //ゆらゆらCos波動の動きをx左右方向にプラス<br>
+&nbsp;&nbsp;&nbsp; &nbsp; float prevCosX = std::cos(cosMove * MyMath::Deg2Rad) * cosRadius;<br>
+&nbsp;&nbsp;&nbsp; &nbsp; cosMove += 2.5f; // Cosの波運動の角度を進める<br>
+&nbsp;&nbsp;&nbsp; &nbsp; float currentCosX = std::cos(cosMove * MyMath::Deg2Rad) * cosRadius;<br>
+<br>
+&nbsp;&nbsp;&nbsp; &nbsp; // (前の角度でのX) - (今の角度でのX)の差を足すことで【ベースのxの位置 ± cosの動き】になる<br>
+&nbsp;&nbsp;&nbsp; &nbsp; position.x += currentCosX - prevCosX; // 上下方向のSinの波運動</em><br></p>
+
+		
     <a id="mozTocId5000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 5【応用1】</p>
     <br>
