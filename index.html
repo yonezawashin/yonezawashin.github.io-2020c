@@ -11097,7 +11097,7 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><
 		<br>
 		<h2><a id="mozTocId50015" class="mozTocH1"></a>スコアを画面表示させてみる</h2>
 
-		<p><code>TitleScene.hには実はすでにスコアを表示するコードがありますが</code>します。<br></p>
+		<p><code>TitleScene.hには実はすでにスコアを表示するコードがありますが実は文字列の扱い方が間違っていて</code>表示されていません。<br></p>
     <p class="source">#ifndef TITLESCENE_H_<br>
       #define TITLESCENE_H_<br>
       <br>
@@ -11130,41 +11130,7 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><
       };<br>
       <br>
       #endif</p>
-	    <br>
-<p>TitleScene.hには実はすでにスコアを表示するコードがありますが実は文字列の扱い方が間違っていて表示されていません。<br></p>
-    <p class="source">#ifndef TITLESCENE_H_<br>
-      #define TITLESCENE_H_<br>
-      <br>
-      #include "Scene.h"<br>
-      <br>
-      #include "DxLib.h"<br>
-      #include "Screen.h"<br>
-      #include "Input.h"<br>
-      #include "Image.h"<br>
-      (中略)...........<br>
-      <br>
-      class TitleScene : public Scene<br>
-      {<br>
-      public:<br>
-      (中略)...........<br>
-      <br>
-      &nbsp;&nbsp; &nbsp;// 描画処理<br>
-      &nbsp;&nbsp; &nbsp;void Draw() override<br>
-      &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 0, "TitleSceneです。ボタン押下でPlaySceneへ。", GetColor(255, 255, 255));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (sm.scoreMax &gt;= 0)<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 200, <em>"MAXスコア: " + sm.scoreMax</em>, GetColor(255, 255, 255));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-      <br>
-      
-      (中略)...........<br>
-	    <br>
-      &nbsp;&nbsp; &nbsp;}<br>
-      };<br>
-      <br>
-      #endif</p>
-    <br>
+	    
 		<br>
 		DrawStringの関数の上で右クリックして「定義をここに表示」してみてください。<br>
 		<p class="source">
