@@ -10350,6 +10350,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲームオーバー判定と画面チェンジ処理<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// プレイヤの数が0じゃないのに生存数が0ならゲームオーバー</em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bool isGameover = (<em>gm.players.size() != 0 &amp;&amp; aliveCount == 0</em>);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <u>if (!isGameover && gm.player-&gt;isDead) isGameover = true;</u><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isGameover)<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::PlayMusic(Sound::ending); //BGMを変更する<br>
