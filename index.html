@@ -10355,6 +10355,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::PlayMusic(Sound::ending); //BGMを変更する<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
@@ -10381,7 +10382,7 @@ Update()関数内にX方向の動きも追加すると..<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto player = pair.second;</em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!<em>player</em>-&gt;isDead) // 自機が死んでいなければ<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>player</em>-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>}</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾の描画処理<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // C#のforeach文と同じく全自機弾を更新できる<br>
