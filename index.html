@@ -10672,11 +10672,11 @@ Update()関数内にX方向の動きも追加すると..<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (minPlayer != nullptr)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機狙いばらまき弾<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float randomAngle = MyRandom::Range(-15.0f, 15.0f); // ±15度の乱数の角度を取得<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, angle + randomAngle * MyMath::Deg2Rad, 8));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;coolTime += 10;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;// 自機狙いばらまき弾<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float angle = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;float randomAngle = MyRandom::Range(-15.0f, 15.0f); // ±15度の乱数の角度を取得<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, angle + randomAngle * MyMath::Deg2Rad, 8));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;coolTime += 10;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       <br>
