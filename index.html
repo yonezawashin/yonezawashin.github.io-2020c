@@ -11439,6 +11439,62 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       &nbsp;&nbsp; &nbsp;return setting-&gt;handle;<br>
 }</p>
 		<br>
+		<p><code>TitleScene.hを修正して</code>Fontクラスから生成したフォントデータからスコアを表示してみましょう。<br></p>
+		<p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+	#include &lt;string&gt;<br>
+	<br>
+      #include "DxLib.h"<br>
+      (中略)...........<br>
+<em>#include "Font.h"</em><br>
+      (中略)...........<br>		
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      (中略)...........<br>
+      &nbsp;&nbsp; &nbsp;<em>// ★dp4FontViewerを使ってInfoからFont名を得て↓コピぺすればつづりを間違えない https://us.fontviewer.de/Download/<br>
+      &nbsp;&nbsp; &nbsp;Font::Setting font = Font::Setting("設定1", "HG丸ｺﾞｼｯｸM-PRO", 40, 3);</em><br>
+      &nbsp;&nbsp; &nbsp;int font1 = -1; //フォントのハンドルをCreateFontToHandle関数で得る<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 初期化処理<br>
+      &nbsp;&nbsp; &nbsp;void Initialize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>Font::Load(&font); // 設定に沿ってフォントをデータ化しておく<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// "ＭＳ 明朝"のフォントで、サイズ４０、太さ7<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// エッジサイズ3、DX_FONTTYPE_ANTIALIASING_EDGE_4X4　: アンチエイリアス＆エッジ付きフォント( 4x4サンプリング )<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// イタリック=TRUEのフォントを作成し<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 作成したデータの識別番号を変数 font1 に保存する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;font1 = DxLib::CreateFontToHandle("ＭＳ 明朝", 40, 7, DX_FONTTYPE_ANTIALIASING_EDGE_4X4, -1, 3, TRUE);<br>
+      &nbsp;&nbsp; &nbsp;</em><br>
+      &nbsp;&nbsp; &nbsp;(中略)...........<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;}
+(中略)...........<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;SetFontLineSpaceToHandle(40, font1); // 1行ごとのスペース<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawStringToHandle(0, 0, "TitleSceneです。\nボタン押下でPlaySceneへ。", GetColor(0, 255, 0), font1, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>//[テストしやすくするため一旦コメントアウト] </em>if (sm.scoreMax &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString<em>ToHandle</em>(0, 200, (std::string("MAXスコア: ") + std::to_string(sm.scoreMax)).c_str(), GetColor(255, 255, 255)<em>, Font::fonts["設定1"].handle, GetColor(255, 0, 0)</em>);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      
+      (中略)...........<br>
+	    <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
 		<br>
 		<br>
 		<br>
