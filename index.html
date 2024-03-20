@@ -11475,6 +11475,20 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;}
 (中略)...........<br>
+		    // 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)
+    void Finalize() override
+    {
+        bool res = Font::DeleteFontToHandle(&font); // フォントデータを削除してメモリ節約
+        assert(res != -1);
+    }
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
+      &nbsp;&nbsp; &nbsp;void Finalize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>Font::DeleteFontToHandle(&font); // フォントデータを削除してメモリ節約(1フォントあたり1.2MB節約できる)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;</em><br>
+      &nbsp;&nbsp; &nbsp;(中略)...........<br>
+      &nbsp;&nbsp; &nbsp;}
+(中略)...........<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// 描画処理<br>
       &nbsp;&nbsp; &nbsp;void Draw() override<br>
@@ -11714,8 +11728,17 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       <br>
       #endif</p>
 		<br>
+		どうでしょうか？これで他の人のPCに入っていないフリーのフォントでも.dtf形式のファイルをFontフォルダにおいてゲームを送れば、文字が表示されない心配がなくなります。<br>
+		<br>
+		かっこいい<b>フリーのフォントを探して取り入れるだけでもゲームの印象はがらりと宇宙っぽくもデジタルっぽくもポップにも</b>なります。<br>
+		<b>センスとはチョイスと組み合わせ</b>です。そしてそこをさぼると<b>ユーザーには確実に作り手の熱量を見抜かれてしまいます</b>。<br>
+		<b>探して選んで組み合わせること</b>。その地道な積み上げは<b>暗黙に人に伝わってしまう</b>のです。<br>
+		<b>センスとは積み上げられるものです</b>。過去の試行錯誤が<b>結果的に知らない人から見るとひらめきセンスのように見えてしまうだけです</b>。<br>
 		<br>
 		<br>
+		<br>
+		<br>
+	<h2><a id="mozTocId50017" class="mozTocH1"></a>スコアの加算処理と背景の加速</h2>	
 		
   </body>
 </html>
