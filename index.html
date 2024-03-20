@@ -11349,14 +11349,15 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int italic = FALSE; // イタリック体で表示するか<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int handle = -1; // CreateFontToHandle関数で帰ってくるハンドル https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
 		<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;bool isDFTFont = false; // C:\DxLib_VC\Tool\CreateDXFontData で書き出したDFT形式を使用するかどうか<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;bool isDFTFont = false; // DXライブラリ付属ツール C:\DxLib_VC\Tool\CreateDXFontData で書き出したDFT形式を使用するかどうか<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;const std::string tag = ""; // 設定にタグをつけて管理する<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string fontName; // 作成するフォント名(NULL にするとデフォルトのフォント)<br>
 <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// std::unordered_mapの値に使うにはデフォルトコンストラクタが必要<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Setting() = default;//←これが無いと「クラス、構造体、..に規定のコンストラクタがありません」エラー<br>
 		<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Setting(const std::string tag, const TCHAR* FontName, int Size, int Thick, int FontType = -1, int CharSet = -1, int EdgeSize = -1, int Italic = FALSE)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Setting(const std::string tag, const TCHAR* FontName, int Size, int Thick,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int FontType = -1, int CharSet = -1, int EdgeSize = -1, int Italic = FALSE)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;: size{ Size }, thick{ Thick }, fontType{ FontType }, charSet{ CharSet }, edgeSize{ EdgeSize }, italic{ Italic },<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;tag{ tag }, fontName{ (FontName == NULL) ? "" : std::string(FontName) }<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
@@ -11416,7 +11417,8 @@ int Font::Load(Setting* setting)<br>
       &nbsp;&nbsp; &nbsp;// https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
       &nbsp;&nbsp; &nbsp;// フォントを作成し作成したデータの識別番号をsetting-&gt;handle に保存する<br>
       &nbsp;&nbsp; &nbsp;if (setting-&gt;isDFTFont == false || setting-&gt;fontName == "")<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = DxLib::CreateFontToHandle((setting-&gt;fontName == "") ? NULL : setting-&gt;fontName.c_str(), setting-&gt;size, setting-&gt;thick, setting-&gt;fontType, setting-&gt;charSet, setting-&gt;edgeSize, setting-&gt;italic, setting-&gt;handle);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = DxLib::CreateFontToHandle((setting-&gt;fontName == "") ? NULL : setting-&gt;fontName.c_str(),<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting-&gt;size, setting-&gt;thick, setting-&gt;fontType, setting-&gt;charSet, setting-&gt;edgeSize, setting-&gt;italic, setting-&gt;handle);<br>
       &nbsp;&nbsp; &nbsp;else // ＤＸフォントデータファイルを読込み、フォントハンドルを保存する<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = LoadFontDataToHandle(setting-&gt;fontName.c_str(), setting-&gt;edgeSize);<br>
 	<br>
