@@ -11502,9 +11502,14 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		ひとつ問題として、同じWindows同士でも入っているフォントが違っていたりすると、<br>
 		ゲームをプレイしてもらう相手にフォントがない場合は、フォントが表示されなくなるおそれがあります。<br>
-		これを解決するにはDXライブラリをインストールしたフォルダに付属しているToolツールフォルダにある
-		CreateDXFontDataexeをコマンドプロンプトで使用して書き出されるDFT形式を使用する対策があります。<br>
+		これを解決するには<b>DXライブラリをインストールしたフォルダに付属しているToolツールフォルダ</b>にある
+		<b>CreateDXFontData.exeをコマンドプロンプトで使用</b>して書き出される<b>DFT形式を使用</b>する対策があります。<br>
+		<b>Windowsのデフォルトで入っているフォントも著作物</b>ですから、安全を考えて個人商用フリーのフォントをWEBでさがしてみましょう。(<b>利用規約はしっかり読みましょう</b>)<br>
+		<a href="https://coliss.com/articles/freebies/japanese-free-fonts.html">https://coliss.com/articles/freebies/japanese-free-fonts.html</a><br>
 		<br>
+		フリーフォントのインストールの仕方は下記を参考に<br>
+		<a href="https://www.pc-koubou.jp/magazine/58097">https://www.pc-koubou.jp/magazine/58097</a><br>
+		
 		<br>
 	<br>
 		<p><code>Font.hを修正してDFT形式のファイルからフォントデータを生成</code>して表示する処理を定義しましょう。<br></p>
