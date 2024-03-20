@@ -11396,5 +11396,57 @@ private:<br>
 };<br>
 #endif</p>
 		<br>
+		<br>Font.cppも必要になります。<br>
+		<p><code>Font.cppを新規作成</code>してフォントデータを生成したり、メモリ上から削除して節約したりする処理をつくりましょう。<br></p>
+		<p class="source">#include "Font.h"<br>
+<br>
+std::unordered_map&lt;std::string, Font::Setting&gt; Font::fonts; // フォントの辞書<br>
+<br>
+<br>
+int Font::Load(Setting* setting)<br>
+{<br>
+      &nbsp;&nbsp; &nbsp;// 設定がnullptrだったらデフォルトのフォントを返す<br>
+      &nbsp;&nbsp; &nbsp;if (setting == nullptr)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return GetDefaultFontHandle();<br>
+<br>
+      &nbsp;&nbsp; &nbsp;// すでに辞書に登録があったら作成したフォントデータを削除しておく<br>
+      &nbsp;&nbsp; &nbsp;if (fonts.count(setting-&gt;tag) != 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DxLib::DeleteFontToHandle(fonts[setting-&gt;tag].handle);<br>
+<br>
+      &nbsp;&nbsp; &nbsp;// https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
+      &nbsp;&nbsp; &nbsp;// フォントを作成し作成したデータの識別番号をsetting-&gt;handle に保存する<br>
+      &nbsp;&nbsp; &nbsp;if (setting-&gt;isDFTFont == false || setting-&gt;fontName == "")<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = DxLib::CreateFontToHandle((setting-&gt;fontName == "") ? NULL : setting-&gt;fontName.c_str(), setting-&gt;size, setting-&gt;thick, setting-&gt;fontType, setting-&gt;charSet, setting-&gt;edgeSize, setting-&gt;italic, setting-&gt;handle);<br>
+      &nbsp;&nbsp; &nbsp;else // ＤＸフォントデータファイルを読込み、フォントハンドルを保存する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = LoadFontDataToHandle(setting-&gt;fontName.c_str(), setting-&gt;edgeSize);<br>
+	<br>
+      &nbsp;&nbsp; &nbsp;assert(setting-&gt;handle != -1 && "Font名が間違っているかFontフォルダ指定をミスっていませんか?"); // フォント作成失敗<br>
+	<br>
+      &nbsp;&nbsp; &nbsp;// 読み込んだハンドルを辞書に登録しておく<br>
+      &nbsp;&nbsp; &nbsp;fonts.emplace(setting-&gt;tag, *setting);<br>
+<br>
+      &nbsp;&nbsp; &nbsp;return setting-&gt;handle;<br>
+}<br>
+<br>
+// フォントがメモリを圧迫してるときに使う(フォントデータはひとつ1.2MB程のメモリを使う)<br>
+int Font::DeleteFontToHandle(Setting* setting)<br>
+{<br>
+      &nbsp;&nbsp; &nbsp;// 設定がnullptrだったら何もせずreturn<br>
+      &nbsp;&nbsp; &nbsp;if (setting == nullptr)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return 0;<br>
+<br>
+      &nbsp;&nbsp; &nbsp;// すでに辞書に登録があったら<br>
+      &nbsp;&nbsp; &nbsp;if (fonts.count(setting-&gt;tag) != 0)<br>
+      &nbsp;&nbsp; &nbsp;{	// 作成したフォントデータを削除<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int result = DxLib::DeleteFontToHandle(fonts[setting-&gt;tag].handle);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(result == 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;fonts.erase(setting-&gt;tag); // 辞書からも削除<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;setting->handle = -1; // -1に戻して未ロード状態がわかるようにする<br>
+<br>
+      &nbsp;&nbsp; &nbsp;return setting-&gt;handle;<br>
+}</p>
+		<br>
   </body>
 </html>
