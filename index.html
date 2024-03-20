@@ -11593,8 +11593,8 @@ private:<br>
 };<br>
 #endif</p>
 		<br>
-		<br>Font.cppも必要になります。<br>
-		<p><code>Font.cppを新規作成</code>してフォントデータを生成したり、メモリ上から削除して節約したりする処理をつくりましょう。<br></p>
+		<br>Font.cppも修正が必要になります。<br>
+		<p><code>Font.cppを修正してLoadFontDataToHandle関数でDFT形式のフォントファイルを読み込む</code>処理をつくりましょう。<br></p>
 		<p class="source">#include "Font.h"<br>
 <br>
 std::unordered_map&lt;std::string, Font::Setting&gt; Font::fonts; // フォントの辞書<br>
