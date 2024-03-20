@@ -11349,6 +11349,127 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int italic = FALSE; // イタリック体で表示するか<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int handle = -1; // CreateFontToHandle関数で帰ってくるハンドル https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
 		<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;const std::string tag = ""; // 設定にタグをつけて管理する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string fontName; // 作成するフォント名(NULL にするとデフォルトのフォント)<br>
+<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// std::unordered_mapの値に使うにはデフォルトコンストラクタが必要<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Setting() = default;//←これが無いと「クラス、構造体、..に規定のコンストラクタがありません」エラー<br>
+		<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Setting(const std::string tag, const TCHAR* FontName, int Size, int Thick,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int FontType = -1, int CharSet = -1, int EdgeSize = -1, int Italic = FALSE)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;: size{ Size }, thick{ Thick }, fontType{ FontType }, charSet{ CharSet }, edgeSize{ EdgeSize }, italic{ Italic },<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;tag{ tag }, fontName{ (FontName == NULL) ? "" : std::string(FontName) }<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;virtual ~Setting() {}<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+<br>
+      &nbsp;&nbsp; &nbsp;// 自分で設定したフォント設定の辞書<br>
+      &nbsp;&nbsp; &nbsp;static std::unordered_map&lt;std::string, Setting&gt; fonts;<br>
+<br>
+      &nbsp;&nbsp; &nbsp;Font() {}; // 初期化コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;virtual ~Font() {}; // 破棄するデストラクタ<br>
+<br>
+      &nbsp;&nbsp; &nbsp;static void Init()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ゲーム起動時から終了までずっと使うフォントはまとめてここで読込む形もアリ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//Setting font1{ "設定1", "ＭＳ 明朝", 40, 3 };<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//Load(&amp;font1); // 設定に沿ってフォントをデータ化しておく<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;// Settingに沿ってCreateFontToHandle関数でフォントデータを作成して辞書に登録しておく https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
+      &nbsp;&nbsp; &nbsp;static int Load(Setting* setting = nullptr);<br>
+<br>
+      &nbsp;&nbsp; &nbsp;// 作成しておいたフォントデータを削除する(ひとつあたり1.2MB程のメモリを使う)<br>
+      &nbsp;&nbsp; &nbsp;static int DeleteFontToHandle(Setting* setting = nullptr);<br>
+<br>
+private:<br>
+<br>
+};<br>
+#endif</p>
+		<br>
+		<br>Font.cppも必要になります。<br>
+		<p><code>Font.cppを新規作成</code>してフォントデータを生成したり、メモリ上から削除して節約したりする処理をつくりましょう。<br></p>
+		<p class="source">#include "Font.h"<br>
+<br>
+std::unordered_map&lt;std::string, Font::Setting&gt; Font::fonts; // フォントの辞書<br>
+<br>
+<br>
+int Font::Load(Setting* setting)<br>
+{<br>
+      &nbsp;&nbsp; &nbsp;// 設定がnullptrだったらデフォルトのフォントを返す<br>
+      &nbsp;&nbsp; &nbsp;if (setting == nullptr)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return GetDefaultFontHandle();<br>
+<br>
+      &nbsp;&nbsp; &nbsp;// すでに辞書に登録があったら作成したフォントデータを削除しておく<br>
+      &nbsp;&nbsp; &nbsp;if (fonts.count(setting-&gt;tag) != 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DxLib::DeleteFontToHandle(fonts[setting-&gt;tag].handle);<br>
+<br>
+      &nbsp;&nbsp; &nbsp;// https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
+      &nbsp;&nbsp; &nbsp;// フォントを作成し作成したデータの識別番号をsetting-&gt;handle に保存する<br>
+      &nbsp;&nbsp; &nbsp;setting->handle = CreateFontToHandle((setting-&gt;fontName == "") ? NULL : setting-&gt;fontName.c_str(), setting-&gt;size, setting-&gt;thick,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; setting-&gt;fontType, setting-&gt;charSet, setting-&gt;edgeSize, setting-&gt;italic, setting-&gt;handle);<br>
+	<br>
+      &nbsp;&nbsp; &nbsp;assert(setting-&gt;handle != -1 && "Font名が間違っているかFontフォルダ指定をミスっていませんか?"); // フォント作成失敗<br>
+	<br>
+      &nbsp;&nbsp; &nbsp;// 読み込んだハンドルを辞書に登録しておく<br>
+      &nbsp;&nbsp; &nbsp;fonts.emplace(setting-&gt;tag, *setting);<br>
+<br>
+      &nbsp;&nbsp; &nbsp;return setting-&gt;handle;<br>
+}<br>
+<br>
+// フォントがメモリを圧迫してるときに使う(フォントデータはひとつ1.2MB程のメモリを使う)<br>
+int Font::DeleteFontToHandle(Setting* setting)<br>
+{<br>
+      &nbsp;&nbsp; &nbsp;// 設定がnullptrだったら何もせずreturn<br>
+      &nbsp;&nbsp; &nbsp;if (setting == nullptr)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return 0;<br>
+<br>
+      &nbsp;&nbsp; &nbsp;// すでに辞書に登録があったら<br>
+      &nbsp;&nbsp; &nbsp;if (fonts.count(setting-&gt;tag) != 0)<br>
+      &nbsp;&nbsp; &nbsp;{	// 作成したフォントデータを削除<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int result = DxLib::DeleteFontToHandle(fonts[setting-&gt;tag].handle);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(result == 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;fonts.erase(setting-&gt;tag); // 辞書からも削除<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;setting->handle = -1; // -1に戻して未ロード状態がわかるようにする<br>
+<br>
+      &nbsp;&nbsp; &nbsp;return setting-&gt;handle;<br>
+}</p>
+		<br>
+		<br>
+		<br>
+		<br>
+さて、このままでもシンプルに使いこなすことはできるでしょうが、できればImageクラスのようにFont用のクラスをつくって管理しておきたいところです。<br>
+		では、さっそくつくっていきましょう。<br>
+	<br>
+		<p><code>Font.hを新規作成</code>してフォントデータを生成して辞書配列std::unordered_mapで管理するクラスを定義しましょう。<br></p>
+		<p class="source">#ifndef FONT_H_<br>
+#define FONT_H_<br>
+<br>
+#include "DxLib.h"<br>
+#include &lt;assert.h&gt; // 読込み失敗表示用<br>
+#include &lt;string&gt;<br>
+#include &lt;unordered_map&gt;<br>
+<br>
+<br>
+// フォント設定の管理や読み込みを行うクラス<br>
+class Font<br>
+{<br>
+public:<br>
+      &nbsp;&nbsp; &nbsp;// フォントの設定の構造体<br>
+      &nbsp;&nbsp; &nbsp;struct Setting<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int size = -1; // フォントのサイズ( おおよそのドット数 -1にするとデフォルトのサイズ )<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int thick = -1; // フォントの太さ( 0～9 -1にするとデフォルトの太さ )<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int fontType = -1; // フォントのタイプ [参考] https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int charSet = -1;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int edgeSize = -1; // フォントの縁のエッジのサイズ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int italic = FALSE; // イタリック体で表示するか<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int handle = -1; // CreateFontToHandle関数で帰ってくるハンドル https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
+		<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;bool isDFTFont = false; // DXライブラリ付属ツール C:\DxLib_VC\Tool\CreateDXFontData で書き出したDFT形式を使用するかどうか<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;const std::string tag = ""; // 設定にタグをつけて管理する<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string fontName; // 作成するフォント名(NULL にするとデフォルトのフォント)<br>
@@ -11450,5 +11571,6 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       &nbsp;&nbsp; &nbsp;return setting-&gt;handle;<br>
 }</p>
 		<br>
+		
   </body>
 </html>
