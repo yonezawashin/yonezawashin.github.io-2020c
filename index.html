@@ -11359,7 +11359,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Setting(const std::string tag, const TCHAR* FontName, int Size, int Thick,<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int FontType = -1, int CharSet = -1, int EdgeSize = -1, int Italic = FALSE)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;: size{ Size }, thick{ Thick }, fontType{ FontType }, charSet{ CharSet }, edgeSize{ EdgeSize }, italic{ Italic },<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;tag{ tag }, fontName{ (FontName == NULL) ? "" : std::string(FontName) }<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;tag{ tag }, fontName{ (FontName == NULL) ? "" : std::string(FontName) }<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;isDFTFont = false; // 引数を4つ以上指定する初期化ならCreateFontToHandleを使用する<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
@@ -11418,7 +11418,7 @@ int Font::Load(Setting* setting)<br>
       &nbsp;&nbsp; &nbsp;// フォントを作成し作成したデータの識別番号をsetting-&gt;handle に保存する<br>
       &nbsp;&nbsp; &nbsp;if (setting-&gt;isDFTFont == false || setting-&gt;fontName == "")<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = DxLib::CreateFontToHandle((setting-&gt;fontName == "") ? NULL : setting-&gt;fontName.c_str(), setting-&gt;size, setting-&gt;thick,<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; setting-&gt;fontType, setting-&gt;charSet, setting-&gt;edgeSize, setting-&gt;italic, setting-&gt;handle);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; setting-&gt;fontType, setting-&gt;charSet, setting-&gt;edgeSize, setting-&gt;italic, setting-&gt;handle);<br>
       &nbsp;&nbsp; &nbsp;else // ＤＸフォントデータファイルを読込み、フォントハンドルを保存する<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = LoadFontDataToHandle(setting-&gt;fontName.c_str(), setting-&gt;edgeSize);<br>
 	<br>
