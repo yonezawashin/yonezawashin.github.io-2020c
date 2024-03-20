@@ -9132,6 +9132,7 @@ Update()関数内にX方向の動きも追加すると..<br>
 	<a href="#mozTocId50014">背景画像を作ってループ表示させてみる</a><br>
 	<a href="#mozTocId50015">スコアを画面表示させてみる</a><br>
 	<a href="#mozTocId50016">フォントを変えてみる</a><br>
+	<a href="#mozTocId50017">スコアの加算と背景の加速</a><br>
       </li>
       <br>
       <p>次のテキストは後々。</p>
@@ -11738,7 +11739,75 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		<br>
 		<br>
-	<h2><a id="mozTocId50017" class="mozTocH1"></a>スコアの加算処理と背景の加速</h2>	
-		
+	<h2><a id="mozTocId50017" class="mozTocH1"></a>スコアの加算処理と背景の加速</h2>
+		さて現状では、スコアは表示されますが、敵を倒してもスコアは増えていません。<br>
+		今度はそこを改造して、スコアをカウントしてみましょう。<br>
+		<br>
+<br>
+		 <p><code>PlayScene.hのプレイヤ弾と敵の衝突判定にスコアをふやす処理</code>を追加してみましょう。</p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+	    (中略)................<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+	    (中略)................<br>
+	    int score = 0; // プレイ中のゲームのスコア:短期的数値でシーン遷移ごとにリセットされる
+	    (中略)................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ここにプレイ中の更新処理を持ってくる<br>
+      <br>
+      
+	    (中略)................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾と敵の衝突判定<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; playerBullet : gm.playerBullets)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾が死んでたらスキップする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (playerBullet-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; continue;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; enemy : gm.enemies)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 敵が死んでたらスキップする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (enemy-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; continue;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾と敵が重なっているか？<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (MyMath::CircleCircleIntersection(<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; playerBullet-&gt;position, playerBullet-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;position, enemy-&gt;collisionRadius))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 重なっていたら、それぞれのぶつかったときの処理を呼び出す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; enemy-&gt;OnCollisionPlayerBullet(playerBullet);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; playerBullet-&gt;OnCollisionEnemy(enemy);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::Play(Sound::bomb); // 効果音の再生<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>++score; // 敵を倒すとスコアが+1される<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bgSpeed += 0.05f; // 敵を倒せば倒すほど背景を加速させる演出</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 衝突の結果、自機弾が死んだら、この弾のループはおしまい<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (playerBullet-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; break;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+	    (中略)................<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      
+	    (中略)................<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
   </body>
 </html>
