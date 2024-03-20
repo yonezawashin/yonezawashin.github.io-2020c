@@ -11514,6 +11514,15 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<img src="image/font_dp4_fontviewer2.png" alt="" style="width: 1456px; height: 772px;"><br>
 		<br>
 		<br>
+		フリーフォントのフォント名がコピー出来たら、左下のWindowsの検索窓から<b>コマンドプロンプトを検索して起動</b>しましょう。<br>
+		コマンドプロンプトは<b>GUI</b>(Gグラフィカルな Userユーザー Interfaceインターフェース)と違い、<br>
+		1990年代の<b>CUI(Commandコマンド形式のUserユーザー Interfaceインターフェース)でcdなどのCommandコマンドを文字で打ち込み、フォルダをたどる仕組み</b>です。<br>
+		<b>cd \</b>コマンドでWindow C:直下のルートフォルダに移動します。<br>
+		<b>cd と打って、タブTabボタンを押す</b>とC:フォルダの中にあるフォルダが順番に表示されますのでDxLib＿VCフォルダを探しましょう。<br>
+		<b>あとは順々にDxLib＿VC/Tool/CreateDXFontDataフォルダまで</b>たどりましょう。<br>
+		DxLib＿VC/Tool/CreateDXFontDataフォルダには<b>CreateDXFontData.exeがあります</b>ので<br>
+		<b>Sampleフォルダにある～.batやreadme.txtをメモ帳に書いてあることを参考に</b><br>
+		<b>CreateDXFontData.exe /F"コピーしたフォント名" /B4 /S32 /O"MyFont1.dft"</b>などのコマンドをうちEnterで実行してMyFont1.dftができたら成功です。<br>
 		<br>
 		<img src="image/font_dp4_fontviewer3.png" alt="" style="width: 1214px; height: 720px;"><br>
 		<br>
@@ -11657,7 +11666,7 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 	<br>
       #include "DxLib.h"<br>
       (中略)...........<br>
-<em>#include "Font.h"</em><br>
+#include "Font.h"<br>
       (中略)...........<br>		
       <br>
       class TitleScene : public Scene<br>
