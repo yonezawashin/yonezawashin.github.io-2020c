@@ -11417,7 +11417,7 @@ int Font::Load(Setting* setting)<br>
       &nbsp;&nbsp; &nbsp;// https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
       &nbsp;&nbsp; &nbsp;// フォントを作成し作成したデータの識別番号をsetting-&gt;handle に保存する<br>
       &nbsp;&nbsp; &nbsp;if (setting-&gt;isDFTFont == false || setting-&gt;fontName == "")<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = DxLib::CreateFontToHandle((setting-&gt;fontName == "") ? NULL : setting-&gt;fontName.c_str(), setting-&gt;size, setting-&gt;thick,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = CreateFontToHandle((setting-&gt;fontName == "") ? NULL : setting-&gt;fontName.c_str(), setting-&gt;size, setting-&gt;thick,<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; setting-&gt;fontType, setting-&gt;charSet, setting-&gt;edgeSize, setting-&gt;italic, setting-&gt;handle);<br>
       &nbsp;&nbsp; &nbsp;else // ＤＸフォントデータファイルを読込み、フォントハンドルを保存する<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = LoadFontDataToHandle(setting-&gt;fontName.c_str(), setting-&gt;edgeSize);<br>
