@@ -11457,7 +11457,7 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       public:<br>
       (中略)...........<br>
       &nbsp;&nbsp; &nbsp;<em>// ★dp4FontViewerを使ってInfoからFont名を得て↓コピぺすればつづりを間違えない https://us.fontviewer.de/Download/<br>
-      &nbsp;&nbsp; &nbsp;Font::Setting font = Font::Setting("設定1", "HG丸ｺﾞｼｯｸM-PRO", 40, 7, DX_FONTTYPE_ANTIALIASING_EDGE_4X4, -1, 3, TRUE);</em><br>
+      &nbsp;&nbsp; &nbsp;Font::Setting font = Font::Setting("設定1", "HG丸ｺﾞｼｯｸM-PRO", 40, 7, DX_FONTTYPE_ANTIALIASING_EDGE_4X4, -1, 3, FALSE);</em><br>
       &nbsp;&nbsp; &nbsp;int font1 = -1; //フォントのハンドルをCreateFontToHandle関数で得る<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// 初期化処理<br>
@@ -11509,8 +11509,16 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		フリーフォントのインストールの仕方は下記を参考に<br>
 		<a href="https://www.pc-koubou.jp/magazine/58097">https://www.pc-koubou.jp/magazine/58097</a><br>
-		
 		<br>
+		<br>
+		<img src="image/font_dp4_fontviewer2.png" alt="" style="width: 1456px; height: 772px;"><br>
+		<br>
+		<br>
+		<br>
+		<img src="image/font_dp4_fontviewer3.png" alt="" style="width: 1214px; height: 720px;"><br>
+		<br>
+		<br>
+		MyFont1.dftができたら<code>Imageフォルダと同じフォルダにFontフォルダを作成して、生成したMyFont1.dftファイルをコピーしておきましょう</code>
 	<br>
 		<p><code>Font.hを修正してDFT形式のファイルからフォントデータを生成</code>して表示する処理を定義しましょう。<br></p>
 		<p class="source">#ifndef FONT_H_<br>
@@ -11537,7 +11545,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int italic = FALSE; // イタリック体で表示するか<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int handle = -1; // CreateFontToHandle関数で帰ってくるハンドル https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
 		<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;bool isDFTFont = false; // DXライブラリ付属ツール C:\DxLib_VC\Tool\CreateDXFontData で書き出したDFT形式を使用するかどうか<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>bool isDFTFont = false; // DXライブラリ付属ツール C:\DxLib_VC\Tool\CreateDXFontData で書き出したDFT形式を使用するかどうか</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;const std::string tag = ""; // 設定にタグをつけて管理する<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string fontName; // 作成するフォント名(NULL にするとデフォルトのフォント)<br>
 <br>
@@ -11548,15 +11556,15 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int FontType = -1, int CharSet = -1, int EdgeSize = -1, int Italic = FALSE)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;: size{ Size }, thick{ Thick }, fontType{ FontType }, charSet{ CharSet }, edgeSize{ EdgeSize }, italic{ Italic },<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;tag{ tag }, fontName{ (FontName == NULL) ? "" : std::string(FontName) }<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;isDFTFont = false; // 引数を4つ以上指定する初期化ならCreateFontToHandleを使用する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;isDFTFont = false; // 引数を4つ以上指定する初期化ならCreateFontToHandleを使用する</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
 <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Setting(const std::string tag, const TCHAR* DFTFontPath, int EdgeSize = -1)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>Setting(const std::string tag, const TCHAR* DFTFontPath, int EdgeSize = -1)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;: tag{ tag }, fontName{ (DFTFontPath == NULL) ? "" : std::string(DFTFontPath) }, edgeSize{ EdgeSize }<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;isDFTFont = true; // 引数を3つ以下指定する初期化ならDFT形式のフォントをロードする<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
 <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;virtual ~Setting() {}<br>
       &nbsp;&nbsp; &nbsp;};<br>
@@ -11604,11 +11612,11 @@ int Font::Load(Setting* setting)<br>
 <br>
       &nbsp;&nbsp; &nbsp;// https://dxlib.xsrv.jp/function/dxfunc_graph2.html#R17N10<br>
       &nbsp;&nbsp; &nbsp;// フォントを作成し作成したデータの識別番号をsetting-&gt;handle に保存する<br>
-      &nbsp;&nbsp; &nbsp;if (setting-&gt;isDFTFont == false || setting-&gt;fontName == "")<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = CreateFontToHandle((setting-&gt;fontName == "") ? NULL : setting-&gt;fontName.c_str(), setting-&gt;size, setting-&gt;thick,<br>
+      &nbsp;&nbsp; &nbsp;<em>if (setting-&gt;isDFTFont == false || setting-&gt;fontName == "")<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;</em>setting->handle = CreateFontToHandle((setting-&gt;fontName == "") ? NULL : setting-&gt;fontName.c_str(), setting-&gt;size, setting-&gt;thick,<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; setting-&gt;fontType, setting-&gt;charSet, setting-&gt;edgeSize, setting-&gt;italic, setting-&gt;handle);<br>
-      &nbsp;&nbsp; &nbsp;else // ＤＸフォントデータファイルを読込み、フォントハンドルを保存する<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = LoadFontDataToHandle(setting-&gt;fontName.c_str(), setting-&gt;edgeSize);<br>
+      &nbsp;&nbsp; &nbsp;<em>else // ＤＸフォントデータファイルを読込み、フォントハンドルを保存する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;setting->handle = LoadFontDataToHandle(setting-&gt;fontName.c_str(), setting-&gt;edgeSize);</em><br>
 	<br>
       &nbsp;&nbsp; &nbsp;assert(setting-&gt;handle != -1 && "Font名が間違っているかFontフォルダ指定をミスっていませんか?"); // フォント作成失敗<br>
 	<br>
