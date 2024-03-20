@@ -11271,10 +11271,10 @@ extern	int	DrawString( int x, int y, <b>const TCHAR *String</b>,      unsigned i
       public:<br>
       (中略)...........<br>
       &nbsp;&nbsp; &nbsp;<em>int font = -1; //フォントのハンドルをCreateFontToHandle関数で得る</em><br>
-      &nbsp;&nbsp; &nbsp;
-      &nbsp;&nbsp; &nbsp;// 初期化処理
-      &nbsp;&nbsp; &nbsp;void Initialize() override
-      &nbsp;&nbsp; &nbsp;{
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 初期化処理<br>
+      &nbsp;&nbsp; &nbsp;void Initialize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// "ＭＳ 明朝"のフォントで、サイズ４０、太さ7<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// エッジサイズ3、DX_FONTTYPE_ANTIALIASING_EDGE_4X4　: アンチエイリアス＆エッジ付きフォント( 4x4サンプリング )<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// イタリック=TRUEのフォントを作成し<br>
