@@ -12194,7 +12194,7 @@ public:<br>
         &nbsp;&nbsp; &nbsp;}</b><br>
       <br>
       &nbsp;&nbsp; &nbsp;// csvファイルの読み込み<br>
-      &nbsp;&nbsp; &nbsp;virtual void Load(std::string filePath)<br>
+      &nbsp;&nbsp; &nbsp;virtual void Load(std::string filePath<em>, CsvType csvType = CsvType::IntMap</em>)<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filePath == "" || isInitialized) return; //ファイル名がないもしくはロード済<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;FilePath = filePath; // ファイル名を保管<br>
