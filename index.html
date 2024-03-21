@@ -8279,6 +8279,17 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;std::string FilePath { "" };<br>
       &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;int&gt;&gt; Data;// csvデータ<br>
       <br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
+      &nbsp;&nbsp; &nbsp;DataCsv(std::string filePath = "") :FilePath{ filePath }<br>
+      &nbsp;&nbsp; &nbsp;{// csvファイルの読込み★【初期化と同時なのでファイルとデータ型が一心同体で使いやすい】<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (FilePath != "") Load(FilePath); // ファイル読込み<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      &nbsp;&nbsp; &nbsp;virtual ~DataCsv()<br>
+      &nbsp;&nbsp; &nbsp;{// 仮想デストラクタ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear();// 2次元配列データのお掃除<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;<b>// ★スムーズに[][]でアクセスできるように[]演算子を独自定義する<br>
         &nbsp;&nbsp; &nbsp;std::vector&lt;int&gt;&amp; operator[](std::size_t index) { // ★ &amp;参照にしないといちいちデータのコピーを返すので遅くなるよ<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data[index]; // 書き込み<br>
@@ -8291,16 +8302,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // size()関数の名前をvectorと被らせることで使う側はvectorインvectorのままのコードで使える<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data.size();<br>
         &nbsp;&nbsp; &nbsp;}</b><br>
-      &nbsp;&nbsp; &nbsp;<br>
-      &nbsp;&nbsp; &nbsp;// 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
-      &nbsp;&nbsp; &nbsp;DataCsv(std::string filePath = "") :FilePath{ filePath }<br>
-      &nbsp;&nbsp; &nbsp;{// csvファイルの読込み★【初期化と同時なのでファイルとデータ型が一心同体で使いやすい】<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (FilePath != "") Load(FilePath); // ファイル読込み<br>
-      &nbsp;&nbsp; &nbsp;};<br>
-      &nbsp;&nbsp; &nbsp;virtual ~DataCsv()<br>
-      &nbsp;&nbsp; &nbsp;{// 仮想デストラクタ<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear();// 2次元配列データのお掃除<br>
-      &nbsp;&nbsp; &nbsp;};<br>
       <br>
       &nbsp;&nbsp; &nbsp;<b>// データをクリアしてメモリを解放する<br>
         &nbsp;&nbsp; &nbsp;virtual void clear()<br>
@@ -12162,7 +12163,17 @@ public:<br>
       <br>
       &nbsp;&nbsp; &nbsp;std::string FilePath { "" };<br>
       &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;<em>CsvValue</em>&gt;&gt; Data;// csvデータ<br>
-      <br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
+      &nbsp;&nbsp; &nbsp;DataCsv(std::string filePath = ""<em>, CsvType csvType = CsvType::IntMap</em>) :FilePath{ filePath }<br>
+      &nbsp;&nbsp; &nbsp;{// csvファイルの読込み★【初期化と同時なのでファイルとデータ型が一心同体で使いやすい】<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (FilePath != "") Load(FilePath<em>, csvType</em>); // ファイル読込み<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      &nbsp;&nbsp; &nbsp;virtual ~DataCsv()<br>
+      &nbsp;&nbsp; &nbsp;{// 仮想デストラクタ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear();// 2次元配列データのお掃除<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// ★スムーズに[][]でアクセスできるように[]演算子を独自定義する<br>
         &nbsp;&nbsp; &nbsp;std::vector&lt;<em>CsvValue</em>&gt;&amp; operator[](std::size_t index) { // ★ &amp;参照にしないといちいちデータのコピーを返すので遅くなるよ<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data[index]; // 書き込み<br>
@@ -12175,23 +12186,13 @@ public:<br>
         &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // size()関数の名前をvectorと被らせることで使う側はvectorインvectorのままのコードで使える<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data.size();<br>
         &nbsp;&nbsp; &nbsp;}<br>
-      &nbsp;&nbsp; &nbsp;<br>
-      &nbsp;&nbsp; &nbsp;// 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
-      &nbsp;&nbsp; &nbsp;DataCsv(std::string filePath = ""<em>, CsvType csvType = CsvType::IntMap</em>) :FilePath{ filePath }<br>
-      &nbsp;&nbsp; &nbsp;{// csvファイルの読込み★【初期化と同時なのでファイルとデータ型が一心同体で使いやすい】<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (FilePath != "") Load(FilePath<em>, csvType</em>); // ファイル読込み<br>
-      &nbsp;&nbsp; &nbsp;};<br>
-      &nbsp;&nbsp; &nbsp;virtual ~DataCsv()<br>
-      &nbsp;&nbsp; &nbsp;{// 仮想デストラクタ<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear();// 2次元配列データのお掃除<br>
-      &nbsp;&nbsp; &nbsp;};<br>
       <br>
-      &nbsp;&nbsp; &nbsp;<b>// データをクリアしてメモリを解放する<br>
+      &nbsp;&nbsp; &nbsp;// データをクリアしてメモリを解放する<br>
         &nbsp;&nbsp; &nbsp;virtual void clear()<br>
         &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // [確実にメモリを空にするには] http://vivi.dyndns.org/tech/cpp/vector.html#shrink_to_fit<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;CsvValue&gt;&gt;().swap(Data); // 空のテンポラリオブジェクトでリセット<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isInitialized = false; //ロード済みフラグをOFF<br>
-        &nbsp;&nbsp; &nbsp;}</b><br>
+        &nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;// csvファイルの読み込み<br>
       &nbsp;&nbsp; &nbsp;virtual void Load(std::string filePath<em>, CsvType csvType = CsvType::IntMap</em>)<br>
