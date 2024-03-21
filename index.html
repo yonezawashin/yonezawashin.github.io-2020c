@@ -12112,7 +12112,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp;// 3種類の読み取りオペレータ<br>
       &nbsp;&nbsp; &nbsp;inline operator int()<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;if (type == Type::Int) return (float)intData;
+      &nbsp;&nbsp; &nbsp;if (type == Type::Int) return (float)intData;<br>
       &nbsp;&nbsp; &nbsp;else if (type == Type::Float) return (int)floatData;<br>
       &nbsp;&nbsp; &nbsp;else if (type == Type::String && intData == 0)<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;intData = intFromString(); // デフォルトで文字列として読込んだデータをintに変換<br>
@@ -12121,7 +12121,7 @@ public:<br>
 <br>
       &nbsp;&nbsp; &nbsp;inline operator float()<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;if (type == Type::Float) return floatData;
+      &nbsp;&nbsp; &nbsp;if (type == Type::Float) return floatData;<br>
       &nbsp;&nbsp; &nbsp;else if (type == Type::Int) return (float)intData;<br>
       &nbsp;&nbsp; &nbsp;else if (type == Type::String && intData == 0)<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;floatData = floatFromString(); // デフォルトで文字列として読込んだデータをfloatに変換<br>
