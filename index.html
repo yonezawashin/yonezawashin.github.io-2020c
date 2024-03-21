@@ -12076,7 +12076,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;NUM<br>
       &nbsp;&nbsp; &nbsp;};<br>
       &nbsp;&nbsp; &nbsp;Type type = Type::String;<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
 protected: // 内部データを書き換え禁止:書き換えられるとintと文字列とのずれが起きうる<br>
       &nbsp;&nbsp; &nbsp;// エクセルのCsvデータはマス目がint,float,stringの3種類ありうる<br>
       &nbsp;&nbsp; &nbsp;union {  // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
@@ -12084,7 +12084,7 @@ protected: // 内部データを書き換え禁止:書き換えられるとint�
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float floatData; // 小数float型データを格納<br>
       &nbsp;&nbsp; &nbsp;};<br>
       &nbsp;&nbsp; &nbsp;std::string stringData{""}; // 文字列string型データを格納<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
 public:<br>
       &nbsp;&nbsp; &nbsp;CsvValue() = default;<br>
       &nbsp;&nbsp; &nbsp;// 3種類のコンストラクタ<br>
@@ -12093,20 +12093,20 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->intData = intData;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->stringData = std::to_string(intData);<br>
       &nbsp;&nbsp; &nbsp;}<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;CsvValue(float floatData) : type{ Type::Float }<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->floatData = floatData;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->stringData = std::to_string(floatData);<br>
       &nbsp;&nbsp; &nbsp;}<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;CsvValue(std::string& stringData) : type{ Type::String }<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->stringData = stringData;<br>
       &nbsp;&nbsp; &nbsp;}<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;virtual ~CsvValue() {}; // 仮想デストラクタ<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// 変換演算子によりCSVのセルをintとしてもstringとしても扱えるように<br>
       &nbsp;&nbsp; &nbsp;// https://programming-place.net/ppp/contents/cpp/language/019.html#conversion_op<br>
       &nbsp;&nbsp; &nbsp;// 3種類の読み取りオペレータ<br>
@@ -12118,7 +12118,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;intData = intFromString(); // デフォルトで文字列として読込んだデータをintに変換<br>
       &nbsp;&nbsp; &nbsp;return intData;<br>
       &nbsp;&nbsp; &nbsp;}<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;inline operator float()<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;if (type == Type::Float) return floatData;<br>
@@ -12127,12 +12127,12 @@ public:<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;floatData = floatFromString(); // デフォルトで文字列として読込んだデータをfloatに変換<br>
       &nbsp;&nbsp; &nbsp;return floatData;<br>
       &nbsp;&nbsp; &nbsp;}<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;inline operator std::string()&amp;<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;return stringData;<br>
       &nbsp;&nbsp; &nbsp;}<br>
-	    <br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;int intFromString() // 文字列データからint型への変換する関数<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;std::istringstream ss(stringData); //文字列ストリームの初期化<br>
@@ -12140,7 +12140,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;ss >> num; // 文字列ストリームから数字への変換<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;return num;<br>
       &nbsp;&nbsp; &nbsp;}<br>
-	    <br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;float floatFromString() // 文字列データからfloat型への変換する関数<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;std::istringstream ss(stringData); //文字列ストリームの初期化<br>
@@ -12148,34 +12148,34 @@ public:<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;ss >> num; // 文字列ストリームから数字への変換<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;return num;<br>
       &nbsp;&nbsp; &nbsp;}<br>
-	<br>
+      &nbsp;&nbsp; &nbsp;<br>
 private:<br>
       &nbsp;&nbsp; &nbsp;void clearString() // 文字列をcapacityごとクリアしてメモリ節約<br>
       &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// https://stackoverflow.com/questions/740030/how-to-release-the-unused-capacity-of-a-string<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string("").swap(stringData); // [capacityをリセットしてメモリ節約]<br>
       &nbsp;&nbsp; &nbsp;}<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
 public:<br>
       &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const int other) { // 代入=演算子<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;type = Type::Int; // タイプを更新<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::Float) floatData = (float)other;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else intData = other;<br>
-<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::String) std::to_string(other).swap(stringData); // [swapテクでcapacity節約]<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else clearString();<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp; &nbsp;}<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const float other) { // 代入=演算子<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;type = Type::Float; // タイプを更新<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::Int) intData = (int)other;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else floatData = other;<br>
-<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::String) std::to_string(other).swap(stringData); // [swapテクでcapacity節約]<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else clearString();<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp; &nbsp;}<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const std::string&amp; other) { // 代入=演算子<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;type = Type::String; // タイプを更新<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;intData = 0; // 初期値 0 としてリセット<br>
