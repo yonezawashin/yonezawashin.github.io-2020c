@@ -12156,7 +12156,7 @@ private:<br>
       &nbsp;&nbsp; &nbsp;}<br>
 <br>
 public:<br>
-      &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const int other) {<br>
+      &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const int other) { // 代入=演算子<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;type = Type::Int; // タイプを更新<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::Float) floatData = (float)other;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else intData = other;<br>
@@ -12166,7 +12166,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp; &nbsp;}<br>
 <br>
-      &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const float other) {<br>
+      &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const float other) { // 代入=演算子<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;type = Type::Float; // タイプを更新<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::Int) intData = (int)other;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else floatData = other;<br>
@@ -12176,7 +12176,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp; &nbsp;}<br>
 <br>
-      &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const std::string&amp; other) {<br>
+      &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const std::string&amp; other) { // 代入=演算子<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;type = Type::String; // タイプを更新<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;intData = 0; // 初期値 0 としてリセット<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;stringData = other;<br>
