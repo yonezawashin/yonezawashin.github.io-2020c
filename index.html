@@ -12183,6 +12183,16 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp; &nbsp;}<br>
 };<br>
+	<br>
+	// ファイル出力ストリーム演算子&lt;&lt;を定義する<br>
+std::ostream& operator &lt;&lt; (std::ostream& stream, CsvValue& csvValue)<br>
+{<br>
+    if (csvValue.type == CsvValue::Type::Int) stream &lt;&lt; (int)csvValue;<br>
+    else if (csvValue.type == CsvValue::Type::Float) stream &lt;&lt; (float)csvValue;<br>
+    else if (csvValue.type == CsvValue::Type::String) stream &lt;&lt; (std::string)csvValue;<br>
+<br>
+    return stream;<br>
+}<br>
 </em><br>
 	    <br>
       // CSVファイルを読込み幅や高さとデータ本体を保持するデータ型<br>
