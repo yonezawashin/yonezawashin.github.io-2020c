@@ -12163,18 +12163,18 @@ public:<br>
       &nbsp;&nbsp; &nbsp;std::string FilePath { "" };<br>
       &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;<em>CsvValue</em>&gt;&gt; Data;// csvデータ<br>
       <br>
-      &nbsp;&nbsp; &nbsp;<b>// ★スムーズに[][]でアクセスできるように[]演算子を独自定義する<br>
+      &nbsp;&nbsp; &nbsp;// ★スムーズに[][]でアクセスできるように[]演算子を独自定義する<br>
         &nbsp;&nbsp; &nbsp;std::vector&lt;<em>CsvValue</em>&gt;&amp; operator[](std::size_t index) { // ★ &amp;参照にしないといちいちデータのコピーを返すので遅くなるよ<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data[index]; // 書き込み<br>
         &nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;std::vector&lt;<em>CsvValue</em>&gt; operator[](std::size_t index) const { // ★constは添え字[]読み取りの処理を定義<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data[index]; // 読み取り<br>
-        &nbsp;&nbsp; &nbsp;}</b><br>
+        &nbsp;&nbsp; &nbsp;}<br>
       <br>
-      &nbsp;&nbsp; &nbsp;<b>std::size_t size()<br>
+      &nbsp;&nbsp; &nbsp;std::size_t size()<br>
         &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // size()関数の名前をvectorと被らせることで使う側はvectorインvectorのままのコードで使える<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data.size();<br>
-        &nbsp;&nbsp; &nbsp;}</b><br>
+        &nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
       &nbsp;&nbsp; &nbsp;DataCsv(std::string filePath = ""<em>, CsvType csvType = CsvType::IntMap</em>) :FilePath{ filePath }<br>
