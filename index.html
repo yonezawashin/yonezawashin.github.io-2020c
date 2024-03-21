@@ -12331,7 +12331,7 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (i &gt; 0) ofs_csv_file &lt;&lt; ","; // 区切りのカンマを書き出す<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ofs_csv_file &lt;&lt; Data[j][i]; // Data配列を出力<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ofs_csv_file &lt;&lt; "\n"; // 1行の終わりに改行のアスキーコード\nを出力<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ofs_csv_file &lt;&lt; std::endl; // 1行の終わりに改行を出力<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
