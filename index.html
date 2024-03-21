@@ -12189,8 +12189,8 @@ public:<br>
       <br>
       &nbsp;&nbsp; &nbsp;// データをクリアしてメモリを解放する<br>
         &nbsp;&nbsp; &nbsp;virtual void clear()<br>
-        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // [確実にメモリを空にするには] http://vivi.dyndns.org/tech/cpp/vector.html#shrink_to_fit<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;CsvValue&gt;&gt;().swap(Data); // 空のテンポラリオブジェクトでリセット<br>
+        &nbsp;&nbsp; &nbsp;{<em>&nbsp;&nbsp; // [確実にメモリを空にするには] http://vivi.dyndns.org/tech/cpp/vector.html#shrink_to_fit<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;CsvValue&gt;&gt;().swap(Data); // 空のテンポラリオブジェクトでリセット</em><br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isInitialized = false; //ロード済みフラグをOFF<br>
         &nbsp;&nbsp; &nbsp;}<br>
       <br>
