@@ -9133,6 +9133,7 @@ Update()関数内にX方向の動きも追加すると..<br>
 	<a href="#mozTocId50015">スコアを画面表示させてみる</a><br>
 	<a href="#mozTocId50016">フォントを変えてみる</a><br>
 	<a href="#mozTocId50017">スコアの加算と背景の加速</a><br>
+	<a href="#mozTocId50018">スコアのランキング表示</a><br>
       </li>
       <br>
       <p>次のテキストは後々。</p>
@@ -11832,7 +11833,7 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		少なくとも自分がゲームを作るなら、パワポの上でアイデアを考えるよりも、<br>
 		&nbsp;&nbsp;&nbsp; <b>ゲームの状態の遷移とユーザーの心の遷移の連動を頭の中でイメージ</b>してユーザーが<b>どの時点で先を予想できてあきてしまうか</b>、までは見えてしまいます。<br>
 		&nbsp;&nbsp;&nbsp; <b>自分の心の遷移の先回りをされていると感じるとき</b>はゲームに<b>明確な作り手の意図を感じられます</b>し、難しすぎるときは<b>自分が無視されているような感覚を感じます</b>。<br>
-		&nbsp;&nbsp;&nbsp; そういう意味では<b>作り手(自分)とユーザー(自分や他人)の「表現物としてのゲームを通じた自己対話」</b>がゲームを作る繰り返しではないかと感じます。<br>
+		&nbsp;&nbsp;&nbsp; そういう意味では<b>作り手(自分)とユーザー(自分や他人)の「表現物としてのゲームを通じた対話」</b>がゲームを作る繰り返しではないかと感じます。<br>
 		<br>
 		<b>私は自分の気持ち良いと感じる状態遷移を蒐集</b>しました、<br>
 		― マリオのスター無敵状態(<b>曲の加速</b>)、<br>
@@ -11850,6 +11851,35 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		<br>
 		
+	<h2><a id="mozTocId50018" class="mozTocH1"></a>スコアのランキング表示</h2>
+		<p><code>SceneManager.hにスコアのランクとランキング配列を定義</code>してランキングを管理できるようにしましょう。</p>
+    <p class="source">#ifndef SCNENEMANAGER_H_<br>
+      #define SCNENEMANAGER_H_<br>
+      <br>
+(中略)..........<br>
+      <br>
+      #include "Singleton.h"<br>
+      <br>
+      class Scene; //クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+      <br>
+      class SceneManager : public Singleton&lt;SceneManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;friend class Singleton&lt;SceneManager&gt;; // Singleton でのインスタンス作成は許可<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <b>// マネージャを【どこからでもアクセスしやすい「変数の掲示板」として使えばシーンをまたぐ変数も定義できる】</b><br>
+      &nbsp;&nbsp;&nbsp; std::string selectStage = "stage1"; // 選択中のステージ名など<br>
+      &nbsp;&nbsp; &nbsp;int scoreMax = -1; // 【シーンをまたぐスコアなど】はマネージャに定義すれば【シーンをまたいだあとも】消えず残る<br>
+      &nbsp;&nbsp; &nbsp;<em>int ranking[5] = {-1,-1,-1,-1,-1}; // スコアトップ5を記録しておく配列<br>
+      &nbsp;&nbsp; &nbsp;int rank = 0; // 直前のゲーム終了したときの順位</em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+(中略)..........<br>
+	    <br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
 		
   </body>
 </html>
