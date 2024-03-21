@@ -12184,14 +12184,14 @@ public:<br>
       &nbsp;&nbsp; &nbsp;}<br>
 };<br>
 	<br>
-	// ファイル出力ストリーム演算子&lt;&lt;を定義する<br>
-std::ostream& operator &lt;&lt; (std::ostream& stream, CsvValue& csvValue)<br>
+// ファイル出力ストリーム演算子&lt;&lt;を定義する<br>
+std::ostream&amp; operator &lt;&lt; (std::ostream&amp; stream, CsvValue&amp; csvValue)<br>
 {<br>
-    if (csvValue.type == CsvValue::Type::Int) stream &lt;&lt; (int)csvValue;<br>
-    else if (csvValue.type == CsvValue::Type::Float) stream &lt;&lt; (float)csvValue;<br>
-    else if (csvValue.type == CsvValue::Type::String) stream &lt;&lt; (std::string)csvValue;<br>
+&nbsp;&nbsp; &nbsp;if (csvValue.type == CsvValue::Type::Int) stream &lt;&lt; (int)csvValue;<br>
+&nbsp;&nbsp; &nbsp;else if (csvValue.type == CsvValue::Type::Float) stream &lt;&lt; (float)csvValue;<br>
+&nbsp;&nbsp; &nbsp;else if (csvValue.type == CsvValue::Type::String) stream &lt;&lt; (std::string)csvValue;<br>
 <br>
-    return stream;<br>
+&nbsp;&nbsp; &nbsp;return stream;<br>
 }<br>
 </em><br>
 	    <br>
