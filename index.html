@@ -11852,6 +11852,10 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		
 	<h2><a id="mozTocId50018" class="mozTocH1"></a>スコアのランキング表示</h2>
+		さて、現状でもこれまでの最大MAXスコアは表示できていますが、<b>MAXを更新しなければ、ユーザーはやりがいを感じられなくなってしまうかも</b>しれません。<br>
+		一番簡単な解決策としては、<b>スコアを配列でランキングとして管理</b>して、<br>
+		<b>No.1(1位)になれなくてもプレイ結果が今までのプレイと比べてどの順位にいるかわかるだけ</b>でも、<b>繰り返しプレイするときのやりがいは変わってきます</b>。(<b>1プレイごとの状態の変化</b>)<br>
+		<br>
 		<p><code>SceneManager.hにスコアのランクとランキング配列を定義</code>してランキングを管理できるようにしましょう。</p>
     <p class="source">#ifndef SCNENEMANAGER_H_<br>
       #define SCNENEMANAGER_H_<br>
@@ -11880,6 +11884,159 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       <br>
       #endif</p>
     <br>
-		
+		つぎにプレイの画面終了時にスコアを降順に並べ替えながらランキングに登録する処理をくわえます。<br>
+		【勉強】<b>順序を並べ替えるソートの仕方</b>はいろいろ種類があります。<b>プログラミングの仕事をするのであれば常識</b>ですので(<b>就職や転職のオンラインコーディングテストでよく出る</b>)、<br>
+		これを機会にぜひ勉強しておきたいところですね。おすすめは<a href="https://book.mynavi.jp/ec/products/detail/id=114278">アルゴリズムビジュアル大辞典</a>です。<br>
+		<a href="https://yutaka-watanobe.github.io/star-aida/1.0/algorithms/insertion_sort/anim.html">QRコード</a>からデータの動きをアニメーションで見れて、実感がわきやすいです。<br>
+      &nbsp;&nbsp;&nbsp; アルゴリズムビジュアル大辞典のアニメサイト:<a href="https://yutaka-watanobe.github.io/star-aida/books/">https://yutaka-watanobe.github.io/star-aida/books/</a><br>
+      &nbsp;&nbsp;&nbsp; 今回使う挿入ソート: <a href="https://yutaka-watanobe.github.io/star-aida/1.0/algorithms/insertion_sort/anim.html">https://yutaka-watanobe.github.io/star-aida/1.0/algorithms/insertion_sort/anim.html</a><br>
+		<br>
+		下記のサイトで<b>[Run]ボタンを押す</b>と<b>並べ替えの速度の違いを実感</b>できるとおもいます。<br>
+      &nbsp;&nbsp;&nbsp; 挿入ソート: <a href="https://ufcpp.net/study/algorithm/sort_insert.html">https://ufcpp.net/study/algorithm/sort_insert.html</a><br>
+      &nbsp;&nbsp;&nbsp; バブルソート: <a href="https://ufcpp.net/study/algorithm/sort_bubble.html">https://ufcpp.net/study/algorithm/sort_bubble.html</a><br>
+      &nbsp;&nbsp;&nbsp; 選択ソート: <a href="https://ufcpp.net/study/algorithm/sort_select.html">https://ufcpp.net/study/algorithm/sort_select.html</a><br>
+      &nbsp;&nbsp;&nbsp; シェルソート: <a href="https://ufcpp.net/study/algorithm/sort_shell.html">https://ufcpp.net/study/algorithm/sort_shell.html</a><br>
+      &nbsp;&nbsp;&nbsp; クイックソート: <a href="https://ufcpp.net/study/algorithm/sort_quick.html">https://ufcpp.net/study/algorithm/sort_quick.html</a><br>
+      &nbsp;&nbsp;&nbsp; ヒープソート: <a href="https://ufcpp.net/study/algorithm/sort_heap.html">https://ufcpp.net/study/algorithm/sort_heap.html</a><br>
+      &nbsp;&nbsp;&nbsp; マージソート: <a href="https://ufcpp.net/study/algorithm/sort_merge.html">https://ufcpp.net/study/algorithm/sort_merge.html</a><br>
+      &nbsp;&nbsp;&nbsp; バケットソート: <a href="https://ufcpp.net/study/algorithm/sort_bucket.html">https://ufcpp.net/study/algorithm/sort_bucket.html</a><br>
+      &nbsp;&nbsp;&nbsp; 基数ソート: <a href="https://ufcpp.net/study/algorithm/sort_radix.html">https://ufcpp.net/study/algorithm/sort_radix.html</a><br>
+		<br>
+		基本的には<b>クイックソートが速度の王様だと記憶</b>しておけばよいです。(<a href="https://www.kijineko.co.jp/%E8%BF%B7%E4%BF%A1-%E3%83%87%E3%83%BC%E3%82%BF%E5%88%97%E3%81%AE%E3%82%BD%E3%83%BC%E3%83%88%E3%81%AB%E3%81%AFqsort%E9%96%A2%E6%95%B0%E3%82%92%E4%BD%BF%E3%81%86%E3%81%B9%E3%81%97/">問題設定の条件による</a>)<br>
+		std::qsortの使い方 : <a href="https://runebook.dev/ja/docs/cpp/algorithm/qsort">https://runebook.dev/ja/docs/cpp/algorithm/qsort</a>
+		クイックソートは<b>安定ソートではない不安定ソート(=並べ替え前とあとで同じ値を持つ人の順位の変わる可能性がある)</b>例. 前回 3位:Aさん(10点)、4位:Bさん(10点) → 次回 3位:<em>Bさん</em>(10点)、4位:<em>Aさん</em>(10点)→おなじ点数なのに不安定..<br>
+		<br>
+		自分でソート処理を書かなくてもC++の<a href="https://cpprefjp.github.io/reference/algorithm/sort.html">std::sort関数を使えば楽</a>だが、<br>
+		教養として最低限、std::sort関数がクイックソートの改良版のイントロソートをベースとした<a href="http://blog.livedoor.jp/dgd17/archives/11610522.html">不安定ソートであることを知ったうえで使うべき</a>であり、<br>
+		安定ソートが必要な時には、std::stable_sort関数で<a href="https://qiita.com/mima_ita/items/b4cb3be38d64a397216b">安定なマージソート系の並べ替えの仕方もあることを知っておく必要</a>がある。<br>
+		<br>
+		<br>
+		<br>
+		さて、今回は勉強を兼ねて、<b>比較的コードも単純</b>で、<b>安定ソートである挿入ソート</b>を自分で書いて、<b>ランキングにゲームのスコアを挿入する</b>練習をしてみましょう。<br>
+		<br>
+		<br>
+	<code>PlayScene.hのシーンの終了時(GameOver時でもよいが..どこでやるかは迷いどころ)にスコアをランキングに順序をソートしながら登録する</code>修正をくわえましょう。</p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+    (中略).....................<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+    (中略).....................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp;&nbsp; void Finalize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+    (中略).....................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲーム終了時のスコアがMAXなら記録<u>して終了</u><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(score &gt; sm.scoreMax) sm.scoreMax = score;<br>
+      <em>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲーム終了時のスコアをranking配列に挿入ソートして記録<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int j, iSize = sizeof(sm.ranking) / sizeof(int);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (score &lt; sm.ranking[iSize - 1])<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.rank = -1; // ランキング外<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {   // ranking配列の一番後ろは一番小さいのでまずはそれと入れ替え<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.ranking[iSize - 1] = score;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 挿入ソートでランキングを降順に並べ替え<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // https://www.momoyama-usagi.com/entry/info-algo-sort-basic#i-3<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // https://ufcpp.net/study/algorithm/sort_insert.html<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 1; i &lt; iSize; ++i)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; j = i; // 交換要素のためのインデックス<br>
+<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // while(j &gt; 0 &amp;&amp; sm.ranking[j-1] &gt; sm.ranking[j]) に変えると昇順ソートになる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; while ((j &gt; 0) &amp;&amp; (sm.ranking[j - 1] &lt; sm.ranking[j]))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 整列されていない隣り合う要素を交換する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int tmp = sm.ranking[j - 1];<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.ranking[j - 1] = sm.ranking[j];<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.ranking[j] = tmp;<br>
+<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; j--; // 1つ左のデータへ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 何位かを判定<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; iSize; ++i)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (sm.ranking[i] == score)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.rank = i; // ランキング順位 0位～4位<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; break; // 1つ見つけたらすぐbreakでfor文を抜ける<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+	    (中略).....................<br>
+      };<br>
+      <br>
+      #endif<br>
+	    <br>
+		<p><code>TitleScene.hを修正してプレイしたスコアのランキングをFontで文字列を改行しながら</code>表示してみましょう。<br></p>
+		<p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+	#include &lt;string&gt;<br>
+	<br>
+      #include "DxLib.h"<br>
+      (中略)...........<br>
+#include "Font.h"<br>
+      (中略)...........<br>		
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+(中略)...........<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>int lineSize = 40; // 1行の縦方向の改行サイズ<em></em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;SetFontLineSpaceToHandle(<em>lineSize</em>, font1); // 1行ごとのスペース<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawStringToHandle(0, 0, "TitleSceneです。\nボタン押下でPlaySceneへ。", GetColor(0, 255, 0), font1, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// </em>if (sm.scoreMax &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawStringToHandle(0, 200, (std::string("MAXスコア: ") + std::to_string(sm.scoreMax)).c_str(), GetColor(255, 255, 255), Font::fonts["設定1"].handle, GetColor(0, 255, 255));<br>
+      <em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 順位 0位～4位を1位から5位に直すため +1する→ sm.rank + 1<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string myRankText = (sm.rank &lt; 0) ? std::string("ランク イン シッパイ") : std::string("アナタ ハ イマ  No.") + std::to_string(sm.rank + 1) + std::string(" ") + std::to_string(sm.ranking[sm.rank]);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawStringToHandle(0, 200 + lineSize, myRankText.c_str(), GetColor(255, 255, 255), Font::fonts["設定1"].handle, GetColor(255, 0, 255));<br>
+<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string rankText; // ランキングを改行しながら複数行のテキストに<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (int i=0, iSize = sizeof(sm.ranking) / sizeof(int); i &lt; iSize; ++i)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(sm.ranking[i] &gt;= 0) // 配列の初期値は-1は表示せずとばす<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;rankText += std::string("No.") + std::to_string(i + 1) + std::string(" ") + std::to_string(sm.ranking[i]) + std::string("\n");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawStringToHandle(0, 200 + lineSize*2, rankText.c_str(), GetColor(255, 255, 255), Font::fonts["設定1"].handle);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      
+      (中略)...........<br>
+	    <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    </p>	
+
+		<br>
+		<br>
+		さて、うまくランキング表示ができたでしょうか？<b>何度か自滅して5回ぐらい自滅しないとランキングは表示されないのでバグだと勘違いしないでください</b>ね。<br>
+		<br>
+		<br>
+		<br>
   </body>
 </html>
