@@ -12050,7 +12050,208 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		<br>
 		<br>
+
+		<p><code>DataCsv.hを新規作成</code>します。</p>
+    <p class="source">#ifndef DATACSV_H_<br>
+      #define DATACSV_H_<br>
+      <br>
+      #include &lt;assert.h&gt; // 読込み失敗表示用<br>
+      #include &lt;vector&gt; // csvを2次元vector配列に格納<br>
+      #include &lt;string&gt; // 文字列に必要<br>
+      #include &lt;fstream&gt; // ファイル読み出しifstreamに必要<br>
+      #include &lt;sstream&gt; // 文字列ストリームに必要<br>
+      <br>
+<em>//★CsvValue型をint型や文字列string型や小数float型として【カメレオン】のように使える。<br>
+// 【エクセルはマス目がカメレオン】整数も小数も文字列もありうる。<br>
+// それを解消して統一して扱える便利な★CsvValue型。<br>
+class CsvValue<br>
+{<br>
+public:<br>
+      &nbsp;&nbsp; &nbsp;enum class Type<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Int,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Float,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;String,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;NUM<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      &nbsp;&nbsp; &nbsp;Type type = Type::String;<br>
+<br>
+protected: // 内部データを書き換え禁止:書き換えられるとintと文字列とのずれが起きうる<br>
+      &nbsp;&nbsp; &nbsp;// エクセルのCsvデータはマス目がint,float,stringの3種類ありうる<br>
+      &nbsp;&nbsp; &nbsp;union {  // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int intData = 0; // 整数int型データを格納<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float floatData; // 小数float型データを格納<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      &nbsp;&nbsp; &nbsp;std::string stringData{""}; // 文字列string型データを格納<br>
+<br>
+public:<br>
+      &nbsp;&nbsp; &nbsp;CsvValue() = default;<br>
+      &nbsp;&nbsp; &nbsp;// 3種類のコンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;CsvValue(int intData) : type{ Type::Int }<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->intData = intData;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->stringData = std::to_string(intData);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;CsvValue(float floatData) : type{ Type::Float }<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->floatData = floatData;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->stringData = std::to_string(floatData);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;CsvValue(std::string& stringData) : type{ Type::String }<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->stringData = stringData;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;virtual ~CsvValue() {}; // 仮想デストラクタ<br>
+<br>
+      &nbsp;&nbsp; &nbsp;// 変換演算子によりCSVのセルをintとしてもstringとしても扱えるように<br>
+      &nbsp;&nbsp; &nbsp;// https://programming-place.net/ppp/contents/cpp/language/019.html#conversion_op<br>
+      &nbsp;&nbsp; &nbsp;// 3種類の読み取りオペレータ<br>
+      &nbsp;&nbsp; &nbsp;inline operator int()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;if (type == Type::Float) return (int)floatData;<br>
+      &nbsp;&nbsp; &nbsp;else if (type == Type::String && intData == 0)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;intData = intFromString(); // デフォルトで文字列として読込んだデータをintに変換<br>
+      &nbsp;&nbsp; &nbsp;return intData;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;inline operator float()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;if (type == Type::Int) return (float)intData;<br>
+      &nbsp;&nbsp; &nbsp;else if (type == Type::String && intData == 0)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;floatData = floatFromString(); // デフォルトで文字列として読込んだデータをfloatに変換<br>
+      &nbsp;&nbsp; &nbsp;return floatData;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;inline operator std::string() const<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;return stringData;
+      &nbsp;&nbsp; &nbsp;}<br>
+	    <br>
+      &nbsp;&nbsp; &nbsp;int intFromString() // 文字列データからint型への変換する関数<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;std::istringstream ss(stringData); //文字列ストリームの初期化<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;ss >> num; // 文字列ストリームから数字への変換<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;return num;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+	    <br>
+      &nbsp;&nbsp; &nbsp;float floatFromString() // 文字列データからfloat型への変換する関数<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;std::istringstream ss(stringData); //文字列ストリームの初期化<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;float num; // 数字単体<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;ss >> num; // 文字列ストリームから数字への変換<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;return num;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+};<br>
+</em><br>
+	    <br>
+      // CSVファイルを読込み幅や高さとデータ本体を保持するデータ型<br>
+      struct DataCsv // ←structはC++ではほぼclassと同じ【違いはデフォルトがpublic】<br>
+      {&nbsp;&nbsp; // 読込んだデータファイルの情報<br>
+      <em>&nbsp;&nbsp; &nbsp;enum class CsvType<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;IntMap,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;CsvValue<br>
+      &nbsp;&nbsp; &nbsp;};</em><br>
+      &nbsp;&nbsp; &nbsp;int Width = 0; // csvファイルの表の幅<br>
+      &nbsp;&nbsp; &nbsp;int Height = 0;// csvファイルの表の高さ<br>
+      &nbsp;&nbsp; &nbsp;bool isInitialized = false; //[2重ロード対策]1度ロードしたらtrueにしてclear()されるまでロード抑止
+      <br>
+      &nbsp;&nbsp; &nbsp;std::string FilePath { "" };<br>
+      &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;<em>CsvValue</em>&gt;&gt; Data;// csvデータ<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<b>// ★スムーズに[][]でアクセスできるように[]演算子を独自定義する<br>
+        &nbsp;&nbsp; &nbsp;std::vector&lt;<em>CsvValue</em>&gt;&amp; operator[](std::size_t index) { // ★ &amp;参照にしないといちいちデータのコピーを返すので遅くなるよ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data[index]; // 書き込み<br>
+        &nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;std::vector&lt;<em>CsvValue</em>&gt; operator[](std::size_t index) const { // ★constは添え字[]読み取りの処理を定義<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data[index]; // 読み取り<br>
+        &nbsp;&nbsp; &nbsp;}</b><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<b>std::size_t size()<br>
+        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // size()関数の名前をvectorと被らせることで使う側はvectorインvectorのままのコードで使える<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data.size();<br>
+        &nbsp;&nbsp; &nbsp;}</b><br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
+      &nbsp;&nbsp; &nbsp;DataCsv(std::string filePath = ""<em>, CsvType csvType = CsvType::IntMap</em>) :FilePath{ filePath }<br>
+      &nbsp;&nbsp; &nbsp;{// csvファイルの読込み★【初期化と同時なのでファイルとデータ型が一心同体で使いやすい】<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (FilePath != "") Load(FilePath<em>, csvType</em>); // ファイル読込み<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      &nbsp;&nbsp; &nbsp;virtual ~DataCsv()<br>
+      &nbsp;&nbsp; &nbsp;{// 仮想デストラクタ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear();// 2次元配列データのお掃除<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<b>// データをクリアしてメモリを解放する<br>
+        &nbsp;&nbsp; &nbsp;virtual void clear()<br>
+        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // [確実にメモリを空にするには] http://vivi.dyndns.org/tech/cpp/vector.html#shrink_to_fit<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;CsvValue&gt;&gt;().swap(Data); // 空のテンポラリオブジェクトでリセット<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isInitialized = false; //ロード済みフラグをOFF<br>
+        &nbsp;&nbsp; &nbsp;}</b><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// csvファイルの読み込み<br>
+      &nbsp;&nbsp; &nbsp;virtual void Load(std::string filePath)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filePath == "" || isInitialized) return; //ファイル名がないもしくはロード済<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;FilePath = filePath; // ファイル名を保管<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear(); //データを一旦クリア<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 読み込むcsvファイルを開く(std::ifstreamのコンストラクタで開く)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::ifstream ifs_csv_file(filePath);<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string line; //1行単位でcsvファイルから文字列を読み込む<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int readWidth = 0; //読込みデータの幅<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int maxWidth = 0; // 1行の数字の最大個数<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int readHeight = 0; //初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓2重while文でCSVファイルを読み取る<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(ifs_csv_file, line)) // ファイルを行ごとに読み込む<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;<em>CsvValue</em>&gt; valuelist; // 1行の数字リスト<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream linestream(line); // 各行の文字列ストリーム<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string splitted; // カンマで分割された文字列<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int widthCount = 0; //この行の幅をカウント<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;if (csvType == CsvType::IntMap)</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;{</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;while (std::getline(linestream, splitted, { ',' }))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream ss; //文字列ストリームの初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss = std::istringstream(splitted); //文字列ストリーム<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;valuelist.emplace_back(num); // 数字を数字のリスト(valuelist)に追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++widthCount; //この行のカンマで区切られた数字の数をカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行の幅の数が記録を更新してMAXになるかチェック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (widthCount &gt; maxWidth) maxWidth = widthCount; //暫定Max幅を更新<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行分をvectorに追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (valuelist.size() != 0) Data.emplace_back(valuelist);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++readHeight; //マップの高さをカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readWidth = maxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readWidth &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違いでは?" != "");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readHeight &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違いでは?" != "");<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Width = readWidth; // 読込み成功したデータの幅を記録<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Height = readHeight; // 読込み成功したデータの高さを記録<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// コンストラクタで初期化でロードの場合とLoad関数経由で読む経路があるから2重ロード対策<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isInitialized = true; // 読込み初期化済みフラグをON<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
     <br>
     <br>
+
+		
   </body>
 </html>
