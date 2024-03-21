@@ -8346,12 +8346,12 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行分をvectorに追加<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (valuelist.size() != 0) Data.emplace_back(valuelist);<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++readHeight; //マップの高さをカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++readHeight; //読み込んだ行(縦)の数カウントアップ<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readWidth = maxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readWidth &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違いでは?" != "");<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readHeight &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違いでは?" != "");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readWidth = maxWidth; //読み込んだ列(横)の数は一番数字の個数の多かった行に合わせる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだCSVの幅と高さをチェック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readWidth &gt; 0 &amp;&amp; "CSV読込み失敗ファイル名間違いでは?" != "");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readHeight &gt; 0 &amp;&amp; "CSV読込み失敗ファイル名間違いでは?" != "");<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Width = readWidth; // 読込み成功したデータの幅を記録<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Height = readHeight; // 読込み成功したデータの高さを記録<br>
@@ -12242,12 +12242,12 @@ public:<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行分をvectorに追加<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (valuelist.size() != 0) Data.emplace_back(valuelist);<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++readHeight; //マップの高さをカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++readHeight; //読み込んだ行(縦)をカウントアップ<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readWidth = maxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readWidth = maxWidth; //読み込んだ列(横)の数は一番数字の個数の多かった行に合わせる<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readWidth &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違いでは?" != "");<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readHeight &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違いでは?" != "");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readWidth &gt; 0 &amp;&amp; "CSV読込み失敗ファイル名間違いでは?" != "");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readHeight &gt; 0 &amp;&amp; "CSV読込み失敗ファイル名間違いでは?" != "");<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Width = readWidth; // 読込み成功したデータの幅を記録<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Height = readHeight; // 読込み成功したデータの高さを記録<br>
