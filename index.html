@@ -12307,6 +12307,35 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
       &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp<em>// csvファイルの保存<br>
+      &nbsp;&nbsp; &nbspvoid Save(std::string filePath = "")<br>
+      &nbsp;&nbsp; &nbsp{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string outputPath = filePath;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filePath == "") // ファイル名がないときは読込時のパス<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;outputPath = FilePath;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (outputPath == "") return; // ファイル名がないとき<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;FilePath = filePath; // ファイル名を保管<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 読み込むcsvファイルを開く(std::ofstreamのコンストラクタで開く)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::ofstream ofs_csv_file(filePath);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string line; //1行単位でcsvファイルから文字列を読み込む<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓2重for文でCSVファイルを列i,行jごとに書き出していく<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (auto j = 0; j &lt; Data.size(); ++j)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (auto i = 0; i &lt; Data[j].size(); ++i)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (i &gt; 0) ofs_csv_file &lt;&lt; ","; // 区切りのカンマを書き出す<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ofs_csv_file &lt;&lt; Data[j][i]; // Data配列を出力<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ofs_csv_file &lt;&lt; "\n"; // 1行の終わりに改行のアスキーコード\nを出力<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
+      &nbsp;&nbsp; &nbsp}</em><br>
       };<br>
       <br>
       #endif</p>
