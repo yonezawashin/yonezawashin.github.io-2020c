@@ -8274,6 +8274,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       {&nbsp;&nbsp; // 読込んだデータファイルの情報<br>
       &nbsp;&nbsp; &nbsp;int Width = 0; // csvファイルの表の幅<br>
       &nbsp;&nbsp; &nbsp;int Height = 0;// csvファイルの表の高さ<br>
+      &nbsp;&nbsp; &nbsp;bool isInitialized = false; //[2重ロード対策]1度ロードしたらtrueにしてclear()されるまでロード抑止
+      <br>
       &nbsp;&nbsp; &nbsp;std::string FilePath { "" };<br>
       &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;int&gt;&gt; Data;// csvデータ<br>
       <br>
@@ -8291,7 +8293,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp; &nbsp;}</b><br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
-      &nbsp;&nbsp; &nbsp;DataCsv(std::string FilePath = "") :FilePath{ FilePath }<br>
+      &nbsp;&nbsp; &nbsp;DataCsv(std::string filePath = "") :FilePath{ filePath }<br>
       &nbsp;&nbsp; &nbsp;{// csvファイルの読込み★【初期化と同時なのでファイルとデータ型が一心同体で使いやすい】<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (FilePath != "") Load(FilePath); // ファイル読込み<br>
       &nbsp;&nbsp; &nbsp;};<br>
@@ -8304,12 +8306,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp; &nbsp;virtual void clear()<br>
         &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // データをクリアしてメモリを解放する<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear();// 2次元配列データのお掃除<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isInitialized = false; //ロード済みフラグをOFF<br>
         &nbsp;&nbsp; &nbsp;}</b><br>
       <br>
       &nbsp;&nbsp; &nbsp;// csvファイルの読み込み<br>
       &nbsp;&nbsp; &nbsp;virtual void Load(std::string filePath)<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filePath == "") return; //ファイル名がない<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (FilePath == "" || isInitialized) return; //ファイル名がないもしくはロード済<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;FilePath = filePath; // ファイル名を保管<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear(); //データを一旦クリア<br>
       <br>
@@ -8351,6 +8354,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Width = readWidth; // 読込み成功したデータの幅を記録<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Height = readHeight; // 読込み成功したデータの高さを記録<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// コンストラクタで初期化でロードの場合とLoad関数経由で読む経路があるから2重ロード対策<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isInitialized = true; // 読込み初期化済みフラグをON<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
       &nbsp;&nbsp; &nbsp;}<br>
@@ -12044,8 +12050,7 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		<br>
 		<br>
-
-		<p><code>DataCsv.hを新規作成</code>します。</p>
+    <p><code>DataCsv.hを新規作成</code>します。</p>
     <p class="source">#ifndef DATACSV_H_<br>
       #define DATACSV_H_<br>
       <br>
@@ -12149,6 +12154,7 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       };<br>
       <br>
       #endif</p>
+    <br>
     <br>
   </body>
 </html>
