@@ -8013,7 +8013,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Height = 0; //初期化<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(ifs_csv_file, line)) // ファイルを行ごとに読み込む<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;int&gt; numlist; // 1行の数字リスト<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;int&gt; valuelist; // 1行の数字リスト<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream linestream(line); // 各行の文字列ストリーム<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string splitted; // カンマで分割された文字列<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int widthCount = 0; //この行の幅をカウント<br>
@@ -8023,14 +8023,14 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss = std::istringstream(splitted); //文字列ストリーム<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;numlist.emplace_back(num); // 数字をこの行のリスト(numlist)に追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;valuelist.emplace_back(num); // 数字をこの行のリスト(valuelist)に追加<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;widthCount++; //この行のカンマで区切られた数字の数をカウントアップ<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行の数字の数が記録を更新してMAXになるかチェック<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (widthCount &gt; MaxWidth) MaxWidth = widthCount; //暫定Max幅を更新<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 数字1行分をvectorに追加<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (numlist.size() != 0) enemyData.emplace_back(numlist);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (valuelist.size() != 0) enemyData.emplace_back(valuelist);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Height++; //マップの高さをカウントアップ<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Width = MaxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
@@ -8334,14 +8334,14 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss = std::istringstream(splitted); //文字列ストリーム<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;valuelist.emplace_back(num); // 数字を数字のリスト(numlist)に追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;valuelist.emplace_back(num); // 数字を数字のリスト(valuelist)に追加<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++widthCount; //この行のカンマで区切られた数字の数をカウントアップ<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行の幅の数が記録を更新してMAXになるかチェック<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (widthCount &gt; maxWidth) maxWidth = widthCount; //暫定Max幅を更新<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行分をvectorに追加<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (numlist.size() != 0) Data.emplace_back(valuelist);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (valuelist.size() != 0) Data.emplace_back(valuelist);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++readHeight; //マップの高さをカウントアップ<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readWidth = maxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
@@ -8420,7 +8420,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Height = 0; //初期化<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(ifs_csv_file, line)) // ファイルを行ごとに読み込む<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;int&gt; numlist; // 1行の数字リスト<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;int&gt; valuelist; // 1行の数字リスト<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream linestream(line); // 各行の文字列ストリーム<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string splitted; // カンマで分割された文字列<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int widthCount = 0; //この行の幅をカウント<br>
@@ -8430,14 +8430,14 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss = std::istringstream(splitted); //文字列ストリーム<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;numlist.emplace_back(num); // 数字をこの行のリスト(numlist)に追加<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;valuelist.emplace_back(num); // 数字をこの行のリスト(valuelist)に追加<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;widthCount++; //この行のカンマで区切られた数字の数をカウントアップ<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行の数字の数が記録を更新してMAXになるかチェック<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (widthCount &gt; MaxWidth) MaxWidth = widthCount; //暫定Max幅を更新<br>
         <br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 数字1行分をvectorに追加<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (numlist.size() != 0) enemyData.emplace_back(numlist);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (valuelist.size() != 0) enemyData.emplace_back(valuelist);<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Height++; //マップの高さをカウントアップ<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Width = MaxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
@@ -12044,5 +12044,105 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		<br>
 		<br>
+
+		<p><code>DataCsv.hを新規作成</code>します。</p>
+    <p class="source">#ifndef DATACSV_H_<br>
+      #define DATACSV_H_<br>
+      <br>
+      #include &lt;assert.h&gt; // 読込み失敗表示用<br>
+      #include &lt;vector&gt; // csvを2次元vector配列に格納<br>
+      #include &lt;string&gt; // 文字列に必要<br>
+      #include &lt;fstream&gt; // ファイル読み出しifstreamに必要<br>
+      #include &lt;sstream&gt; // 文字列ストリームに必要<br>
+      <br>
+      // CSVファイルを読込み幅や高さとデータ本体を保持するデータ型<br>
+      struct DataCsv // ←structはC++ではほぼclassと同じ【違いはデフォルトがpublic】<br>
+      {&nbsp;&nbsp; // 読込んだデータファイルの情報<br>
+      &nbsp;&nbsp; &nbsp;int Width = 0; // csvファイルの表の幅<br>
+      &nbsp;&nbsp; &nbsp;int Height = 0;// csvファイルの表の高さ<br>
+      &nbsp;&nbsp; &nbsp;std::string FilePath { "" };<br>
+      &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;int&gt;&gt; Data;// csvデータ<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<b>// ★スムーズに[][]でアクセスできるように[]演算子を独自定義する<br>
+        &nbsp;&nbsp; &nbsp;std::vector&lt;int&gt;&amp; operator[](std::size_t index) { // ★ &amp;参照にしないといちいちデータのコピーを返すので遅くなるよ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data[index]; // 書き込み<br>
+        &nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;std::vector&lt;int&gt; operator[](std::size_t index) const { // ★constは添え字[]読み取りの処理を定義<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data[index]; // 読み取り<br>
+        &nbsp;&nbsp; &nbsp;}</b><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<b>std::size_t size()<br>
+        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // size()関数の名前をvectorと被らせることで使う側はvectorインvectorのままのコードで使える<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return Data.size();<br>
+        &nbsp;&nbsp; &nbsp;}</b><br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
+      &nbsp;&nbsp; &nbsp;DataCsv(std::string FilePath = "") :FilePath{ FilePath }<br>
+      &nbsp;&nbsp; &nbsp;{// csvファイルの読込み★【初期化と同時なのでファイルとデータ型が一心同体で使いやすい】<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (FilePath != "") Load(FilePath); // ファイル読込み<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      &nbsp;&nbsp; &nbsp;virtual ~DataCsv()<br>
+      &nbsp;&nbsp; &nbsp;{// 仮想デストラクタ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear();// 2次元配列データのお掃除<br>
+      &nbsp;&nbsp; &nbsp;};<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<b>// データをクリアしてメモリを解放する<br>
+        &nbsp;&nbsp; &nbsp;virtual void clear()<br>
+        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; // データをクリアしてメモリを解放する<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear();// 2次元配列データのお掃除<br>
+        &nbsp;&nbsp; &nbsp;}</b><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// csvファイルの読み込み<br>
+      &nbsp;&nbsp; &nbsp;virtual void Load(std::string filePath)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filePath == "") return; //ファイル名がない<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;FilePath = filePath; // ファイル名を保管<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Data.clear(); //データを一旦クリア<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 読み込むcsvファイルを開く(std::ifstreamのコンストラクタで開く)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::ifstream ifs_csv_file(filePath);<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string line; //1行単位でcsvファイルから文字列を読み込む<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int readWidth = 0; //読込みデータの幅<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int maxWidth = 0; // 1行の数字の最大個数<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int readHeight = 0; //初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓2重while文でCSVファイルを読み取る<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(ifs_csv_file, line)) // ファイルを行ごとに読み込む<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;int&gt; valuelist; // 1行の数字リスト<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream linestream(line); // 各行の文字列ストリーム<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string splitted; // カンマで分割された文字列<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int widthCount = 0; //この行の幅をカウント<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(linestream, splitted, { ',' }))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream ss; //文字列ストリームの初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss = std::istringstream(splitted); //文字列ストリーム<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;valuelist.emplace_back(num); // 数字を数字のリスト(valuelist)に追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++widthCount; //この行のカンマで区切られた数字の数をカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行の幅の数が記録を更新してMAXになるかチェック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (widthCount &gt; maxWidth) maxWidth = widthCount; //暫定Max幅を更新<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行分をvectorに追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (valuelist.size() != 0) Data.emplace_back(valuelist);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++readHeight; //マップの高さをカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readWidth = maxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readWidth &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違いでは?" != "");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readHeight &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違いでは?" != "");<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Width = readWidth; // 読込み成功したデータの幅を記録<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Height = readHeight; // 読込み成功したデータの高さを記録<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
   </body>
 </html>
