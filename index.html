@@ -11885,10 +11885,13 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       #endif</p>
     <br>
 		つぎにプレイの画面終了時にスコアを降順に並べ替えながらランキングに登録する処理をくわえます。<br>
+		<br>
+		<br>
 		【勉強】<b>順序を並べ替えるソートの仕方</b>はいろいろ種類があります。<b>プログラミングの仕事をするのであれば常識</b>ですので(<b>就職や転職のオンラインコーディングテストでよく出る</b>)、<br>
 		これを機会にぜひ勉強しておきたいところですね。おすすめは<a href="https://book.mynavi.jp/ec/products/detail/id=114278">アルゴリズムビジュアル大辞典</a>です。<br>
+		<br>
 		<a href="https://yutaka-watanobe.github.io/star-aida/1.0/algorithms/insertion_sort/anim.html">QRコード</a>からデータの動きをアニメーションで見れて、実感がわきやすいです。<br>
-      &nbsp;&nbsp;&nbsp; アルゴリズムビジュアル大辞典のアニメサイト:<a href="https://yutaka-watanobe.github.io/star-aida/books/">https://yutaka-watanobe.github.io/star-aida/books/</a><br>
+      &nbsp;&nbsp;&nbsp; アルゴリズムビジュアル大辞典のアニメ一覧サイト:<a href="https://yutaka-watanobe.github.io/star-aida/books/">https://yutaka-watanobe.github.io/star-aida/books/</a><br>
       &nbsp;&nbsp;&nbsp; 今回使う挿入ソート: <a href="https://yutaka-watanobe.github.io/star-aida/1.0/algorithms/insertion_sort/anim.html">https://yutaka-watanobe.github.io/star-aida/1.0/algorithms/insertion_sort/anim.html</a><br>
 		<br>
 		下記のサイトで<b>[Run]ボタンを押す</b>と<b>並べ替えの速度の違いを実感</b>できるとおもいます。<br>
@@ -11903,12 +11906,13 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       &nbsp;&nbsp;&nbsp; 基数ソート: <a href="https://ufcpp.net/study/algorithm/sort_radix.html">https://ufcpp.net/study/algorithm/sort_radix.html</a><br>
 		<br>
 		基本的には<b>クイックソートが速度の王様だと記憶</b>しておけばよいです。(<a href="https://www.kijineko.co.jp/%E8%BF%B7%E4%BF%A1-%E3%83%87%E3%83%BC%E3%82%BF%E5%88%97%E3%81%AE%E3%82%BD%E3%83%BC%E3%83%88%E3%81%AB%E3%81%AFqsort%E9%96%A2%E6%95%B0%E3%82%92%E4%BD%BF%E3%81%86%E3%81%B9%E3%81%97/">問題設定の条件による</a>)<br>
-		std::qsortの使い方 : <a href="https://runebook.dev/ja/docs/cpp/algorithm/qsort">https://runebook.dev/ja/docs/cpp/algorithm/qsort</a>
-		クイックソートは<b>安定ソートではない不安定ソート(=並べ替え前とあとで同じ値を持つ人の順位の変わる可能性がある)</b>例. 前回 3位:Aさん(10点)、4位:Bさん(10点) → 次回 3位:<em>Bさん</em>(10点)、4位:<em>Aさん</em>(10点)→おなじ点数なのに不安定..<br>
+		std::qsortの使い方 : <a href="https://runebook.dev/ja/docs/cpp/algorithm/qsort">https://runebook.dev/ja/docs/cpp/algorithm/qsort</a><br>
+		クイックソートは<b>安定ソートではない不安定ソート(=並べ替え前とあとで同じ値を持つ人の順位の変わる可能性がある)</b>です。<br>
+		不安定な具体例. 前回 3位:Aさん(10点)、4位:Bさん(10点) → 次回 3位:<em>Bさん</em>(10点)、4位:<em>Aさん</em>(10点)→おなじ点数なのに不安定..<br>
 		<br>
 		自分でソート処理を書かなくてもC++の<a href="https://cpprefjp.github.io/reference/algorithm/sort.html">std::sort関数を使えば楽</a>だが、<br>
-		教養として最低限、std::sort関数がクイックソートの改良版のイントロソートをベースとした<a href="http://blog.livedoor.jp/dgd17/archives/11610522.html">不安定ソートであることを知ったうえで使うべき</a>であり、<br>
-		安定ソートが必要な時には、std::stable_sort関数で<a href="https://qiita.com/mima_ita/items/b4cb3be38d64a397216b">安定なマージソート系の並べ替えの仕方もあることを知っておく必要</a>がある。<br>
+		教養として最低限、<b>std::sort関数</b>が<b>クイックソートの改良版のイントロソート</b>をベースとした<a href="http://blog.livedoor.jp/dgd17/archives/11610522.html">不安定ソートであることを知ったうえで使うべき</a>であり、<br>
+		安定ソートが必要に応じて、<b>std::stable_sort関数</b>で<a href="https://qiita.com/mima_ita/items/b4cb3be38d64a397216b">安定なマージソート系の並べ替えの仕方もあることを知っておく必要</a>がある。<br>
 		<br>
 		<br>
 		<br>
@@ -12000,7 +12004,7 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       &nbsp;&nbsp; &nbsp;// 描画処理<br>
       &nbsp;&nbsp; &nbsp;void Draw() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>int lineSize = 40; // 1行の縦方向の改行サイズ<em></em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>int lineSize = 40; // 1行の縦方向の改行サイズ</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;SetFontLineSpaceToHandle(<em>lineSize</em>, font1); // 1行ごとのスペース<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawStringToHandle(0, 0, "TitleSceneです。\nボタン押下でPlaySceneへ。", GetColor(0, 255, 0), font1, GetColor(0, 0, 255));<br>
