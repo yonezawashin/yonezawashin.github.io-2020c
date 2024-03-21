@@ -12215,17 +12215,27 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream linestream(line); // 各行の文字列ストリーム<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string splitted; // カンマで分割された文字列<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int widthCount = 0; //この行の幅をカウント<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;if (csvType == CsvType::IntMap)</em><br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;{</em><br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;while (std::getline(linestream, splitted, { ',' }))<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::istringstream ss; //文字列ストリームの初期化<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss = std::istringstream(splitted); //文字列ストリーム<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;valuelist.emplace_back(num); // 数字を数字のリスト(valuelist)に追加<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++widthCount; //この行のカンマで区切られた数字の数をカウントアップ<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>if (csvType == CsvType::IntMap)</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>{</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>while (std::getline(linestream, splitted, { ',' }))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;std::istringstream ss; //文字列ストリームの初期化<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;ss = std::istringstream(splitted); //文字列ストリーム<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;int num; // 数字単体<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;valuelist.emplace_back(num); // 数字を数字のリスト(valuelist)に追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;++widthCount; //この行のカンマで区切られた数字の数をカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>else if (csvType == CsvType::CsvValue)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while (std::getline(linestream, splitted, { ',' }))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;valuelist.emplace_back(num); // 文字列としてリスト(valuelist)に追加<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++widthCount; //この行のカンマで区切られた数をカウントアップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 1行の幅の数が記録を更新してMAXになるかチェック<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (widthCount &gt; maxWidth) maxWidth = widthCount; //暫定Max幅を更新<br>
       <br>
