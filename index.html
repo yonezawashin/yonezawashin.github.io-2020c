@@ -12112,7 +12112,8 @@ public:<br>
       &nbsp;&nbsp; &nbsp;// 3種類の読み取りオペレータ<br>
       &nbsp;&nbsp; &nbsp;inline operator int()<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;if (type == Type::Float) return (int)floatData;<br>
+      &nbsp;&nbsp; &nbsp;if (type == Type::Int) return (float)intData;
+      &nbsp;&nbsp; &nbsp;else if (type == Type::Float) return (int)floatData;<br>
       &nbsp;&nbsp; &nbsp;else if (type == Type::String && intData == 0)<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;intData = intFromString(); // デフォルトで文字列として読込んだデータをintに変換<br>
       &nbsp;&nbsp; &nbsp;return intData;<br>
@@ -12120,15 +12121,16 @@ public:<br>
 <br>
       &nbsp;&nbsp; &nbsp;inline operator float()<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp;if (type == Type::Int) return (float)intData;<br>
+      &nbsp;&nbsp; &nbsp;if (type == Type::Float) return floatData;
+      &nbsp;&nbsp; &nbsp;else if (type == Type::Int) return (float)intData;<br>
       &nbsp;&nbsp; &nbsp;else if (type == Type::String && intData == 0)<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;floatData = floatFromString(); // デフォルトで文字列として読込んだデータをfloatに変換<br>
       &nbsp;&nbsp; &nbsp;return floatData;<br>
       &nbsp;&nbsp; &nbsp;}<br>
 <br>
-      &nbsp;&nbsp; &nbsp;inline operator std::string() const<br>
+      &nbsp;&nbsp; &nbsp;inline operator std::string()&amp;<br>
       &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;return stringData;
+      &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;return stringData;<br>
       &nbsp;&nbsp; &nbsp;}<br>
 	    <br>
       &nbsp;&nbsp; &nbsp;int intFromString() // 文字列データからint型への変換する関数<br>
@@ -12145,6 +12147,40 @@ public:<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;float num; // 数字単体<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;ss >> num; // 文字列ストリームから数字への変換<br>
       &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;return num;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+	<br>
+private:<br>
+      &nbsp;&nbsp; &nbsp;void clearString() // 文字列をcapacityごとクリアしてメモリ節約<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// https://stackoverflow.com/questions/740030/how-to-release-the-unused-capacity-of-a-string<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string("").swap(stringData); // [capacityをリセットしてメモリ節約]<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+public:<br>
+      &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const int other) {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;type = Type::Int; // タイプを更新<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::Float) floatData = (float)other;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else intData = other;<br>
+<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::String) std::to_string(other).swap(stringData); // [swapテクでcapacity節約]<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else clearString();<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const float other) {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;type = Type::Float; // タイプを更新<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::Int) intData = (int)other;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else floatData = other;<br>
+<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::String) std::to_string(other).swap(stringData); // [swapテクでcapacity節約]<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else clearString();<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+<br>
+      &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const std::string&amp; other) {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;type = Type::String; // タイプを更新<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;intData = 0; // 初期値 0 としてリセット<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;stringData = other;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp; &nbsp;}<br>
 };<br>
 </em><br>
