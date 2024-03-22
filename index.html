@@ -8274,7 +8274,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       {&nbsp;&nbsp; // 読込んだデータファイルの情報<br>
       &nbsp;&nbsp; &nbsp;int Width = 0; // csvファイルの表の幅<br>
       &nbsp;&nbsp; &nbsp;int Height = 0;// csvファイルの表の高さ<br>
-      &nbsp;&nbsp; &nbsp;bool isInitialized = false; //[2重ロード対策]1度ロードしたらtrueにしてclear()されるまでロード抑止
+      &nbsp;&nbsp; &nbsp;bool isInitialized = false; //[2重ロード対策]1度ロードしたらtrueにしてclear()されるまでロード抑止<br>
       <br>
       &nbsp;&nbsp; &nbsp;std::string FilePath { "" };<br>
       &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;int&gt;&gt; Data;// csvデータ<br>
@@ -12171,6 +12171,8 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::String) std::to_string(other).swap(stringData); // [swapテクでcapacity節約]<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else clearString();<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->stringData = std::to_string(intData);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;<br>
@@ -12181,6 +12183,8 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (type == Type::String) std::to_string(other).swap(stringData); // [swapテクでcapacity節約]<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else clearString();<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->stringData = std::to_string(floatData);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;<br>
