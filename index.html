@@ -8034,7 +8034,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Height++; //マップの高さをカウントアップ<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Width = MaxWidth; //マップ幅は一番数字の個数の多かった行に合わせる<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだCSVの幅と高さをチェック<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(Width &gt; 0 &amp;&amp;"マップ読込み失敗ファイル名間違いでは?"!="");<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(Height &gt; 0 &amp;&amp;"マップ読込み失敗ファイル名間違いでは?"!="");<br>
       &nbsp;&nbsp; &nbsp;}<br>
@@ -12322,7 +12322,7 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readWidth = maxWidth; //読み込んだ列(横)の数は一番数字の個数の多かった行に合わせる<br>
       &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;if (!isForceCreate) // ファイルがないとき強制的に空ファイルを生成した場合は幅と高さのチェックをスキップする</em><br>
       &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;{</em><br>
-      &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
+      &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;//↓読込んだCSVの幅と高さをチェック<br>
       &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;assert(readWidth &gt; 0 &amp;&amp; "CSV読込み失敗ファイル名間違いでは?" != "");<br>
       &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;assert(readHeight &gt; 0 &amp;&amp; "CSV読込み失敗ファイル名間違いでは?" != "");<br>
       &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;}</em><br>
