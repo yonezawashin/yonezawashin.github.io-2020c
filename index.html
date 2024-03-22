@@ -12051,8 +12051,11 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		<br>
 		<br>
-
-		<p><code>DataCsv.hを新規作成</code>します。</p>
+	<h2><a id="mozTocId50018" class="mozTocH1"></a>スコアのランキング表示</h2>
+		<br>
+		<br>
+		
+		<p><code>DataCsv.hにCSVのセル(int,float,文字列の3種類)を読み取れるCsvValueクラスを追加して、さらにSave機能を追加</code>します。</p>
     <p class="source">#ifndef DATACSV_H_<br>
       #define DATACSV_H_<br>
       <br>
@@ -12087,7 +12090,7 @@ protected: // 内部データを書き換え禁止:書き換えられるとint�
       &nbsp;&nbsp; &nbsp;<br>
 public:<br>
       &nbsp;&nbsp; &nbsp;CsvValue() = default;<br>
-      &nbsp;&nbsp; &nbsp;// 3種類のコンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;// 3種類のCSVセル(int,float,文字列std::stringとconst char*:計4種)のコンストラクタ<br>
       &nbsp;&nbsp; &nbsp;CsvValue(int intData) : type{ Type::Int }<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->intData = intData;<br>
@@ -12101,6 +12104,11 @@ public:<br>
       &nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;CsvValue(std::string& stringData) : type{ Type::String }<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->stringData = stringData;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;CsvValue(const char* stringData) : type{ Type::String }<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this->stringData = stringData;<br>
       &nbsp;&nbsp; &nbsp;}<br>
@@ -12182,6 +12190,13 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;stringData = other;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;CsvValue&amp; operator = (const char* other) { // 代入=演算子<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;type = Type::String; // タイプを更新<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;intData = 0; // 初期値 0 としてリセット<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;stringData = std::string(other);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
 };<br>
 	<br>
 namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関数定義をする<br>
@@ -12209,13 +12224,17 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
       &nbsp;&nbsp; &nbsp;};</em><br>
       &nbsp;&nbsp; &nbsp;int Width = 0; // csvファイルの表の幅<br>
       &nbsp;&nbsp; &nbsp;int Height = 0;// csvファイルの表の高さ<br>
-      &nbsp;&nbsp; &nbsp;bool isInitialized = false; //[2重ロード対策]1度ロードしたらtrueにしてclear()されるまでロード抑止
+      &nbsp;&nbsp; &nbsp;bool isInitialized = false; //[2重ロード対策]1度ロードしたらtrueにしてclear()されるまでロード抑止<br>
+      <em>&nbsp;&nbsp; &nbsp;bool isForceCreate = false; // ファイルが無い、もしくは空のときにアラートを出さず無理やり(force)新しく作るか(create)<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// isForceCreateをセット[*thisをreturnで関数連鎖テク] https://flat-leon.hatenablog.com/entry/cpp_named_parameter<br>
+      &nbsp;&nbsp; &nbsp;DataCsv& IsForceCreate(bool b) { isForceCreate = b; return *this; }</em><br>
       <br>
       &nbsp;&nbsp; &nbsp;std::string FilePath { "" };<br>
       &nbsp;&nbsp; &nbsp;std::vector&lt;std::vector&lt;<em>CsvValue</em>&gt;&gt; Data;// csvデータ<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
-      &nbsp;&nbsp; &nbsp;DataCsv(std::string filePath = ""<em>, CsvType csvType = CsvType::IntMap</em>) :FilePath{ filePath }<br>
+      &nbsp;&nbsp; &nbsp;DataCsv(std::string filePath = ""<em>, CsvType csvType = CsvType::CsvValue</em>) :FilePath{ filePath }<br>
       &nbsp;&nbsp; &nbsp;{// csvファイルの読込み★【初期化と同時なのでファイルとデータ型が一心同体で使いやすい】<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (FilePath != "") Load(FilePath<em>, csvType</em>); // ファイル読込み<br>
       &nbsp;&nbsp; &nbsp;};<br>
@@ -12245,7 +12264,7 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
         &nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;// csvファイルの読み込み<br>
-      &nbsp;&nbsp; &nbsp;virtual void Load(std::string filePath<em>, CsvType csvType = CsvType::IntMap</em>)<br>
+      &nbsp;&nbsp; &nbsp;virtual void Load(std::string filePath<em>, CsvType csvType = CsvType::CsvValue</em>)<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filePath == "" || isInitialized) return; //ファイル名がないもしくはロード済<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;FilePath = filePath; // ファイル名を保管<br>
@@ -12253,6 +12272,12 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 読み込むcsvファイルを開く(std::ifstreamのコンストラクタで開く)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::ifstream ifs_csv_file(filePath);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// [.good()でファイル存在確認]https://stackoverflow.com/questions/12774207/fastest-way-to-check-if-a-file-exists-using-standard-c-c11-14-17-c<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isForceCreate &amp;&amp; !ifs_csv_file.good())<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::ofstream ofs_csv_file(filePath);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ofs_csv_file &lt;&lt; ""; // 空文字のファイルを生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string line; //1行単位でcsvファイルから文字列を読み込む<br>
       <br>
@@ -12295,9 +12320,12 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++readHeight; //読み込んだ行(縦)をカウントアップ<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;readWidth = maxWidth; //読み込んだ列(横)の数は一番数字の個数の多かった行に合わせる<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readWidth &gt; 0 &amp;&amp; "CSV読込み失敗ファイル名間違いでは?" != "");<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert(readHeight &gt; 0 &amp;&amp; "CSV読込み失敗ファイル名間違いでは?" != "");<br>
+      &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;if (!isForceCreate) // ファイルがないとき強制的に空ファイルを生成した場合は幅と高さのチェックをスキップする</em><br>
+      &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;{</em><br>
+      &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;//↓読込んだマップの幅と高さをチェック<br>
+      &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;assert(readWidth &gt; 0 &amp;&amp; "CSV読込み失敗ファイル名間違いでは?" != "");<br>
+      &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>&nbsp;&nbsp; &nbsp;assert(readHeight &gt; 0 &amp;&amp; "CSV読込み失敗ファイル名間違いでは?" != "");<br>
+      &nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;}</em><br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Width = readWidth; // 読込み成功したデータの幅を記録<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;Height = readHeight; // 読込み成功したデータの高さを記録<br>
