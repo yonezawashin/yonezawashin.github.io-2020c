@@ -12543,9 +12543,9 @@ public:<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;<b>// マネージャを【どこからでもアクセスしやすい「変数の掲示板」として使えばシーンをまたぐ変数も定義できる】</b><br>
       &nbsp;&nbsp; &nbsp;std::string selectStage = "stage1"; // 選択中のステージ名など<br>
-      &nbsp;&nbsp; &nbsp;<em>RankingData ranking{ {"SaveData/ranking.csv"} }; // スコアのランキング記録するCSV</em>
+      &nbsp;&nbsp; &nbsp;<em>RankingData ranking{ {"SaveData/ranking.csv"} }; // スコアのランキング記録するCSV</em><br>
       &nbsp;&nbsp; &nbsp;<em>CsvValue&amp;</em> scoreMax = <em>ranking[0][0]</em>; // <em>今までのMAXスコア &amp;参照でセーブするデータの住所を参照して直接書き換えられるように</em><br>
-      &nbsp;&nbsp; &nbsp;<u>int ranking[5] = {-1,-1,-1,-1,-1}; // スコアトップ5を記録しておく配列</u>
+      &nbsp;&nbsp; &nbsp;<u>int ranking[5] = {-1,-1,-1,-1,-1}; // スコアトップ5を記録しておく配列</u><br>
       &nbsp;&nbsp; &nbsp;<em>CsvValue&amp;</em> rank = <em>ranking[1][0]</em>; // <em>最後にプレイしたセーブデータのランク</em>順位<em>への&amp;参照</em><br>
       &nbsp;&nbsp;&nbsp; <br>
 (中略)..........<br>
