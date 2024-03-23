@@ -12381,10 +12381,10 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
 		&nbsp;&nbsp; &nbsp;return *this; // 最終的に*thisで自分のクラス自身の参照を返す<br>
 		}</p><br>
 		とやるだけです。<br>
-	<p class="source"><em>&nbsp;&nbsp; &nbsp;bool isForceCreate = false; // ファイルが無い、もしくは空のときにアラートを出さず無理やり(force)新しく作るか(create)<br>
+	<p class="source">&nbsp;&nbsp; &nbsp;bool isForceCreate = false; // ファイルが無い、もしくは空のときにアラートを出さず無理やり(force)新しく作るか(create)<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// isForceCreateをセット[*thisをreturnで関数連鎖テク] https://flat-leon.hatenablog.com/entry/cpp_named_parameter<br>
-      &nbsp;&nbsp; &nbsp;DataCsv& IsForceCreate(bool b) { isForceCreate = b; return *this; }</em><br>
+      &nbsp;&nbsp; &nbsp;DataCsv& IsForceCreate(bool b) { isForceCreate = b; return *this; }<br>
       <br></p><br>
 
 		メソッド連鎖を使うと通常2行で書くような次のような処理をすっきりと表現できるようになります。<br>
@@ -12545,7 +12545,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp;std::string selectStage = "stage1"; // 選択中のステージ名など<br>
       &nbsp;&nbsp; &nbsp;<em>RankingData ranking{ {"SaveData/ranking.csv"} }; // スコアのランキング記録するCSV</em><br>
       &nbsp;&nbsp; &nbsp;<em>CsvValue&amp;</em> scoreMax = <em>ranking[0][0]</em>; // <em>今までのMAXスコア &amp;参照でセーブするデータの住所を参照して直接書き換えられるように</em><br>
-      &nbsp;&nbsp; &nbsp;<u>int ranking[5] = {-1,-1,-1,-1,-1}; // スコアトップ5を記録しておく配列</u><br>
+      &nbsp;&nbsp; &nbsp;<u>// int ranking[5] = {-1,-1,-1,-1,-1}; // スコアトップ5を記録しておく配列</u><br>
       &nbsp;&nbsp; &nbsp;<em>CsvValue&amp;</em> rank = <em>ranking[1][0]</em>; // <em>最後にプレイしたセーブデータのランク</em>順位<em>への&amp;参照</em><br>
       &nbsp;&nbsp;&nbsp; <br>
 (中略)..........<br>
@@ -12579,8 +12579,6 @@ public:<br>
 	#include &lt;string&gt;<br>
 	<br>
       #include "DxLib.h"<br>
-      (中略)...........<br>
-#include "Font.h"<br>
       (中略)...........<br>		
       <br>
       class TitleScene : public Scene<br>
@@ -12605,7 +12603,7 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (int i=0, iSize = <em>sm.ranking[2].size()</em>; i &lt; iSize; ++i)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(<em>(int)</em>sm.ranking<em>[2]</em>[i] &gt;= 0) // 配列の初期値は-1は表示せずとばす<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;rankText += std::string("No.") + std::to_string(i + 1) + std::string(" ") + std::to_string(sm.ranking<em>[2]</em>[i]) + std::string("\n");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;rankText += std::string("No.") + std::to_string(i + 1) + std::string(" ") + std::to_string(<em>(int)</em>sm.ranking<em>[2]</em>[i]) + std::string("\n");<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawStringToHandle(0, 200 + lineSize*2, rankText.c_str(), GetColor(255, 255, 255), Font::fonts["設定1"].handle);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
