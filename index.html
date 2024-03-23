@@ -9141,6 +9141,7 @@ Update()関数内にX方向の動きも追加すると..<br>
 	<a href="#mozTocId50016">フォントを変えてみる</a><br>
 	<a href="#mozTocId50017">スコアの加算と背景の加速</a><br>
 	<a href="#mozTocId50018">スコアのランキング表示</a><br>
+	<a href="#mozTocId50019">スコアのセーブ保存とCSVのセルを受けint,float,文字列に柔軟に化けるCsvValue型</a><br>
       </li>
       <br>
       <p>次のテキストは後々。</p>
@@ -12051,7 +12052,7 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		<br>
 		<br>
-	<h2><a id="mozTocId50018" class="mozTocH1"></a>スコアのランキング表示</h2>
+	<h2><a id="mozTocId50019" class="mozTocH1"></a>スコアのセーブ保存とCSVのセルを受けint,float,文字列に柔軟に化けるCsvValue型</h2>
 		<br>
 		<br>
 		
@@ -12340,9 +12341,9 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
       &nbsp;&nbsp; &nbsp;}<br>
 <br>
-      &nbsp;&nbsp; &nbsp<em>// csvファイルの保存<br>
-      &nbsp;&nbsp; &nbspvoid Save(std::string filePath = "")<br>
-      &nbsp;&nbsp; &nbsp{<br>
+      &nbsp;&nbsp; &nbsp;<em>// csvファイルの保存<br>
+      &nbsp;&nbsp; &nbsp;void Save(std::string filePath = "")<br>
+      &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string outputPath = filePath;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filePath == "") // ファイル名がないときは読込時のパス<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;outputPath = FilePath;<br>
@@ -12373,7 +12374,50 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
       #endif</p>
     <br>
     <br>
+		上記コードで <b><a href="https://flat-leon.hatenablog.com/entry/cpp_named_parameter">メソッドチェイン</a>(関数連鎖)のテクニック</b>を使いました。<br>
+		基本構造は 〇〇型の自分のクラスを定義した際に<br>
+		〇〇 & 関数名()<br>
+		{<br>
+		&nbsp;&nbsp; &nbsp;........<br>   
+		&nbsp;&nbsp; &nbsp;return *this; // 最終的に*thisで自分のクラス自身の参照を返す<br>
+		}<br>
+		とやるだけです。<br>
+	<p class="source"><em>&nbsp;&nbsp; &nbsp;bool isForceCreate = false; // ファイルが無い、もしくは空のときにアラートを出さず無理やり(force)新しく作るか(create)<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// isForceCreateをセット[*thisをreturnで関数連鎖テク] https://flat-leon.hatenablog.com/entry/cpp_named_parameter<br>
+      &nbsp;&nbsp; &nbsp;DataCsv& IsForceCreate(bool b) { isForceCreate = b; return *this; }</em><br>
+      <br></p><br>
 
+		メソッド連鎖を使うと通常2行で書くような次のような処理をすっきりと表現できるようになります。<br>
+		<p class="source">DataCsv data;<br>
+			data.isForceCreate = true;<br>
+			data.Load(filePath, DataCsv::CsvType::CsvValue);<br>
+		</p>
+		↑これを、下記↓のように書けます。<br>
+	      <p class="source">DataCsv data;<br>
+	      data<em>.IsForceCreate(true)</em>.Load(filePath, DataCsv::CsvType::CsvValue);<br></p><br>
+		<br>
+		<br>Setする変数項目が多かったりするときに効果を発揮します。<br>
+		<p class="source">DataCsv data;<br>
+	      data<em>.SetA(true).SetB(-1).SetC("テスト").SetD(3.145f)</em>.Load(filePath, DataCsv::CsvType::CsvValue);<br></p><br><br>
+		
+		<br>関数のデフォルト引数でisForceCreateをデフォルト引数として渡すか迷いました。<br>
+		<p class="source">void Load(std::string filePath, CsvType csvType = CsvType::CsvValue, bool isForceCreate=false);<br>
+		<br>
+			........<br>
+			data.Load(filePath, DataCsv::CsvType::CsvValue<em>, true</em>); // うーん、<em>あいだに挟まったDataCsv::CsvType::CsvValueをいちいち書かないとtrue渡せない</em>な..省略しにくい<br>
+		<br>
+		<br></p>
+		<br><br>
+		<br>関数連鎖で渡せば、<b>[!]DataCsv::CsvType::CsvValueを省略しやすく</b>なる。<br>
+		<p class="source">void Load(std::string filePath, CsvType csvType = CsvType::CsvValue);<br>
+		<br>
+			........<br>
+			data<em>.IsForceCreate(true)</em>.Load(filePath<u>, DataCsv::CsvType::CsvValue, true</u>); // 省略!!<br>
+			<br>↓
+			data.IsForceCreate(true).Load(filePath); // 省略しても、csvTypeはデフォルトのDataCsv::CsvType::CsvValueになる<br>
+		<br>
+		<br></p><br>
 		
   </body>
 </html>
