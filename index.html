@@ -12570,6 +12570,7 @@ public:<br>
 		実際にデータを読み出してゆく際には[2]行目にアクセスしてやっていきます。<br>
 		TitleSceneやPlaySceneのコードでは[2]に着目しておきましょう。<br>
 		<br>
+		<code>TitleScene.hのスコアへアクセスする部分をあいまいなCsvValue型にアクセスする部分は(int)に変換し、CSVのセーブデータ配列の[2]行目形にアクセスする形に修正</code>をくわえましょう。</p>
 		<p class="source">#ifndef TITLESCENE_H_<br>
       #define TITLESCENE_H_<br>
       <br>
@@ -12614,6 +12615,75 @@ public:<br>
       (中略)...........<br>
 	    <br>
       &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+		<code>PlayScene.hのスコアへアクセスする部分をあいまいなCsvValue型にアクセスする部分は(int)に変換し、CSVのセーブデータ配列の[2]行目形にアクセスする形に修正</code>をくわえましょう。</p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+    (中略).....................<br>
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+    (中略).....................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 終了処理(大抵Initializeと同じリセットだが終了時だけやりたいリセットの仕方もあるかも)<br>
+      &nbsp;&nbsp;&nbsp; void Finalize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+    (中略).....................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲーム終了時のスコアがMAXなら記録<u>して終了</u><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(score &gt; <em>(int)</em>sm.scoreMax) sm.scoreMax = score;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if (sm.ranking[2].size() &lt; sm.ranking.listMAX)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.ranking[2].emplace_back( -1 ); // sizeがlistMAX以下のときは後ろに-1を追加</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲーム終了時のスコアをranking配列に挿入ソートして記録<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int j, iSize = <em>sm.ranking[2].size()</em>;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (score &lt; <em>(int)</em>sm.ranking[iSize - 1])<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.rank = -1; // ランキング外<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {   // ranking配列の一番後ろは一番小さいのでまずはそれと入れ替え<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.ranking<em>[2]</em>[iSize - 1] = score;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 挿入ソートでランキングを降順に並べ替え<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // https://www.momoyama-usagi.com/entry/info-algo-sort-basic#i-3<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // https://ufcpp.net/study/algorithm/sort_insert.html<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 1; i &lt; iSize; ++i)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; j = i; // 交換要素のためのインデックス<br>
+<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // while(j &gt; 0 &amp;&amp; <em>(int)</em>sm.ranking<em>[2]</em>[j-1] &gt; <em>(int)</em>sm.ranking<em>[2]</em>[j]) に変えると昇順ソートになる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; while ((j &gt; 0) &amp;&amp; (sm.ranking<em>[2]</em>[j - 1] &lt; sm.ranking<em>[2]</em>[j]))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 整列されていない隣り合う要素を交換する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int tmp = sm.ranking<em>[2]</em>[j - 1];<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.ranking<em>[2]</em>[j - 1] = sm.ranking<em>[2]</em>[j];<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.ranking<em>[2]</em>[j] = tmp;<br>
+<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; j--; // 1つ左のデータへ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 何位かを判定<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; iSize; ++i)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<em>(int)</em>sm.ranking<em>[2]</em>[i] == score)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.rank = i; // ランキング順位 0位～4位<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; break; // スコアが=イコールになるものを見つけたらすぐbreakでfor文を抜ける<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>sm.ranking.Save(); // 並べ替えたあとにランキングをCSVファイルにセーブする</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+	    (中略).....................<br>
       };<br>
       <br>
       #endif</p>
