@@ -9142,6 +9142,7 @@ Update()関数内にX方向の動きも追加すると..<br>
 	<li><a href="#mozTocId50017">スコアの加算と背景の加速</a></li>
 	<li><a href="#mozTocId50018">スコアのランキング表示</a></li>
 	<li><a href="#mozTocId50019">スコアのセーブ保存とCSVのセルを受けint,float,文字列に柔軟に化けるCsvValue型</a></li>
+	<li><a href="#mozTocId50020">キーボードとマウスの入力</a></li>
       
       <br>
       <p>次のテキストは後々。</p>
@@ -12722,7 +12723,364 @@ public:<br>
 		<br>
 		<br>
 		
-	<h2><a id="mozTocId50018" class="mozTocH1"></a>スコアのランキング表示</h2>
+	<h2><a id="mozTocId50020" class="mozTocH1"></a>キーボードとマウスの入力</h2>
+		<br>
+		<br>
+		<p><code>Input.hでコントローラの初回ボタンプッシュを管理して、2つのコントローラの初回プッシュが被ったら同一コントローラ扱いとしてスルーする機能</code>を追加しましょう。</p>
+    <p class="source">#ifndef INPUT_H_<br>
+      #define INPUT_H_<br>
+      <br>
+	
+      #include &lt;climits&gt; //int型の最大値2147483647につかう<br>
+      #include &lt;unordered_map&gt; // 辞書配列【map高速版】https://qiita.com/sileader/items/a40f9acf90fbda16af51<br>
+      <br>
+      #include "DxLib.h"<br>
+      <br>
+      // コントローラのパッド番号定義<br>
+      enum class Pad<br>
+      {<br>
+      <em>&nbsp;&nbsp;&nbsp; Keyboard = -3, // キーボード入力を得る</em><br>
+      &nbsp;&nbsp;&nbsp; All = -2, // すべてのうちどれか1つでも押されたとき<br>
+      &nbsp;&nbsp;&nbsp; None = -1, // パッド割当て無(やられたり待機中のプレイヤに)<br>
+      &nbsp;&nbsp;&nbsp; Key=0, // キーボード<br>
+      &nbsp;&nbsp;&nbsp; One, // コントローラ1<br>
+      &nbsp;&nbsp;&nbsp; Two, // コントローラ2<br>
+      &nbsp;&nbsp;&nbsp; Three, // コントローラ3<br>
+      &nbsp;&nbsp;&nbsp; Four, // コントローラ4<br>
+      <em>&nbsp;&nbsp;&nbsp; Mouse, // マウスのボタン判定に</em><br>
+      &nbsp;&nbsp;&nbsp; NUM, // コントローラの数=<em>6(マウス込み)</em><br>
+      };<br>
+<em><br>
+enum class Mouse<br>
+{<br>
+&nbsp;&nbsp;&nbsp; All = -2, // すべてのうちどれか1つでも押されたとき<br>
+&nbsp;&nbsp;&nbsp; None = -1,<br>
+&nbsp;&nbsp;&nbsp; DownL, //[左クリック押した瞬間=1]<br>
+&nbsp;&nbsp;&nbsp; DragL, //[左ドラッグ中=1]<br>
+&nbsp;&nbsp;&nbsp; UpL, //[左クリック離した瞬間=1]<br>
+&nbsp;&nbsp;&nbsp; DownR, //[右クリック押した瞬間=1]<br>
+&nbsp;&nbsp;&nbsp; DragR, //[右ドラッグ中=1]<br>
+&nbsp;&nbsp;&nbsp; UpR, //[右クリック離した瞬間=1]<br>
+&nbsp;&nbsp;&nbsp; X, // 現在のマウス位置<br>
+&nbsp;&nbsp;&nbsp; ReleaseX, // 離した状態のマウス位置(ドラッグ中は開始前位置)<br>
+&nbsp;&nbsp;&nbsp; DownLX, //[左] 押した位置<br>
+&nbsp;&nbsp;&nbsp; DragLX, //[左] ドラッグ中の位置<br>
+&nbsp;&nbsp;&nbsp; UpLX, //[左] 離した位置<br>
+&nbsp;&nbsp;&nbsp; DownRX,//[右] 押した位置<br>
+&nbsp;&nbsp;&nbsp; DragRX, //[右] ドラッグ中の位置<br>
+&nbsp;&nbsp;&nbsp; UpRX, //[右] 離した位置<br>
+&nbsp;&nbsp;&nbsp; Y, // 現在のマウス位置<br>
+&nbsp;&nbsp;&nbsp; ReleaseY, // 離した状態のマウス位置(ドラッグ中は開始前位置)<br>
+&nbsp;&nbsp;&nbsp; DownLY, //[左] 押した位置<br>
+&nbsp;&nbsp;&nbsp; DragLY, //[左] ドラッグ中の位置<br>
+&nbsp;&nbsp;&nbsp; UpLY, //[左] 離した位置<br>
+&nbsp;&nbsp;&nbsp; DownRY,//[右] 押した位置<br>
+&nbsp;&nbsp;&nbsp; DragRY, //[右] ドラッグ中の位置<br>
+&nbsp;&nbsp;&nbsp; UpRY, //[右] 離した位置<br>
+&nbsp;&nbsp;&nbsp; NUM<br>
+};</em><br>
+      <br>
+      // 入力クラス<br>
+      class Input<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; const int MaxPadNum = (int)Pad::Four + 1; // 最大パッド数(Keyぶん+1)<br>
+	    <br>
+      &nbsp;&nbsp;&nbsp; static int prevStates[(int)Pad::NUM]; // 1フレーム前の状態<br>
+      &nbsp;&nbsp;&nbsp; static int currentStates[(int)Pad::NUM]; // 現在の状態<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;Pad, bool&gt; isJoin; // 参加中のパッド番号辞書<br>
+      &nbsp;&nbsp;&nbsp; // 参加中のパッドかどうか?<br>
+      &nbsp;&nbsp;&nbsp; static bool IsJoin(Pad pad) { return isJoin.count(pad) == 1 &amp;&amp; Input::isJoin[pad]; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;int, int&gt; padDic; // パッド番号からDXの定義への辞書<br>
+	    <em><br>
+      &nbsp;&nbsp;&nbsp; static int prevMouse; // 1フレーム前のマウス状態<br>
+      &nbsp;&nbsp;&nbsp; static int currentMouse; // 現在のマウス状態<br>
+      &nbsp;&nbsp;&nbsp; static int MouseX, MouseY; // 現在のマウス位置<br>
+      &nbsp;&nbsp;&nbsp; static int ClickX, ClickY, MButton, LogType;<br>
+      &nbsp;&nbsp;&nbsp; static float MouseWheel; // マウスのホイールの回転<br>
+      &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;Mouse, int&gt; Click;//&lt;Mouse⇒int&gt; マウスのクリックXY位置辞書<br>
+<br>
+      &nbsp;&nbsp;&nbsp; //[キーボード入力]https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28<br>
+      &nbsp;&nbsp;&nbsp; static char prevKey[256]; // 1フレーム前のキーボード状態<br>
+      &nbsp;&nbsp;&nbsp; static char currentKey[256]; // 現在のキーボード状態<br>
+      </em><br>
+      &nbsp;&nbsp;&nbsp; //★【DXコントローラバグ検知】初回プッシュが被ればDXバグで同一コントローラ<br>
+      &nbsp;&nbsp;&nbsp; static int firstPushTiming[(int)Pad::Four]; // Pad::Fourが最後だから8とかに増やすなら要書き換え<br>
+      &nbsp;&nbsp;&nbsp; static int timing;// = 0;<br>
+      &nbsp;&nbsp;&nbsp; static bool isBugCheckMode;// = false; //バグチェックを開始するか<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 辞書配列の初期化<br>
+      &nbsp;&nbsp;&nbsp; static void InitPadDictionary()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 辞書配列で対応関係を結び付けておく<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Key] = DX_INPUT_KEY;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::One] = DX_INPUT_PAD1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Two] = DX_INPUT_PAD2;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Three] = DX_INPUT_PAD3;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; padDic[(int)Pad::Four] = DX_INPUT_PAD4;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <em><br>
+      &nbsp;&nbsp;&nbsp; // マウスの状態初期化<br>
+      &nbsp;&nbsp;&nbsp; static void InitMouse()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; MouseX = -1, MouseY = -1; // 現在のマウス位置を-1で初期状態では画面外として初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ClickX = -1, ClickY = -1, MButton = 0, LogType = 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::ReleaseX] = -1; Click[Mouse::ReleaseY] = -1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::UpLX] = -1;     Click[Mouse::UpLY] = -1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::UpRX] = -1;     Click[Mouse::UpRY] = -1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::DownLX] = -1;   Click[Mouse::DownLY] = -1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::DownRX] = -1;   Click[Mouse::DownRY] = -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+<br>
+      &nbsp;&nbsp;&nbsp; // キーボードの状態初期化<br>
+      &nbsp;&nbsp;&nbsp; static void InitKeyboard()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i < 256; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevKey[i] = currentKey[i] = 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      </em><br>
+      &nbsp;&nbsp;&nbsp; // 初期化。タイトルなどキー入力状態リセット時に<br>
+      &nbsp;&nbsp;&nbsp; static void Init()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; InitPadDictionary(); // パッドの辞書配列の初期化<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[i] = currentStates[i] = 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>InitMouse(); // マウスの状態初期化</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>InitKeyboard(); // キーボードの状態初期化</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; timing = 0, isBugCheckMode = false; //バグチェック<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // プレイヤの参加処理(参加辞書登録して参加中の数も返す)<br>
+        &nbsp;&nbsp;&nbsp; static int JoinCheck()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int joinCount = 0;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加ボタンが押されたら<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_1))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>isJoin[(Pad)i] = true; // 参加パッド辞書に登録</b><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<b>isJoin.count((Pad)i) == 1 &amp;&amp; isJoin[(Pad)i] == true</b>)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; joinCount++; // 参加中の人数をカウント<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return joinCount; // 参加中のコントローラ数を返す<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 最新の入力状況に更新する処理。<br>
+      &nbsp;&nbsp;&nbsp; // 毎フレームの最初に（ゲームの処理より先に）呼んでください。<br>
+      &nbsp;&nbsp;&nbsp; static void Update()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 現在の状態を一つ前の状態として保存してGetJoypad..<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[i] = currentStates[i];<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; currentStates[i] = GetJoypadInputState(padDic[i]);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>UpdateMouse(); // マウス状態を更新</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>UpdateKeyboard(); // キーボード状態を更新</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>	    
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isBugCheckMode = true;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ++timing; //タイミングのカウントを+1<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (timing == INT_MAX) timing = 0; // int型最大値になったら0にループ<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+<br>
+      <em>&nbsp;&nbsp;&nbsp; // キーボードの状態を更新する<br>
+      &nbsp;&nbsp;&nbsp; static void UpdateKeyboard()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; memcpy(prevKey, currentKey, sizeof(prevKey));<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キーボードの状態配列を更新する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; GetHitKeyStateAll(currentKey); // https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28<br>
+      &nbsp;&nbsp;&nbsp; }</em><br>
+<br>
+      <em>&nbsp;&nbsp;&nbsp; // マウスの状態を更新する<br>
+      &nbsp;&nbsp;&nbsp; static void UpdateMouse()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::DownL] = 0; Click[Mouse::DownR] = 0; //Click[Mouse.UpL] = 0; Click[Mouse.UpR] = 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::All] = 0; // 状態辞書の0リセット<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevMouse = currentMouse; // 前フレームの最新のマウス情報を1つ前の情報とする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevStates[(int)Pad::Mouse] = currentMouse;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; MouseWheel = GetMouseWheelRotVolF(); // マウスのホイール回転量を更新<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // マウスの位置を取得<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; GetMousePoint(&amp;MouseX, &amp;MouseY);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::X] = MouseX; Click[Mouse::Y] = MouseY;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; currentMouse = GetMouseInput(); // マウス状態を得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; currentStates[(int)Pad::Mouse] = currentMouse; // マウス状態をパッド状態にも併合<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 押してない離した状態のマウス位置を更新<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (currentMouse == 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::ReleaseX] = MouseX; Click[Mouse::ReleaseY] = MouseY;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else Click[Mouse::All] = 1; // マウスのいずれかのボタンが押されている<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 左マウスドラッグ中のXY位置を更新<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButton(Pad::Mouse, MOUSE_INPUT_LEFT) &amp;&amp; !GetButtonDown(Pad::Mouse, MOUSE_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::DragLX] = MouseX; Click[Mouse::DragLY] = MouseY; Click[Mouse::DragL] = 1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::DragL] = 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 右マウスドラッグ中のXY位置を更新<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButton(Pad::Mouse, MOUSE_INPUT_RIGHT) &amp;&amp; !GetButtonDown(Pad::Mouse, MOUSE_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::DragRX] = MouseX; Click[Mouse::DragRY] = MouseY; Click[Mouse::DragR] = 1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::DragR] = 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //[マウスクリック検知] https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N40<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // マウスのボタンが押されたり離されたりしたかどうかの情報を取得する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetMouseInputLog2(&amp;MButton, &amp;ClickX, &amp;ClickY, &amp;LogType, TRUE) == 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // [左ボタン]が押されたり離されたりしていた<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if ((MButton & MOUSE_INPUT_LEFT) != 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // クリックされた瞬間と離された瞬間のマウス位置を記録<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (LogType == MOUSE_INPUT_LOG_DOWN)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::DownLX] = ClickX; Click[Mouse::DownLY] = ClickY; Click[Mouse::DownL] = 1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (LogType == MOUSE_INPUT_LOG_UP)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::UpLX] = ClickX; Click[Mouse::UpLY] = ClickY; Click[Mouse::UpL] = 1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }// [右ボタン]が押されたり離されたりしていた<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if ((MButton & MOUSE_INPUT_RIGHT) != 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // クリックされた瞬間と離された瞬間のマウス位置を記録<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (LogType == MOUSE_INPUT_LOG_DOWN)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::DownRX] = ClickX; Click[Mouse::DownRY] = ClickY; Click[Mouse::DownR] = 1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (LogType == MOUSE_INPUT_LOG_UP)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Click[Mouse::UpRX] = ClickX; Click[Mouse::UpRY] = ClickY; Click[Mouse::UpR] = 1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタンが押されているか？<br>
+      &nbsp;&nbsp;&nbsp; static bool GetButton(Pad pad, int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // GetButtonの中でGetButtonを呼ぶ【再起呼出し】テクニック<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButton((Pad)i, buttonId))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; //押されているPadを発見！<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 一つも押されていなかった<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <em>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(pad == Pad::Keyboard) // 今ボタンが押されているかどうかを返却<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return (currentKey[buttonId] ==1); //https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今ボタンが押されているかどうかを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (currentStates[(int)pad] &amp; buttonId) != 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタンが押された瞬間か？<br>
+      &nbsp;&nbsp;&nbsp; static bool GetButtonDown(Pad pad, int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<em>   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonDown((Pad)i, buttonId))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; //押されているPadを発見！<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 一つも押されていなかった<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        <em>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::Keyboard) //https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return (currentKey[buttonId] == 1) &amp;&amp; (prevKey[buttonId] != 1);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今は押されていて、かつ1フレーム前は押されていない場合はtrueを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((currentStates[(int)pad] &amp; buttonId) &amp; ~(prevStates[(int)pad] &amp; buttonId)) != 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ボタンが離された瞬間か？<br>
+      &nbsp;&nbsp;&nbsp; static bool GetButtonUp(Pad pad, int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<em>   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonUp((Pad)i, buttonId))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; //押されているPadを発見！<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // 一つも押されていなかった<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <em>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>		
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::Keyboard) //https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return (prevKey[buttonId] == 1) &amp;&amp; (currentKey[buttonId] != 1);</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 1フレーム前は押されていて、かつ今は押されている場合はtrueを返却<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((prevStates[(int)pad] &amp; buttonId) &amp; ~(currentStates[(int)pad] &amp; buttonId)) != 0;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <em>&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; //コントローラのボタンの初回プッシュを検知し<br>
+      &nbsp;&nbsp;&nbsp; //他コントローラと初回タイミングが完全被りかチェックして重複コントローラの判定処理をスルーする対策<br>
+      &nbsp;&nbsp;&nbsp; //★コントローラ3を押すと7も反応するなどコントローラ4以降の動作が怪しいのでその対策(DXのバグ?仕様?)<br>
+      &nbsp;&nbsp;&nbsp; static bool ControllerBugCheck(Pad pad, int buttonId)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 今は押されていて、かつ1フレーム前は押されていない場合<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bool buttonDown = ((currentStates[(int)pad] & buttonId) & ~(prevStates[(int)pad] & buttonId)) != 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //if (isBugCheckMode == false) return false; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //コントローラの初回ボタンプッシュを検知<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (buttonDown && firstPushTiming[(int)pad] == 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i < (int)Pad::NUM - 1; i++)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //全コントローラ初回プッシュ被りがないかチェック完全同時は怪しいので-1<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bool isDown = ((currentStates[i] & buttonId) & ~(prevStates[i] & buttonId)) != 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if ((Pad)i != pad && isDown ////初回プッシュ被り検出<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; && (timing == firstPushTiming[i] || firstPushTiming[i] == 0))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //初回プッシュのタイミング被りは-1フラグを記録<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; firstPushTiming[i] = -1;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (firstPushTiming[(int)pad] != -1)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; firstPushTiming[(int)pad] = timing;//初回プッシュを記録<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (firstPushTiming[(int)pad] == -1) return true; //DXのコントローラ被りバグ！<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else return false; //コントローラ被りOK!<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; </em><br>
+      }; //←【注意】クラス定義の終わりにはコロンが必要だよ！<br>
+      <br>
+      #endif&nbsp; //ここでエラー出た人は↑【注意】の;コロン忘れ<br>
+    </p>
+    <br>
+	      <p><code>Input.cppに変数定義を追加します。</code></p>
+    <p class="source">#include "Input.h"<br>
+      <br>
+      int Input::prevStates[]; // 1フレーム前の状態<br>
+      int Input::currentStates[]; // 現在の状態<br>
+      std::unordered_map&lt;Pad, bool&gt; Input::isJoin; // 参加中のパッド番号辞書<br>
+      <br>
+      std::unordered_map&lt;int, int&gt; Input::padDic; // パッド番号からDXの定義への辞書<br>
+<br>
+<em>//★【DXコントローラバグ検知】初回プッシュが被ればDXバグで同一コントローラ<br>
+int Input::firstPushTiming[(int)Pad::Four]; // Pad::Fourが最後だから8とかに増やすなら要書き換え<br>
+int Input::timing{ 0 };<br>
+bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><br>
+	    <br>
+    </p>
+    <br>
+
+		
     <br>
     <br>
   </body>
