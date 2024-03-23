@@ -12726,7 +12726,20 @@ public:<br>
 	<h2><a id="mozTocId50020" class="mozTocH1"></a>キーボードとマウスの入力</h2>
 		<br>
 		重要なインフラとしてキーボード入力の検知とマウスの入力の検知があります。<br>
-		DXが用意してくれている
+		DXが用意してくれているキーボードの関数はGetHitKeyStateAll()になります。<br>
+		<a href="https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28">https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28</a><br>
+		この関数をGetButton、GetButtonDown、GetButtonUpに対応させて3種類の入力状態を得られるように対応します。<br>
+		<br>
+		DXが用意してくれているマウスの関数は下記3つを使います。<br>
+		GetMousePoint(&amp;MouseX, &amp;MouseY)<br>
+		<a href="https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28">https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28</a><br>
+		GetMouseInput()<br>
+		<a href="https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N8">https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N8</a><br>
+		GetMouseInputLog2(&amp;MButton, &amp;ClickX, &amp;ClickY, &amp;LogType, TRUE)<br>
+		<a href="https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N40">https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N40</a><br>
+		はい、<b>DXの元の関数だけでは単純にダブルクリックやドラッグを得られるわけではありません</b>。<br>
+		プログラマが頑張ってこれら<b>3つの関数を駆使して、独自にダブルクリックやドラッグを得られるよう頑張ってくれ</b>ということですね。<br>
+		がんばって、それらを得られるようにしましょう。<br>
 		<br>
 		<p><code>Input.hにキーボードとマウス入力を検知できる機能</code>を追加しましょう。</p>
     <p class="source">#ifndef INPUT_H_<br>
