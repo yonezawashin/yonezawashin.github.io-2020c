@@ -12376,11 +12376,11 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
     <br>
 		上記コードで <b><a href="https://flat-leon.hatenablog.com/entry/cpp_named_parameter">メソッドチェイン</a>(関数連鎖)のテクニック</b>を使いました。<br>
 		基本構造は 〇〇型の自分のクラスを定義した際に<br>
-		〇〇 & 関数名()<br>
+		<p class="source">〇〇 & 関数名()<br>
 		{<br>
 		&nbsp;&nbsp; &nbsp;........<br>   
 		&nbsp;&nbsp; &nbsp;return *this; // 最終的に*thisで自分のクラス自身の参照を返す<br>
-		}<br>
+		}</p><br>
 		とやるだけです。<br>
 	<p class="source"><em>&nbsp;&nbsp; &nbsp;bool isForceCreate = false; // ファイルが無い、もしくは空のときにアラートを出さず無理やり(force)新しく作るか(create)<br>
       &nbsp;&nbsp; &nbsp;<br>
@@ -12401,7 +12401,7 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
 		<p class="source">DataCsv data;<br>
 	      data<em>.SetA(true).SetB(-1).SetC("テスト").SetD(3.145f)</em>.Load(filePath, DataCsv::CsvType::CsvValue);<br></p><br>
 		
-		<br>関数のデフォルト引数でisForceCreateをデフォルト引数として渡すか迷いました。<br>
+		<br>Load関数のデフォルト引数でisForceCreateをデフォルト引数として渡すか迷いました。<br>
 		<p class="source">void Load(std::string filePath, CsvType csvType = CsvType::CsvValue, bool isForceCreate=false);<br>
 		<br>
 			........<br>
