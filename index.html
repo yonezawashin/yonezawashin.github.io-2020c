@@ -40,7 +40,7 @@
       <p>テキスト2もこのファイル内にまとめた。</p>
       <a href="#mozTocId2000">[C++]シューティングゲーム 2</a><br>
       <br>
-      <p>このHTMLのWEBテキストはBlueGriffonという無料のソフトで書いた<a href="https://forest.watch.impress.co.jp/library/software/bluegriffon/">https://forest.watch.impress.co.jp/library/software/bluegriffon/</a><br>
+      <p>このHTMLのWEBテキストはBlueGriffonという無料のソフトで書いた<br><a href="https://forest.watch.impress.co.jp/library/software/bluegriffon/">https://forest.watch.impress.co.jp/library/software/bluegriffon/</a><br>
       <a href="https://prog-8.com/docs/github-pages">githubで自分のサイトを無料公開できるので自作サイトにも挑戦しては</a></p>
       <br>
     </ol>
@@ -12433,7 +12433,9 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
 struct SaveData // データをSaveするタイプ あいまいなabstract型<br>
 {<br>
 &nbsp;&nbsp; &nbsp;std::vector&lt;std::string&gt; filePaths{ {""} }; // 複数のファイルを同時に呼び出したい場合のため配列に<br>
-&nbsp;&nbsp; &nbsp;SaveData() = default;<br>
+&nbsp;&nbsp; &nbsp;SaveData(std::vector&lt;std::string&gt; filePaths = { "" } ) : filePaths { filePaths }<br>
+&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;}<br>
 &nbsp;&nbsp; &nbsp;virtual ~SaveData() {}; // 破棄する処理デストラクタ<br>
 <br>
 // セーブデータのファイルパスを複数vector配列で関数に渡す<br>
@@ -12462,15 +12464,14 @@ public:<br>
 &nbsp;&nbsp; &nbsp;}<br>
 <br>
 &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
-&nbsp;&nbsp; &nbsp;RankingData(std::vector&lt;std::string&gt; filePaths = { "" }) : SaveData()<br>
+&nbsp;&nbsp; &nbsp;RankingData(std::vector&lt;std::string&gt; filePaths = { "" }) : SaveData(filePaths)<br>
 &nbsp;&nbsp; &nbsp;{<br>
-&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;filePaths = filePaths;<br>
-&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; Load();<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; Load(filePaths);<br>
 &nbsp;&nbsp; &nbsp;}<br>
 <br>
 &nbsp;&nbsp; &nbsp;virtual SaveData&amp; Load(std::vector&lt;std::string&gt; filepaths = { "" }) override<br>
 &nbsp;&nbsp; &nbsp;{<br>
-&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filepaths.size() &gt; 0 && filepaths[0] != "")<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filepaths.size() &gt; 0 &amp;&amp; filepaths[0] != "")<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;filePaths = filepaths;<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (std::size_t i = 0, iSize = filePaths.size(); i &lt; iSize; ++i)<br>
