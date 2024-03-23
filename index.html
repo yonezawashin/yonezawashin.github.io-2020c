@@ -13071,11 +13071,22 @@ enum class Mouse<br>
       std::unordered_map&lt;Pad, bool&gt; Input::isJoin; // 参加中のパッド番号辞書<br>
       <br>
       std::unordered_map&lt;int, int&gt; Input::padDic; // パッド番号からDXの定義への辞書<br>
+<em><br>
+int Input::prevMouse; // 1フレーム前のマウス状態<br>
+int Input::currentMouse; // 現在のマウス状態<br>
+int Input::MouseX{ -1 }, Input::MouseY{ -1 }; // 現在のマウス位置<br>
+float Input::MouseWheel{ 0 };<br>
+int Input::ClickX{ -1 }, Input::ClickY{ -1 }, Input::MButton{ 0 }, Input::LogType{ 0 };<br>
+std::unordered_map&lt;Mouse, int&gt; Input::Click;//&lt;Mouse⇒int&gt; マウスのクリックXY位置辞書<br>
 <br>
-<em>//★【DXコントローラバグ検知】初回プッシュが被ればDXバグで同一コントローラ<br>
+//[キーボード入力]https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28<br>
+char Input::prevKey[256]; // 1フレーム前のキーボード状態<br>
+char Input::currentKey[256]; // 現在のキーボード状態<br>
+</em><br>
+//★【DXコントローラバグ検知】初回プッシュが被ればDXバグで同一コントローラ<br>
 int Input::firstPushTiming[(int)Pad::Four]; // Pad::Fourが最後だから8とかに増やすなら要書き換え<br>
 int Input::timing{ 0 };<br>
-bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><br>
+bool Input::isBugCheckMode = false; //バグチェックを開始するか<br>
 	    <br>
     </p>
     <br>
