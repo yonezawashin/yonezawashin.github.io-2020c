@@ -12397,9 +12397,9 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
 	      <p class="source">DataCsv data;<br>
 	      data<em>.IsForceCreate(true)</em>.Load(filePath, DataCsv::CsvType::CsvValue);<br></p><br>
 		<br>
-		<br>Setする変数項目が多かったりするときに効果を発揮します。<br>
+		Setする変数項目が多かったりするときに効果を発揮します。<br>
 		<p class="source">DataCsv data;<br>
-	      data<em>.SetA(true).SetB(-1).SetC("テスト").SetD(3.145f)</em>.Load(filePath, DataCsv::CsvType::CsvValue);<br></p><br><br>
+	      data<em>.SetA(true).SetB(-1).SetC("テスト").SetD(3.145f)</em>.Load(filePath, DataCsv::CsvType::CsvValue);<br></p><br>
 		
 		<br>関数のデフォルト引数でisForceCreateをデフォルト引数として渡すか迷いました。<br>
 		<p class="source">void Load(std::string filePath, CsvType csvType = CsvType::CsvValue, bool isForceCreate=false);<br>
@@ -12408,16 +12408,116 @@ namespace { // 無名名前空間で囲んで、.hヘッダにグローバル関
 			data.Load(filePath, DataCsv::CsvType::CsvValue<em>, true</em>); // うーん、<em>あいだに挟まったDataCsv::CsvType::CsvValueをいちいち書かないとtrue渡せない</em>な..省略しにくい<br>
 		<br>
 		<br></p>
-		<br><br>
-		<br>関数連鎖で渡せば、<b>[!]DataCsv::CsvType::CsvValueを省略しやすく</b>なる。<br>
+		<br>
+		<br>関数連鎖で渡せば、<b>DataCsv::CsvType::CsvValueを省略しやすく</b>なる。<br>
 		<p class="source">void Load(std::string filePath, CsvType csvType = CsvType::CsvValue);<br>
 		<br>
 			........<br>
 			data<em>.IsForceCreate(true)</em>.Load(filePath<u>, DataCsv::CsvType::CsvValue, true</u>); // 省略!!<br>
-			<br>↓
+			↓<br>
 			data.IsForceCreate(true).Load(filePath); // 省略しても、csvTypeはデフォルトのDataCsv::CsvType::CsvValueになる<br>
 		<br>
 		<br></p><br>
-		
+<br>
+	<br>
+		つぎにSaveデータを扱うベースとなる基底クラスSaveDataを定義しましょう(これを : 継承してRankingDataクラスをつくります)<br>
+		<br>
+		<p><code>SaveData.hを新規作成</code>します。</p>
+		<p class="source">#ifndef SAVEDATA_H_<br>
+#define SAVEDATA_H_<br>
+<br>
+
+#include &lt;vector&gt; // セーブデータのファイルパスを複数vector配列で関数に渡すために使用<br>
+#include &lt;string&gt; // 文字列に必要<br>
+<br>			
+struct SaveData // データをSaveするタイプ あいまいなabstract型<br>
+{<br>
+&nbsp;&nbsp; &nbsp;std::vector&lt;std::string&gt; filePaths{ {""} }; // 複数のファイルを同時に呼び出したい場合のため配列に<br>
+&nbsp;&nbsp; &nbsp;SaveData() = default;<br>
+&nbsp;&nbsp; &nbsp;virtual ~SaveData() {}; // 破棄する処理デストラクタ<br>
+<br>
+// セーブデータのファイルパスを複数vector配列で関数に渡す<br>
+&nbsp;&nbsp; &nbsp;virtual SaveData&amp; Load(std::vector&lt;std::string&gt; filePaths = { "" }) { return *this; };<br>
+&nbsp;&nbsp; &nbsp;virtual SaveData&amp; Save(std::vector&lt;std::string&gt; filePaths = { "" }) { return *this; };<br>
+private:<br>
+<br>
+};<br>
+#endif</p><br>
+		<br>
+		<p><code>RankingData.hを新規作成してSaveDataを継承してCSVのロードとセーブ機能を実装</code>します。</p>
+		<p class="source">#ifndef RANKING_H_<br>
+#define RANKING_H_<br>
+<br>
+#include "SaveData.h"<br>
+#include "DataCsv.h"<br>
+<br>
+struct RankingData : public SaveData<br>
+{<br>
+public:<br>
+&nbsp;&nbsp; &nbsp;const size_t listMAX = 100; // 過去のランキングリストを100位までcsvに保管<br>
+&nbsp;&nbsp; &nbsp;DataCsv list;<br>
+<br>
+&nbsp;&nbsp; &nbsp;std::vector&lt;CsvValue&gt;&amp; operator[](std::size_t index) {<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return list[index]; // 読み書き<br>
+&nbsp;&nbsp; &nbsp;}<br>
+<br>
+&nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+&nbsp;&nbsp; &nbsp;RankingData(std::vector&lt;std::string&gt; filePaths = { "" }) : SaveData()<br>
+&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;filePaths = filePaths;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; Load();<br>
+&nbsp;&nbsp; &nbsp;}<br>
+<br>
+&nbsp;&nbsp; &nbsp;virtual SaveData&amp; Load(std::vector&lt;std::string&gt; filepaths = { "" }) override<br>
+&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filepaths.size() &gt; 0 && filepaths[0] != "")<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;filePaths = filepaths;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (std::size_t i = 0, iSize = filePaths.size(); i &lt; iSize; ++i)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (i == 0)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// csvファイルの読み込み<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;list.IsForceCreate(true).Load(filePaths[0], DataCsv::CsvType::CsvValue);<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (list.size() == 0)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{   // 何もデータがないときは初期生成<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;CsvValue&gt; firstScore = { -1 }; // 0行目: スコア(最後にプレイしたとき)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;list.Data.emplace_back(firstScore);<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;CsvValue&gt; firstRank = { 0 }; // 1行目: ランク順位(最後にプレイしたとき)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;list.Data.emplace_back(firstRank);<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::vector&lt;CsvValue&gt; firstList = { -1 }; // 2行目: 過去スコアのリスト<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;list.Data.emplace_back(firstList);<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//else if (i == 1)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//  // 複数まとめて同時にファイルを読み込みたければi=1,2..も定義<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//}<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
+&nbsp;&nbsp; &nbsp;}<br>
+<br>
+&nbsp;&nbsp; &nbsp;virtual SaveData&amp; Save(std::vector&lt;std::string&gt; filepaths = { "" }) override<br>
+&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filepaths.size() &gt; 0 && filepaths[0] != "")<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;filePaths = filepaths;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (std::size_t i = 0, iSize = filePaths.size(); i &lt; iSize; ++i)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (i == 0)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// csvファイルの保存<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;list.Save(filePaths[0]);<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//else if (i == 1)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//  // 複数まとめて同時にファイルを保存したければi=1,2..も定義<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//}<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
+&nbsp;&nbsp; &nbsp;}<br>
+};<br>
+<br>
+#endif</p><br>
   </body>
 </html>
