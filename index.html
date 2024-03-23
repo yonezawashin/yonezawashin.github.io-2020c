@@ -12439,8 +12439,8 @@ struct SaveData // データをSaveするタイプ あいまいなabstract型<br
 &nbsp;&nbsp; &nbsp;virtual ~SaveData() {}; // 破棄する処理デストラクタ<br>
 <br>
 // セーブデータのファイルパスを複数vector配列で関数に渡す<br>
-&nbsp;&nbsp; &nbsp;virtual SaveData&amp; Load(std::vector&lt;std::string&gt; filePaths = { "" }) { return *this; };<br>
-&nbsp;&nbsp; &nbsp;virtual SaveData&amp; Save(std::vector&lt;std::string&gt; filePaths = { "" }) { return *this; };<br>
+&nbsp;&nbsp; &nbsp;virtual void Load(std::vector&lt;std::string&gt; filePaths = { "" }) {};<br>
+&nbsp;&nbsp; &nbsp;virtual void Save(std::vector&lt;std::string&gt; filePaths = { "" }) {};<br>
 private:<br>
 <br>
 };<br>
@@ -12469,7 +12469,7 @@ public:<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; Load(filePaths);<br>
 &nbsp;&nbsp; &nbsp;}<br>
 <br>
-&nbsp;&nbsp; &nbsp;virtual SaveData&amp; Load(std::vector&lt;std::string&gt; filepaths = { "" }) override<br>
+&nbsp;&nbsp; &nbsp;virtual void Load(std::vector&lt;std::string&gt; filepaths = { "" }) override<br>
 &nbsp;&nbsp; &nbsp;{<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filepaths.size() &gt; 0 &amp;&amp; filepaths[0] != "")<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;filePaths = filepaths;<br>
@@ -12495,10 +12495,10 @@ public:<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//}<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
-&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
 &nbsp;&nbsp; &nbsp;}<br>
 <br>
-&nbsp;&nbsp; &nbsp;virtual SaveData&amp; Save(std::vector&lt;std::string&gt; filepaths = { "" }) override<br>
+&nbsp;&nbsp; &nbsp;virtual void Save(std::vector&lt;std::string&gt; filepaths = { "" }) override<br>
 &nbsp;&nbsp; &nbsp;{<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (filepaths.size() &gt; 0 && filepaths[0] != "")<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;filePaths = filepaths;<br>
@@ -12515,7 +12515,7 @@ public:<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//}<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
-&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return *this;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return;<br>
 &nbsp;&nbsp; &nbsp;}<br>
 };<br>
 <br>
