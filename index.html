@@ -12043,8 +12043,7 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       &nbsp;&nbsp; &nbsp;}<br>
       };<br>
       <br>
-      #endif</p>
-    </p>	
+      #endif</p>	
 
 		<br>
 		<br>
@@ -12520,5 +12519,106 @@ public:<br>
 };<br>
 <br>
 #endif</p><br>
+		<br>
+		つぎにSceneManager.hをSaveDataをRankingDataクラスを使ってLoadする形に変更しますが、<br>
+		必ず、Imageフォルダと同じ階層に<code>SaveDataという名前でフォルダを新規作成</code>しておかないと保存もロードも失敗しますので注意してください。<br>
+		<br>
+		<p><code>SceneManager.hのスコアのランクとランキング配列をRankingDataクラスからロードする形に変えて</code>してランキングを管理できるようにしましょう。</p>
+    <p class="source">#ifndef SCNENEMANAGER_H_<br>
+      #define SCNENEMANAGER_H_<br>
+      <br>
+(中略)..........<br>
+#include "DataCsv.h"<br>
+<em>#include "RankingData.h"</em><br>
+      <br>
+      #include "Singleton.h"<br>
+      <br>
+      class Scene; //クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+      <br>
+      class SceneManager : public Singleton&lt;SceneManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;friend class Singleton&lt;SceneManager&gt;; // Singleton でのインスタンス作成は許可<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;<b>// マネージャを【どこからでもアクセスしやすい「変数の掲示板」として使えばシーンをまたぐ変数も定義できる】</b><br>
+      &nbsp;&nbsp; &nbsp;std::string selectStage = "stage1"; // 選択中のステージ名など<br>
+      &nbsp;&nbsp; &nbsp;<em>RankingData ranking{ {"SaveData/ranking.csv"} }; // スコアのランキング記録するCSV</em>
+      &nbsp;&nbsp; &nbsp;<em>CsvValue&amp;</em> scoreMax = <em>ranking[0][0]</em>; // <em>今までのMAXスコア &amp;参照でセーブするデータの住所を参照して直接書き換えられるように</em><br>
+      &nbsp;&nbsp; &nbsp;<u>int ranking[5] = {-1,-1,-1,-1,-1}; // スコアトップ5を記録しておく配列</u>
+      &nbsp;&nbsp; &nbsp;<em>CsvValue&amp;</em> rank = <em>ranking[1][0]</em>; // <em>最後にプレイしたセーブデータのランク</em>順位<em>への&amp;参照</em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+(中略)..........<br>
+	    <br>
+      };<br>
+      <br>
+      #endif</p>
+		<br>
+		さて、CSVのエクセルのセルが以下のようになっていたとしましょう<br>
+		<em>0</em>行目:[ <em>5</em> ][&nbsp;&nbsp;&nbsp;][&nbsp;&nbsp;&nbsp;][&nbsp;&nbsp;&nbsp;]<br>
+		<em>1</em>行目:[ <em>2</em> ][&nbsp;&nbsp;&nbsp;][&nbsp;&nbsp;&nbsp;][&nbsp;&nbsp;&nbsp;]<br>
+		2行目:[ 5 ][ 3 ][ 1 ][ 1 ].......<br>
+		<br>
+		<em>0</em>行目<em>0</em>列 : scoreMax 今までのMAXスコアを保存 ( 上図では<em>5</em> )<br>
+		<em>1</em>行目<em>0</em>列 : rank 最後にプレイしたセーブデータのランク順位を保存 ( 上図では<em>2</em> 2位)<br>
+		2行目以降.. 過去のデータ 5,3,1,1.....
+		<br>
+		上記を読みだしているコードの対応関係を下記で今後使いこなせるように確認しておきましょう。<br>
+		<p class="source">
+      &nbsp;&nbsp; &nbsp;CsvValue&amp; scoreMax = ranking[<em>0</em>][<em>0</em>]; // 今までのMAXスコア &amp;参照でセーブするデータの住所を参照して直接書き換えられるように<br>
+      &nbsp;&nbsp; &nbsp;CsvValue&amp; rank = ranking[<em>1</em>][<em>0</em>]; // 最後にプレイしたセーブデータのランク順位への&amp;参照</p><br>
+		実際にデータを読み出してゆく際には[2]行目にアクセスしてやっていきます。<br>
+		TitleSceneやPlaySceneのコードでは[2]に着目しておきましょう。<br>
+		<br>
+		<p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+	#include &lt;string&gt;<br>
+	<br>
+      #include "DxLib.h"<br>
+      (中略)...........<br>
+#include "Font.h"<br>
+      (中略)...........<br>		
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+(中略)...........<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;(中略)...........<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<em>(int)</em>sm.scoreMax &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawStringToHandle(0, 200, (std::string("MAXスコア: ") + std::to_string(<em>(int)</em>sm.scoreMax)).c_str(), GetColor(255, 255, 255), Font::fonts["設定1"].handle, GetColor(0, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 順位 0位～4位を1位から5位に直すため +1する→ sm.rank + 1<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string myRankText = (<em>(int)</em>sm.rank &lt; 0) ? std::string("ランク イン シッパイ") : std::string("アナタ ハ イマ  No.") + std::to_string(<em>(int)</em>sm.rank + 1) + std::string(" ") + <em>(std::string)</em>(sm.ranking<em>[2]</em>[<em>(int)</em>sm.rank]);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawStringToHandle(0, 200 + lineSize, myRankText.c_str(), GetColor(255, 255, 255), Font::fonts["設定1"].handle, GetColor(255, 0, 255));<br>
+<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string rankText; // ランキングを改行しながら複数行のテキストに<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (int i=0, iSize = <em>sm.ranking[2].size()</em>; i &lt; iSize; ++i)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(<em>(int)</em>sm.ranking<em>[2]</em>[i] &gt;= 0) // 配列の初期値は-1は表示せずとばす<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;rankText += std::string("No.") + std::to_string(i + 1) + std::string(" ") + std::to_string(sm.ranking<em>[2]</em>[i]) + std::string("\n");<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawStringToHandle(0, 200 + lineSize*2, rankText.c_str(), GetColor(255, 255, 255), Font::fonts["設定1"].handle);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      
+      (中略)...........<br>
+	    <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <br>
   </body>
 </html>
