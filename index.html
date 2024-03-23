@@ -12725,8 +12725,10 @@ public:<br>
 		
 	<h2><a id="mozTocId50020" class="mozTocH1"></a>キーボードとマウスの入力</h2>
 		<br>
+		重要なインフラとしてキーボード入力の検知とマウスの入力の検知があります。<br>
+		DXが用意してくれている
 		<br>
-		<p><code>Input.hでコントローラの初回ボタンプッシュを管理して、2つのコントローラの初回プッシュが被ったら同一コントローラ扱いとしてスルーする機能</code>を追加しましょう。</p>
+		<p><code>Input.hにキーボードとマウス入力を検知できる機能</code>を追加しましょう。</p>
     <p class="source">#ifndef INPUT_H_<br>
       #define INPUT_H_<br>
       <br>
@@ -12866,7 +12868,7 @@ enum class Mouse<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 参加ボタンが押されたら<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown((Pad)i, PAD_INPUT_1))<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>isJoin[(Pad)i] = true; // 参加パッド辞書に登録</b><br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<b>isJoin.count((Pad)i) == 1 &amp;&amp; isJoin[(Pad)i] == true</b>)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isJoin.count((Pad)i) == 1 &amp;&amp; isJoin[(Pad)i] == true)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; joinCount++; // 参加中の人数をカウント<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return joinCount; // 参加中のコントローラ数を返す<br>
@@ -12969,7 +12971,7 @@ enum class Mouse<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ボタンが押されているか？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButton(Pad pad, int buttonId)<br>
-      &nbsp;&nbsp;&nbsp; {   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //コントローラバグチェック<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
@@ -12990,9 +12992,9 @@ enum class Mouse<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ボタンが押された瞬間か？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButtonDown(Pad pad, int buttonId)<br>
-      &nbsp;&nbsp;&nbsp; {<em>   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //コントローラバグチェック<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
@@ -13011,9 +13013,9 @@ enum class Mouse<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ボタンが離された瞬間か？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButtonUp(Pad pad, int buttonId)<br>
-      &nbsp;&nbsp;&nbsp; {<em>   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //コントローラバグチェック<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pad == Pad::All) // All指定の時は全てのパッド<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 再起呼出しテクニック<br>
