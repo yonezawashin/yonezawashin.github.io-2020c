@@ -12637,14 +12637,14 @@ public:<br>
       &nbsp;&nbsp;&nbsp; {<br>
     (中略).....................<br>
       <br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲーム終了時のスコアがMAXなら記録<u>して終了</u><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲーム終了時のスコアがMAXなら記録<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(score &gt; <em>(int)</em>sm.scoreMax) sm.scoreMax = score;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if (sm.ranking[2].size() &lt; sm.ranking.listMAX)<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.ranking[2].emplace_back( -1 ); // sizeがlistMAX以下のときは後ろに-1を追加</em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲーム終了時のスコアをranking配列に挿入ソートして記録<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int j, iSize = <em>sm.ranking[2].size()</em>;<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (score &lt; <em>(int)</em>sm.ranking[iSize - 1])<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (score &lt; <em>(int)</em>sm.ranking<em>[2]</em>[iSize - 1])<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.rank = -1; // ランキング外<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {   // ranking配列の一番後ろは一番小さいのでまずはそれと入れ替え<br>
