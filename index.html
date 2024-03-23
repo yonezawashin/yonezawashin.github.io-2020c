@@ -10823,7 +10823,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ボタンが押されているか？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButton(Pad pad, int buttonId)<br>
-      &nbsp;&nbsp;&nbsp; {<em>   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; {<em>&nbsp;&nbsp;&nbsp; //コントローラバグチェック<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
@@ -10841,7 +10841,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ボタンが押された瞬間か？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButtonDown(Pad pad, int buttonId)<br>
-      &nbsp;&nbsp;&nbsp; {<em>   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; {<em>&nbsp;&nbsp;&nbsp; //コントローラバグチェック<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
@@ -10859,7 +10859,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ボタンが離された瞬間か？<br>
       &nbsp;&nbsp;&nbsp; static bool GetButtonUp(Pad pad, int buttonId)<br>
-      &nbsp;&nbsp;&nbsp; {<em>   //コントローラバグチェック<br>
+      &nbsp;&nbsp;&nbsp; {<em>&nbsp;&nbsp;&nbsp; //コントローラバグチェック<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ControllerBugCheck(pad, buttonId)) return false;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::None) return false; // Noneなら判別不要<br>
@@ -13047,7 +13047,7 @@ enum class Mouse<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 1フレーム前は押されていて、かつ今は押されている場合はtrueを返却<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((prevStates[(int)pad] &amp; buttonId) &amp; ~(currentStates[(int)pad] &amp; buttonId)) != 0;<br>
       &nbsp;&nbsp;&nbsp; }<br>
-      <em>&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; //コントローラのボタンの初回プッシュを検知し<br>
       &nbsp;&nbsp;&nbsp; //他コントローラと初回タイミングが完全被りかチェックして重複コントローラの判定処理をスルーする対策<br>
       &nbsp;&nbsp;&nbsp; //★コントローラ3を押すと7も反応するなどコントローラ4以降の動作が怪しいのでその対策(DXのバグ?仕様?)<br>
@@ -13075,7 +13075,7 @@ enum class Mouse<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (firstPushTiming[(int)pad] == -1) return true; //DXのコントローラ被りバグ！<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else return false; //コントローラ被りOK!<br>
       &nbsp;&nbsp;&nbsp; }<br>
-      &nbsp;&nbsp;&nbsp; </em><br>
+      &nbsp;&nbsp;&nbsp; <br>
       }; //←【注意】クラス定義の終わりにはコロンが必要だよ！<br>
       <br>
       #endif&nbsp; //ここでエラー出た人は↑【注意】の;コロン忘れ<br>
