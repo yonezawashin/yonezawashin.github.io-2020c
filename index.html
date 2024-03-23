@@ -12658,7 +12658,7 @@ public:<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; j = i; // 交換要素のためのインデックス<br>
 <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // while(j &gt; 0 &amp;&amp; <em>(int)</em>sm.ranking<em>[2]</em>[j-1] &gt; <em>(int)</em>sm.ranking<em>[2]</em>[j]) に変えると昇順ソートになる<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; while ((j &gt; 0) &amp;&amp; (sm.ranking<em>[2]</em>[j - 1] &lt; sm.ranking<em>[2]</em>[j]))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; while ((j &gt; 0) &amp;&amp; (<em>(int)</em>sm.ranking<em>[2]</em>[j - 1] &lt; <em>(int)</em>sm.ranking<em>[2]</em>[j]))<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 整列されていない隣り合う要素を交換する<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int tmp = sm.ranking<em>[2]</em>[j - 1];<br>
