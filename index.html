@@ -12726,19 +12726,22 @@ public:<br>
 	<h2><a id="mozTocId50020" class="mozTocH1"></a>キーボードとマウスの入力</h2>
 		<br>
 		重要なインフラとしてキーボード入力の検知とマウスの入力の検知があります。<br>
-		DXが用意してくれているキーボードの関数はGetHitKeyStateAll()になります。<br>
+		<br>
+		DXが用意してくれているキーボードの関数は<br>
+		<b>GetHitKeyStateAll()</b>になります。<br>
 		<a href="https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28">https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28</a><br>
 		この関数をGetButton、GetButtonDown、GetButtonUpに対応させて3種類の入力状態を得られるように対応します。<br>
 		<br>
 		DXが用意してくれているマウスの関数は下記3つを使います。<br>
-		GetMousePoint(&amp;MouseX, &amp;MouseY)<br>
+		<b>GetMousePoint(&amp;MouseX, &amp;MouseY)</b><br>
 		<a href="https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28">https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28</a><br>
-		GetMouseInput()<br>
+		<b>GetMouseInput()</b><br>
 		<a href="https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N8">https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N8</a><br>
-		GetMouseInputLog2(&amp;MButton, &amp;ClickX, &amp;ClickY, &amp;LogType, TRUE)<br>
+		<b>GetMouseInputLog2(&amp;MButton, &amp;ClickX, &amp;ClickY, &amp;LogType, TRUE)</b><br>
 		<a href="https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N40">https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N40</a><br>
 		はい、<b>DXの元の関数だけでは単純にダブルクリックやドラッグを得られるわけではありません</b>。<br>
 		プログラマが頑張ってこれら<b>3つの関数を駆使して、独自にダブルクリックやドラッグを得られるよう頑張ってくれ</b>ということですね。<br>
+		<br>
 		がんばって、それらを得られるようにしましょう。<br>
 		<br>
 		<p><code>Input.hにキーボードとマウス入力を検知できる機能</code>を追加しましょう。</p>
@@ -13018,7 +13021,7 @@ enum class Mouse<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
         <em>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pad == Pad::Keyboard) //https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return (currentKey[buttonId] == 1) &amp;&amp; (prevKey[buttonId] != 1);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return (currentKey[buttonId] == 1) &amp;&amp; (prevKey[buttonId] != 1);</em><br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 今は押されていて、かつ1フレーム前は押されていない場合はtrueを返却<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((currentStates[(int)pad] &amp; buttonId) &amp; ~(prevStates[(int)pad] &amp; buttonId)) != 0;<br>
