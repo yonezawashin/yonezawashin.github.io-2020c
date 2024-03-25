@@ -12751,6 +12751,7 @@ public:<br>
 	
       #include &lt;climits&gt; //int型の最大値2147483647につかう<br>
       #include &lt;unordered_map&gt; // 辞書配列【map高速版】https://qiita.com/sileader/items/a40f9acf90fbda16af51<br>
+      <em>#include &lt;string&gt; // キーボード押下の文字列出力につかう</em><br>
       <br>
       #include "DxLib.h"<br>
       <br>
@@ -12823,6 +12824,10 @@ enum class Mouse<br>
       &nbsp;&nbsp;&nbsp; //[キーボード入力]https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28<br>
       &nbsp;&nbsp;&nbsp; static char prevKey[256]; // 1フレーム前のキーボード状態<br>
       &nbsp;&nbsp;&nbsp; static char currentKey[256]; // 現在のキーボード状態<br>
+      &nbsp;&nbsp;&nbsp; static std::string KeyString[256];//&lt;キーコード⇒キー文字列&gt;の辞書<br>
+      &nbsp;&nbsp;&nbsp; static std::string CapsString[256];//&lt;Caps状態キーコード⇒キー文字列&gt;の辞書<br>
+      &nbsp;&nbsp;&nbsp; static bool isCapsLocked;// CapsLock状態か?<br>
+      &nbsp;&nbsp;&nbsp; static bool isShifted;// Shiftが押された状態か?<br>
       </em><br>
       &nbsp;&nbsp;&nbsp; //★【DXコントローラバグ検知】初回プッシュが被ればDXバグで同一コントローラ<br>
       &nbsp;&nbsp;&nbsp; static int firstPushTiming[(int)Pad::Four]; // Pad::Fourが最後だから8とかに増やすなら要書き換え<br>
@@ -12865,6 +12870,7 @@ enum class Mouse<br>
       &nbsp;&nbsp;&nbsp; static void Init()<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; InitPadDictionary(); // パッドの辞書配列の初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>InitKeyString(); // キーボード辞書配列の初期化</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キー状態をゼロリセット<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; (int)Pad::NUM; i++)<br>
@@ -12914,6 +12920,11 @@ enum class Mouse<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; memcpy(prevKey, currentKey, sizeof(prevKey));<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キーボードの状態配列を更新する<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; GetHitKeyStateAll(currentKey); // https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonUp(Pad::Keyboard, KEY_INPUT_CAPSLOCK))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isCapsLocked != isCapsLocked; // CapsLock状態を反転<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // シフトが押された状態かを更新<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isShifted = (GetButton(Pad::Keyboard, KEY_INPUT_LSHIFT) || GetButton(Pad::Keyboard, KEY_INPUT_RSHIFT));<br>
       &nbsp;&nbsp;&nbsp; }</em><br>
 <br>
       <em>&nbsp;&nbsp;&nbsp; // マウスの状態を更新する<br>
@@ -13076,6 +13087,112 @@ enum class Mouse<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else return false; //コントローラ被りOK!<br>
       &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; <br>
+	      <br>
+    <em>&nbsp;&nbsp;&nbsp; // キーボードのキーと文字列の対応関係配列の初期化 https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N2<br>
+&nbsp;&nbsp;&nbsp; static void InitKeyString()<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 辞書配列で対応関係を結び付けておく<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_BACK] = "BackSpace";//"\b";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_TAB] = "\t";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_RETURN] = "\n";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_LSHIFT] = "ShiftL";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_RSHIFT] = "ShiftR";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_LCONTROL] = "CtrlL";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_RCONTROL] = "CtrlR";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_SPACE] = " ";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_PGUP] = "PgUp";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_PGDN] = "PgDn";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_END] = "End";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_HOME] = "Home";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_LEFT] = "Left";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_UP] = "Up";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_RIGHT] = "Right";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_DOWN] = "Down";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_INSERT] = "Insert";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_DELETE] = "Delete";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_MINUS] = "-"; CapsString[KEY_INPUT_MINUS] = "=";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_YEN] = "\\"; CapsString[KEY_INPUT_YEN] = "|";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_PREVTRACK] = "^"; CapsString[KEY_INPUT_PREVTRACK] = "~";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_PERIOD] = "."; CapsString[KEY_INPUT_PERIOD] = ">";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_SLASH] = "/";  CapsString[KEY_INPUT_SLASH] = "?";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_LALT] = "AltL";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_RALT] = "AltR";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_SCROLL] = "Scroll";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_SEMICOLON] = ";"; CapsString[KEY_INPUT_SEMICOLON] = "+";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_COLON] = ":"; CapsString[KEY_INPUT_COLON] = "*";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_LBRACKET] = "["; CapsString[KEY_INPUT_LBRACKET] = "{";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_RBRACKET] = "]"; CapsString[KEY_INPUT_RBRACKET] = "}";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_AT] = "@"; CapsString[KEY_INPUT_AT] = "`";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_BACKSLASH] = "\\"; CapsString[KEY_INPUT_BACKSLASH] = "_";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_COMMA] = ","; CapsString[KEY_INPUT_COMMA] = "<";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_CAPSLOCK] = "CapsLock";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_PAUSE] = "Pause";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPAD0] = "0";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPAD1] = "1";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPAD2] = "2";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPAD3] = "3";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPAD4] = "4";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPAD5] = "5";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPAD6] = "6";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPAD7] = "7";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPAD8] = "8";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPAD9] = "9";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_MULTIPLY] = "*";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_ADD] = "+";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_SUBTRACT] = "-";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_DECIMAL] = ".";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_DIVIDE] = "/";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_NUMPADENTER] = "\n";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F1] = "F1";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F2] = "F2";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F3] = "F3";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F4] = "F4";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F5] = "F5";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F6] = "F6";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F7] = "F7";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F8] = "F8";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F9] = "F9";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F10] = "F10";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F11] = "F11";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F12] = "F12";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_A] = "a"; CapsString[KEY_INPUT_A] = "A";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_B] = "b"; CapsString[KEY_INPUT_B] = "B";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_C] = "c"; CapsString[KEY_INPUT_C] = "C";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_D] = "d"; CapsString[KEY_INPUT_D] = "D";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_E] = "e"; CapsString[KEY_INPUT_E] = "E";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_F] = "f"; CapsString[KEY_INPUT_F] = "F";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_G] = "g"; CapsString[KEY_INPUT_G] = "G";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_H] = "h"; CapsString[KEY_INPUT_H] = "H";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_I] = "i"; CapsString[KEY_INPUT_I] = "I";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_J] = "j"; CapsString[KEY_INPUT_J] = "J";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_K] = "k"; CapsString[KEY_INPUT_K] = "K";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_L] = "l"; CapsString[KEY_INPUT_L] = "L";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_M] = "m"; CapsString[KEY_INPUT_M] = "M";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_N] = "n"; CapsString[KEY_INPUT_N] = "N";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_O] = "o"; CapsString[KEY_INPUT_O] = "O";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_P] = "p"; CapsString[KEY_INPUT_P] = "P";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_Q] = "q"; CapsString[KEY_INPUT_Q] = "Q";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_R] = "r"; CapsString[KEY_INPUT_R] = "R";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_S] = "s"; CapsString[KEY_INPUT_S] = "S";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_T] = "t"; CapsString[KEY_INPUT_T] = "T";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_U] = "u"; CapsString[KEY_INPUT_U] = "U";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_V] = "v"; CapsString[KEY_INPUT_V] = "V";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_W] = "w"; CapsString[KEY_INPUT_W] = "W";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_X] = "x"; CapsString[KEY_INPUT_X] = "X";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_Y] = "y"; CapsString[KEY_INPUT_Y] = "Y";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_Z] = "z"; CapsString[KEY_INPUT_Z] = "Z";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_0] = "0";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_1] = "1"; CapsString[KEY_INPUT_1] = "!";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_2] = "2"; CapsString[KEY_INPUT_2] = "\"";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_3] = "3"; CapsString[KEY_INPUT_3] = "#";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_4] = "4"; CapsString[KEY_INPUT_4] = "$";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_5] = "5"; CapsString[KEY_INPUT_5] = "%";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_6] = "6"; CapsString[KEY_INPUT_6] = "&amp;";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_7] = "7"; CapsString[KEY_INPUT_7] = "'";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_8] = "8"; CapsString[KEY_INPUT_8] = "(";<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; KeyString[KEY_INPUT_9] = "9"; CapsString[KEY_INPUT_9] = ")";<br>
+&nbsp;&nbsp;&nbsp; }</em><br>
+<br>
       }; //←【注意】クラス定義の終わりにはコロンが必要だよ！<br>
       <br>
       #endif&nbsp; //ここでエラー出た人は↑【注意】の;コロン忘れ<br>
@@ -13100,6 +13217,10 @@ std::unordered_map&lt;Mouse, int&gt; Input::Click;//&lt;Mouse⇒int&gt; マウ�
 //[キーボード入力]https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28<br>
 char Input::prevKey[256]; // 1フレーム前のキーボード状態<br>
 char Input::currentKey[256]; // 現在のキーボード状態<br>
+std::string Input::KeyString[256];//&lt;キーコード⇒キー文字列&gt;の辞書<br>
+std::string Input::CapsString[256];//&lt;Caps状態キーコード⇒キー文字列&gt;の辞書<br>
+bool Input::isCapsLocked{ false };// CapsLock状態か?<br>
+bool Input::isShifted{ false };// Shiftが押された状態か?<br>
 </em><br>
 //★【DXコントローラバグ検知】初回プッシュが被ればDXバグで同一コントローラ<br>
 int Input::firstPushTiming[(int)Pad::Four]; // Pad::Fourが最後だから8とかに増やすなら要書き換え<br>
