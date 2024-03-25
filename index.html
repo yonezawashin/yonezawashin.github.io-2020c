@@ -12610,7 +12610,6 @@ public:<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       <br>
-      
       (中略)...........<br>
 	    <br>
       &nbsp;&nbsp; &nbsp;}<br>
@@ -13087,7 +13086,6 @@ enum class Mouse<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else return false; //コントローラ被りOK!<br>
       &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; <br>
-	      <br>
     <em>&nbsp;&nbsp;&nbsp; // キーボードのキーと文字列の対応関係配列の初期化 https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N2<br>
 &nbsp;&nbsp;&nbsp; static void InitKeyString()<br>
 &nbsp;&nbsp;&nbsp; {<br>
@@ -13229,7 +13227,118 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか<br>
 	    <br>
     </p>
     <br>
-
+    <br>
+<code>TitleScene.hにマウスとキーボード入力を表示するデモのコード</code>をくわえましょう。</p>
+		<p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+	#include &lt;string&gt;<br>
+	<br>
+      #include "DxLib.h"<br>
+      (中略)...........<br>		
+      <br>		
+      <em>&nbsp;&nbsp; &nbsp;std::string keyboardText{""}; // キーボード入力テキスト<br>
+      &nbsp;&nbsp; &nbsp;int keyDownCount[256]; // 各キーを押している時間をカウントして長押し動作<br>
+      &nbsp;&nbsp; &nbsp;int longPushNum = 30; // 30フレーム0.5秒長押しで文字がだーっと出る<br></em>
+<br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+(中略)...........<br>
+<br>
+&nbsp;&nbsp; &nbsp;// ボタン入力に応じた処理<br>
+&nbsp;&nbsp; &nbsp;void HandleInput()<br>
+&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;(中略)...........<br>	
+<br>
+<em>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// キーボードでテキスト入力<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;bool isEntered = false; // テンキーのEnterと普通のEnterダブり問題対策<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (int i = 0; i &lt; 256; ++i)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (i == KEY_INPUT_RETURN || i == KEY_INPUT_NUMPADENTER)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (!isEntered) isEntered = true;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else continue;<br>
+<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButtonDown(Pad::Keyboard, i))<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;keyDownCount[i] = 0; // キーが押された瞬間からカウントアップ開始<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if(Input::GetButton(Pad::Keyboard, i))<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;++keyDownCount[i]; // キーが押されてる時間をカウントアップ<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (0 &lt; keyDownCount[i] &amp;&amp; keyDownCount[i] &lt; longPushNum)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;continue; // Downの瞬間=0かlongPush以上時間経過してない場合は文字を増やさない<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::GetButton(Pad::Keyboard, i))<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (i == KEY_INPUT_BACK || i == KEY_INPUT_DELETE)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (keyboardText.size() &gt; 0)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;keyboardText.pop_back(); // 末尾の文字を1つ削除する<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (i == KEY_INPUT_LSHIFT || i == KEY_INPUT_RSHIFT)<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// シフト文字は出力しない SHIFT + a ⇒ A 大文字表示に<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (Input::isCapsLocked || Input::isShifted) //CapsLockかShift押下中は大文字<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;keyboardText += (Input::CapsString[i] != "") ? Input::CapsString[i] : Input::KeyString[i];<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;keyboardText += Input::KeyString[i]; // 押された文字をテキスト列に追加<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
+&nbsp;&nbsp; &nbsp;<br>
+&nbsp;&nbsp; &nbsp;}<br>
+(中略)...........<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 描画処理<br>
+      &nbsp;&nbsp; &nbsp;void Draw() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;(中略)...........<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// キーボードのデモ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 100, keyboardText.c_str(),GetColor(255,255,255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// マウスのデモ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::Click[Mouse::All] == 1)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// ドラッグしたら<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::Click[Mouse::DragL] == 1)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// ドラッグしたら開始XYと四角 □ を表示<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string drawString = "Drag開始(X,Y)=(" + std::to_string(Input::Click[Mouse::DownLX]) + "," + std::to_string(Input::Click[Mouse::DownLY]) + ")";<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(Input::Click[Mouse::DownLX], Input::Click[Mouse::DownLY], drawString.c_str(), GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 選択範囲の四角を表示<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawLineBox(Input::Click[Mouse::DownLX], Input::Click[Mouse::DownLY], Input::Click[Mouse::DragLX], Input::Click[Mouse::DragLY], GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// [1] if(Input::GetButton(Pad::Mouse, MOUSE_INPUT_RIGHT) と<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// [2] if(Input::Click[Mouse::DragR] == 1) は 同じ意味になる([2]のほうが短く書ける)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::Click[Mouse::DragR] == 1 &amp;&amp; Input::MouseX &gt;= 0 &amp;&amp; Input::MouseY &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string drawString = "マウス右(X,Y)=(" + std::to_string(Input::MouseX) + "," + std::to_string(Input::MouseY) + ")";<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(Input::MouseX, Input::MouseY, drawString.c_str(), GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (Input::MouseX >= 0 &amp;&amp; Input::MouseY &gt;= 0)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string drawString = "(X,Y)=(" + std::to_string(Input::MouseX) + "," + std::to_string(Input::MouseY) + ")";<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(Input::MouseX, Input::MouseY, drawString.c_str(), GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// クリックを離した位置は記録が残る<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::Click[Mouse::UpLX] != -1 &amp;&amp; Input::Click[Mouse::UpLY] != -1)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string drawString = "離した(X,Y)=(" + std::to_string(Input::Click[Mouse::UpLX]) + "," + std::to_string(Input::Click[Mouse::UpLY]) + ")";<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(Input::Click[Mouse::UpLX], Input::Click[Mouse::UpLY], drawString.c_str(), GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ドラッグ開始XYも残るので範囲エリアの四角内のキャラ選択などにも使える<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (Input::Click[Mouse::DownLX] != -1 &amp;&amp; Input::Click[Mouse::DownLY] != -1)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;std::string drawString = "Drag開始(X,Y)=(" + std::to_string(Input::Click[Mouse::DownLX]) + "," + std::to_string(Input::Click[Mouse::DownLY]) + ")";<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(Input::Click[Mouse::DownLX], Input::Click[Mouse::DownLY], drawString.c_str(), GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
+      (中略)...........<br>
+	    <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
 		
     <br>
     <br>
