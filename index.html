@@ -4414,17 +4414,17 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;random.seed(seed);<br>
       &nbsp;&nbsp;}<br>
       <br>
-      &nbsp;&nbsp;// 指定した範囲の整数の乱数を取得する（maxは出ないので注意）<br>
+      &nbsp;&nbsp;// 指定した範囲の整数の乱数を取得する<br>
       &nbsp;&nbsp;static int Range(int min, int max)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;std::uniform_int_distribution&lt;&gt; randRange(min, max); // [min, max-1] 範囲の一様乱数<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;std::uniform_int_distribution&lt;&gt; randRange(min, max); // [min, max] 範囲の一様乱数<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return randRange(random);<br>
       &nbsp;&nbsp;}<br>
       <br>
-      &nbsp;&nbsp;// 指定した範囲の小数の乱数を取得する（maxは出ないので注意）<br>
+      &nbsp;&nbsp;// 指定した範囲の小数の乱数を取得する<br>
       &nbsp;&nbsp;static float Range(float min, float max)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;std::uniform_real_distribution&lt;&gt; randRange(min, max); // [min&lt;= x &lt;max] 範囲の一様乱数<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;std::uniform_real_distribution&lt;&gt; randRange(min, max); // [min&lt;= x &lt;=max] 範囲の一様乱数<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return (float)randRange(random);<br>
       &nbsp;&nbsp;}<br>
       <br>
