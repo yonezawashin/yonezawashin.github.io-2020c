@@ -340,7 +340,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>if (isGround)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_A)) // Zキーを押した瞬間<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -351,7 +351,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;else if (vy &lt; 0 &amp;&amp; Input::GetButtonUp(PAD_INPUT_A)) // Zキーを離した瞬間<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = 0; // ジャンプで上昇中(vy &gt; 0)にボタンを離すと勢いが止まる(小ジャンプ)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;x += vx; // 速度のぶん現在の位置から移動<br>
       &nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
@@ -391,11 +391,16 @@
       }</p>
     <br>
     <br>
+    <br>
+    <br>
     いかがでしょう、うまくジャンプできましたか？<br>
     bool isGroundがtrueのとき(着地状態のとき)にボタンを押した瞬間にジャンプ力の数値をvyに設定して、<br>
     if (!isGround)のとき(isGroundがfalseのとき)に毎ターン vy += vyGravity;することで下方向に重力がかかるようにしています。<br>
-    vyJumpSpeed = 16 やvyDownSpeedMax = 16 や yGravity = 0.8fなどの数字を自分で変えてみてイメージにあうジャンプを調整してみましょう。<br>
+    vyJumpSpeed = 16 やvyDownSpeedMax = 16 や yGravity = 0.8fなどの<b>数字を自分で変えてみてイメージにあうジャンプを調整してみましょう</b>。<br>
     <br>
+<br>
+<br>
+<br>
 
     
   </body>
