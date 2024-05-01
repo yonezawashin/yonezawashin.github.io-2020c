@@ -401,7 +401,156 @@
 <br>
 <br>
 <br>
-
-    
+さて、<a href="https://qiita.com/morian-bisco/items/4c659d9f940c7e3a2099">さらに凝ったプログラム</a>にトライして、初代マリオのようなジャンプ処理に挑戦してみましょう<br>
+    <br>
+    <p>以下の【初代マリオ風の処理(小数のbit演算を省いた簡易化したもの)】でジャンプさせられるか挑戦しましょう</p>
+    <p><code>main.cpp</code>を編集します：</p>
+    <p class="source">#include "DxLib.h"<br>
+      #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;// 画面モードの設定<br>
+      &nbsp;&nbsp;SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズをScreenクラスに合わせて設定してカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズをScreenクラスに合わせて設定(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;//↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ゲームのwhileループを開始する前の初期化処理<br>
+      &nbsp;&nbsp;int playerImage = -1;<br>
+      &nbsp;&nbsp;playerImage = LoadGraph("Image/Player.png");<br>
+      &nbsp;&nbsp;assert(playerImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float x = 200, y = Screen::Height; // 初期位置<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float vx = 0, vy = 0; // プレイヤの速度<br>
+      &nbsp;&nbsp;<em>float yJumpStart = 0; // ジャンプした瞬間のyの位置</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float vxSpeedMax = 15; // X左右方向の限界速度<br>
+      &nbsp;&nbsp;float vyJumpSpeed = 16, vyDownSpeedMax = 16; // ジャンプの上昇と降下スピードのリミット<br>
+      &nbsp;&nbsp;float <em>vyForce = 0, vyForceJump = 0.5f, </em>vyGravity = 0.8f;<em> // 上昇フェーズと下落フェーズの力を別々に設定できるようになった</em><br>
+      &nbsp;&nbsp;bool isGround = true; // 着地しているか<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int imgSizeX, imgSizeY; // 画像の縦横サイズ<br>
+      &nbsp;&nbsp;GetGraphSize(playerImage, &amp;imgSizeX, &amp;imgSizeY); // GetGraphSize関数で画像の縦横を得られる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;Input::Init(); // Inputクラスの初期化<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;ScreenFlip();<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;{&nbsp;&nbsp;// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Input::Update(); // Inputの更新(これを毎ターンやらないとキーの状態が変わらず反応しない)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt; 0) vx = 0; // 急ブレーキ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt;= -vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += -0.35;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx /= 1.1; // すべりの減衰ブレーキ表現<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_A)) // Zキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed; // ジャンプ方向はY上方向(マイナス方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>else if (vy &gt;= 0) // 下落開始(vy &lt; 0のときはまだジャンプ上昇の勢いありvy==0を境に勢いは逆方向に)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity; // ジャンプ上昇力が0になって以降に初めて重力をオンにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButtonUp(PAD_INPUT_A)) // Zキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (yJumpStart - y &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity; // ジャンプ上昇中(vy &lt; 0のとき)にボタンを離したら早めに重力をかけ始める(小ジャンプ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>else if (vy &lt; 0 &amp;&amp; Input::GetButtonUp(PAD_INPUT_A)) // Zキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = 0; // ジャンプで上昇中(vy &gt; 0)にボタンを離すと勢いが止まる(小ジャンプ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</u><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;x += vx; // 速度のぶん現在の位置から移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vx *= 0.97f; // 減速率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>vy += vyForce; // 勢い(力・フォースを加算)</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>if(!isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy += vyGravity; // 重力で下方向に加速</u><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vy &gt;= vyDownSpeedMax) // 無限に落下速度が加速しないようにリミット(空気抵抗みたいなもの)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = vyDownSpeedMax;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 着地判定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (y &gt; Screen::Height)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y = Screen::Height; // この行が無いと勢いで地面にめり込んだぶんを地面の位置に沿わせられない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>vyForce = 0;</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f, 0, playerImage, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printfDx("y:%.1f vy:%.2f\n", y, vy);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;}
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// キー入力待ちをする<br>
+      &nbsp;&nbsp;WaitKey();<br>
+      &nbsp;&nbsp;// ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;DxLib_End();<br>
+      &nbsp;&nbsp;// ソフトの終了<br>
+      &nbsp;&nbsp;return 0;<br>
+      }</p>
+    <br>
+    <br>
+    いかがでしょう、一番の違いは<em>上昇フェーズと下落フェーズの力を別々に設定できるようになった</em>ことです。<br>
+    たしかに、上昇フェーズは伸びがあるようにして、下落フェーズではストンと落としたいなど、<br>
+    力・フォースを<em>上昇と下落2つのフェーズで切り替えられる</em>ほうが<b>表現力のバリエーションの作りこみがより深まります</b>よね。<br>
+    <br>
+    <b>こういった細かいこだわりまでをプログラミングで表現できたこと</b>こそが、<br>
+    Nintendoの家庭用ファミコンが日本国内を席巻するだけでなく、<br>
+    かつてアップルのジョブスも若き時代在籍した<b>米国のアタリ社がぶっ壊しかけた家庭用ゲーム機市場を復活・開拓できた勝因</b>かもしれません。<br>
+    <b>(任天堂に先んじて家庭用ゲーム機を出したが<b>アタリショック:粗悪ソフトの大量在庫余りで米国クリスマス商戦でそのゲーム機が大爆死</b>を引き起こした)<br>
+    <br>
+    今の時代もスマホアプリは粗悪な課金アプリであふれていますが、アップル自体はソフトの在庫を抱えなくてよいビジネスモデルです。<br>
+    (ジョブズがアタリショックからも学んでいたかどうかはわかりませんが、<b>ゲームも音楽も巨大ITからソフト側が搾取される時代</b>です)<br>
+    そう、今の時代はゲーム機メーカー側ではなく、作り手側がリスクを負わされている時代に戻ったわけです。<br>
+    <br>
+    いつかゲーム制作<b>企業に勤めれば、こだわれるなどと考えるのは甘い</b>です。<br>
+    プログラムなんて書いたことないようなプランナやプロデューサーたちが牛耳っている現代の制作現場おいては、<br>
+    こだわる時間と愛と余裕のあるのはゲームの制作を学んでいるフェーズの学生ぐらいです。<b>今が一番こだわれると常に思うこと</b>です。<br>
+    --世代を経るごとに日本のゲーム開発力も必ず空洞化していくでしょうが、次世代にささやかな希望を託す意味をこめて--<br>
+    <br>
+    <br>
   </body>
 </html>
