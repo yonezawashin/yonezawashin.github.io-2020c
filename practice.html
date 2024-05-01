@@ -115,6 +115,7 @@
       &nbsp;&nbsp;{&nbsp;&nbsp;// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>Input::Update(); // Inputの更新(これを毎ターンやらないとキーの状態が変わらず反応しない)</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>vx = 0; // 速度を毎ターンリセット初期化(しない場合はどんどん加速)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;vy = 0;</em><br>
@@ -211,6 +212,7 @@
       &nbsp;&nbsp;{&nbsp;&nbsp;// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Input::Update(); // Inputの更新(これを毎ターンやらないとキーの状態が変わらず反応しない)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<u>vx = 0; // 速度を毎ターンリセット初期化(しない場合はどんどん加速)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;vy = 0;</u><br>
@@ -258,11 +260,19 @@
       }</p>
     <br>
     さて、いかがでしょうか？氷が床の表面を滑るような動きができたでしょうか？<br>
-    DrawRotaGraphF(x<em> - imgSizeX / 2</em>, y<em> - imgSizeY / 2</em>.. として<b>imgSizeX / 2を引いているのは<br>
+    DrawRotaGraphF(x<em> - imgSizeX / 2</em>, y<em> - imgSizeY / 2</em>.. として<b><em>imgSizeX / 2</em>を引いているのは<br>
     DrawRotaGraphF関数は画像を描く基準点が画像の中心なので、画像の縦と横の幅の1/2を引くことで中心のぶんのつじつまを合わせるため</b>です。<br>
-    単純なプログラムですが、<b>突き詰めると、スマホのiPhoneのSafariのブラウザのスクロールの気持ちよさような独自のブランディング(差別化)</b>につながるわけですから、あなどれません。<br>
+    単純なプログラムですが、<br>
+    <b>突き詰めると、スマホのiPhoneのSafariの【ブラウザのスクロールの気持ちよさ】のような独自のブランディング(差別化)</b>につながるわけですから、あなどれません。<br>
     <b>たかが加速、されど加速</b>。<b>減速率やvxMaxSpeedなどの数字を色々変えながら自分の気持ちいい数値を探してみて</b>ください。<br>
     <br>
     <br>
+    <br>
+    <br>
+    <br>
+    さて、こうなったら横方向だけではなく、縦方向のジャンプにも挑戦してみましょう<br>
+    
+
+    
   </body>
 </html>
