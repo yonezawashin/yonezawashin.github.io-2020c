@@ -212,22 +212,22 @@
       &nbsp;&nbsp;&nbsp;&nbsp;ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<b>vx = 0; // 速度を毎ターンリセット初期化(しない場合はどんどん加速)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;vy = 0;</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>vx = 0; // 速度を毎ターンリセット初期化(しない場合はどんどん加速)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vy = 0;</u><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>if (vx > 0) vx = 0; // 急ブレーキ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx >= -vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += -0.35;</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>vx = -5; // Xマイナス方向の速度</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<u>vx = -5; // Xマイナス方向の速度</u><br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>if (vx < 0) vx /= 1.1; // すべりの減衰ブレーキ表現<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx <= vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35;</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>vx = 5; // Xプラス方向の速度</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<u>vx = 5; // Xプラス方向の速度</u><br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<b>if (Input::GetButton(PAD_INPUT_UP))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -258,8 +258,9 @@
       }</p>
     <br>
     さて、いかがでしょうか？氷が床の表面を滑るような動きができたでしょうか？<br>
-    単純なプログラムですが、突き詰めると、スマホのiPhoneのSafariのブラウザのスクロールの気持ちよさような独自のブランディング(差別化)につながるわけですから、あなどれません。<br>
-    たかが加速、されど加速。減速率やvxMaxSpeedなどの数字を色々変えながら自分の気持ちいい数値を探してみてください。<br>
+    DrawRotaGraphF(x<em> - imgSizeX / 2</em>, y<em> - imgSizeY / 2</em>.. として<b>imgSizeX / 2を引いているのはDrawRotaGraphF関数は画像を描く基準点が画像の中心なので、画像の縦と横の幅の1/2を引くことで中心のぶんのつじつまを合わせるため</b>です。<br>
+    単純なプログラムですが、<b>突き詰めると、スマホのiPhoneのSafariのブラウザのスクロールの気持ちよさような独自のブランディング(差別化)</b>につながるわけですから、あなどれません。<br>
+    <b>たかが加速、されど加速</b>。<b>減速率やvxMaxSpeedなどの数字を色々変えながら自分の気持ちいい数値を探してみて</b>ください。<br>
     <br>
     <br>
   </body>
