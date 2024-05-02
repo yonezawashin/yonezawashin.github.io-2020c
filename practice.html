@@ -610,7 +610,7 @@
       &nbsp;&nbsp;float vxSpeedMax = 15; // X左右方向の限界速度<br>
       &nbsp;&nbsp;float vyJumpSpeed<em>[] = { 14, 15, 16 }</em>, vyDownSpeedMax<em>[] = { 16, 16, 16 }</em>; // <em>ダッシュの段階に応じた複数の</em>ジャンプの上昇と降下スピードのリミット<br>
       &nbsp;&nbsp;float vyForce = 0;<br>
-      &nbsp;&nbsp;float vyForceJump<em>[] = { 0.5f,0.4f,0.3f }</em>, vyGravity<em>[] = { 0.8f,0.8f,0.8f }</em>; // <em>ダッシュの段階に応じて加速度を設定できるように複数パラメータを持つようにした</em><br>
+      &nbsp;&nbsp;float vyForceJump<em>[] = { 0.5f,0.4f,0.3f }</em>, vyGravity<em>[] = { 0.8f,0.8f,0.8f }</em>; // <em>ダッシュの段階に応じた複数の加速度パラメータを持つようにした</em><br>
       &nbsp;&nbsp;bool isGround = true; // 着地しているか<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;int imgSizeX, imgSizeY; // 画像の縦横サイズ<br>
@@ -707,6 +707,10 @@
     float vyForceJump<em>[] = { 0.5f,0.4f,0.3f }</em>, vyGravity<em>[] = { 0.8f,0.8f,0.8f }</em>;のように<br>
     複数のパラメータを持ち、それをvyForce = vyGravity<em>[vx_idx]</em>;のように、<em>vx_idx</em>で切り替えているのがポイントです。<br>
     加速の段階はジャンプする瞬間に<em>if (vx_abs &gt; 6) ++vx_idx;</em>のようにif(vx_abs &gt; <em>6</em>)やif(vx_abs > <em>9</em>)で現在の加速度の大きさで段階を切り替えています。<br>
+    <br>
+    <br>
+    <br>
+    <br>
     <br>
   </body>
 </html>
