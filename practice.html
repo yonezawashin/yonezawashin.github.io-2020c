@@ -442,7 +442,8 @@
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float vxSpeedMax = 15; // X左右方向の限界速度<br>
       &nbsp;&nbsp;float vyJumpSpeed = 16, vyDownSpeedMax = 16; // ジャンプの上昇と降下スピードのリミット<br>
-      &nbsp;&nbsp;float <em>vyForce = 0, vyForceJump = 0.5f, </em>vyGravity = 0.8f;<em> // 上昇フェーズと下落フェーズの力を別々に設定できるようになった</em><br>
+      &nbsp;&nbsp;<em>float vyForce = 0;</em><br>
+      &nbsp;&nbsp;float <em>vyForceJump = 0.5f, </em>vyGravity = 0.8f;<em> // 上昇フェーズと下落フェーズの力を別々に設定できるようになった</em><br>
       &nbsp;&nbsp;bool isGround = true; // 着地しているか<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;int imgSizeX, imgSizeY; // 画像の縦横サイズ<br>
