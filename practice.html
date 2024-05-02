@@ -478,6 +478,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_A)) // Zキーを押した瞬間<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed; // ジャンプ方向はY上方向(マイナス方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>vyForce = vyForceJump; // 上昇フェーズ中の下方向へ引っ張られる力</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>yJumpStart = y; // ジャンプ開始する瞬間のy位置を保管する</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -559,6 +561,152 @@
     ゲームプログラマは本当は「ゲーム<b>も</b>好きだけど<b>プログラミングがもっと好き</b>」な人が向いている仕事かもしれません。<br>
     (世代を経るごとに日本のゲーム開発力はどんどん空洞化していくでしょうが、次世代にささやかな希望を託す意味をこめて、少し踏み込んだことを書きました)<br>
     <br>
+    <br>
+<br>
+    <br>
+    <br>
+    <br>
+    <br>
+さて、次はダッシュ中にジャンプすると高く飛べる仕組みにトライしてみましょう<br>
+    <br>
+    <p>以下の【ダッシュの加速段階によってパラメータを切り替えるサンプル】でダッシュの段階に応じた高さでジャンプさせられるか挑戦しましょう</p>
+    <p><code>main.cpp</code>を編集します：</p>
+    <p class="source">#include "DxLib.h"<br>
+      #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;// 画面モードの設定<br>
+      &nbsp;&nbsp;SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズをScreenクラスに合わせて設定してカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズをScreenクラスに合わせて設定(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;//↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ゲームのwhileループを開始する前の初期化処理<br>
+      &nbsp;&nbsp;int playerImage = -1;<br>
+      &nbsp;&nbsp;playerImage = LoadGraph("Image/Player.png");<br>
+      &nbsp;&nbsp;assert(playerImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float x = 200, y = Screen::Height; // 初期位置<br>
+      &nbsp;&nbsp;float yJumpStart = 0; // ジャンプした瞬間のyの位置<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float vx = 0, vy = 0; // プレイヤの速度<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>int vx_idx = 0; // 横方向の加速の段階</em><br>
+      &nbsp;&nbsp;float vxSpeedMax = 15; // X左右方向の限界速度<br>
+      &nbsp;&nbsp;float vyJumpSpeed<em>[] = { 14, 15, 16 }</em>, vyDownSpeedMax<em>[] = { 16, 16, 16 }</em>; // <em>ダッシュの段階に応じた複数の</em>ジャンプの上昇と降下スピードのリミット<br>
+      &nbsp;&nbsp;float vyForce = 0;<br>
+      &nbsp;&nbsp;float vyForceJump<em>[] = { 0.5f,0.4f,0.3f }</em>, vyGravity<em>[] = { 0.8f,0.8f,0.8f }</em>; // <em>ダッシュの段階に応じて加速度を設定できるように複数パラメータを持つようにした</em><br>
+      &nbsp;&nbsp;bool isGround = true; // 着地しているか<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int imgSizeX, imgSizeY; // 画像の縦横サイズ<br>
+      &nbsp;&nbsp;GetGraphSize(playerImage, &amp;imgSizeX, &amp;imgSizeY); // GetGraphSize関数で画像の縦横を得られる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;Input::Init(); // Inputクラスの初期化<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;ScreenFlip();<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;{&nbsp;&nbsp;// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Input::Update(); // Inputの更新(これを毎ターンやらないとキーの状態が変わらず反応しない)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt; 0) vx = 0; // 急ブレーキ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt;= -vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += -0.35f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx /= 1.1; // すべりの減衰ブレーキ表現<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_A)) // Zキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>vx_idx = 0; // 加速の段階をリセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float vx_abs = (vx &lt; 0) ? -vx : vx; // absはvxの絶対値(マイナスなら-をつけてプラスに直す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 6) ++vx_idx; // 一定値を超えるごとに加速段階を+1<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 9) ++vx_idx; // 最大0～2段階まで +1ずつされる</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed<em>[vx_idx]</em>; // ジャンプ方向はY上方向(マイナス方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump<em>[vx_idx]</em>; // 上昇フェーズ中の下方向へ引っ張られる力<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yJumpStart = y; // ジャンプ開始する瞬間のy位置を保管する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (vy &gt;= 0) // 下落開始(vy &lt; 0のときはまだジャンプ上昇の勢いありvy==0を境に勢いは逆方向に)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity<em>[vx_idx]</em>; // ジャンプ上昇力が0になって以降に初めて重力をオンにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButtonUp(PAD_INPUT_A)) // Zキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (yJumpStart - y &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity<em>[vx_idx]</em>; // ジャンプ上昇中(vy &lt; 0のとき)にボタンを離したら早めに重力をかけ始める(小ジャンプ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;x += vx; // 速度のぶん現在の位置から移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vx *= 0.97f; // 減速率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vy += vyForce; // 勢い(力・フォースを加算)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vy &gt;= vyDownSpeedMax<em>[vx_idx]</em>) // 無限に落下速度が加速しないようにリミット(空気抵抗みたいなもの)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = vyDownSpeedMax<em>[vx_idx]</em>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 着地判定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (y &gt; Screen::Height)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y = Screen::Height; // この行が無いと勢いで地面にめり込んだぶんを地面の位置に沿わせられない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>vx_idx = 0;</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f, 0, playerImage, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printfDx("y:%.1f vy:%.2f<em> idx:%d</em>\n", y, vy<em>, vx_idx</em>);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;}
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// キー入力待ちをする<br>
+      &nbsp;&nbsp;WaitKey();<br>
+      &nbsp;&nbsp;// ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;DxLib_End();<br>
+      &nbsp;&nbsp;// ソフトの終了<br>
+      &nbsp;&nbsp;return 0;<br>
+      }</p>
+    <br>
+    <br>
+    いかがでしょう、ダッシュして加速している状態のときのジャンプの高さと、その場でダッシュせずにジャンプした時のジャンプの高さの違いが出れば成功です。<br>
+    float vyForceJump<em>[] = { 0.5f,0.4f,0.3f }</em>, vyGravity<em>[] = { 0.8f,0.8f,0.8f }</em>;のように<br>
+    複数のパラメータを持ち、それをvyForce = vyGravity<em>[vx_idx]</em>;のように、<em>vx_idx</em>で切り替えているのがポイントです。<br>
+    加速の段階はジャンプする瞬間に<em>if (vx_abs &gt; 6) ++vx_idx;</em>のようにif(vx_abs &gt; <em>6</em>)やif(vx_abs > <em>9</em>)で現在の加速度の大きさで段階を切り替えています。<br>
     <br>
   </body>
 </html>
