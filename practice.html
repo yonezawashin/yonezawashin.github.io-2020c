@@ -226,7 +226,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>if (vx &lt; 0) vx /= 1.1; // すべりの減衰ブレーキ表現<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>if (vx &lt; 0) vx *= 0.9; // すべりながら減衰ブレーキ表現(vxは9/10ずつ減少する)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<u>vx = 5; // Xプラス方向の速度</u><br>
@@ -335,7 +335,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx /= 1.1; // すべりの減衰ブレーキ表現<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx *= 0.9; // すべりながら減衰ブレーキ表現(vxは9/10ずつ減少する)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -468,7 +468,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx /= 1.1; // すべりの減衰ブレーキ表現<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx *= 0.9; // すべりながら減衰ブレーキ表現(vxは9/10ずつ減少する)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -635,7 +635,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx /= 1.1; // すべりの減衰ブレーキ表現<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx *= 0.9; // すべりながら減衰ブレーキ表現(vxは9/10ずつ減少する)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -781,7 +781,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx /= 1.1; // すべりの減衰ブレーキ表現<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx *= 0.9; // すべりながら減衰ブレーキ表現(vxは9/10ずつ減少する)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -879,6 +879,196 @@
     <br>
     <br>
     <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    さて、次はキャラクターをアニメーションさせる表現にトライしてみましょう。<br>
+    RPGなどのキャラチップ自作ツール<a href="https://pipoya.notion.site/CharaMEL-6fb3b97cc5f643e7a8025fce608e7050">キャラメル-CharaMEL-</a>をダウンロードして<a href="https://pipoya.notion.site/65954b63976d40e9b9a1a77f0f90e1d6">いろいろな機能を駆使してキャラを自作</a>すれば再配布自由な自作キャラが完成です。<br>
+    作るのが面倒な人向けに自作した<a href="/sozai/pikkoron.json">キャラの設定jsonファイル</a>(メニューのファイル→キャラクタのインポートから読込可能)と<a href="/sozai/pikkoron.png">書き出したpng画像ファイル</a>(ファイル→キャラクタのエクスポート)を置いておきます。<br>
+    書き出したpngファイルを私は「Image/pikkoron.png」として<b>DXライブラリのImageフォルダ</b>に保存(またはコピー)しておきました。<br>
+    このキャラチップ画像ファイルを<b>パラパラアニメさせる</b>ことで「キャラクターをダッシュさせたり、空を飛行させたり」してみましょう。<br>
+    <br>
+    <br>
+    <p>以下の【キャラチップ配列の[3][4][5]、[6][7][8]をアニメさせダッシュと[4][7]を60度回転させ空を飛ぶサンプル】でキャラチップ画像をパラパラアニメさせる仕組みに挑戦しましょう。</p>
+    <p><code>main.cpp</code>を編集します：</p>
+    <p class="source">#include "DxLib.h"<br>
+      #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;// 画面モードの設定<br>
+      &nbsp;&nbsp;SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズをScreenクラスに合わせて設定してカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズをScreenクラスに合わせて設定(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;//↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ゲームのwhileループを開始する前の初期化処理<br>
+      &nbsp;&nbsp;<u>int playerImage = -1;<br>
+      &nbsp;&nbsp;playerImage = LoadGraph("Image/Player.png");<br>
+      &nbsp;&nbsp;assert(playerImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;</u><br>
+      &nbsp;&nbsp;<em>int playerChips[12]; // キャラのチップのグリッドの分割数に応じて3×4 = 12のぶんだけ配列を事前に確保<br>
+      &nbsp;&nbsp;LoadDivGraph("Image/pikkoron.png", 12, 3, 4, 32, 32, playerChips); // キャラのチップのサイズは32×32<br>
+      &nbsp;&nbsp;assert(playerChips[0] != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float x = 200, y = Screen::Height; // 初期位置<br>
+      &nbsp;&nbsp;float yJumpStart = 0; // ジャンプした瞬間のyの位置<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float vx = 0, vy = 0; // プレイヤの速度<br>
+      &nbsp;&nbsp;enum Direction { Left, Right }; // enumでキャラの向いてる方向をDirection型として2種類(LeftとRight)定義<br>
+      &nbsp;&nbsp;Direction direction = Direction::Right; // キャラの向いてる方向<br>
+      &nbsp;&nbsp;int animeTime = 0; // アニメ時間<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int vx_idx = 0; // 横方向の加速の段階<br>
+      &nbsp;&nbsp;float vxSpeedMax = 15; // X左右方向の限界速度<br>
+      &nbsp;&nbsp;float vyJumpSpeed[] = { 14, 15, 16, 4 }, vyDownSpeedMax[] = { 16, 16, 16, 8 }; // ダッシュ段階に応じた複数のジャンプの上昇と降下スピードのリミット<br>
+      &nbsp;&nbsp;float vyForce = 0;<br>
+      &nbsp;&nbsp;float vyForceJump[] = { 0.5f,0.4f,0.3f,0.1f }, vyGravity[] = { 0.8f,0.8f,0.8f,0.8f }; // ダッシュ段階に応じた複数のパラメータを持つように<br>
+      &nbsp;&nbsp;bool isGround = true; // 着地しているか<br>
+      &nbsp;&nbsp;bool isFlying = false; // 飛行モード<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int imgSizeX, imgSizeY; // 画像の縦横サイズ<br>
+      &nbsp;&nbsp;GetGraphSize(<em>playerChips[0]</em>, &amp;imgSizeX, &amp;imgSizeY); // GetGraphSize関数で画像の縦横を得られる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;Input::Init(); // Inputクラスの初期化<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;ScreenFlip();<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;{&nbsp;&nbsp;// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Input::Update(); // Inputの更新(これを毎ターンやらないとキーの状態が変わらず反応しない)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt; 0) vx = 0; // 急ブレーキ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt;= -vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += -0.35f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx *= 0.9; // すべりながら減衰ブレーキ表現(vxは9/10ずつ減少する)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 飛行モード中にZキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isFlying && Input::GetButtonDown(PAD_INPUT_A))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 3; // [3]番には飛行中のパラメータが入ってる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed[vx_idx]; // 押すたび少し羽ばたく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump[vx_idx];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_A)) // Zキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 0; // 加速の段階をリセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float vx_abs = (vx &lt; 0) ? -vx : vx; // absはvxの絶対値(マイナスなら-をつけてプラスに直す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 6) ++vx_idx; // 一定値を超えるごとに加速段階を+1<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 9) ++vx_idx; // 最大0～2段階まで +1ずつされる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 9) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isFlying = true; // 飛行モードにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed[vx_idx]; // ジャンプ方向はY上方向(マイナス方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump[vx_idx]; // 上昇フェーズ中の下方向へ引っ張られる力(この行がないと際限なくジャンプ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yJumpStart = y; // ジャンプ開始する瞬間のy位置を保管する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (vy &gt;= 0) // 下落開始(vy &lt; 0のときはまだジャンプ上昇の勢いありvy==0を境に勢いは逆方向に)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity[vx_idx]; // ジャンプ上昇力が0になって以降に初めて重力をオンにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButtonUp(PAD_INPUT_A)) // Zキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (yJumpStart - y &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity[vx_idx]; // ジャンプ上昇中(vy &lt; 0のとき)にボタンを離したら早めに重力をかけ始める(小ジャンプ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;x += vx; // 速度のぶん現在の位置から移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vx *= 0.97f; // 減速率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vy += vyForce; // 勢い(力・フォースを加算)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vy &gt;= vyDownSpeedMax[vx_idx]) // 無限に落下速度が加速しないようにリミット(空気抵抗みたいなもの)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = vyDownSpeedMax[vx_idx];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 着地判定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (y &gt; Screen::Height)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y = Screen::Height; // この行が無いと勢いで地面にめり込んだぶんを地面の位置に沿わせられない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isFlying = false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>// ダッシュ段階に応じてキャラクタのアニメ時間を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float vx_dash = (vx &lt; 0) ? -vx : vx; // 絶対値でプラスだけにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 0.5f) animeTime += 1; // 時間 +1 ( 合計 1 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 6) animeTime += 1;  // 時間 +1 (計 1+1=2 ) 1フレームごとに2アニメ時間が進む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 9) animeTime += 2; // 最終段階ではアニメ時間をさらに +2 (計 1+1+2=4 )</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>int animeStep = animeTime / 10; // 10を5に変えたらアニメ速度が上がる(10ごとに1コマアニメが進む)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (animeStep &gt;= 3) // アニメのステップ数が0,1,2の3段階までなら3を超えたら0へループ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animeTime = 0; // 0へ戻り再びアニメ時間を再ループ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animeStep = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f, 0, playerImage, TRUE);</u><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>if (isFlying &amp;&amp; direction == Direction::Left) // 飛ぶと-60度傾けて表示 キャラチップは[4]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX, y - imgSizeY, 2.0f,-60.0f / 360.0f * 2 * DX_PI, playerChips[4], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (isFlying &amp;&amp; direction == Direction::Right) // 60度回転させて表示 キャラチップは[7]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX, y - imgSizeY, 2.0f, 60.0f / 360.0f * 2 * DX_PI, playerChips[7], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Left) // キャラのチップの[5][4][3]を[5 - animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX, y - imgSizeY, 2.0f, 0.0f, playerChips[5 - animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Right) // キャラのチップの[6][7][8]を[6 + animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX, y - imgSizeY, 2.0f, 0.0f, playerChips[6 + animeStep], TRUE););</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printfDx("y:%.1f vy:%.2f idx:%d\n", y, vy, vx_idx);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;}
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// キー入力待ちをする<br>
+      &nbsp;&nbsp;WaitKey();<br>
+      &nbsp;&nbsp;// ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;DxLib_End();<br>
+      &nbsp;&nbsp;// ソフトの終了<br>
+      &nbsp;&nbsp;return 0;<br>
+      }</p>
+    <br>
+    <br>
+    いかがでしょう、キャラクタがパラパラとアニメされて走っているように見えるようになりましたか？<br>
     <br>
     <br>
   </body>
