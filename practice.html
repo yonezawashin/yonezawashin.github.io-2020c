@@ -921,8 +921,7 @@
       &nbsp;&nbsp;// ゲームのwhileループを開始する前の初期化処理<br>
       &nbsp;&nbsp;<u>int playerImage = -1;<br>
       &nbsp;&nbsp;playerImage = LoadGraph("Image/Player.png");<br>
-      &nbsp;&nbsp;assert(playerImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
-      &nbsp;&nbsp;</u><br>
+      &nbsp;&nbsp;assert(playerImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
       &nbsp;&nbsp;<em>int playerChips[12]; // キャラのチップのグリッドの分割数に応じて3×4 = 12のぶんだけ配列を事前に確保<br>
       &nbsp;&nbsp;LoadDivGraph("Image/pikkoron.png", 12, 3, 4, 32, 32, playerChips); // キャラのチップのサイズは32×32<br>
       &nbsp;&nbsp;assert(playerChips[0] != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
@@ -932,9 +931,9 @@
       &nbsp;&nbsp;float yJumpStart = 0; // ジャンプした瞬間のyの位置<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float vx = 0, vy = 0; // プレイヤの速度<br>
-      &nbsp;&nbsp;enum Direction { Left, Right }; // enumでキャラの向いてる方向をDirection型として2種類(LeftとRight)定義<br>
+      &nbsp;&nbsp;<em>enum Direction { Left, Right }; // enumでキャラの向いてる方向をDirection型として2種類(LeftとRight)定義<br>
       &nbsp;&nbsp;Direction direction = Direction::Right; // キャラの向いてる方向<br>
-      &nbsp;&nbsp;int animeTime = 0; // アニメ時間<br>
+      &nbsp;&nbsp;int animeTime = 0; // アニメ時間</em><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;int vx_idx = 0; // 横方向の加速の段階<br>
       &nbsp;&nbsp;float vxSpeedMax = 15; // X左右方向の限界速度<br>
