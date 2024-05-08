@@ -892,7 +892,7 @@
     キャラチップ画像のキャラは32×32(書き出し時のサイズによる)などに分割されており、それをDXライブラリのLoadDivGraph関数で読み取る際に対応する画像番号の見極めが必要です。(GIMPでグリッドを引いて番号を見極めましょう)<br>
     <p> <img src="image/charachip_grid.png" alt=""></p>
     <br>
-    <p>以下の【キャラチップ配列のダッシュ左[3][4][5]、右[6][7][8]と立ち(左右)[4][7]を±60度回転させ空を飛ぶサンプル】でキャラチップ画像をパラパラアニメさせてみましょう。</p>
+    <p>以下の【キャラチップ配列のダッシュ左<b>[3][4][5]</b>、右<b>[6][7][8]</b>と立ち(左右)<b>[4][7]</b>を±60度回転させ空を飛ぶサンプル】でキャラチップ画像をパラパラアニメさせてみましょう。</p>
     <p><code>main.cpp</code>を編集します：</p>
     <p class="source">#include "DxLib.h"<br>
       #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
@@ -1045,13 +1045,13 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<u>DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f, 0, playerImage, TRUE);</u><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>if (isFlying &amp;&amp; direction == Direction::Left) // 飛ぶと-60度傾けて表示 キャラチップは[4]で固定<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX, y - imgSizeY, 2.0f,-60.0f / 360.0f * 2 * DX_PI, playerChips[4], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f,-60.0f / 360.0f * 2 * DX_PI, playerChips[4], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;else if (isFlying &amp;&amp; direction == Direction::Right) // 60度回転させて表示 キャラチップは[7]で固定<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX, y - imgSizeY, 2.0f, 60.0f / 360.0f * 2 * DX_PI, playerChips[7], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f, 60.0f / 360.0f * 2 * DX_PI, playerChips[7], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Left) // キャラのチップの[5][4][3]を[5 - animeStep]で使う(animeStep=0,1,2)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX, y - imgSizeY, 2.0f, 0.0f, playerChips[5 - animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f, 0.0f, playerChips[5 - animeStep], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Right) // キャラのチップの[6][7][8]を[6 + animeStep]で使う(animeStep=0,1,2)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX, y - imgSizeY, 2.0f, 0.0f, playerChips[6 + animeStep], TRUE););</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f, 0.0f, playerChips[6 + animeStep], TRUE);</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
@@ -1071,6 +1071,20 @@
     <br>
     いかがでしょう、キャラクタがパラパラとアニメされて走っているように見えるようになりましたか？<br>
     <br>
+    キャラクタが小さくて見にくいという人は描画処理のコードの以下の部分を変更すれば、<b>キャラを2倍の大きさで表示</b>させられます。<br>
+<p class="source">
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isFlying &amp;&amp; direction == Direction::Left) // 飛ぶと-60度傾けて表示 キャラチップは[4]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - <em>imgSizeX</em>, y - <em>imgSizeY</em>, <em>2.0f</em>,-60.0f / 360.0f * 2 * DX_PI, playerChips[4], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (isFlying &amp;&amp; direction == Direction::Right) // 60度回転させて表示 キャラチップは[7]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - <em>imgSizeX</em>, y - <em>imgSizeY</em>, <em>2.0f</em>, 60.0f / 360.0f * 2 * DX_PI, playerChips[7], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Left) // キャラのチップの[5][4][3]を[5 - animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - <em>imgSizeX</em>, y - <em>imgSizeY</em>, <em>2.0f</em>, 0.0f, playerChips[5 - animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Right) // キャラのチップの[6][7][8]を[6 + animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - <em>imgSizeX</em>, y - <em>imgSizeY</em>, <em>2.0f</em>, 0.0f, playerChips[6 + animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      </p>
     <br>
   </body>
 </html>
