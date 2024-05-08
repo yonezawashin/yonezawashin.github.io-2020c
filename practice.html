@@ -1130,12 +1130,242 @@
 <br>
     <br>
     <br>
-    まずは、せっかくなのでジャンプの効果音を<a href="https://jfxr.frozenfractal.com/">ブラウザで動くシンセサイザーJFXRで作ってみましょう。<br>
+    まずは、せっかくなのでジャンプの効果音を<a href="https://jfxr.frozenfractal.com/">ブラウザで動くシンセサイザーJFXR</a>で作ってみましょう。<br>
     <a href="https://2dgames.jp/jfxr/">簡単な使い方だけなら以下のサイトが参考になります。</a><br>
-    シンセの設定に慣れてきたら<a href="https://apps.apple.com/jp/app/audiokit-synth-one-synthesizer/id1371050497">iPhone用のシンセ</a>で夜、寝転がりながらスマホで効果音制作にも挑戦だ。<br>
-    <a href="https://daw-jones.hatenablog.com/entry/2019/04/14/154502">結構本格的なシンセ機能があるのでDAWのユーザーも結構おすすめしてる</a><br>
+    シンセの調節に慣れてきたら<a href="https://apps.apple.com/jp/app/audiokit-synth-one-synthesizer/id1371050497">iPhone用のシンセ</a>で夜、寝転がりながらスマホで効果音制作にも挑戦だ。<br>
+    <a href="https://daw-jones.hatenablog.com/entry/2019/04/14/154502">結構本格的なシンセ機能があるのでDAWのユーザーも結構おすすめ↑してる</a><br>
+    <br>
+    シンセの基本は下記の動画を<b>暇な夜の時間のあるときにみておく</b>と音づくりのスタート地点に立てると思います(センスのある天才肌なら開眼するはず)。<br>
+    <a href="https://daw-jones.hatenablog.com/entry/2019/04/14/154502">https://youtu.be/7tMbJ6f6qf0?t=341</a><br>
+    <br>
+    まあ、ジャンプ音ぐらいなら下記画像のボタンやバーを適当にいじれば音の知識がゼロからでも、なんとなくセンスがつかめるはず。<br>
     <p> <img src="image/synth_jfxr_jump.png" alt=""></p>
     <br>
+    <br>
+    <br>
+    例として、わたくしの引き当てたジャンプ音のシンセ調節ファイルを下記リンクに共有します。<br>
+    <a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/sozai/Jump.jfxr">わたくしの引き当てたジャンプ音のシンセ調節ファイル</a>←右クリックでダウンロードして<a href="https://jfxr.frozenfractal.com/">ブラウザで動くシンセJFXR</a>の左上の[Open]ボタンから開いてみよう<br>
+    <br>
+    まずは「小ジャンプ」の効果音として下記設定をして、[Export]ボタンから<b>Jump0.wavというファイル名</b>で<b>DXライブラリのプロジェクトにSEフォルダを作って</b>そこに保存しましょう。<br>
+    <p> <img src="image/synth_jump0.png" alt=""></p>
+    <br>
+    つぎは「大ジャンプ」の効果音として下記設定をして、[Export]ボタンから<b>Jump1.wavというファイル名</b>で<b>DXライブラリのプロジェクトのSEフォルダに保存</b>しましょう。<br>
+    <p> <img src="image/synth_jump1.png" alt=""></p>
+    <br>
+    今度は「空を飛び始める」効果音として下記設定をして、[Export]ボタンから<b>Jump2.wavというファイル名</b>で<b>DXライブラリのプロジェクトのSEフォルダに保存</b>しましょう。<br>
+    <p> <img src="image/synth_jump2.png" alt=""></p>
+    <br>
+    最後は「空でホップする」効果音として下記設定をして、[Export]ボタンから<b>Jump3.wavというファイル名</b>で<b>DXライブラリのプロジェクトのSEフォルダに保存</b>しましょう。<br>
+    <p> <img src="image/synth_jump3.png" alt=""></p>
+    <br>
+    <br>
+    <p>あとは以下の【効果音をSEフォルダから読み込んで大小ジャンプと空を飛ぶ音を出すサンプル】でキャラの動きに合わせて効果音を出してみましょう。</p>
+    <p><code>main.cpp</code>を編集します：</p>
+    <p class="source">#include "DxLib.h"<br>
+      #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;// 画面モードの設定<br>
+      &nbsp;&nbsp;SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズをScreenクラスに合わせて設定してカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズをScreenクラスに合わせて設定(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;//↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ゲームのwhileループを開始する前の初期化処理<br>
+      &nbsp;&nbsp;int playerChips[12]; // キャラのチップのグリッドの分割数に応じて3×4 = 12のぶんだけ配列を事前に確保<br>
+      &nbsp;&nbsp;LoadDivGraph("Image/pikkoron.png", 12, 3, 4, 32, 32, playerChips); // キャラのチップのサイズは32×32<br>
+      &nbsp;&nbsp;assert(playerChips[0] != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>// 効果音ファイルを事前にメモリに読み込む https://dxlib.xsrv.jp/function/dxfunc_sound.html#R8N4<br>
+      &nbsp;&nbsp;int jumpSE[4]; // 4種類のジャンプ音を読み込む<br>
+      &nbsp;&nbsp;jumpSE[0] = LoadSoundMem("SE/Jump0.wav");<br>
+      &nbsp;&nbsp;jumpSE[1] = LoadSoundMem("SE/Jump1.wav");<br>
+      &nbsp;&nbsp;jumpSE[2] = LoadSoundMem("SE/Jump2.wav");<br>
+      &nbsp;&nbsp;jumpSE[3] = LoadSoundMem("SE/Jump3.wav");<br>
+      &nbsp;&nbsp;assert(jumpSE[0] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;assert(jumpSE[1] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;assert(jumpSE[2] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;assert(jumpSE[3] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float x = 200, y = Screen::Height; // 初期位置<br>
+      &nbsp;&nbsp;float yJumpStart = 0; // ジャンプした瞬間のyの位置<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float vx = 0, vy = 0; // プレイヤの速度<br>
+      &nbsp;&nbsp;enum Direction { Left, Right }; // enumでキャラの向いてる方向をDirection型として2種類(LeftとRight)定義<br>
+      &nbsp;&nbsp;Direction direction = Direction::Right; // キャラの向いてる方向<br>
+      &nbsp;&nbsp;int animeTime = 0; // アニメ時間<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int vx_idx = 0; // 横方向の加速の段階<br>
+      &nbsp;&nbsp;float vxSpeedMax = 15; // X左右方向の限界速度<br>
+      &nbsp;&nbsp;float vyJumpSpeed[] = { 14, 15, 16, 4 }, vyDownSpeedMax[] = { 16, 16, 16, 8 }; // ダッシュ段階に応じた複数のジャンプの上昇と降下スピードのリミット<br>
+      &nbsp;&nbsp;float vyForce = 0;<br>
+      &nbsp;&nbsp;float vyForceJump[] = { 0.5f,0.4f,0.3f,0.1f }, vyGravity[] = { 0.8f,0.8f,0.8f,0.8f }; // ダッシュ段階に応じた複数のパラメータを持つように<br>
+      &nbsp;&nbsp;bool isGround = true; // 着地しているか<br>
+      &nbsp;&nbsp;bool isFlying = false; // 飛行モード<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int imgSizeX, imgSizeY; // 画像の縦横サイズ<br>
+      &nbsp;&nbsp;GetGraphSize(playerChips[0], &amp;imgSizeX, &amp;imgSizeY); // GetGraphSize関数で画像の縦横を得られる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;Input::Init(); // Inputクラスの初期化<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;ScreenFlip();<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;{&nbsp;&nbsp;// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Input::Update(); // Inputの更新(これを毎ターンやらないとキーの状態が変わらず反応しない)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt; 0) vx = 0; // 急ブレーキ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt;= -vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += -0.35f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx *= 0.9; // すべりながら減衰ブレーキ表現(vxは9/10ずつ減少する)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 飛行モード中にZキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isFlying && Input::GetButtonDown(PAD_INPUT_A))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 3; // [3]番には飛行中のパラメータが入ってる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed[vx_idx]; // 押すたび少し羽ばたく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump[vx_idx];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>// 加速段階に応じて違うジャンプ音を鳴らす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlaySoundMem(jumpSE[vx_idx], DX_PLAYTYPE_BACK);</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_A)) // Zキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 0; // 加速の段階をリセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float vx_abs = (vx &lt; 0) ? -vx : vx; // absはvxの絶対値(マイナスなら-をつけてプラスに直す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 6) ++vx_idx; // 一定値を超えるごとに加速段階を+1<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 9) ++vx_idx; // 最大0～2段階まで +1ずつされる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 9) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isFlying = true; // 飛行モードにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>// 加速段階に応じて違うジャンプ音を鳴らす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlaySoundMem(jumpSE[vx_idx], DX_PLAYTYPE_BACK);</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed[vx_idx]; // ジャンプ方向はY上方向(マイナス方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump[vx_idx]; // 上昇フェーズ中の下方向へ引っ張られる力(この行がないと際限なくジャンプ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yJumpStart = y; // ジャンプ開始する瞬間のy位置を保管する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (vy &gt;= 0) // 下落開始(vy &lt; 0のときはまだジャンプ上昇の勢いありvy==0を境に勢いは逆方向に)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity[vx_idx]; // ジャンプ上昇力が0になって以降に初めて重力をオンにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButtonUp(PAD_INPUT_A)) // Zキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (yJumpStart - y &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity[vx_idx]; // ジャンプ上昇中(vy &lt; 0のとき)にボタンを離したら早めに重力をかけ始める(小ジャンプ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;x += vx; // 速度のぶん現在の位置から移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vx *= 0.97f; // 減速率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vy += vyForce; // 勢い(力・フォースを加算)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vy &gt;= vyDownSpeedMax[vx_idx]) // 無限に落下速度が加速しないようにリミット(空気抵抗みたいなもの)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = vyDownSpeedMax[vx_idx];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 着地判定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (y &gt; Screen::Height)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y = Screen::Height; // この行が無いと勢いで地面にめり込んだぶんを地面の位置に沿わせられない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isFlying = false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// ダッシュ段階に応じてキャラクタのアニメ時間を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float vx_dash = (vx &lt; 0) ? -vx : vx; // 絶対値でプラスだけにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 0.5f) animeTime += 1; // 時間 +1 ( 合計 1 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 6) animeTime += 1;  // 時間 +1 (計 1+1=2 ) 1フレームごとに2アニメ時間が進む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 9) animeTime += 2; // 最終段階ではアニメ時間をさらに +2 (計 1+1+2=4 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;int animeStep = animeTime / 10; // 10を5に変えたらアニメ速度が上がる(10ごとに1コマアニメが進む)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (animeStep &gt;= 3) // アニメのステップ数が0,1,2の3段階までなら3を超えたら0へループ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animeTime = 0; // 0へ戻り再びアニメ時間を再ループ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animeStep = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isFlying &amp;&amp; direction == Direction::Left) // 飛ぶと-60度傾けて表示 キャラチップは[4]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f,-60.0f / 360.0f * 2 * DX_PI, playerChips[4], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (isFlying &amp;&amp; direction == Direction::Right) // 60度回転させて表示 キャラチップは[7]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f, 60.0f / 360.0f * 2 * DX_PI, playerChips[7], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Left) // キャラのチップの[5][4][3]を[5 - animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f, 0.0f, playerChips[5 - animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Right) // キャラのチップの[6][7][8]を[6 + animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - imgSizeX / 2, y - imgSizeY / 2, 1.0f, 0.0f, playerChips[6 + animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printfDx("y:%.1f vy:%.2f idx:%d\n", y, vy, vx_idx);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;}
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// キー入力待ちをする<br>
+      &nbsp;&nbsp;WaitKey();<br>
+      &nbsp;&nbsp;// ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;DxLib_End();<br>
+      &nbsp;&nbsp;// ソフトの終了<br>
+      &nbsp;&nbsp;return 0;<br>
+      }</p>
+    <br>
+    <br>
+    いかがでしょう、ジャンプ音が鳴りましたか？<br>
+    うまくいかない人は、音のファイルを<b>DXのプロジェクトのSEフォルダに入れてありますか？</b><br>
+    ジャンプ音のファイル名はちゃんとJump1.wavが<b>大文字のJから始まっていますか？</b>Jump 1.wavのように<b>スペースが開いてませんか？</b><br>
+    <br>
+    コード自体の変更は少ないですが、理想のジャンプ音に出会えるまで繰り返し色んな音を試しているだけですぐに時間は過ぎてゆくはずです。<br>
+    WEBでひとさまの作った効果音を漁るのと、シンセで理想のジャンプ音を自作するのと、どちらを選んでも結局、時間がかかると思います。<br>
+    クリエイターの端くれとしては、ぼくは自分でシンセをいじってイメージどおりの音を探る作業のほうが楽しいかもしれません。<br>
+    <br>
+    たかがジャンプの効果音一つと思うでしょうか？<br>
+    <b>ゲームの手触り感の50%は効果音で決まるとぼくは思っています。</b><br>
+    どんなにプログラミングや企画にこだわったゲームでも効果音が気持ちよくないゲームはメリハリがなくて眠くなってしまいます。<br>
+    <br>
+    マリオワールドの効果音をはじめて聞いたとき、ぼくは<a href="https://www.youtube.com/watch?v=tWfN2aCge8U">ゲームというより「楽器」を感じました</a>。<br>
+    ひとつひとつの効果音が高周波が効いて目覚ましのような<a href="https://youtu.be/UEJMve_-FmE?t=14">目の覚める音だと思います</a>。<br>
+    <br>
+    おそらく、ぼくが最近のマリオや任天堂作品と昔の作品を比べて、昔のほうが逆にきらきらしてると感じるのは<a href="https://ja.wikipedia.org/wiki/%E8%BF%91%E8%97%A4%E6%B5%A9%E6%B2%BB">「効果音」の作者が変わったから</a>なのかな..と思います。<br>
+    ポケモンも最新のは<a href="https://ja.wikipedia.org/wiki/%E5%A2%97%E7%94%B0%E9%A0%86%E4%B8%80">前の作品と変わって</a>なんかバトル中の音楽が眠い...<br>
+    <br>
+    ゲームの<b>快適さも、手触りも、メリハリも</b>、簡単に見えて<b>音の影響はかなり大きい</b>と思います。<br>
     <br>
     <br>
   </body>
