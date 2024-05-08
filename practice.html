@@ -10,6 +10,18 @@
   </head>
   <body>
     <p class="title">[C++]基本練習</p>
+    <ol id="mozToc">
+    <!--mozToc h1 1-->
+      <li><a href="#mozTocId0001">静止したキャラを出すだけのプログラム</a></li>
+      <li><a href="#mozTocId0002">キャラを上下左右キーで動かせるプログラム</a></li>
+      <li><a href="#mozTocId0003">キャラを左右キーで加速移動させるプログラム</a></li>
+      <li><a href="#mozTocId0004">キャラをZキーでジャンプさせるプログラム</a></li>
+      <li><a href="#mozTocId0005">初代マリオ風のふわっとジャンプ(上昇と下降フェーズの引力を別々に設定できる)プログラム</a></li>
+      <li><a href="#mozTocId0006">ダッシュ中にジャンプすると高く飛べる(加速段階によって複数のジャンプパラメータを持てる)プログラム</a></li>
+      <li><a href="#mozTocId0007">ダッシュで2速状態でジャンプすると空で羽ばたけるプログラム</a></li>
+      <li><a href="#mozTocId0008">キャラチップ配列アニメで「左右ダッシュ」と「2速状態ジャンプでキャラを±60度回転させ空を飛ぶ」プログラム</a></li>
+    </ol>
+    <h1><a id="mozTocId0001" class="mozTocH1"></a>静止したキャラを出すだけのプログラム</h1>
     <br>
     まずは最小限のプログラムでif文などの練習をしていきましょう<br>
     <p>以下の【キャラを出すだけの最小限サンプル】でキャラクターが出るかを確認しましょう</p>
@@ -66,6 +78,9 @@
       }</p>
     <br>
     キャラクターが出なかった人はImageフォルダにPlayer.pngファイルがちゃんとあるか確かめてみてください。<br>
+<br>
+    <h1><a id="mozTocId0002" class="mozTocH1"></a>キャラを上下左右キーで動かせるプログラム</h1>
+<br>
     <p>では次は【Screen.h、Input.hとInput.cppを追加してキャラを上下左右キーで動かせる】ようにしてみましょう</p>
     <a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId00021">Screen.hの作り方はこちらを参考にしてください</a></p>
     <a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId00061">Input.hとInput.cppの作り方はこちらを参考にしてください</a></p>
@@ -159,6 +174,9 @@
     うまく反応しない場合は<em>Input::Update();</em>を忘れていることが多いです。<br>
     <br>
     <br>
+<br>
+    <h1><a id="mozTocId0003" class="mozTocH1"></a>キャラを左右キーで加速移動させるプログラム</h1>
+<br>
     <br>
     <p>今度は【キャラを左右キーで加速させる】ように改造してみましょう</p>
     <br>
@@ -269,6 +287,9 @@
     <br>
     <br>
     <br>
+<br>
+    <h1><a id="mozTocId0004" class="mozTocH1"></a>キャラをZキーでジャンプさせるプログラム</h1>
+<br>
     <br>
     さて、こうなったら横方向だけではなく、縦方向のジャンプにも挑戦してみましょう<br>
     <br>
@@ -398,10 +419,13 @@
     if (!isGround)のとき(isGroundがfalseのとき)に毎ターン vy += vyGravity;することで下方向に重力がかかるようにしています。<br>
     vyJumpSpeed = 16 やvyDownSpeedMax = 16 や yGravity = 0.8fなどの<b>数字を自分で変えてみてイメージにあうジャンプを調整してみましょう</b>。<br>
     <br>
+    <br>
+    <br>
 <br>
+    <h1><a id="mozTocId0005" class="mozTocH1"></a>初代マリオ風のふわっとジャンプ(上昇と下降フェーズの引力を別々に設定できる)プログラム</h1>
 <br>
-<br>
-さて、<a href="https://qiita.com/morian-bisco/items/4c659d9f940c7e3a2099">さらに凝ったプログラム</a>にトライして、初代マリオのようなジャンプ処理に挑戦してみましょう<br>
+    <br>
+    さて、<a href="https://qiita.com/morian-bisco/items/4c659d9f940c7e3a2099">さらに凝ったプログラム</a>にトライして、初代マリオのようなジャンプ処理に挑戦してみましょう<br>
     <br>
     <p>以下の【初代マリオ風の処理(小数のbit演算を省いた簡易化したもの)】でジャンプさせられるか挑戦しましょう</p>
     <p><code>main.cpp</code>を編集します：</p>
@@ -566,6 +590,9 @@
     <br>
     <br>
     <br>
+<br>
+    <h1><a id="mozTocId0006" class="mozTocH1"></a>ダッシュ中にジャンプすると高く飛べる(加速段階によって複数のジャンプパラメータを持てる)プログラム</h1>
+<br>
     <br>
 さて、次はダッシュ中にジャンプすると高く飛べる仕組みにトライしてみましょう<br>
     <br>
@@ -711,6 +738,9 @@
     <br>
     <br>
     <br>
+<br>
+    <h1><a id="mozTocId0007" class="mozTocH1"></a>ダッシュで2速状態でジャンプすると空で羽ばたけるプログラム</h1>
+<br>
     <br>
     さて、次はダッシュで2速状態でジャンプすると空で羽ばたける仕組みにトライしてみましょう。<br>
     <br>
@@ -882,6 +912,9 @@
     <br>
     <br>
     <br>
+<br>
+    <h1><a id="mozTocId0008" class="mozTocH1"></a>キャラチップ配列アニメで「左右ダッシュ」と「2速状態ジャンプでキャラを±60度回転させ空を飛ぶ」プログラム</h1>
+<br>
     <br>
     さて、次はキャラクターをアニメーションさせる表現にトライしてみましょう。<br>
     RPGなどのキャラチップ自作ツール<a href="https://pipoya.notion.site/CharaMEL-6fb3b97cc5f643e7a8025fce608e7050">キャラメル-CharaMEL-</a>をダウンロードして<a href="https://pipoya.notion.site/65954b63976d40e9b9a1a77f0f90e1d6">いろいろな機能を駆使してキャラを自作</a>すれば再配布自由な自作キャラが完成です。<br>
