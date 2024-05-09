@@ -996,12 +996,14 @@
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>direction = Direction::Left;</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt; 0) vx = 0; // 急ブレーキ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt;= -vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += -0.35f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>direction = Direction::Right;</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx *= 0.9; // すべりながら減衰ブレーキ表現(vxは9/10ずつ減少する)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;<br>
@@ -1148,15 +1150,19 @@
     <a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/sozai/Jump.jfxr">わたくしの引き当てたジャンプ音のシンセ調節ファイル</a>←右クリックでダウンロードして<a href="https://jfxr.frozenfractal.com/">ブラウザで動くシンセJFXR</a>の左上の[Open]ボタンから開いてみよう<br>
     <br>
     まずは「小ジャンプ」の効果音として下記設定をして、[Export]ボタンから<b>Jump0.wavというファイル名</b>で<b>DXライブラリのプロジェクトにSEフォルダを作って</b>そこに保存しましょう。<br>
+    <audio controls src="sozai/Jump0.wav" type="audio/wav">小ジャンプ</audio><a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/sozai/Jump0.wav">Jump0.wav</a><br>
     <p> <img src="image/synth_jump0.png" alt=""></p>
     <br>
     つぎは「大ジャンプ」の効果音として下記設定をして、[Export]ボタンから<b>Jump1.wavというファイル名</b>で<b>DXライブラリのプロジェクトのSEフォルダに保存</b>しましょう。<br>
+    <audio controls src="sozai/Jump1.wav" type="audio/wav">大ジャンプ</audio><a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/sozai/Jump1.wav">Jump1.wav</a><br>
     <p> <img src="image/synth_jump1.png" alt=""></p>
     <br>
     今度は「空を飛び始める」効果音として下記設定をして、[Export]ボタンから<b>Jump2.wavというファイル名</b>で<b>DXライブラリのプロジェクトのSEフォルダに保存</b>しましょう。<br>
+    <audio controls src="sozai/Jump2.wav" type="audio/wav">空を飛び始める</audio><a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/sozai/Jump2.wav">Jump2.wav</a><br>
     <p> <img src="image/synth_jump2.png" alt=""></p>
     <br>
     最後は「空でホップする」効果音として下記設定をして、[Export]ボタンから<b>Jump3.wavというファイル名</b>で<b>DXライブラリのプロジェクトのSEフォルダに保存</b>しましょう。<br>
+    <audio controls src="sozai/Jump3.wav" type="audio/wav">空でホップする</audio><a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/sozai/Jump3.wav">Jump3.wav</a><br>
     <p> <img src="image/synth_jump3.png" alt=""></p>
     <br>
     <br>
@@ -1234,12 +1240,14 @@
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;direction = Direction::Left;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt; 0) vx = 0; // 急ブレーキ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt;= -vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += -0.35f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;direction = Direction::Right;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx *= 0.9; // すべりながら減衰ブレーキ表現(vxは9/10ずつ減少する)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;<br>
