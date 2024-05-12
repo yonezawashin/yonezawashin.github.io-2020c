@@ -1928,9 +1928,12 @@
     <br>
     いかがでしょう、マップ地形が画面に描かれたでしょうか？<br>
     <br>
-    チップを描く起点の座標(x,y)=(chip_x, chip_y)は、マス目番号×32(CellSize:チップ画像の分割サイズ)で求まります<br>
+    チップを描く起点の座標(x,y)=(chip_x, chip_y)は、マス目番号×32(CellSize:チップ画像の分割サイズ)で求められます。<br>
     float chip_y = (float)(<em>cellY * CellSize</em>); // マス目Y(行)番号×マス目サイズ<br>
     float chip_x = (float)(<em>cellX * CellSize</em>); // マス目X(列)番号×マス目サイズ<br>
+    <br>
+    下図はマス目の1マス(セル)のサイズが32の場合の位置の計算方法のイメージです。<br>
+    <p> <img src="image/csv_stage_cellsize.png" alt=""></p>
     <br>
     <br>
     <br>
