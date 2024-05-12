@@ -1453,10 +1453,7 @@
       &nbsp;&nbsp;assert(jumpSE[2] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
       &nbsp;&nbsp;assert(jumpSE[3] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;<em>int CellSize = 32; // マップの1マスのピクセル数<br>
-      &nbsp;&nbsp;int mapChips[64]; // マップのチップのグリッドの分割数に応じて8×8 = 64など配列で確保<br>
-      &nbsp;&nbsp;LoadDivGraph("Map/mapchip.png", 64, 8, 8, CellSize, CellSize, mapChips); // マップのチップのサイズは32×32(=CellSize)<br>
-      &nbsp;&nbsp;assert(mapChips[0] != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
+      &nbsp;&nbsp;<em>int CellSize = 32; // マップの1マスのピクセル数</em><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<em>std::vector&lt;std::vector&lt;int&gt;&gt; mapData;// タイルマップデータ<br>
       &nbsp;&nbsp;std::ifstream ifs_csv_file("Map/stage.csv"); // 読み込むcsvファイルを開く(std::ifstreamのコンストラクタで開く)<br>
@@ -1723,8 +1720,8 @@
       &nbsp;&nbsp;assert(jumpSE[2] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
       &nbsp;&nbsp;assert(jumpSE[3] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;<em>int CellSize = 32; // マップの1マスのピクセル数<br>
-      &nbsp;&nbsp;int mapChips[64]; // マップのチップのグリッドの分割数に応じて8×8 = 64など配列で確保<br>
+      &nbsp;&nbsp;int CellSize = 32; // マップの1マスのピクセル数<br>
+      &nbsp;&nbsp;<em>int mapChips[64]; // マップのチップのグリッドの分割数に応じて8×8 = 64など配列で確保<br>
       &nbsp;&nbsp;LoadDivGraph("Map/mapchip.png", 64, 8, 8, CellSize, CellSize, mapChips); // マップのチップのサイズは32×32(=CellSize)<br>
       &nbsp;&nbsp;assert(mapChips[0] != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
       &nbsp;&nbsp;<br>
