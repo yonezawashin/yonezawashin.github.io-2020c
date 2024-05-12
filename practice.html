@@ -2180,7 +2180,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x = wallRight - hitOffsetLeft; // 左端を壁の右端に沿わす(めり込んだぶんを押し戻す)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = 0; // 壁に当たったら速度をストップ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} // ↓右端が壁にめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yTop) || // 右上が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yMiddle) || // 右中が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yBottom) )  // 右下が壁か？<br>
