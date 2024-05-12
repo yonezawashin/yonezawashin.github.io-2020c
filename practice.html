@@ -1405,7 +1405,7 @@
     書き出したcsvファイル↑は<b>DXのプロジェクトのフォルダにMapフォルダを作ってMap/stage.csvとして保存</b>してください。<br>
     <br>
     <br>
-    <p>さてまずは【地形ファイルをMapフォルダから読み込んで地形番号を表示させるサンプル】でcsvファイルのなかには地形番号が書き出されていることを実感しましょう。</p>
+    <p>さてまずは【地形csvファイルをMapフォルダから読み込んで地形番号を表示させるサンプル】でcsvファイルの中身には地形番号がカンマ区切りで書き出されていることを実感しましょう。</p>
     <p><code>main.cpp</code>を編集します：</p>
     <p class="source">#include "DxLib.h"<br>
       #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
@@ -1654,7 +1654,19 @@
       &nbsp;&nbsp;return 0;<br>
       }</p>
     <br>
-    <br>    
-    
+    <br>
+    いかがでしょうか？このようにcsvの中身は地形番号が,カンマ区切りで書き出されています。<br>
+    <p> <img src="image/csv_stage_comma.png" alt=""></p>
+    <br>
+    <br>
+    プログラムではそのcsvファイルを<em>std::ifstream ifs_csv_file("Map/stage.csv");</em>で読みだして<br>
+    カンマ区切りを<em>while (std::getline(linestream, comma_part, { ',' }))</em>で分割して<br>
+    分割したcomma_partを文字列ストリームssを使って<em>std::istringstream ss( comma_part );</em><br>
+    ストリーム演算子&gt;&gt; を通してint型のnumに変換して<em>ss &gt;&gt; num;</em>
+    その数字numをまずは配列std::vector&lt;int&gt;型のvaluelistに<em>valuelist.emplace_back(num);</em>で1つずつ入れて、<br>
+    その1行数字配列valuelistを2次元数字配列std::vector&lt;std::vector&lt;int&gt;&gt;型のmapDataに <em>mapData.emplace_back(valuelist);</em>で行単位で1行ずつ格納しています。<br>
+    <br>
+    <br>
+    <br>
   </body>
 </html>
