@@ -3257,12 +3257,14 @@
       &nbsp;&nbsp;enum BlockBit // ブロックの特性を32桁のビットで表現<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;None = 0,<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;Wall   = 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Wall &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>Damage = 0b0000'0000'0000'0000'0000'0000'0000'0010,</em><br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;std::unordered_map&lt;int, unsigned int&gt; blockBits = {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{-1,BlockBit::None},<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{ 0,BlockBit::Wall},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>{ 1,BlockBit::Damage},</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;{ 2,BlockBit::Wall},<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{ 3,BlockBit::Wall}<br>
       &nbsp;&nbsp;};<br>
