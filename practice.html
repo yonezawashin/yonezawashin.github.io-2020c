@@ -3535,15 +3535,18 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, yDeadAnim, 1.0f, 10.0f * deadAnimeStep / 360.0f * 2 * DX_PI, playerChips[chipAnime], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++deadAnimeTime; // アニメ時間を進める<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (isFlying &amp;&amp; direction == Direction::Left) // 飛ぶと-60度傾けて表示 キャラチップは[4]で固定<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y <em>- camera_y</em> + imgSizeY / 2, 1.0f,-60.0f / 360.0f * 2 * DX_PI, playerChips[4], TRUE);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (isFlying &amp;&amp; direction == Direction::Right) // 60度回転させて表示 キャラチップは[7]で固定<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y <em>- camera_y</em> + imgSizeY / 2, 1.0f, 60.0f / 360.0f * 2 * DX_PI, playerChips[7], TRUE);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Left) // キャラのチップの[5][4][3]を[5 - animeStep]で使う(animeStep=0,1,2)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y <em>- camera_y</em> + imgSizeY / 2, 1.0f, 0.0f, playerChips[5 - animeStep], TRUE);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Right) // キャラのチップの[6][7][8]を[6 + animeStep]で使う(animeStep=0,1,2)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y <em>- camera_y</em> + imgSizeY / 2, 1.0f, 0.0f, playerChips[6 + animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>if (isFlying &amp;&amp; direction == Direction::Left) // 飛ぶと-60度傾けて表示 キャラチップは[4]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y - camera_y + imgSizeY / 2, 1.0f,-60.0f / 360.0f * 2 * DX_PI, playerChips[4], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>else if (isFlying &amp;&amp; direction == Direction::Right) // 60度回転させて表示 キャラチップは[7]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y - camera_y + imgSizeY / 2, 1.0f, 60.0f / 360.0f * 2 * DX_PI, playerChips[7], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>else if (direction == Direction::Left) // キャラのチップの[5][4][3]を[5 - animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y - camera_y + imgSizeY / 2, 1.0f, 0.0f, playerChips[5 - animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>else if (direction == Direction::Right) // キャラのチップの[6][7][8]を[6 + animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y - camera_y + imgSizeY / 2, 1.0f, 0.0f, playerChips[6 + animeStep], TRUE);<br>
+      <em>&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;float rotaShiftX = CellSize / 2, rotaShiftY = CellSize / 2; // DrawRotaGraphF関数は画像の真ん中が起点なので1/2ずらした位置計算<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 地形マップを[ 行のfor文×列のfor文 ]の2重ループで描く<br>
@@ -3557,19 +3560,19 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (id < 0) continue; // -1のときは描かない<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// マップチップを描く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(chip_x - camera_x + rotaShiftX, chip_y <em>- camera_y</em> + rotaShiftY, 1.0f, 0.0f, mapChips[id], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(chip_x - camera_x + rotaShiftX, chip_y - camera_y + rotaShiftY, 1.0f, 0.0f, mapChips[id], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ]用にcsvのidの数字を描く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawString(chip_x - camera_x, chip_y <em>- camera_y</em>, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawString(chip_x - camera_x, chip_y - camera_y, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たり判定の四隅を赤枠で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawBox(getLeft(x) - camera_x, getTop(y)<em> - camera_y</em>, getRight(x) - camera_x, getBottom(y)<em> - camera_y</em>, GetColor(255, 0, 0), FALSE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawBox(getLeft(x) - camera_x, getTop(y) - camera_y, getRight(x) - camera_x, getBottom(y) - camera_y, GetColor(255, 0, 0), FALSE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y<em> - camera_y</em>, 2, GetColor(0, 255, 0), TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y - camera_y, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, <em>- camera_y</em>, debug_x - camera_x, Screen::Height<em> - camera_y</em>, GetColor(0, 0, 255));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(-camera_x, debug_y<em> - camera_y</em>, Screen::Width - camera_x, debug_y<em> - camera_y</em>, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, - camera_y, debug_x - camera_x, Screen::Height - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(-camera_x, debug_y - camera_y, Screen::Width - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
@@ -3585,6 +3588,31 @@
       &nbsp;&nbsp;// ソフトの終了<br>
       &nbsp;&nbsp;return 0;<br>
       }</p>
+    <br>
+    <br>
+    いかがでしょう、トゲトゲにあたったらキャラがアニメして、スタート地点に戻るようになりましたか？<br>
+    <br>
+    今回のポイントは位置を直線的に移動させるアニメの式です。<br>
+    yAnim0, yAnim1, yAnim2 など 3つのyの位置があったとすると<br>
+    <br>
+    float yDeadAnim; // やられた際にはyの位置をアニメさせる<br>
+    // 直線的な比例アニメの式(t=時刻)  位置1×(終時刻 - t) / アニメの長さ  +  位置2×(t - 始時刻) / アニメの長さ<br>
+    if (deadAnimeTime < 40) // やられアニメが始まって40フレーム目までは yAnim0 ～ yAnim1<br>
+    &nbsp;&nbsp;yDeadAnim = <em>yAnim0 * (40 - deadAnimeTime) / 40 + yAnim1 * (deadAnimeTime - 0) / 40;</em><br>
+    else if (deadAnimeTime < 60) // やられアニメが始まって60フレーム目までは yAnim1 ～ yAnim2<br>
+    &nbsp;&nbsp;yDeadAnim = <em>yAnim1 * (60 - deadAnimeTime) / 20 + yAnim2 * (deadAnimeTime - 40) / 20;</em><br><br>
+    <br>
+    <br>
+    式をさらに単純化すると、tが時刻0.0～1.0まで変わるとすると<br>
+    &nbsp;&nbsp;<b>y = y0 × (1.0 - t) + y1 × t</b><br>
+    この形の式にt=0.0をいれたときはy = y0 × (1.0 - 0.0) + y1 × 0.0 = y0(開始位置)<br>
+    この形の式にt=0.5をいれたときはy = y0 × (1.0 - 0.5) + y1 × 0.5 = 0.5×y0 + 0.5×y1(中間位置)<br>
+    この形の式にt=1.0をいれたときはy = y0 × (1.0 - 1.0) + y1 × 1.0 = y1(到着位置)<br>
+    <br>
+    つまり<b>t=0.0～1.0に変わるとyがy0からy1までアニメーションする式が出来上がり</b>ます。<br>
+    そう、簡単に言うと実は<b>y0に0～1を、y1に1～0を「0と1が入れ替わるようにつじつまを合わせている式」</b>です。<br>
+    このアニメ式をxにも使えば自由に直線的にある地点からある地点まで画像をアニメで動かせるようになります。<br>
+    <br>
     <br>
     <br>
     <br>
