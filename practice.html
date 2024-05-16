@@ -4182,5 +4182,56 @@
     C++ではenum classを使ったほうが無難そうですね。<br>
     (ただし、(int)型にキャストしながら使う)<br>
     <br>
+    <br>
+    もう1点のポイントはstd::unordered_map <b>高速辞書配列の辞書のキーとできるのは<br>
+    int,float,char,short,long,std::stringなどデフォルトのよく使う型のみ</b>なので、<br>
+    今回は<b>xとyの2つの数字のペアをキーとして使うため</b>に、<br>
+    辞書にデータを突っ込む際にどう突っ込むかを決めているハッシュ関数を自作しなければならないです。<br>
+    <br>
+    ハッシュ関数や暗号化という言葉を聞いたことがありますか？<br>
+    <a href="https://ja.wikipedia.org/wiki/%E6%9A%97%E5%8F%B7%E5%AD%A6%E7%9A%84%E3%83%8F%E3%83%83%E3%82%B7%E3%83%A5%E9%96%A2%E6%95%B0">https://ja.wikipedia.org/wiki/暗号学的ハッシュ関数</a><br>
+    暗号もハッシュ関数も共通の性質として、<br>
+    ある値(たとえばパスワード)に対して、<br>
+    ある計算式をかませると、1対1の対になる計算結果がでる性質が必要です。<br>
+    (暗号化するときに2つ以上答えが出ちゃう式だと使えないですものね)<br>
+    1対1の計算結果なら色んな式がありえます。<br>
+    (ある数字のパスワードが来たら2倍した数字で暗号化するとか..のバレバレ数式でも1対1の対にはなるわけで..)<br>
+    どうせ暗号化するならできる限り解析されにくい数式がないか数学的に考えるのが暗号学なわけですね。<br>
+    そして暗号化するときに暗号化したものの桁数が何桁から何桁におさまるかも重要な式の決め方の観点です。<br>
+    暗号化した際の桁数が多くなりすぎたり、桁数が不安定だと、暗号化されたデータをやり取りする際に不安定ですよね。<br>
+    実際に現代社会で使われているSHA-256(NSA米国家安全保障局の考案した暗号学的ハッシュ関数)も256ビット(32バイト)の値(=ハッシュ値)を出力します<br>
+    <br>
+    さて、なんか全然辞書と暗号がつながらないじゃんと思われたでしょうが、<br>
+    辞書のデータをどのページに書き込むか決めるときにstd::mapのようにキーが順番にならんでいるなら「あ」ならこのページに書き込む<br>
+    と決められますが、キーを順番に並べない高速辞書std::unordered_mapの場合はハッシュ関数で出てきた値の場所にデータを放り込むイメージです。<br>
+    雑に例えると、例えばたくさんロッカーがあってカバンを適当にハッシュ関数で決めたロッカーに投げ込めば、<br>
+    いちいち順番が決まったロッカー番号を探してカバンをしまうより高速にほぼ1発でしまえますよね。<br>
+    (ただ適当に投げ込んだ先にすでにカバンが入っていた場合には再ハッシュなどの工夫が必要になるぶんちょっと遅くなるので、<br>
+    かぶりにくいようにうまく結果がばらけるハッシュルール数式を使う(質)かもしくはロッカーの数が十分たくさんあってめったにかぶらなくなる(量)の観点がでてきます)<br>
+    <br>
+    今回はxとyのペアを高速辞書のキーにするにあたり適度に結果がばらけるといわれている式<br>
+    seed ^ (std::hash&lt;TypeT&gt;()(value) + 0x9e3779b9 + (seed &lt;&lt; 6) + (seed &gt;&gt; 2));<br>
+    をHashCombine()関数として定義しています。<br>
+    <br>
+      <br>
+    <p class="source"><br>
+      #include &lt;unordered_map&gt;&nbsp;// std::unordered_map 高速辞書配列に必要(チップ番号から壁などを表すビットへ変換する辞書)<br>
+      <em>#include &lt;utility&gt;&nbsp;// std::pair(データのペア型)を使うのに必要<br>
+      // [ペアを高速辞書のキーにするためハッシュ関数が必要] https://qiita.com/hamamu/items/4d081751b69aa3bb3557<br>
+      template&lt;class TypeT&gt; size_t HashCombine(const size_t seed, const TypeT&amp; value)<br>
+      {<br>
+      &nbsp;&nbsp;return seed ^ (std::hash&lt;TypeT&gt;()(value) + 0x9e3779b9 + (seed &lt;&lt; 6) + (seed &gt;&gt; 2));<br>
+      }<br>
+      <br>
+      // pair型に()をつけたときに呼び出される処理をoperator()で定義してreturnでハッシュ関数を返す<br>
+      template&lt;class TypeT, class TypeS&gt; struct std::hash&lt;std::pair&lt;TypeT, TypeS&gt;&gt;<br>
+      {<br>
+      &nbsp;&nbsp;size_t operator() (const std::pair&lt;TypeT, TypeS&gt;&amp; keyval) const noexcept<br>
+      &nbsp;&nbsp;{ &nbsp; // returnでハッシュ関数を返すことで高速辞書のキーとして認め許されるようになる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return HashCombine(std::hash&lt;TypeT&gt;()(keyval.first), keyval.second);<br>
+      &nbsp;&nbsp;};<br>
+      }</em><br>
+      <br>
+    </p>
   </body>
 </html>
