@@ -3624,7 +3624,7 @@
     <h1><a id="mozTocId0015" class="mozTocH1"></a>ブロックを下から叩いたらy位置をアニメさせてバウンスするプログラム</h1>
 <br>
     <br>
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!以降は、まだ記事を追記途中!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!<br>
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!以降は、追記途中うごくか？ エラーでたらおしえてください!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!<br>
     <br>
     <br>
     <p>さてつぎは【ブロックに<b>どの方向からめりこんだか</b>を得られるようにして<b>叩かれたブロックのマス目番号XYをキーに高速辞書でアニメ時間を管理</b>して叩かれたブロックをバウンスするサンプル】でブロックに動きをつけましょう。</p>
@@ -3982,9 +3982,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; hitcheck(BlockBit::Bounce, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::pair&lt;int,int&gt; mapXY = std::make_pair(mapX, mapY); // ぶつかったブロックのセルの行mapYと列mapXのペア<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockAnime.count(mapXY) == 0) // 辞書にキーがあるかcountで数えて未登録==0のとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockAnime[mapXY] = 0; // ブロックのアニメ時間を辞書に登録(時間が辞書にあるものだけアニメが走る)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 頭の部分が壁にめりこんでいるか？<br>
@@ -4101,7 +4100,20 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (id < 0) continue; // -1のときは描かない<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// マップチップを描く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(chip_x - camera_x + rotaShiftX, chip_y - camera_y + rotaShiftY, 1.0f, 0.0f, mapChips[id], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>auto mapXY = std::make_pair(cellX, cellY);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockAnime.count(mapXY) == 0)</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>DrawRotaGraphF(chip_x - camera_x + rotaShiftX, chip_y - camera_y + rotaShiftY, 1.0f, 0.0f, mapChips[id], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>else if ((int)BlockBit::Bounce & blockBits[id])<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yBase = chip_y - camera_y + rotaShiftY;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim0 = yBase - 10, yAnim1 = yBase; // yAnim0 から yAnim1の位置までアニメする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int blockTime = blockAnime[mapXY];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim = yAnim0 * (15 - blockTime) / 15 + yAnim1 * blockTime / 15;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(chip_x - camera_x + rotaShiftX, yAnim, 1.0f, 0.0f, mapChips[id], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++blockAnime[mapXY]; // アニメ時間を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockTime > 15) // アニメ終了時間を15フレーム目とするとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockAnime.erase(mapXY); // 辞書からアニメをerase関数で取り除く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ]用にcsvのidの数字を描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawString(chip_x - camera_x, chip_y - camera_y, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
