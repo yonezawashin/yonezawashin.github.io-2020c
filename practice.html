@@ -3517,9 +3517,9 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yDeadAnim; // やられた際にはyの位置をアニメさせる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 直線的な比例アニメの式(t=時刻)  位置1×(終時刻 - t) / アニメの長さ  +  位置2×(t - 始時刻) / アニメの長さ<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (deadAnimeTime < 40) // やられアニメが始まって40フレーム目までは yAnim0 ～ yAnim1<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (deadAnimeTime &lt; 40) // やられアニメが始まって40フレーム目までは yAnim0 ～ yAnim1<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yDeadAnim = yAnim0 * (40 - deadAnimeTime) / 40 + yAnim1 * (deadAnimeTime - 0) / 40;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (deadAnimeTime < 60) // やられアニメが始まって60フレーム目までは yAnim1 ～ yAnim2<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (deadAnimeTime &lt; 60) // やられアニメが始まって60フレーム目までは yAnim1 ～ yAnim2<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yDeadAnim = yAnim1 * (60 - deadAnimeTime) / 20 + yAnim2 * (deadAnimeTime - 40) / 20;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -4055,9 +4055,9 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yDeadAnim; // やられた際にはyの位置をアニメさせる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 直線的な比例アニメの式(t=時刻)  位置1×(終時刻 - t) / アニメの長さ  +  位置2×(t - 始時刻) / アニメの長さ<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (deadAnimeTime < 40) // やられアニメが始まって40フレーム目までは yAnim0 ～ yAnim1<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (deadAnimeTime &lt; 40) // やられアニメが始まって40フレーム目までは yAnim0 ～ yAnim1<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yDeadAnim = yAnim0 * (40 - deadAnimeTime) / 40 + yAnim1 * (deadAnimeTime - 0) / 40;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (deadAnimeTime < 60) // やられアニメが始まって60フレーム目までは yAnim1 ～ yAnim2<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (deadAnimeTime &lt; 60) // やられアニメが始まって60フレーム目までは yAnim1 ～ yAnim2<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yDeadAnim = yAnim1 * (60 - deadAnimeTime) / 20 + yAnim2 * (deadAnimeTime - 40) / 20;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
