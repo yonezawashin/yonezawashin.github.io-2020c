@@ -3802,40 +3802,52 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>isCheckBit</em>;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;enum class HitPart // 当たった箇所を表すビット<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;None &nbsp; &nbsp;= 0,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Left &nbsp; &nbsp;= 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Right &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0010,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Top &nbsp; &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0100,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Bottom &nbsp;= 0b0000'0000'0000'0000'0000'0000'0000'1000,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;XMiddle = 0b0000'0000'0000'0000'0000'0000'0001'0000,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;YMiddle = 0b0000'0000'0000'0000'0000'0000'0010'0000,<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
       &nbsp;&nbsp;auto hitcheck = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&lgt;&gt;&amp; terrain,<br>
-      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom<em>,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 左端がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yTop)) // 左上がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yMiddle)) // 左中がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yBottom)) // 左下がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yTop<em>, pMapX, pMapY</em>)) // 左上がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::Left | (int)HitPart::Top</em>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yMiddle<em>, pMapX, pMapY</em>)) // 左中がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::Left | (int)HitPart::YMiddle</em>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yBottom<em>, pMapX, pMapY</em>)) // 左下がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::Left | (int)HitPart::Bottom</em>;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 右端がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yTop)) // 右上がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yMiddle)) // 右中がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yBottom)) // 右下がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yTop<em>, pMapX, pMapY</em>)) // 右上がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::Right | (int)HitPart::Top</em>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yMiddle<em>, pMapX, pMapY</em>)) // 右中がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::Right | (int)HitPart::YMiddle</em>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yBottom<em>, pMapX, pMapY</em>)) // 右下がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::Right | (int)HitPart::Bottom</em>;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 頭の部分がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yTop)) // 左上がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xMiddle, yTop)) // 中上がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yTop)) // 右上がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yTop<em>, pMapX, pMapY</em>)) // 左上がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::Left | (int)HitPart::Top</em>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xMiddle, yTop<em>, pMapX, pMapY</em>)) // 中上がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::XMiddle | (int)HitPart::Top</em>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yTop<em>, pMapX, pMapY</em>)) // 右上がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::Right | (int)HitPart::Top</em>;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 足元が壁にめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yBottom))  // 左下がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xMiddle, yBottom)) // 中下がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yBottom)) // 右下がめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yBottom<em>, pMapX, pMapY</em>))  // 左下がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::Left | (int)HitPart::Bottom</em>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xMiddle, yBottom<em>, pMapX, pMapY</em>)) // 中下がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::XMiddle | (int)HitPart::Bottom</em>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yBottom<em>, pMapX, pMapY</em>)) // 右下がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::Right | (int)HitPart::Bottom</em>;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>(int)HitPart::None</em>;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
