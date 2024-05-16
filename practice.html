@@ -3880,6 +3880,8 @@
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float debug_x = -1, debug_y = -1; // [デバッグ] めり込みすぎのラインを記録しておく変数<br>
+      &nbsp;&nbsp;float debug_x_yTop = -1, debug_x_yBottom = -1; // [デバッグ] カメラが動くのでめり込んだ瞬間の上下端も記録<br>
+      &nbsp;&nbsp;float debug_y_xLeft = -1, debug_y_xRight = -1; // [デバッグ] カメラが動くのでめり込んだ瞬間の左右端も記録<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;Input::Init(); // Inputクラスの初期化<br>
@@ -3970,6 +3972,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xLeft, yBottom) )  // 左下が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x = xLeft; // [デバック] めり込んだラインを記録しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x_yTop = y - Screen::Height / 2, debug_x_yBottom = y + Screen::Height / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// std::fmodで小数点の余りを計算 めり込みすぎの余り = std::fmod(xLeft, CellSize)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallRight = xLeft + CellSize - (float)std::fmod(xLeft, CellSize); // 壁の右端<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x = wallRight - hitOffsetLeft; // 左端を壁の右端に沿わす(めり込んだぶんを押し戻す)<br>
@@ -3981,6 +3984,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yBottom) )  // 右下が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x = xRight; // [デバック] めり込んだラインを記録しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x_yTop = y - Screen::Height / 2, debug_x_yBottom = y + Screen::Height / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallLeft = xRight - (float)std::fmod(xRight, CellSize); // 壁の左端<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x = wallLeft + hitOffsetRight - imgSizeX; // 右端を壁の左端に沿わす(めり込んだぶんを押し戻す)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = 0; // 壁に当たったら速度をストップ<br>
@@ -4015,6 +4019,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yTop) )  // 右上が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y = yTop; // [デバック] めり込んだラインを記録しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y_xLeft = x - Screen::Width / 2, debug_y_xRight = x + Screen::Width / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallBottom = yTop + CellSize - (float)std::fmod(yTop, CellSize); // 壁の下側の境界<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y = wallBottom - hitOffsetTop; // 頭を壁の下端に沿わす(めり込んだぶんを押し戻す)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = 0; // 壁に当たったら速度をストップ<br>
@@ -4025,6 +4030,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yBottom) )  // 右下が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y = yBottom; // [デバック] めり込んだラインを記録しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y_xLeft = x - Screen::Width / 2, debug_y_xRight = x + Screen::Width / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallTop = yBottom - (float)std::fmod(yBottom, CellSize); // 壁の上側の境界<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y = wallTop + hitOffsetBottom - imgSizeX; // 足元を壁の上端に沿わす(めり込んだぶんを押し戻す)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
@@ -4147,8 +4153,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y - camera_y, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, - camera_y, debug_x - camera_x, Screen::Height - camera_y, GetColor(0, 0, 255));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(-camera_x, debug_y - camera_y, Screen::Width - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
