@@ -3624,7 +3624,7 @@
     <h1><a id="mozTocId0015" class="mozTocH1"></a>ブロックを下から叩いたらy位置をアニメさせてバウンスするプログラム</h1>
 <br>
     <br>
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!以降は、追記途中うごくか？ エラーでたらおしえてください!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!<br>
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!以降は、追記したてのところ。うごくかな？ エラーでたらおしえてください!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!<br>
     <br>
     <br>
     <p>さてつぎは【ブロックに<b>どの方向からめりこんだか</b>を得られるようにして<b>叩かれたブロックのマス目番号XYをキーに高速辞書でアニメ時間を管理</b>して叩かれたブロックをバウンスするサンプル】でブロックに動きをつけましょう。</p>
@@ -4097,13 +4097,13 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float chip_x = (float)(cellX * CellSize); // マス目X(列)番号×マス目サイズで x座標に戻す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = mapData[cellY][cellX]; // [行][列] の位置のcsvの地形番号(チップ番号)を得る<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (id < 0) continue; // -1のときは描かない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (id &lt; 0) continue; // -1のときは描かない<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// マップチップを描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>auto mapXY = std::make_pair(cellX, cellY);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockAnime.count(mapXY) == 0)</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>DrawRotaGraphF(chip_x - camera_x + rotaShiftX, chip_y - camera_y + rotaShiftY, 1.0f, 0.0f, mapChips[id], TRUE);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>else if ((int)BlockBit::Bounce & blockBits[id])<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>else if ((int)BlockBit::Bounce &amp; blockBits[id])<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yBase = chip_y - camera_y + rotaShiftY;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim0 = yBase - 10, yAnim1 = yBase; // yAnim0 から yAnim1の位置までアニメする<br>
