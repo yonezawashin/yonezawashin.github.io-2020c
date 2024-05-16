@@ -3765,7 +3765,7 @@
       &nbsp;&nbsp;auto getRight  = [&amp;hitOffsetRight, &amp;imgSizeX](float worldX) { return worldX + imgSizeX - hitOffsetRight; };<br>
       &nbsp;&nbsp;auto getBottom = [&amp;hitOffsetBottom, &imgSizeY](float worldY) { return worldY + imgSizeY - hitOffsetBottom; };<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;enum BlockBit // ブロックの特性を32桁のビットで表現<br>
+      &nbsp;&nbsp;enum <em>class </em>BlockBit // ブロックの特性を32桁のビットで表現<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;None = 0,<br>
       &nbsp;&nbsp;&nbsp;&nbsp;Wall &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
@@ -3802,7 +3802,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>isCheckBit</em>;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;enum class HitPart // 当たった箇所を表すビット<br>
+      &nbsp;&nbsp;<em>enum class HitPart // 当たった箇所を表すビット<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;None &nbsp; &nbsp;= 0,<br>
       &nbsp;&nbsp;&nbsp;&nbsp;Left &nbsp; &nbsp;= 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
@@ -3811,7 +3811,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;Bottom &nbsp;= 0b0000'0000'0000'0000'0000'0000'0000'1000,<br>
       &nbsp;&nbsp;&nbsp;&nbsp;XMiddle = 0b0000'0000'0000'0000'0000'0000'0001'0000,<br>
       &nbsp;&nbsp;&nbsp;&nbsp;YMiddle = 0b0000'0000'0000'0000'0000'0000'0010'0000,<br>
-      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
       &nbsp;&nbsp;auto hitcheck = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&lgt;&gt;&amp; terrain,<br>
