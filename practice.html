@@ -2515,8 +2515,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<em>float camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp;if (camera_x <= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ</em><br>
+      &nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ</em><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float debug_x = -1, debug_y = -1; // [デバッグ] めり込みすぎのラインを記録しておく変数<br>
@@ -2665,8 +2665,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x <= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// ダッシュ段階に応じてキャラクタのアニメ時間を進める<br>
@@ -2892,11 +2892,11 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp;if (camera_x <= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
+      &nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
       &nbsp;&nbsp;<em>float camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
-      &nbsp;&nbsp;if (camera_y <= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;else if (Height * CellSize - Screen::Height <= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ</em><br>
+      &nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ</em><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float debug_x = -1, debug_y = -1; // [デバッグ] めり込みすぎのラインを記録しておく変数<br>
@@ -3045,11 +3045,11 @@
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x <= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_y <= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Height * CellSize - Screen::Height <= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// ダッシュ段階に応じてキャラクタのアニメ時間を進める<br>
@@ -3323,11 +3323,11 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};</em><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp;if (camera_x <= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
+      &nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
       &nbsp;&nbsp;float camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
-      &nbsp;&nbsp;if (camera_y <= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;else if (Height * CellSize - Screen::Height <= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
+      &nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float debug_x = -1, debug_y = -1; // [デバッグ] めり込みすぎのラインを記録しておく変数<br>
@@ -3486,11 +3486,11 @@
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x <= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_y <= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Height * CellSize - Screen::Height <= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// ダッシュ段階に応じてキャラクタのアニメ時間を進める<br>
@@ -3851,11 +3851,11 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp;if (camera_x <= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
+      &nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
       &nbsp;&nbsp;float camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
-      &nbsp;&nbsp;if (camera_y <= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;else if (Height * CellSize - Screen::Height <= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
+      &nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float debug_x = -1, debug_y = -1; // [デバッグ] めり込みすぎのラインを記録しておく変数<br>
@@ -3977,6 +3977,16 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (hitcheck(BlockBit::Damage, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // やられたフラグをtrueに<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>int mapX = 0, mapY = 0; // ぶつかったらそのブロックのCSVのセルの行mapYと列mapXを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ( (int)HitPart::Top<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; hitcheck(BlockBit::Bounce, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::pair&lt;int,int&gt; mapXY = std::make_pair(mapX, mapY); // ぶつかったブロックのセルの行mapYと列mapXのペア<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 頭の部分が壁にめりこんでいるか？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(BlockBit::Wall, mapData, xLeft, yTop) || // 左上が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xMiddle, yTop) || // 中上が壁か？<br>
@@ -4014,11 +4024,11 @@
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x <= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_y <= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Height * CellSize - Screen::Height <= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// ダッシュ段階に応じてキャラクタのアニメ時間を進める<br>
