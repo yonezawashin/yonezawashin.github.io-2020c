@@ -4150,8 +4150,8 @@
     注意点として、enumは{}の外でも名前をかぶらせることができないので、<br>
     &nbsp;&nbsp;enum ●● { Normal, Fire, Water.. }; と<b>一回Normalという名前を定義したあと、enum ▲▲ { Normal };</b>とすると<b>Normalがかぶってエラーになってしまいます</b>。<br>
     その使いづらさを解消するために、<b>C++ではenumのかわりにenum class</b>があります。<br>
-    <br>
-    <br>
+    C++ではenum classを使ったほうが無難そうですね。<br>
+    (ただし、(int)型にキャストしながら使う)<br>
     <br>
   </body>
 </html>
