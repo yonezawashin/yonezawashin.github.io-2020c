@@ -3409,6 +3409,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 当たり判定の四隅の座標(±0.01fで1ピクセル隣)を取得<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xLeft = getLeft(x) + 0.01f, xRight = getRight(x) - 0.01f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yTop = getTop(y) + 0.01f, yBottom = getBottom(y) - 0.01f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>float xMiddle = xLeft + (getRight(x) - getLeft(x)) / 2;</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiddle = yTop + (getBottom(y) - getTop(y)) / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>if(hitcheck(BlockBit::Damage, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
@@ -3445,6 +3446,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xLeft = getLeft(x) + 0.01f, xRight = getRight(x) - 0.01f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yTop = getTop(y) + 0.01f, yBottom = getBottom(y) - 0.01f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xMiddle = xLeft + (getRight(x) - getLeft(x)) / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>float yMiddle = yTop + (getBottom(y) - getTop(y)) / 2;</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>if (hitcheck(BlockBit::Damage, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // やられたフラグをtrueに</em><br>
@@ -3937,6 +3939,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 当たり判定の四隅の座標(±0.01fで1ピクセル隣)を取得<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xLeft = getLeft(x) + 0.01f, xRight = getRight(x) - 0.01f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yTop = getTop(y) + 0.01f, yBottom = getBottom(y) - 0.01f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xMiddle = xLeft + (getRight(x) - getLeft(x)) / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiddle = yTop + (getBottom(y) - getTop(y)) / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if(hitcheck(BlockBit::Damage, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
@@ -3973,6 +3976,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xLeft = getLeft(x) + 0.01f, xRight = getRight(x) - 0.01f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yTop = getTop(y) + 0.01f, yBottom = getBottom(y) - 0.01f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xMiddle = xLeft + (getRight(x) - getLeft(x)) / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiddle = yTop + (getBottom(y) - getTop(y)) / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (hitcheck(BlockBit::Damage, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // やられたフラグをtrueに<br>
