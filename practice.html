@@ -3732,11 +3732,11 @@
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float xStart = 200, yStart = Screen::Height - 100; // キャラの初期スタート(ミス後の再開位置)<br>
-      &nbsp;&nbsp;float x = <em>xStart</em>, y = <em>yStart</em>; // 初期位置<br>
+      &nbsp;&nbsp;float x = xStart, y = yStart; // 初期位置<br>
       &nbsp;&nbsp;float yJumpStart = 0; // ジャンプした瞬間のyの位置<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float vx = 0, vy = 0; // プレイヤの速度<br>
-      &nbsp;&nbsp;enum Direction { Left, Right }; // enumでキャラの向いてる方向をDirection型として2種類(LeftとRight)定義<br>
+      &nbsp;&nbsp;enum <em>class </em>Direction { Left, Right }; // enumでキャラの向いてる方向をDirection型として2種類(LeftとRight)定義<br>
       &nbsp;&nbsp;Direction direction = Direction::Right; // キャラの向いてる方向<br>
       &nbsp;&nbsp;int animeTime = 0; // アニメ時間<br>
       &nbsp;&nbsp;<br>
@@ -3770,18 +3770,20 @@
       &nbsp;&nbsp;&nbsp;&nbsp;None = 0,<br>
       &nbsp;&nbsp;&nbsp;&nbsp;Wall &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
       &nbsp;&nbsp;&nbsp;&nbsp;Damage = 0b0000'0000'0000'0000'0000'0000'0000'0010,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>Bounce = 0b0000'0000'0000'0000'0000'0000'0000'0100, // 叩くと弾むブロック</em><br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;std::unordered_map&lt;int, unsigned int&gt; blockBits = {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;{-1,BlockBit::None},<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;{ 0,BlockBit::Wall},<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;{ 1,BlockBit::Damage},<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;{ 2,BlockBit::Wall},<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;{ 3,BlockBit::Wall}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{-1,<em>(int)</em>BlockBit::None},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ 0,<em>(int)</em>BlockBit::Wall},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ 1,<em>(int)</em>BlockBit::Damage},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ 2,<em>(int)</em>BlockBit::Wall<em> | (int)BlockBit::Bounce</em>},<em> // 壁 | はずむ (|ビット論理和)</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ 3,<em>(int)</em>BlockBit::Wall<em> | (int)BlockBit::Bounce</em>}<br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 指定された座標(worldX,worldY)の地形が 壁 や ダメージブロックかなどをチェックする一時関数<br>
-      &nbsp;&nbsp;auto checkID = [&amp;blockBits, &amp;CellSize](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain, float worldX, float worldY)<br>
+      &nbsp;&nbsp;auto checkID = [&amp;blockBits, &amp;CellSize](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain, float worldX, float worldY<em>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int terrainID = -1; // 指定された座標の地形のID<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
@@ -3793,7 +3795,11 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (mapY &lt; terrain.size() &amp;&amp; mapX &lt; terrain[mapY].size())<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;terrainID = terrain[mapY][mapX]; // 二次元配列から地形IDを取り出す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (checkBit &amp; blockBits[terrainID]) != 0; // ビット論理積 &amp; で地形のchekckBitを確かめる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>bool isCheckBit = (((int)checkBit) &amp; blockBits[terrainID]) != 0; // ビット論理積 &amp; で地形のchekckBitを確かめる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (isCheckBit &amp;&amp; pMapX != nullptr &amp;&amp; pMapY != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*pMapX = mapX, *pMapY = mapY; // ブロックのcsvのセル番号をポインタに記録(nullptrの場合は記録しない)</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return <em>isCheckBit</em>;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
