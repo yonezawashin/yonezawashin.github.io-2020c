@@ -4219,7 +4219,7 @@
     ( <b>std::pair&lt;int,int&gt; a;</b> に <b>a()など()をつけたとき</b>に呼び出される<b>operator()の定義</b> )<br>
     ( <b>std::unordered_map&lt;std::pair&lt;int,int&gt,int&gt; b;</b> で <b>b[a] = 4;など辞書にデータを登録する際に暗黙でa()が呼び出されデータがあみだ的に格納される</b> )<br>
     ハッシュのシード値やreturnされるハッシュ値は<b>int型ではなくsize_t型で受け</b>ています(<a href="https://jp-seemore.com/iot/23616/">size_tならば</a>32bitマシンなら=4バイト、64bitマシンなら=8バイトにビルドする環境で合わせてくれて安心)<br>
-    <p class="source"><br>
+    <p class="source">(以上略)...<br>
       #include &lt;unordered_map&gt;&nbsp;// std::unordered_map 高速辞書配列に必要(チップ番号から壁などを表すビットへ変換する辞書)<br>
       <em>#include &lt;utility&gt;&nbsp;// std::pair(データのペア型)を使うのに必要<br>
       // [ペアを高速辞書のキーにするためハッシュ関数が必要] https://qiita.com/hamamu/items/4d081751b69aa3bb3557<br>
@@ -4237,6 +4237,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;return HashCombine(std::hash&lt;TypeT&gt;()(keyval.first), keyval.second);<br>
       &nbsp;&nbsp;};<br>
       }</em><br>
+    (以下略)...<br>
     </p>
       <br>
       <br>
