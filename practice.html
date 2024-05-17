@@ -4216,10 +4216,7 @@
     <br>
     そしてそのHashCombine関数を高速辞書std::unordered_map内部で使用させるためにoperator()呼び出しもセットで準備しています。<br>
     ( <b>std::pair&lt;int,int&gt; a;</b> に <b>a()など()をつけたとき</b>に呼び出される<b>operator()の定義</b> )<br>
-    ( <b>std::unordered_map&lt;std::pair&lt;int,int&gt,int&gt; b;</b> で <b>b[a] = 4;など辞書にデータを登録する際に暗黙でa()が呼び出される</b> )<br>
-    <br>
-    <br>
-      <br>
+    ( <b>std::unordered_map&lt;std::pair&lt;int,int&gt,int&gt; b;</b> で <b>b[a] = 4;など辞書にデータを登録する際に暗黙でa()が呼び出されデータがあみだ的に格納される</b> )<br>
     <p class="source"><br>
       #include &lt;unordered_map&gt;&nbsp;// std::unordered_map 高速辞書配列に必要(チップ番号から壁などを表すビットへ変換する辞書)<br>
       <em>#include &lt;utility&gt;&nbsp;// std::pair(データのペア型)を使うのに必要<br>
