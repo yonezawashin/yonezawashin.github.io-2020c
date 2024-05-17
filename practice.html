@@ -4177,9 +4177,9 @@
     いかがでしょう、下からブロックを叩いたらブロックが上に少しバウンスするようになりましたか？<br>
     <br>
     <br>
-    注意点として、enumは{}の外でも名前をかぶらせることができないので、<br>
-    &nbsp;&nbsp;enum ●● { Normal, Fire, Water.. }; と<b>一回Normalという名前を定義したあと、enum ▲▲ { Normal };</b>とすると<b>Normalがかぶってエラーになってしまいます</b>。<br>
+    注意点として、enumでは<b> { } の外でも名前をかぶらせることができない</b>ので、<br>
     その使いづらさを解消するために、<b>C++ではenumのかわりにenum class</b>があります。<br>
+    例.&nbsp;&nbsp;enum ●● { Normal, Fire, Water.. }; と<b>一回Normalという名前を定義したあと、enum ▲▲ { Normal };</b>とすると<b>Normalがかぶってエラーになってしまいます</b>。<br>
     C++ではenum classを使ったほうが無難そうですね。<br>
     (ただし、(int)型にキャストしながら使う)<br>
     <br>
@@ -4240,7 +4240,20 @@
     (以下略)...<br>
     </p>
       <br>
-      <br>
+      以上のoperator()の定義があれば<br>
+      std::pair&lt;int,int&gt; mapXY = std::make_pair(mapX, mapY); <br>
+      のように XとYのペアmapXY を 高速辞書型blockAnime のキー にして<em>blockAnime[mapXY] = 0;</em> のように気軽に代入でデータを入れ込むことができるようになります。<br>
+      <p class="source">(以上略)...<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>int mapX = 0, mapY = 0; // ぶつかったらそのブロックのCSVのセルの行mapYと列mapXを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ( (int)HitPart::Top<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; hitcheck(BlockBit::Bounce, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::pair&lt;int,int&gt; mapXY = std::make_pair(mapX, mapY); // ぶつかったブロックのセルの行mapYと列mapXのペア<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockAnime.count(mapXY) == 0) // 辞書にキーがあるかcountで数えて未登録==0のとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockAnime[mapXY] = 0; // ブロックのアニメ時間を辞書に登録(時間が辞書にあるものだけアニメが走る)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+    (以下略)...<br>
+    </p>
       <br>
       <br>
       <br>
