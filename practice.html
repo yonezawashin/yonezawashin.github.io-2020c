@@ -4214,7 +4214,9 @@
     seed ^ (std::hash&lt;TypeT&gt;()(value) + 0x9e3779b9 + (seed &lt;&lt; 6) + (seed &gt;&gt; 2));<br>
     をHashCombine()関数として定義して使用しています。(16進数 0x9e3779b9やシフトなど難しい式ですが、使う側は意味を考える必要まではないです)<br>
     <br>
-    そしてそのHashCombine関数を高速辞書std::unordered_map内部で使用させるためにoperator()呼び出しもセットで準備しています。(例. a に a()など()をつけたときに呼び出されるoperator()の定義)<br>
+    そしてそのHashCombine関数を高速辞書std::unordered_map内部で使用させるためにoperator()呼び出しもセットで準備しています。<br>
+    ( <b>std::pair&lt;int,int&gt; a;</b> に <b>a()など()をつけたとき</b>に呼び出される<b>operator()の定義</b> )<br>
+    ( <b>std::unordered_map&lt;std::pair&lt;int,int&gt,int&gt; b;</b> で <b>b[a] = 4;など辞書にデータを登録する際に暗黙でa()が呼び出される</b> )<br>
     <br>
     <br>
       <br>
@@ -4231,11 +4233,17 @@
       template&lt;class TypeT, class TypeS&gt; struct std::hash&lt;std::pair&lt;TypeT, TypeS&gt;&gt;<br>
       {<br>
       &nbsp;&nbsp;size_t operator() (const std::pair&lt;TypeT, TypeS&gt;&amp; keyval) const noexcept<br>
-      &nbsp;&nbsp;{ &nbsp; // returnで()をつけたときにハッシュ関数を返すようにすることで高速辞書のキーとして認め許されるようになる<br>
+      &nbsp;&nbsp;{ &nbsp; // ()をつけたときにreturnでハッシュ関数を返すようにすることで高速辞書のキーとして使えるようになる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return HashCombine(std::hash&lt;TypeT&gt;()(keyval.first), keyval.second);<br>
       &nbsp;&nbsp;};<br>
       }</em><br>
-      <br>
     </p>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
   </body>
 </html>
