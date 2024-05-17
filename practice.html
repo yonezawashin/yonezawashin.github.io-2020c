@@ -3668,7 +3668,8 @@
       }<br>
       <br>
       // pair型に()をつけたときに呼び出される処理をoperator()で定義してreturnでハッシュ関数を返す<br>
-      template&lt;class TypeT, class TypeS&gt; struct std::hash&lt;std::pair&lt;TypeT, TypeS&gt;&gt;<br>
+      template&lt;class TypeT, class TypeS&gt;<br>
+      struct std::hash&lt;std::pair&lt;TypeT, TypeS&gt;&gt;<br>
       {<br>
       &nbsp;&nbsp;size_t operator() (const std::pair&lt;TypeT, TypeS&gt;&amp; keyval) const noexcept<br>
       &nbsp;&nbsp;{ &nbsp; // returnでハッシュ関数を返すことで高速辞書のキーとして認め許されるようになる<br>
@@ -4228,7 +4229,8 @@
       }<br>
       <br>
       // pair型に()をつけたときに呼び出される処理をoperator()で定義してreturnでハッシュ関数を返す<br>
-      template&lt;class TypeT, class TypeS&gt; struct std::hash&lt;std::pair&lt;TypeT, TypeS&gt;&gt;<br>
+      template&lt;class TypeT, class TypeS&gt;<br>
+      struct std::hash&lt;std::pair&lt;TypeT, TypeS&gt;&gt;<br>
       {<br>
       &nbsp;&nbsp;size_t operator() (const std::pair&lt;TypeT, TypeS&gt;&amp; keyval) const noexcept<br>
       &nbsp;&nbsp;{ &nbsp; // ()をつけたときにreturnでハッシュ関数を返すようにすることで高速辞書のキーとして使えるようになる<br>
