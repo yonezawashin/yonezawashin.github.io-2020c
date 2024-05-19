@@ -4287,7 +4287,7 @@
 <br>
       <br>
       <br>
-      <p>さてつぎは【ブロックに<b>どの方向からめりこんだか</b>を得られるようにして<b>叩かれたブロックのマス目番号XYをキーに高速辞書でアニメ時間を管理</b>して叩かれたブロックをバウンスするサンプル】でブロックに動きをつけましょう。</p>
+      <p>さてつぎは【ブロックidの<b>変化を辞書blockChangeで管理</b>して叩いたらidが3 → 2 → -1 に変化してブロックを壊せるサンプル】でブロックを壊せるようにしてみましょう。</p>
     <p><code>main.cpp</code>を編集します：</p>
     <p class="source">#include "DxLib.h"<br>
       #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
@@ -4799,10 +4799,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (id &lt; 0) continue; // -1のときは描かない<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// マップチップを描く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>auto mapXY = std::make_pair(cellX, cellY);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockAnime.count(mapXY) == 0)</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;</em>DrawRotaGraphF(chip_x - camera_x + rotaShiftX, chip_y - camera_y + rotaShiftY, 1.0f, 0.0f, mapChips[id], TRUE);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>else if ((int)BlockBit::Bounce &amp; blockBits[id])<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;auto mapXY = std::make_pair(cellX, cellY);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockAnime.count(mapXY) == 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(chip_x - camera_x + rotaShiftX, chip_y - camera_y + rotaShiftY, 1.0f, 0.0f, mapChips[id], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if ((int)BlockBit::Bounce &amp; blockBits[id])<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yBase = chip_y - camera_y + rotaShiftY;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim0 = yBase - 10, yAnim1 = yBase; // yAnim0 から yAnim1の位置までアニメする<br>
@@ -4812,7 +4812,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++blockAnime[mapXY]; // アニメ時間を進める<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockTime > 15) // アニメ終了時間を15フレーム目とするとき<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockAnime.erase(mapXY); // 辞書からアニメをerase関数で取り除く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ]用にcsvのidの数字を描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawString(chip_x - camera_x, chip_y - camera_y, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -4840,6 +4840,11 @@
       &nbsp;&nbsp;// ソフトの終了<br>
       &nbsp;&nbsp;return 0;<br>
       }</p>    
+      <br>
+      <br>
+      いかがでしょう、ブロックを下から叩くとブロックのidが変化して、ブロックが壊せるようになりましたか？<br>
+      オリジナルのタイルを自分で描いて、blockChange辞書に登録して、壊せるブロックを自作で増やしてみてくださいね。<br>
+      <br>
       <br>
       <br>
   </body>
