@@ -3674,8 +3674,8 @@
       &nbsp;&nbsp;size_t operator() (const std::pair&lt;TypeT, TypeS&gt;&amp; keyval) const noexcept<br>
       &nbsp;&nbsp;{ &nbsp; // returnでハッシュ関数を返すことで高速辞書のキーとして認め許されるようになる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return HashCombine(std::hash&lt;TypeT&gt;()(keyval.first), keyval.second);<br>
-      &nbsp;&nbsp;};<br>
-      }</em><br>
+      &nbsp;&nbsp;}<br>
+      };</em><br>
       <br>
       // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
       int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
