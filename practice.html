@@ -4443,10 +4443,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;{ 3,(int)BlockBit::Wall | (int)BlockBit::Bounce<em> | (int)BlockBit::Change</em>}<br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;<em>// ブロックをバウンドさせるための 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
+      &nbsp;&nbsp;// ブロックをバウンドさせるための 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
       &nbsp;&nbsp;std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; blockAnime;<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;std::unordered_map&lt;int, int&gt; blockChange = {<br>
+      &nbsp;&nbsp;<em>std::unordered_map&lt;int, int&gt; blockChange = {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{  2,  3 }, // 叩くと 2 → 3 にかわる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{  3, -1 }, // 叩くと 3 → -1 にかわる<br>
       &nbsp;&nbsp;};</em><br>
