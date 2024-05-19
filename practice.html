@@ -4699,7 +4699,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false; // ブロックに当たってないからfalseにして落下するように<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>if (isBlockChanging) // ブロック変化フラグ==true(すでに↑めりこみ判定でvy=0で勢いを止め反射が効くからid=-1にしてもすりぬけない)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>if (isBlockChanging) // ブロック変化フラグ==true(すでに↑めりこみ判定でvy=0で勢いを止め反射が効くからid=-1にしてもすりぬけずにすむ)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = mapData[mapY][mapX]; // 行mapY 列mapXの地形idを得る<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockChange.count(id) &gt; 0) // blockChangeの辞書に登録のあるidのときは<br>
