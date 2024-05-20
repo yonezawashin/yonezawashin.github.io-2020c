@@ -28,6 +28,7 @@
       <li><a href="#mozTocId0014">トゲトゲに当たったらキャラがくるくる回ってから下に落ちて最初のスタート位置に戻されるプログラム</a></li>
       <li><a href="#mozTocId0015">ブロックを下から叩いたらy位置をアニメさせてバウンスするプログラム</a></li>
       <li><a href="#mozTocId0016">ブロックidを辞書で変化させて叩いたらidが3 → 2 → -1 に変化してブロックを壊せるプログラム</a></li>
+      <li><a href="#mozTocId0017">for文で複数ブロックidを辞書で変化させてON OFFブロックを叩いたらidが12⇔13、14⇔15にスイッチできるプログラム</a></li>
     </ol>
     <h1><a id="mozTocId0001" class="mozTocH1"></a>静止したキャラを出すだけのプログラム</h1>
     <br>
@@ -4846,6 +4847,585 @@
       オリジナルのタイルを自分で描いて、blockChange辞書に登録して、壊せるブロックを自作で増やしてみてくださいね。<br>
       <br>
       <br>
+      <br>
+      <br>
+      <br>
+<br>
+    <h1><a id="mozTocId0017" class="mozTocH1"></a>for文で複数ブロックidを辞書で変化させてON OFFブロックを叩いたらidが12⇔13、14⇔15にスイッチできるプログラム</h1>
+<br>
+      <br>
+      <br>
+      <br>
+      <p>さてつぎは【for文で複数のブロックidを<b>辞書blockChangeで管理</b>してON OFFブロックを叩いたらidが12⇔13、14⇔15にスイッチできるサンプル】でブロックをスイッチできるようにしてみましょう。</p>
+    <p><code>main.cpp</code>を編集します：</p>
+    <p class="source">#include "DxLib.h"<br>
+      #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+      #include "Screen.h"<br>
+      #include "Input.h"<br>
+      <br>
+      #include &lt;vector&gt;&nbsp;// csvを2次元vector配列に格納<br>
+      #include &lt;string&gt;&nbsp;// 文字列std::stringに必要<br>
+      #include &lt;fstream&gt;&nbsp;// ファイル読み出しstd::ifstreamに必要<br>
+      #include &lt;sstream&gt;&nbsp;// 文字列ストリームに必要 ss &gt;&gt; num;で文字列から数字に変換できる<br>
+      #include &lt;unordered_map&gt;&nbsp;// std::unordered_map 高速辞書配列に必要(チップ番号から壁などを表すビットへ変換する辞書)<br>
+      #include &lt;utility&gt;&nbsp;// std::pair(データのペア型)を使うのに必要<br>
+      // [ペアを高速辞書のキーにするためハッシュ関数が必要] https://qiita.com/hamamu/items/4d081751b69aa3bb3557<br>
+      template&lt;class TypeT&gt; size_t HashCombine(const size_t seed, const TypeT&amp; value)<br>
+      {<br>
+      &nbsp;&nbsp;return seed ^ (std::hash&lt;TypeT&gt;()(value) + 0x9e3779b9 + (seed &lt;&lt; 6) + (seed &gt;&gt; 2));<br>
+      }<br>
+      <br>
+      // pair型に()をつけたときに呼び出される処理をoperator()で定義してreturnでハッシュ関数を返す<br>
+      template&lt;class TypeT, class TypeS&gt;<br>
+      struct std::hash&lt;std::pair&lt;TypeT, TypeS&gt;&gt;<br>
+      {<br>
+      &nbsp;&nbsp;size_t operator() (const std::pair&lt;TypeT, TypeS&gt;&amp; keyval) const noexcept<br>
+      &nbsp;&nbsp;{ &nbsp; // returnでハッシュ関数を返すことで高速辞書のキーとして認め許されるようになる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return HashCombine(std::hash&lt;TypeT&gt;()(keyval.first), keyval.second);<br>
+      &nbsp;&nbsp;}<br>
+      };<br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;// 画面モードの設定<br>
+      &nbsp;&nbsp;SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズをScreenクラスに合わせて設定してカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズをScreenクラスに合わせて設定(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;//↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;// ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return -1;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ゲームのwhileループを開始する前の初期化処理<br>
+      &nbsp;&nbsp;int playerChips[12]; // キャラのチップのグリッドの分割数に応じて3×4 = 12のぶんだけ配列を事前に確保<br>
+      &nbsp;&nbsp;LoadDivGraph("Image/pikkoron.png", 12, 3, 4, 32, 32, playerChips); // キャラのチップのサイズは32×32<br>
+      &nbsp;&nbsp;assert(playerChips[0] != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 効果音ファイルを事前にメモリに読み込む https://dxlib.xsrv.jp/function/dxfunc_sound.html#R8N4<br>
+      &nbsp;&nbsp;int jumpSE[4]; // 4種類のジャンプ音を読み込む<br>
+      &nbsp;&nbsp;jumpSE[0] = LoadSoundMem("SE/Jump0.wav");<br>
+      &nbsp;&nbsp;jumpSE[1] = LoadSoundMem("SE/Jump1.wav");<br>
+      &nbsp;&nbsp;jumpSE[2] = LoadSoundMem("SE/Jump2.wav");<br>
+      &nbsp;&nbsp;jumpSE[3] = LoadSoundMem("SE/Jump3.wav");<br>
+      &nbsp;&nbsp;assert(jumpSE[0] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;assert(jumpSE[1] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;assert(jumpSE[2] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;assert(jumpSE[3] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int CellSize = 32; // マップの1マスのピクセル数<br>
+      &nbsp;&nbsp;int mapChips[64]; // マップのチップのグリッドの分割数に応じて8×8 = 64など配列で確保<br>
+      &nbsp;&nbsp;LoadDivGraph("Map/mapchip.png", 64, 8, 8, CellSize, CellSize, mapChips); // マップのチップのサイズは32×32(=CellSize)<br>
+      &nbsp;&nbsp;assert(mapChips[0] != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;std::vector&lt;std::vector&lt;int&gt;&gt; mapData;// タイルマップデータ<br>
+      &nbsp;&nbsp;std::ifstream ifs_csv_file("Map/stage.csv"); // 読み込むcsvファイルを開く(std::ifstreamのコンストラクタで開く)<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int Width = 0, Height = 0; // マップデータの横(Width) 縦(Height)のマスの数<br>
+      &nbsp;&nbsp;int MaxWidth = 0; // 1行の数字の最大個数<br>
+      &nbsp;&nbsp;std::string line; // 1行単位ごとにcsvファイルから文字列をstd::getlineで読み込んで受け取る<br>
+      &nbsp;&nbsp;while (std::getline(ifs_csv_file, line)) // ファイルを行ごとに読み込む<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;std::vector&lt;int&gt; valuelist; // 1行ぶんの数字リスト配列<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;std::istringstream linestream( line ); // 各行の文字列ストリーム<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;std::string comma_part; // カンマで分割された文字列<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;int widthCount = 0; // カンマで区切られた行の数字の数(各行の幅)をカウント<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;while (std::getline(linestream, comma_part, { ',' })) // 1行をgetlineでカンマで区切って列を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::istringstream ss( comma_part ); // カンマで区切られた文字をssを通して&gt;&gt;で数字に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int num; // 数字単体<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ss &gt;&gt; num; // 文字列ストリーム&gt;&gt;で数字へ変換<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;valuelist.emplace_back(num); // 数字をこの行のリスト(valuelist)に追加<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++widthCount; //この行のカンマで区切られた数字の数をカウントアップ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 1行の数字の数がMAX記録を更新するかチェック<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (widthCount &gt; MaxWidth)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MaxWidth = widthCount; // 暫定Maxの列の幅を更新<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 1行ぶんの数字の配列をとりまとめてmapDataに1行ずつ追加<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (valuelist.size() != 0) // 配列に数字が1つでもあるなら.size() != 0<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mapData.emplace_back(valuelist); // mapDataに1行ずつ数字配列valuelistを追加<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;++Height; //マップの高さをカウントアップ<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;Width = MaxWidth; // マップの幅Widthは一番数字の個数の多かった行に合わせる<br>
+      &nbsp;&nbsp;// ↓読込んだCSVの幅と高さをチェック<br>
+      &nbsp;&nbsp;assert(Width &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違い、もしくはMapフォルダにファイルがないのでは?" != "");<br>
+      &nbsp;&nbsp;assert(Height &gt; 0 &amp;&amp; "マップ読込み失敗ファイル名間違い、もしくはMapフォルダにファイルがないのでは?" != "");<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float xStart = 200, yStart = Screen::Height - 100; // キャラの初期スタート(ミス後の再開位置)<br>
+      &nbsp;&nbsp;float x = xStart, y = yStart; // 初期位置<br>
+      &nbsp;&nbsp;float yJumpStart = 0; // ジャンプした瞬間のyの位置<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float vx = 0, vy = 0; // プレイヤの速度<br>
+      &nbsp;&nbsp;enum class Direction { Left, Right }; // enumでキャラの向いてる方向をDirection型として2種類(LeftとRight)定義<br>
+      &nbsp;&nbsp;Direction direction = Direction::Right; // キャラの向いてる方向<br>
+      &nbsp;&nbsp;int animeTime = 0; // アニメ時間<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;bool isDead = false; // キャラがやられたかどうか<br>
+      &nbsp;&nbsp;int deadAnimeTime = 0; // やられたときのアニメ時間<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>bool isSwitchOn = false; // ステージ全体のスイッチのオン、オフ状態(オンのときはオンを押せないようにする)<br>
+      &nbsp;&nbsp;int id_On = 10, id_Off = 11; // オンのときにオンを押したりオフのときにオフを押せないように判定する</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int vx_idx = 0; // 横方向の加速の段階<br>
+      &nbsp;&nbsp;float vxSpeedMax = 15; // X左右方向の限界速度<br>
+      &nbsp;&nbsp;float vyJumpSpeed[] = { 14, 15, 16, 4 }, vyDownSpeedMax[] = { 16, 16, 16, 8 }; // ダッシュ段階に応じた複数のジャンプの上昇と降下スピードのリミット<br>
+      &nbsp;&nbsp;float vyForce = 0;<br>
+      &nbsp;&nbsp;float vyForceJump[] = { 0.5f,0.4f,0.3f,0.1f }, vyGravity[] = { 0.8f,0.8f,0.8f,0.8f }; // ダッシュ段階に応じた複数のパラメータを持つように<br>
+      &nbsp;&nbsp;bool isGround = true; // 着地しているか<br>
+      &nbsp;&nbsp;bool isFlying = false; // 飛行モード<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int imgSizeX, imgSizeY; // 画像の縦横サイズ<br>
+      &nbsp;&nbsp;GetGraphSize(playerChips[0], &amp;imgSizeX, &amp;imgSizeY); // GetGraphSize関数で画像の縦横を得られる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int hitOffsetLeft = 2; // 当たり判定の左端のオフセット<br>
+      &nbsp;&nbsp;int hitOffsetRight = 2; // 当たり判定の右端のオフセット<br>
+      &nbsp;&nbsp;int hitOffsetTop = 1; // 当たり判定の上端のオフセット<br>
+      &nbsp;&nbsp;int hitOffsetBottom = 0; // 当たり判定の下端のオフセット<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 当たり判定のはしっこを計算するための一時関数<br>
+      &nbsp;&nbsp;auto getLeft  = [&amp;hitOffsetLeft](float worldX) { return worldX + hitOffsetLeft; };<br>
+      &nbsp;&nbsp;auto getTop   = [&amp;hitOffsetTop](float worldY) { return worldY + hitOffsetTop; };<br>
+      &nbsp;&nbsp;auto getRight  = [&amp;hitOffsetRight, &amp;imgSizeX](float worldX) { return worldX + imgSizeX - hitOffsetRight; };<br>
+      &nbsp;&nbsp;auto getBottom = [&amp;hitOffsetBottom, &imgSizeY](float worldY) { return worldY + imgSizeY - hitOffsetBottom; };<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;enum class BlockBit // ブロックの特性を32桁のビットで表現<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;None = 0,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Wall &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Damage = 0b0000'0000'0000'0000'0000'0000'0000'0010,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Bounce = 0b0000'0000'0000'0000'0000'0000'0000'0100, // 叩くと弾むブロック<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Change = 0b0000'0000'0000'0000'0000'0000'0000'1000, // 叩くとブロックの種類が変わる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>Switch = 0b0000'0000'0000'0000'0000'0000'0001'0000, // スイッチを叩くと赤ブロックや青ブロックの無効⇔有効が切替</em><br>
+      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;std::unordered_map&lt;int, unsigned int&gt; blockBits = {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{-1,(int)BlockBit::None},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ 0,(int)BlockBit::Wall},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ 1,(int)BlockBit::Damage},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ 2,(int)BlockBit::Wall | (int)BlockBit::Bounce | (int)BlockBit::Change}, // 壁 | はずむ | ブロック変化 (|ビット論理和)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ 3,(int)BlockBit::Wall | (int)BlockBit::Bounce | (int)BlockBit::Change}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>{10,(int)BlockBit::Wall | (int)BlockBit::Bounce | (int)BlockBit::Switch}, // 赤Onスイッチ</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>{11,(int)BlockBit::Wall | (int)BlockBit::Bounce | (int)BlockBit::Switch}, // 青Offスイッチ</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>{12,(int)BlockBit::Wall}, // On に連動するブロック</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>{14,(int)BlockBit::Wall}, // Offに連動するブロック</em><br>
+      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ブロックをバウンドさせるための 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
+      &nbsp;&nbsp;std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; blockAnime;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;std::unordered_map&lt;int, int&gt; blockChange = {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{  2,  3 }, // 叩くと 2 → 3 にかわる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{  3, -1 }, // 叩くと 3 → -1 にかわる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>{ 12, 13 }, // 11(OFF) を押すと 12→13</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>{ 13, 12 }, // 10(ON)  を押すと 13→12</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>{ 14, 15 }, // 10(ON)  を押すと 14→15</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>{ 15, 14 }, // 11(OFF) を押すと 15→14</em><br>
+      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>std::unordered_map&lt;int, std::vector&lt;int&gt;&gt; blockSwitch = {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ 10, {12,13,14,15} }, // 叩くと12,13,14,15がblockChangeの設定内容に応じて変化する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ 11, {12,13,14,15} },<br>
+      &nbsp;&nbsp;};</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 指定された座標(worldX,worldY)の地形が 壁 や ダメージブロックかなどをチェックする一時関数<br>
+      &nbsp;&nbsp;auto checkID = [&amp;blockBits, &amp;CellSize](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain, float worldX, float worldY,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int terrainID = -1; // 指定された座標の地形のID<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (worldX &lt; 0 || worldY &lt; 0) return false; // 負の座標が指定された場合<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// マップ座標系（二次元配列の行と列）に変換する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int mapX = (int)(worldX / CellSize), mapY = (int)(worldY / CellSize);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 二次元配列の範囲内か判定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (mapY &lt; terrain.size() &amp;&amp; mapX &lt; terrain[mapY].size())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;terrainID = terrain[mapY][mapX]; // 二次元配列から地形IDを取り出す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bool isCheckBit = (((int)checkBit) &amp; blockBits[terrainID]) != 0; // ビット論理積 &amp; で地形のchekckBitを確かめる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (isCheckBit &amp;&amp; pMapX != nullptr &amp;&amp; pMapY != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*pMapX = mapX, *pMapY = mapY; // ブロックのcsvのセル番号をポインタに記録(nullptrの場合は記録しない)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return isCheckBit;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;enum class HitPart // 当たった箇所を表すビット<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;None &nbsp; &nbsp;= 0,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Left &nbsp; &nbsp;= 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Right &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0010,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Top &nbsp; &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0100,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Bottom &nbsp;= 0b0000'0000'0000'0000'0000'0000'0000'1000,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;XMiddle = 0b0000'0000'0000'0000'0000'0000'0001'0000,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;YMiddle = 0b0000'0000'0000'0000'0000'0000'0010'0000,<br>
+      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
+      &nbsp;&nbsp;auto hitcheck = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 左端がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yTop, pMapX, pMapY)) // 左上がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::Left | (int)HitPart::Top;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yMiddle, pMapX, pMapY)) // 左中がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::Left | (int)HitPart::YMiddle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yBottom, pMapX, pMapY)) // 左下がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::Left | (int)HitPart::Bottom;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 右端がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yTop, pMapX, pMapY)) // 右上がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::Right | (int)HitPart::Top;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yMiddle, pMapX, pMapY)) // 右中がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::Right | (int)HitPart::YMiddle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yBottom, pMapX, pMapY)) // 右下がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::Right | (int)HitPart::Bottom;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 頭の部分がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yTop, pMapX, pMapY)) // 左上がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::Left | (int)HitPart::Top;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xMiddle, yTop, pMapX, pMapY)) // 中上がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::XMiddle | (int)HitPart::Top;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yTop, pMapX, pMapY)) // 右上がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::Right | (int)HitPart::Top;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 足元が壁にめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xLeft, yBottom, pMapX, pMapY))  // 左下がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::Left | (int)HitPart::Bottom;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xMiddle, yBottom, pMapX, pMapY)) // 中下がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::XMiddle | (int)HitPart::Bottom;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(checkBit, terrain, xRight, yBottom, pMapX, pMapY)) // 右下がめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::Right | (int)HitPart::Bottom;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (int)HitPart::None;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
+      &nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
+      &nbsp;&nbsp;float camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
+      &nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;float debug_x = -1, debug_y = -1; // [デバッグ] めり込みすぎのラインを記録しておく変数<br>
+      &nbsp;&nbsp;float debug_x_yTop = -1, debug_x_yBottom = -1; // [デバッグ] カメラが動くのでめり込んだ瞬間の上下端も記録<br>
+      &nbsp;&nbsp;float debug_y_xLeft = -1, debug_y_xRight = -1; // [デバッグ] カメラが動くのでめり込んだ瞬間の左右端も記録<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;Input::Init(); // Inputクラスの初期化<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;ScreenFlip();<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;{&nbsp;&nbsp;// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Input::Update(); // Inputの更新(これを毎ターンやらないとキーの状態が変わらず反応しない)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;direction = Direction::Left;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt; 0) vx = 0; // 急ブレーキ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &gt;= -vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += -0.35f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;direction = Direction::Right;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt; 0) vx *= 0.9; // すべりながら減衰ブレーキ表現(vxは9/10ずつ減少する)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx &lt;= vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx += 0.35f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 飛行モード中にZキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isFlying &amp;&amp; Input::GetButtonDown(PAD_INPUT_A))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 3; // [3]番には飛行中のパラメータが入ってる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed[vx_idx]; // 押すたび少し羽ばたく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump[vx_idx];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 加速段階に応じて違うジャンプ音を鳴らす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlaySoundMem(jumpSE[vx_idx], DX_PLAYTYPE_BACK);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_A)) // Zキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 0; // 加速の段階をリセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float vx_abs = (vx &lt; 0) ? -vx : vx; // absはvxの絶対値(マイナスなら-をつけてプラスに直す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 6) ++vx_idx; // 一定値を超えるごとに加速段階を+1<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 9) ++vx_idx; // 最大0～2段階まで +1ずつされる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 9) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isFlying = true; // 飛行モードにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 加速段階に応じて違うジャンプ音を鳴らす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlaySoundMem(jumpSE[vx_idx], DX_PLAYTYPE_BACK);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed[vx_idx]; // ジャンプ方向はY上方向(マイナス方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump[vx_idx]; // 上昇フェーズ中の下方向へ引っ張られる力(この行がないと際限なくジャンプ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yJumpStart = y; // ジャンプ開始する瞬間のy位置を保管する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (vy &gt;= 0) // 下落開始(vy &lt; 0のときはまだジャンプ上昇の勢いありvy==0を境に勢いは逆方向に)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity[vx_idx]; // ジャンプ上昇力が0になって以降に初めて重力をオンにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButtonUp(PAD_INPUT_A)) // Zキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (yJumpStart - y &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity[vx_idx]; // ジャンプ上昇中(vy &lt; 0のとき)にボタンを離したら早めに重力をかけ始める(小ジャンプ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (!isDead) // やられたときは移動を停止<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x += vx; // 速度のぶん現在の位置から移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (!isDead) // やられたときは当たり判定も停止<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 当たり判定の四隅の座標(±0.01fで1ピクセル隣)を取得<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xLeft = getLeft(x) + 0.01f, xRight = getRight(x) - 0.01f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yTop = getTop(y) + 0.01f, yBottom = getBottom(y) - 0.01f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xMiddle = xLeft + (getRight(x) - getLeft(x)) / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiddle = yTop + (getBottom(y) - getTop(y)) / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if(hitcheck(BlockBit::Damage, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // やられたフラグをtrueに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 左端が壁にめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(BlockBit::Wall, mapData, xLeft, yTop) || // 左上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xLeft, yMiddle) || // 左中が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xLeft, yBottom) )  // 左下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x = xLeft; // [デバック] めり込んだラインを記録しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x_yTop = y - Screen::Height / 2, debug_x_yBottom = y + Screen::Height / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// std::fmodで小数点の余りを計算 めり込みすぎの余り = std::fmod(xLeft, CellSize)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallRight = xLeft + CellSize - (float)std::fmod(xLeft, CellSize); // 壁の右端<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x = wallRight - hitOffsetLeft; // 左端を壁の右端に沿わす(めり込んだぶんを押し戻す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = 0; // 壁に当たったら速度をストップ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} // ↓右端が壁にめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yTop) || // 右上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yMiddle) || // 右中が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yBottom) )  // 右下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x = xRight; // [デバック] めり込んだラインを記録しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x_yTop = y - Screen::Height / 2, debug_x_yBottom = y + Screen::Height / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallLeft = xRight - (float)std::fmod(xRight, CellSize); // 壁の左端<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x = wallLeft + hitOffsetRight - imgSizeX; // 右端を壁の左端に沿わす(めり込んだぶんを押し戻す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = 0; // 壁に当たったら速度をストップ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (!isDead) // やられたときは移動を停止<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y += vy;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (!isDead) // やられたときは当たり判定も停止<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 当たり判定の四隅の座標(±0.01fで1ピクセル隣)を取得<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xLeft = getLeft(x) + 0.01f, xRight = getRight(x) - 0.01f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yTop = getTop(y) + 0.01f, yBottom = getBottom(y) - 0.01f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xMiddle = xLeft + (getRight(x) - getLeft(x)) / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiddle = yTop + (getBottom(y) - getTop(y)) / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (hitcheck(BlockBit::Damage, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // やられたフラグをtrueに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int mapX = 0, mapY = 0; // ぶつかったらそのブロックのCSVのセルの行mapYと列mapXを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ( (int)HitPart::Top<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; hitcheck(BlockBit::Bounce, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::pair&lt;int,int&gt; mapXY = std::make_pair(mapX, mapY); // ぶつかったブロックのセルの行mapYと列mapXのペア<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockAnime.count(mapXY) == 0) // 辞書にキーがあるかcountで数えて未登録==0のとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockAnime[mapXY] = 0; // ブロックのアニメ時間を辞書に登録(時間が辞書にあるものだけアニメが走る)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>bool isBlockChanging = false; // ブロック変化フラグ(idはあとから変化させないとWallの押し戻しの跳ね返りvy = 0がなくなる)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ( (int)HitPart::Top<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; hitcheck(BlockBit::Change, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isBlockChanging = true; // ここではフラグをtrueにするだけ(めり込み押し戻しvy=0するまえにid=-1にすると壊した瞬間にすり抜けちゃう)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 頭の部分が壁にめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (checkID(BlockBit::Wall, mapData, xLeft, yTop) || // 左上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xMiddle, yTop) || // 中上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yTop) )  // 右上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y = yTop; // [デバック] めり込んだラインを記録しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y_xLeft = x - Screen::Width / 2, debug_y_xRight = x + Screen::Width / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallBottom = yTop + CellSize - (float)std::fmod(yTop, CellSize); // 壁の下側の境界<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y = wallBottom - hitOffsetTop; // 頭を壁の下端に沿わす(めり込んだぶんを押し戻す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = 0; // 壁に当たったら速度をストップ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} // ↓足元が壁にめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xLeft, yBottom) || // 左下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xMiddle, yBottom) || // 中下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;checkID(BlockBit::Wall, mapData, xRight, yBottom) )  // 右下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y = yBottom; // [デバック] めり込んだラインを記録しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y_xLeft = x - Screen::Width / 2, debug_y_xRight = x + Screen::Width / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallTop = yBottom - (float)std::fmod(yBottom, CellSize); // 壁の上側の境界<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y = wallTop + hitOffsetBottom - imgSizeX; // 足元を壁の上端に沿わす(めり込んだぶんを押し戻す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isFlying = false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = 0; // 床に当たったら速度をストップ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false; // ブロックに当たってないからfalseにして落下するように<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>if (isBlockChanging) // ブロック変化フラグ==true(すでに↑めりこみ判定でvy=0で勢いを止め反射が効くからid=-1にしてもすりぬけずにすむ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = mapData[mapY][mapX]; // 行mapY 列mapXの地形idを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockChange.count(id) &gt; 0) // blockChangeの辞書に登録のあるidのときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::pair&lt;int, int&gt; mapXY = std::make_pair(mapX, mapY); // ぶつかったブロックのセルの行mapYと列mapXのペア<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (!(blockBits[blockChange[id]] &amp; (int)BlockBit::Bounce)) // 変化先ブロックがバウンスするならアニメ時間をeraseせずに辞書に残す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockAnime.count(mapXY) &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockAnime.erase(mapXY); // ブロックの種類変える前にアニメをリセットしておかないと辞書に残り続ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mapData[mapY][mapX] = blockChange[id]; // idを入れ替える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vx *= 0.97f; // 減速率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vy += vyForce; // 勢い(力・フォースを加算)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vy &gt;= vyDownSpeedMax[vx_idx]) // 無限に落下速度が加速しないようにリミット(空気抵抗みたいなもの)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = vyDownSpeedMax[vx_idx];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// ダッシュ段階に応じてキャラクタのアニメ時間を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float vx_dash = (vx &lt; 0) ? -vx : vx; // 絶対値でプラスだけにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 0.5f) animeTime += 1; // 時間 +1 ( 合計 1 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 6) animeTime += 1;  // 時間 +1 (計 1+1=2 ) 1フレームごとに2アニメ時間が進む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 9) animeTime += 2; // 最終段階ではアニメ時間をさらに +2 (計 1+1+2=4 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;int animeStep = animeTime / 10; // 10を5に変えたらアニメ速度が上がる(10ごとに1コマアニメが進む)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (animeStep &gt;= 3) // アニメのステップ数が0,1,2の3段階までなら3を超えたら0へループ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animeTime = 0; // 0へ戻り再びアニメ時間を再ループ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animeStep = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isDead) // やられたときの描画処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiss = y - camera_y + imgSizeY / 2; // ミスったy起点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim0 = yMiss; // アニメy位置0 始まりのy位置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim1 = yMiss - 10; // アニメy位置1 アニメの途中少し上方向に 10 浮く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim2 = Screen::Height + 32; // アニメy位置2 最終y位置 画面の高さ+32で画面外へ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yDeadAnim; // やられた際にはyの位置をアニメさせる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 直線的な比例アニメの式(t=時刻)  位置1×(終時刻 - t) / アニメの長さ  +  位置2×(t - 始時刻) / アニメの長さ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (deadAnimeTime &lt; 40) // やられアニメが始まって40フレーム目までは yAnim0 ～ yAnim1<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yDeadAnim = yAnim0 * (40 - deadAnimeTime) / 40 + yAnim1 * (deadAnimeTime - 0) / 40;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (deadAnimeTime &lt; 60) // やられアニメが始まって60フレーム目までは yAnim1 ～ yAnim2<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yDeadAnim = yAnim1 * (60 - deadAnimeTime) / 20 + yAnim2 * (deadAnimeTime - 40) / 20;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yDeadAnim = yAnim2; // アニメ終了 到着 y位置をセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deadAnimeTime = 0; // 次にやられたときのアニメのため0リセットしておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 再開位置からゲーム再開(各数値もリセット)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x = xStart, y = yStart, vx = 0, vy = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false, isFlying = false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int deadAnimeStep = deadAnimeTime / 3; // 3で割って[チップのパラパラの]アニメの速度は弱める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int chipAnime = deadAnimeStep % 3; // % 3で余りを求めれば余りはチップのパラパラ番号は0～2の間に収まる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, yDeadAnim, 1.0f, 10.0f * deadAnimeStep / 360.0f * 2 * DX_PI, playerChips[chipAnime], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++deadAnimeTime; // アニメ時間を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (isFlying &amp;&amp; direction == Direction::Left) // 飛ぶと-60度傾けて表示 キャラチップは[4]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y - camera_y + imgSizeY / 2, 1.0f,-60.0f / 360.0f * 2 * DX_PI, playerChips[4], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (isFlying &amp;&amp; direction == Direction::Right) // 60度回転させて表示 キャラチップは[7]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y - camera_y + imgSizeY / 2, 1.0f, 60.0f / 360.0f * 2 * DX_PI, playerChips[7], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Left) // キャラのチップの[5][4][3]を[5 - animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y - camera_y + imgSizeY / 2, 1.0f, 0.0f, playerChips[5 - animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Right) // キャラのチップの[6][7][8]を[6 + animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, y - camera_y + imgSizeY / 2, 1.0f, 0.0f, playerChips[6 + animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float rotaShiftX = CellSize / 2, rotaShiftY = CellSize / 2; // DrawRotaGraphF関数は画像の真ん中が起点なので1/2ずらした位置計算<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 地形マップを[ 行のfor文×列のfor文 ]の2重ループで描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;for (int cellY = 0, ySize = mapData.size(); cellY &lt; ySize; ++cellY)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float chip_y = (float)(cellY * CellSize); // マス目Y(行)番号×マス目サイズで y座標に戻す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int cellX = 0, xSize = mapData[cellY].size(); cellX &lt; xSize; ++cellX)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float chip_x = (float)(cellX * CellSize); // マス目X(列)番号×マス目サイズで x座標に戻す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = mapData[cellY][cellX]; // [行][列] の位置のcsvの地形番号(チップ番号)を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (id &lt; 0) continue; // -1のときは描かない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// マップチップを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;auto mapXY = std::make_pair(cellX, cellY);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockAnime.count(mapXY) == 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(chip_x - camera_x + rotaShiftX, chip_y - camera_y + rotaShiftY, 1.0f, 0.0f, mapChips[id], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if ((int)BlockBit::Bounce &amp; blockBits[id])<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yBase = chip_y - camera_y + rotaShiftY;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim0 = yBase - 10, yAnim1 = yBase; // yAnim0 から yAnim1の位置までアニメする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int blockTime = blockAnime[mapXY];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim = yAnim0 * (15 - blockTime) / 15 + yAnim1 * blockTime / 15;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(chip_x - camera_x + rotaShiftX, yAnim, 1.0f, 0.0f, mapChips[id], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++blockAnime[mapXY]; // アニメ時間を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockTime > 15) // アニメ終了時間を15フレーム目とするとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockAnime.erase(mapXY); // 辞書からアニメをerase関数で取り除く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ]用にcsvのidの数字を描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawString(chip_x - camera_x, chip_y - camera_y, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たり判定の四隅を赤枠で描画<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawBox(getLeft(x) - camera_x, getTop(y) - camera_y, getRight(x) - camera_x, getBottom(y) - camera_y, GetColor(255, 0, 0), FALSE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y - camera_y, 2, GetColor(0, 255, 0), TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printfDx("y:%.1f vy:%.2f idx:%d\n", y, vy, vx_idx);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;}
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// キー入力待ちをする<br>
+      &nbsp;&nbsp;WaitKey();<br>
+      &nbsp;&nbsp;// ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;DxLib_End();<br>
+      &nbsp;&nbsp;// ソフトの終了<br>
+      &nbsp;&nbsp;return 0;<br>
+      }</p>    
       <br>
   </body>
 </html>
