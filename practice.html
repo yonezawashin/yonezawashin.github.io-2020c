@@ -3298,7 +3298,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<em>// [x方向左右]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckX = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckX = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 左端がめりこんでいるか？<br>
@@ -3320,7 +3320,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};</em><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<em>// [y方向上下]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckY = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckY = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 頭の部分がめりこんでいるか？<br>
@@ -3342,7 +3342,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};</em><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<em>// 地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheck = [&amp;blockBits, &amp;CellSize, &amp;checkID, &amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheck = [&amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return hitcheckX(checkBit,terrain,xLeft,xMiddle,xRight,yTop,yMiddle,yBottom)<br>
@@ -3854,7 +3854,7 @@
       &nbsp;&nbsp;};</em><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [x方向左右]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckX = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckX = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom<em>,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -3877,7 +3877,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [y方向上下]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckY = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckY = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom<em>,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -3900,7 +3900,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheck = [&amp;blockBits, &amp;CellSize, &amp;checkID, &amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheck = [&amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom<em>,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr</em>)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -4520,7 +4520,7 @@
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [x方向左右]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckX = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckX = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -4543,7 +4543,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [y方向上下]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckY = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckY = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -4566,7 +4566,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheck = [&amp;blockBits, &amp;CellSize, &amp;checkID, &amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheck = [&amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -5123,7 +5123,7 @@
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [x方向左右]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckX = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckX = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -5146,7 +5146,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [y方向上下]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckY = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckY = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -5169,7 +5169,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheck = [&amp;blockBits, &amp;CellSize, &amp;checkID, &amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheck = [&amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -5875,7 +5875,7 @@
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [x方向左右]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckX = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckX = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -5898,7 +5898,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [y方向上下]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckY = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckY = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -5921,7 +5921,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheck = [&amp;blockBits, &amp;CellSize, &amp;checkID, &amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheck = [&amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -6541,7 +6541,7 @@
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [x方向左右]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckX = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckX = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -6564,7 +6564,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [y方向上下]地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheckY = [&amp;blockBits, &amp;CellSize, &amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheckY = [&amp;checkID](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -6587,7 +6587,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 地形の ダメージブロックなどにぶつかったかをチェックする一時関数<br>
-      &nbsp;&nbsp;auto hitcheck = [&amp;blockBits, &amp;CellSize, &amp;checkID, &amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
+      &nbsp;&nbsp;auto hitcheck = [&amp;hitcheckX, &amp;hitcheckY](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
