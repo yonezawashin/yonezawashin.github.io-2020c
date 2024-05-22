@@ -5710,6 +5710,9 @@
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// ゲームのwhileループを開始する前の初期化処理<br>
       &nbsp;&nbsp;<em>Image::Load(); // 画像ファイルを事前読み込み</em><br>
+      &nbsp;&nbsp;<u>int playerChips[12]; // キャラのチップのグリッドの分割数に応じて3×4 = 12のぶんだけ配列を事前に確保<br>
+      &nbsp;&nbsp;LoadDivGraph("Image/pikkoron.png", 12, 3, 4, 32, 32, playerChips); // キャラのチップのサイズは32×32<br>
+      &nbsp;&nbsp;assert(playerChips[0] != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 効果音ファイルを事前にメモリに読み込む https://dxlib.xsrv.jp/function/dxfunc_sound.html#R8N4<br>
       &nbsp;&nbsp;int jumpSE[4]; // 4種類のジャンプ音を読み込む<br>
@@ -6270,7 +6273,6 @@
       <br>
       <br>
       <br>
-      <br>
 <br>
     <h1><a id="mozTocId0019" class="mozTocH1"></a>Soundのロードをclass分けして音声のロード処理をファイル分けするプログラム</h1>
 <br>
@@ -6300,9 +6302,7 @@
       <br>
       };<br>
       #endif</p>
-    <br>
-    <br>
-    <p><code>Sound.cppを新規作成</code>します。</p>
+    <p><code>Sound.cppも新規作成</code>します。</p>
     <p class="source">#include "Sound.h"<br>
       <br>
       // メモリ再生音源管理番号<br>
@@ -6382,7 +6382,7 @@
       &nbsp;&nbsp;// ゲームのwhileループを開始する前の初期化処理<br>
       &nbsp;&nbsp;Image::Load(); // 画像ファイルを事前読み込み<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 効果音ファイルを事前にメモリに読み込む https://dxlib.xsrv.jp/function/dxfunc_sound.html#R8N4<br>
+      &nbsp;&nbsp;<u>// 効果音ファイルを事前にメモリに読み込む https://dxlib.xsrv.jp/function/dxfunc_sound.html#R8N4</u><br>
       &nbsp;&nbsp;<em>Sound::Load(); // 音声ファイルを事前読み込み</em><br>
       &nbsp;&nbsp;<u>int jumpSE[4]; // 4種類のジャンプ音を読み込む<br>
       &nbsp;&nbsp;jumpSE[0] = LoadSoundMem("SE/Jump0.wav");<br>
@@ -6864,7 +6864,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int deadAnimeStep = deadAnimeTime / 3; // 3で割って[チップのパラパラの]アニメの速度は弱める<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int chipAnime = deadAnimeStep % 3; // % 3で余りを求めれば余りはチップのパラパラ番号は0～2の間に収まる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, yDeadAnim, 1.0f, 10.0f * deadAnimeStep / 360.0f * 2 * DX_PI, <em>Image::</em>playerChips[chipAnime], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x - camera_x + imgSizeX / 2, yDeadAnim, 1.0f, 10.0f * deadAnimeStep / 360.0f * 2 * DX_PI, Image::playerChips[chipAnime], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++deadAnimeTime; // アニメ時間を進める<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -6935,7 +6935,7 @@
       }</p>
       <br>
       <br>
-      いかがでしょう、動作は変わりませんが、きちんとSoundクラスを通して音声ロード処理をできるようになりましたか？<br>
+      いかがでしょう、動作は変わりませんが、きちんと<b>Soundクラスを通して</b>音声ロード処理をできるようになりましたか？<br>
       <br>
       <br>
       <br>
