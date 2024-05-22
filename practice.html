@@ -5529,7 +5529,7 @@
     <h1><a id="mozTocId0018" class="mozTocH1"></a>Imageのロードをclass分けして画像のロード処理をファイル分けするプログラム</h1>
 <br>
       <p><code>DivImage.h</code>を新規作成して【DivImage型】分割された画像を読込みその分割のグリッドもパラメータとして保持できるようにしましょう。</p>
-      ※シューティングのDivImageと違ってint* HandleArrayではなくstd::vector&lt;int&gt; HandleArrayを使った。<br>
+      ※シューティングのDivImageと違ってnew int[AllNum]の動的配列をint* HandleArrayで受ける形ではなくstd::vector&lt;int&gt; HandleArrayを使った。<br>
     <p class="source">#ifndef DIVIMAGE_H_<br>
       #define DIVIMAGE_H_<br>
       <br>
@@ -5599,13 +5599,13 @@
       };<br>
       <br>
       #endif</p>
-    <p><code>Image.h</code>でカスタムしたデータタイプ【DivImage型】で縦2×横8の分割された爆発画像を読込みましょう。</p>
+    <p><code>Image.hを新規作成して</code>【DivImage型】でキャラの分割された画像と普通の単一画像を読込んでみましょう。</p>
     <p class="source">#ifndef IMAGE_H_<br>
       #define IMAGE_H_<br>
       <br>
       #include "DxLib.h"<br>
       #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
-      <em>#include "DivImage.h" // 分割画像の読込みに使う</em><br>
+      #include "DivImage.h" // 分割画像の読込みに使う<br>
       <br>
       class Image<br>
       {<br>
@@ -5613,17 +5613,11 @@
       &nbsp;&nbsp;Image() {}; // 初期化コンストラクタ:定義と{}空の処理<br>
       &nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタ:定義と{}空の処理<br>
       &nbsp;&nbsp;static void Load();<br>
-      &nbsp;&nbsp;<em>static int LoadDivGraph(const TCHAR* FileName, DivImage&amp; divImage);</em><br>
+      &nbsp;&nbsp;static int LoadDivGraph(const TCHAR* FileName, DivImage&amp; divImage);<br>
       <br>
-      &nbsp;&nbsp;static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
-      &nbsp;&nbsp;static int player; //プレイヤ画像のハンドラ<br>
-      &nbsp;&nbsp;static int playerBullet; //プレイヤの弾画像のハンドラ<br>
-      &nbsp;&nbsp;static int enemyBullet16; //敵弾 画像のハンドラ(読込画像番号)<br>
-      &nbsp;&nbsp;static int zako0; //ザコ0 画像のハンドラ(読込画像番号)<br>
-      &nbsp;&nbsp;static int zako1; //ザコ1 画像のハンドラ(読込画像番号)<br>
-      &nbsp;&nbsp;static int zako2; //ザコ2 画像のハンドラ(読込画像番号)<br>
-      &nbsp;&nbsp;static int zako3; //ザコ3 画像のハンドラ(読込画像番号)<br>
-      &nbsp;&nbsp;<em>static DivImage explosion; // [分割画像]爆発エフェクト</em><br>
+      &nbsp;&nbsp;static int playerImage; //プレイヤ画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;static DivImage playerChips; // [分割画像]プレイヤパラパラ画像<br>
+      &nbsp;&nbsp;static DivImage mapChips; // [分割画像]マップチップ画像<br>
       <br>
       private:<br>
       <br>
@@ -5631,67 +5625,39 @@
       #endif<br>
     </p>
     <br>
-    <p>次に対となるcppファイルも変更します。<br>
-      <code>Image.cpp</code>の内容を次のようにします：</p>
+    <p>次に対となるcppファイルも作成します。<br>
+      <code>Image.cppを新規作成して</code>内容を次のようにします：</p>
     <p class="source">#include "Image.h"<br>
       <br>
-      int Image::bossImage{-1}; // Load終わっても-1(初期値)のままだと画像ロードが失敗してますね<br>
-      int Image::player{-1};<br>
-      int Image::playerBullet{-1};<br>
-      int Image::enemyBullet16{-1};<br>
-      int Image::zako0{-1};<br>
-      int Image::zako1{-1};<br>
-      int Image::zako2{-1};<br>
-      int Image::zako3{-1};<br>
-      <em>// ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定</em><br>
-      <em>DivImage Image::explosion{ 8, 2, 64, 64 };<br>
-      //↑どのような画像を使うかで変わる<br>
-      // 例えば https://pipoya.net/sozai/assets/effects/effect-event-1/ のイベントエフェクト.zipの<br>
-      // 1800×180の縦一列のみなら DivImage Image::explosion{ 10, 1, 180, 180 };となる</em><br>
+      int Image::playerImage{-1}; // Load終わっても-1(初期値)のままだと画像ロードが失敗してますね<br>
+      // ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定<br>
+      DivImage Image::playerChips{ 3, 4, 32, 32 }; // 画像分割サイズ32×32の横3つ×縦4つの分割画像<br>
+      DivImage Image::mapChips{ 8, 8, 32, 32 }; // マップのグリッドの分割数に応じて8×8 = 64など確保<br>
       <br>
       void Image::Load()<br>
       {<br>
-      &nbsp;&nbsp;bossImage = LoadGraph("Image/boss1.png");<br>
-      &nbsp;&nbsp;assert(bossImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;playerImage = LoadGraph("Image/Player.png");<br>
+      &nbsp;&nbsp;assert(playerImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
-      &nbsp;&nbsp;player= LoadGraph("Image/player.png");<br>
-      &nbsp;&nbsp;assert(player!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;Image::LoadDivGraph("Image/pikkoron.png", playerChips); // キャラのチップのサイズは32×32<br>
+      &nbsp;&nbsp;for (int i = 0; i &lt; playerChips.AllNum; ++i)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (playerChips[i] == -1) assert("分割画像読込失敗" == ""); // 画像読込失敗<br>
       <br>
-      &nbsp;&nbsp;playerBullet = LoadGraph("Image/player_bullet.png");<br>
-      &nbsp;&nbsp;assert(playerBullet!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
-      <br>
-      &nbsp;&nbsp;enemyBullet16 = LoadGraph("Image/enemy_bullet_16.png");<br>
-      &nbsp;&nbsp;assert(enemyBullet16!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
-      <br>
-      &nbsp;&nbsp;zako0 = LoadGraph("Image/zako0.png");<br>
-      &nbsp;&nbsp;assert(zako0!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
-      <br>
-      &nbsp;&nbsp;zako1 = LoadGraph("Image/zako1.png");<br>
-      &nbsp;&nbsp;assert(zako1!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
-      <br>
-      &nbsp;&nbsp;zako2 = LoadGraph("Image/zako2.png");<br>
-      &nbsp;&nbsp;assert(zako2!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
-      <br>
-      &nbsp;&nbsp;zako3 = LoadGraph("Image/zako3.png");<br>
-      &nbsp;&nbsp;assert(zako3!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
-      <br>
-      &nbsp;&nbsp;<em>Image::LoadDivGraph("Image/explosion.png", explosion); // div分割画像をロード<br>
-        &nbsp;&nbsp;for (int i = 0; i &lt; explosion.AllNum; i++)<br>
-        &nbsp;&nbsp;{ // 画像読込失敗<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;if (explosion.HandleArray[i] == -1) assert("爆発分割画像読込失敗" == "");<br>
-        &nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;Image::LoadDivGraph("Map/mapchip.png", mapChips); // マップのチップの分割画像のロード<br>
+      &nbsp;&nbsp;for (int i = 0; i &lt; mapChips.AllNum; ++i)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (mapChips[i] == -1) assert("分割画像読込失敗" == ""); // 画像読込失敗<br>
       }<br>
       <br>
-      <em>// DXライブラリのLoadDivGraphを使いやすくラッピング<br>
-        // ★関数に参照渡しを行う<br>
-        // 関数の引数に参照渡しを行うことでdivImageの中身を書き換えることができる(値渡しでは書換不可)<br>
-        //　https://qiita.com/agate-pris/items/05948b7d33f3e88b8967<br>
-        // https://qiita.com/RuthTaro/items/f35c3a26779c0ca1a41a<br>
+      // DXライブラリのLoadDivGraphを同一関数名で使いやすくラッピング<br>
+      // ★関数に参照渡しを行う<br>
+      // 関数の引数に参照渡しを行うことでdivImageの中身を書き換えることができる(値渡しでは書換不可)<br>
+      // https://qiita.com/agate-pris/items/05948b7d33f3e88b8967<br>
+      // https://qiita.com/RuthTaro/items/f35c3a26779c0ca1a41a<br>
         int Image::LoadDivGraph(const TCHAR* FileName, DivImage&amp; divImage)<br>
         {<br>
-        &nbsp;&nbsp;return DxLib::LoadDivGraph(FileName, divImage.XNum * divImage.YNum,<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;divImage.XNum, divImage.YNum, divImage.XSize, divImage.YSize, divImage.HandleArray);<br>
-        };</em><br>
+        &nbsp;&nbsp;return DxLib::LoadDivGraph(FileName, divImage.XNum * divImage.YNum, divImage.XNum, divImage.YNum,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;divImage.XSize, divImage.YSize, divImage.HandleArray.data()); //<b>.data()でvector内部配列の先頭ポインタを渡す</b><br>
+        };<br>
     </p>
   </body>
 </html>
