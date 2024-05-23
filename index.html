@@ -2332,7 +2332,7 @@
       &nbsp;&nbsp;//&nbsp;★削除処理を共通テンプレート関数にする<br>
         &nbsp;&nbsp;//&nbsp;[共通テンプレート関数]https://programming-place.net/ppp/contents/cpp/language/009.html#function_template<br>
         &nbsp;&nbsp;template&nbsp;&lt;typename&nbsp;T,&nbsp;class&nbsp;T_if&gt;<br>
-        &nbsp;&nbsp;void&nbsp;EraseRemoveIf(std::<em>vector</em>&lt;T&gt;&nbsp;&amp;v,&nbsp;T_if&nbsp;if_condition)<br>
+        &nbsp;&nbsp;void&nbsp;EraseRemoveIf(std::<em>list</em>&lt;T&gt;&nbsp;&amp;v,&nbsp;T_if&nbsp;if_condition)<br>
         &nbsp;&nbsp;{&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;特定のタイプT↑&nbsp;&nbsp;↑配列v&nbsp;&nbsp;&nbsp;↑条件式if_condition<br>
         &nbsp;&nbsp;&nbsp;&nbsp;v.erase(<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::remove_if(v.begin(),&nbsp;v.end(),if_condition),<br>
