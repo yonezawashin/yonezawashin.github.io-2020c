@@ -7127,17 +7127,7 @@
       &nbsp;&nbsp;// ゲームのwhileループを開始する前の初期化処理<br>
       &nbsp;&nbsp;Image::Load(); // 画像ファイルを事前読み込み<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;<u>// 効果音ファイルを事前にメモリに読み込む https://dxlib.xsrv.jp/function/dxfunc_sound.html#R8N4</u><br>
       &nbsp;&nbsp;Sound::Load(); // 音声ファイルを事前読み込み<br>
-      &nbsp;&nbsp;<u>int jumpSE[4]; // 4種類のジャンプ音を読み込む<br>
-      &nbsp;&nbsp;jumpSE[0] = LoadSoundMem("SE/Jump0.wav");<br>
-      &nbsp;&nbsp;jumpSE[1] = LoadSoundMem("SE/Jump1.wav");<br>
-      &nbsp;&nbsp;jumpSE[2] = LoadSoundMem("SE/Jump2.wav");<br>
-      &nbsp;&nbsp;jumpSE[3] = LoadSoundMem("SE/Jump3.wav");<br>
-      &nbsp;&nbsp;assert(jumpSE[0] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
-      &nbsp;&nbsp;assert(jumpSE[1] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
-      &nbsp;&nbsp;assert(jumpSE[2] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる<br>
-      &nbsp;&nbsp;assert(jumpSE[3] != -1); // SE読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;int CellSize = 32; // マップの1マスのピクセル数<br>
       &nbsp;&nbsp;<br>
