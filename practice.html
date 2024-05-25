@@ -7178,12 +7178,36 @@
       &nbsp;&nbsp;Vector2 operator=(const VECTOR&amp; other)<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp; &nbsp;this-&lt;x = other.x;<br>
-      &nbsp;&nbsp; &nbsp;this-&lt;y; = other.y;<br>
+      &nbsp;&nbsp; &nbsp;this-&lt;y = other.y;<br>
       &nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp;}<br>
       #endif<br>
       &nbsp;&nbsp;<br>
       };<br>
+      <br>
+      // [inlineを利用することで.cppではなく.hにstatic関数を定義] https://theolizer.com/cpp-school1/cpp-school1-28/<br>
+      //↓スカラー倍や割り算については他のようにメンバ関数とすると右側からしか掛け算できなくなるので以下のようにメンバ外で関数化する<br>
+      <br>
+      // Vectorとスカラの掛け算(スカラー×ベクトル) x,y個別に掛け合わせる<br>
+      inline Vector2 operator * (float left, const Vector2&amp; right)<br>
+      {<br>
+      &nbsp;&nbsp;Vector2 v2;<br>
+      &nbsp;&nbsp;v2.x = left * right.x;<br>
+      &nbsp;&nbsp;v2.y = left * right.y;<br>
+      &nbsp;&nbsp;return v2;<br>
+      }<br>
+      <br>
+      // (右側から)Vectorとスカラの掛け算(ベクトル×スカラー) x,y個別に掛け合わせる<br>
+      inline Vector2 operator * (const Vector2&amp; left, float right)<br>
+      {<br>
+      &nbsp;&nbsp;Vector2 v2;<br>
+      &nbsp;&nbsp;v2.x = left.x * right;<br>
+      &nbsp;&nbsp;v2.y = left.y * right;<br>
+      &nbsp;&nbsp;return v2;<br>
+      }<br>
+      <br>
+      <br>
+      <br>
       #endif</p>
     <p>つぎにCameraクラスを作ってみましょう。</p>
     <p><code>Camera.hを新規作成</code>します。</p>
