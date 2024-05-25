@@ -7164,75 +7164,25 @@
       &nbsp;&nbsp; &nbsp;return Result;<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// [関数]指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
-      &nbsp;&nbsp;void LookAt(Vector2 pos) { LookAt(pos.x,pos.y); }<br>
-      &nbsp;&nbsp;// [関数]指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
-      &nbsp;&nbsp;void LookAt(float targetX, float targetY = Screen::Height / 2)<br>
-      &nbsp;&nbsp;{&nbsp; // 描画起点をずらす量がここに計算される<br>
-      &nbsp;&nbsp; &nbsp;float halfWidth = (float)Screen::Width / 2.0f;<br>
-      &nbsp;&nbsp; &nbsp;float halfHeight = (float)Screen::Height / 2.0f;<br>
-      &nbsp;&nbsp; &nbsp;pos.x = targetX - halfWidth; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp; &nbsp;pos.y = targetY - halfHeight; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
-      &nbsp;&nbsp; &nbsp;if (zoomRatio != 1.0f)<br>
-      &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;leftTop.x = halfWidth - halfWidth * zoomRatio;<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;leftTop.y = halfHeight - halfHeight * zoomRatio;<br>
-      &nbsp;&nbsp; &nbsp;}<br>
-      &nbsp;&nbsp; &nbsp;if (pos.x &lt;= 0) pos.x = 0; // マップの端ではカメラスクロール止める<br>
-      &nbsp;&nbsp; &nbsp;if (pos.y &lt;= 0) pos.y = 0; // マップの端ではカメラスクロール止める<br>
+      &nbsp;&nbsp;// 左辺値がDXのVECTOR型のときの=代入対応<br>
+      &nbsp;&nbsp;inline operator VECTOR() const<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;VECTOR Result;<br>
+      &nbsp;&nbsp; &nbsp;Result.x = this-&lt;x;<br>
+      &nbsp;&nbsp; &nbsp;Result.y = this-&lt;y;<br>
+      &nbsp;&nbsp; &nbsp;Result.z = 0.f;<br>
+      &nbsp;&nbsp; &nbsp;return Result;<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// [関数]画像を描画(回転と個別ズームも可能)<br>
-      &nbsp;&nbsp;inline int DrawRotaGraphF(float worldX, float worldY, double ExRate, double Angle, int GrHandle, int TransFlag = TRUE)<br>
-      &nbsp;&nbsp;{ &nbsp; // カメラのx,yぶんだけマイナスして描く起点をずらして描くことでスクロールさせる(ズームにあわせ左上leftTopのx,yぶんもずらす)<br>
-      &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawRotaGraphF(worldX - pos.x, worldY - pos.y, ExRate, Angle, GrHandle, TRUE);<br>
-      &nbsp;&nbsp; &nbsp;else<br>
-      &nbsp;&nbsp; &nbsp;return DxLib::DrawRotaGraphF((worldX - pos.x) * zoomRatio + leftTop.x, (worldY - pos.y) * zoomRatio + leftTop.y,<br>
-      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;ExRate * zoomRatio, Angle, GrHandle, TRUE);<br>
+      &nbsp;&nbsp;// 右辺値がDXのVECTOR型のときの=代入対応<br>
+      &nbsp;&nbsp;Vector2 operator=(const VECTOR&amp; other)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;this-&lt;x = other.x;<br>
+      &nbsp;&nbsp; &nbsp;this-&lt;y; = other.y;<br>
+      &nbsp;&nbsp; &nbsp;return *this;<br>
       &nbsp;&nbsp;}<br>
+      #endif<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// [関数]文字列を描画<br>
-      &nbsp;&nbsp;inline int DrawString(float worldX, float worldY, const TCHAR* String, unsigned int Color, unsigned int EdgeColor DEFAULTPARAM(= 0))<br>
-      &nbsp;&nbsp;{ &nbsp; // カメラのx,yぶんだけマイナスして描く起点をずらして描くことでスクロールさせる(ズームにあわせ左上leftTopのx,yぶんもずらす)<br>
-      &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawString((int)(worldX - pos.x), (int)(worldY - pos.y), String, Color);<br>
-      &nbsp;&nbsp; &nbsp;else<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawExtendString((int)(worldX - pos.x) * zoomRatio + leftTop.x, (int)(worldY - pos.y) * zoomRatio + leftTop.y,<br>
-      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;zoomRatio, zoomRatio, String, Color, EdgeColor);<br>
-      &nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// [関数]四角形をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
-      &nbsp;&nbsp;inline int DrawBox(float xLeft, float yTop, float xRight, float yBottom, unsigned int Color, int FillFlag)<br>
-      &nbsp;&nbsp;{ &nbsp; // カメラの(pox.x,pos.y)ぶんずらして描画(ズームにあわせ左上leftTopのx,yぶんもずらす)<br>
-      &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawBox((int)(xLeft - pos.x + 0.5f), (int)(yTop - pos.y + 0.5f),<br>
-      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;(int)(xRight - pos.x + 0.5f), (int)(yBottom - pos.y + 0.5f), Color, FillFlag);<br>
-      &nbsp;&nbsp; &nbsp;else<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawBox((int)(xLeft - pos.x + 0.5f) * zoomRatio + leftTop.x, (int)(yTop - pos.y + 0.5f) * zoomRatio + leftTop.y,<br>
-      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;(int)(xRight - pos.x + 0.5f) * zoomRatio + leftTop.x, (int)(yBottom - pos.y + 0.5f) * zoomRatio + leftTop.y, Color, FillFlag);<br>
-      &nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// [関数]円形をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
-      &nbsp;&nbsp;inline int DrawCircle(int x, int y, int r, unsigned int Color, int FillFlag DEFAULTPARAM(= TRUE), int LineThickness DEFAULTPARAM(= 1))<br>
-      &nbsp;&nbsp;{ &nbsp; // カメラの(pox.x,pos.y)ぶんずらして描画(ズームにあわせ左上leftTopのx,yぶんもずらす)<br>
-      &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawCircle(x - pos.x, y - pos.y, r, Color, FillFlag, LineThickness);<br>
-      &nbsp;&nbsp; &nbsp;else<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawCircle((x - pos.x) * zoomRatio + leftTop.x, (y - pos.y) * zoomRatio + leftTop.y,<br>
-      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;r * zoomRatio, Color, FillFlag, LineThickness);<br>
-      &nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// [関数]直線をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
-      &nbsp;&nbsp;inline int DrawLine(int xStart, int yStart, int xEnd, int yEnd, unsigned int Color, int Thickness DEFAULTPARAM(= 1))<br>
-      &nbsp;&nbsp;{ &nbsp; // カメラの(pox.x,pos.y)ぶんずらして描画(ズームにあわせ左上leftTopのx,yぶんもずらす)<br>
-      &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawLine(xStart - pos.x, yStart - pos.y, xEnd - pos.x, yEnd - pos.y, Color, Thickness);<br>
-      &nbsp;&nbsp; &nbsp;else<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawLine((xStart - pos.x) * zoomRatio + leftTop.x, (yStart - pos.y) * zoomRatio + leftTop.y,<br>
-      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; (xEnd - pos.x) * zoomRatio + leftTop.x, (yEnd - pos.y) * zoomRatio + leftTop.y, Color, Thickness);<br>
-      &nbsp;&nbsp;}<br>
       };<br>
       #endif</p>
     <p>つぎにCameraクラスを作ってみましょう。</p>
