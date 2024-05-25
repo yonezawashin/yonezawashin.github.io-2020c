@@ -7057,10 +7057,25 @@
       &nbsp;&nbsp; &nbsp;return std::sqrt(x * x + y * y); // √(x*x + y*y)<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 初期化コンストラクタ<br>
-      &nbsp;&nbsp;Camera(const std::string&amp tag, Vector2 pos, float zoomRatio = 1.0f)<br>
-      &nbsp;&nbsp; &nbsp;: pos{ pos }, zoomRatio{ zoomRatio }, tag{ tag } {}<br>
-      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;// 正規化したベクトルを返す<br>
+      &nbsp;&nbsp;Vector2 normalized()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;float mag = magnitude();<br>
+      &nbsp;&nbsp; &nbsp;if (mag &lt; 0.00001f) // ほぼ0ベクトルか？<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return *this;<br>
+      &nbsp;&nbsp; &nbsp;else<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return Vector2{ x / mag, y / mag }; // x / |x|, y / |y|<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;//-----　演算子オーバーロード　-----<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 逆ベクトル<br>
+      &nbsp;&nbsp;Vector2 operator -()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;return Vector2{ -this-&lt;x, -this-&lt;y };<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;virtual ~Camera() {} // 破棄デストラクタ<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [関数]指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
