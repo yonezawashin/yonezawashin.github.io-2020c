@@ -7032,6 +7032,31 @@
       &nbsp;&nbsp; &nbsp;return std::sqrt(_sqrMagnitude(_vec)); // √x*x + y*y<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// destArrayにデータを保管しておく<br>
+      &nbsp;&nbsp;Vector2&amp; copyToArray(std::array&lt;float, 2&gt;&amp; destArray)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;destArray = this-&gt;xy;//配列としてコピー<br>
+      &nbsp;&nbsp; &nbsp;return *this;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// sourceArray配列からVector3データを生成<br>
+      &nbsp;&nbsp;Vector2 fromArray(std::array&lt;float, 2&gt;&amp; sourceArray)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;return Vector2{ sourceArray[0], sourceArray[1] }; //配列から初期化<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ベクトルの長さの2乗(0から点(x,y)までの距離)(平方根しないぶん計算速い)<br>
+      &nbsp;&nbsp;float sqrMagnitude()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;return x * x + y * y; // x*x + y*y<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ベクトルの長さ(0から点(x,y)までの距離)<br>
+      &nbsp;&nbsp;float magnitude()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;return std::sqrt(x * x + y * y); // √(x*x + y*y)<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 初期化コンストラクタ<br>
       &nbsp;&nbsp;Camera(const std::string&amp tag, Vector2 pos, float zoomRatio = 1.0f)<br>
       &nbsp;&nbsp; &nbsp;: pos{ pos }, zoomRatio{ zoomRatio }, tag{ tag } {}<br>
