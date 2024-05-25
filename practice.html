@@ -6955,7 +6955,6 @@
       <br>
       <br>
       <br>
-      <br>
 <br>
     <h1><a id="mozTocId0020" class="mozTocH1"></a>Cameraの描画ずらし処理をclass分けしてファイル分けしてさらにズーム機能を付加するプログラム</h1>
 <br>
@@ -7235,6 +7234,23 @@
       }<br>
       <br>
       #endif</p>
+      <p><code>Vector2.cppも新規作成</code>します。</p>
+    <p class="source">#include "Vector2.h"<br>
+      <br>
+      // Unityのstatic変数を参考に https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
+      Vector2 const Vector2::zero = Vector2(0.f, 0.f);<br>
+      Vector2 const Vector2::one = Vector2(1.f, 1.f);<br>
+      Vector2 const Vector2::up = Vector2(0.f, 1.f);<br>
+      Vector2 const Vector2::down = Vector2(0.f, -1.f);<br>
+      Vector2 const Vector2::left = Vector2(-1.f, 0.f);<br>
+      Vector2 const Vector2::right = Vector2(1.f, 0.f);<br>
+      //[負の値の最小値] https://stackoverflow.com/questions/20016600/negative-infinity<br>
+      Vector2 const Vector2::negativeInfinity = Vector2(-std::numeric_limits&lt;float&gt;::infinity(), -std::numeric_limits&lt;float&gt;::infinity());<br>
+      //[極大値]https://cpprefjp.github.io/reference/limits/numeric_limits/lowest.html<br>
+      Vector2 const Vector2::positiveInfinity = Vector2(std::numeric_limits&lt;float&gt;::infinity(), std::numeric_limits&lt;float&gt;::infinity());<br>
+      <br>
+    </p>
+    上記Vector2クラスを使って次はカメラのクラスをつくります。<br>
     <p>つぎにCameraクラスを作ってみましょう。</p>
     <p><code>Camera.hを新規作成</code>します。</p>
     <p class="source">#ifndef CAMERA_H_<br>
