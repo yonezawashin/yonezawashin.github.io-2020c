@@ -6968,8 +6968,13 @@
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;std::string tag{ "" }; // カメラを管理するタグ(プレイヤカメラ1など名前をつけてタグ検索できるように)<br>
       &nbsp;&nbsp;static std::unordered_map&lt;std::string, std::shared_ptr&lt;Camera&gt;&gt; list; // ["プレイヤ1"]などカメラ辞書にタグをつけてリンクを保持<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// カメラを管理する辞書をクリア<br>
       &nbsp;&nbsp;static void clear() { std::unordered_map&lt;std::string, std::shared_ptr&lt;Camera&gt;&gt;().swap(list); }<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// カメラを辞書から1つ消す(tagと辞書のタグが一致するものを辞書から消す、共有ポインタなのでカメラの実態も道連れにメモリから消える)<br>
       &nbsp;&nbsp;static void erase(std::string&amp; tag) { list.erase(tag); }<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 初期化コンストラクタ<br>
       &nbsp;&nbsp;Camera(const std::string&amp tag, Vector2 pos, float zoomRatio = 1.0f)<br>
       &nbsp;&nbsp; &nbsp;: pos{ pos }, zoomRatio{ zoomRatio }, tag{ tag } {}<br>
