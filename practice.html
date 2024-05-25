@@ -6967,12 +6967,14 @@
       &nbsp;&nbsp;float zoomRatio = 1.0f; // 拡大率(2.0fにするとカメラのDraw系関数を通したものを2.0f倍で描く)<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;std::string tag{ "" }; // カメラを管理するタグ(プレイヤカメラ1など名前をつけてタグ検索できるように)<br>
-      &nbsp;&nbsp;static std::unordered_map&lt;std::string, std::shared_ptr&lt;Camera&gt;&gt; list; // ["プレイヤ1"]などカメラ辞書にタグをつけてリンクを保持<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// カメラを管理する辞書をクリア<br>
+      &nbsp;&nbsp;// [static変数] Camera::list["プレイヤ1"]などカメラ辞書配列にタグをつけてリンクを保持<br>
+      &nbsp;&nbsp;static std::unordered_map&lt;std::string, std::shared_ptr&lt;Camera&gt;&gt; list;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// [static関数]カメラを管理する辞書をクリア<br>
       &nbsp;&nbsp;static void clear() { std::unordered_map&lt;std::string, std::shared_ptr&lt;Camera&gt;&gt;().swap(list); }<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// カメラを辞書から1つ消す(tagと辞書のタグが一致するものを辞書から消す、共有ポインタなのでカメラの実態も道連れにメモリから消える)<br>
+      &nbsp;&nbsp;// [static関数]カメラを辞書から1つ消す(tagと辞書のタグが一致するものを辞書から消す、共有ポインタなのでカメラの実態も道連れにメモリから消える)<br>
       &nbsp;&nbsp;static void erase(std::string&amp; tag) { list.erase(tag); }<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 初期化コンストラクタ<br>
@@ -6981,8 +6983,9 @@
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp;virtual ~Camera() {} // 破棄デストラクタ<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
+      &nbsp;&nbsp;// [関数]指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
       &nbsp;&nbsp;void LookAt(Vector2 pos) { LookAt(pos.x,pos.y); }<br>
+      &nbsp;&nbsp;// [関数]指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
       &nbsp;&nbsp;void LookAt(float targetX, float targetY = Screen::Height / 2)<br>
       &nbsp;&nbsp;{&nbsp; // 描画起点をずらす量がここに計算される<br>
       &nbsp;&nbsp; &nbsp;float halfWidth = (float)Screen::Width / 2.0f;<br>
@@ -6998,7 +7001,7 @@
       &nbsp;&nbsp; &nbsp;if (pos.y &lt;= 0) pos.y = 0; // マップの端ではカメラスクロール止める<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 画像を描画<br>
+      &nbsp;&nbsp;// [関数]画像を描画(回転と個別ズームも可能)<br>
       &nbsp;&nbsp;inline int DrawRotaGraphF(float worldX, float worldY, double ExRate, double Angle, int GrHandle, int TransFlag = TRUE)<br>
       &nbsp;&nbsp;{ &nbsp; // カメラのx,yぶんだけマイナスして描く起点をずらして描くことでスクロールさせる<br>
       &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
@@ -7008,7 +7011,7 @@
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;ExRate * zoomRatio, Angle, GrHandle, TRUE);<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 文字列を描画<br>
+      &nbsp;&nbsp;// [関数]文字列を描画<br>
       &nbsp;&nbsp;inline int DrawString(float worldX, float worldY, const TCHAR* String, unsigned int Color, unsigned int EdgeColor DEFAULTPARAM(= 0))<br>
       &nbsp;&nbsp;{ &nbsp; // カメラのx,yぶんだけマイナスして描く起点をずらして描くことでスクロールさせる<br>
       &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
@@ -7018,7 +7021,7 @@
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;zoomRatio, zoomRatio, String, Color, EdgeColor);<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 四角形をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
+      &nbsp;&nbsp;// [関数]四角形をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
       &nbsp;&nbsp;inline int DrawBox(float xLeft, float yTop, float xRight, float yBottom, unsigned int Color, int FillFlag)<br>
       &nbsp;&nbsp;{ &nbsp; // カメラの(pox.x,pos.y)ぶんずらして描画<br>
       &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
@@ -7029,7 +7032,7 @@
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;(int)(xRight - pos.x + 0.5f) * zoomRatio + leftTop.x, (int)(yBottom - pos.y + 0.5f) * zoomRatio + leftTop.y, Color, FillFlag);<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 円形をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
+      &nbsp;&nbsp;// [関数]円形をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
       &nbsp;&nbsp;inline int DrawCircle(int x, int y, int r, unsigned int Color, int FillFlag DEFAULTPARAM(= TRUE), int LineThickness DEFAULTPARAM(= 1))<br>
       &nbsp;&nbsp;{ &nbsp; // カメラの(pox.x,pos.y)ぶんずらして描画<br><br>
       &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
@@ -7039,7 +7042,7 @@
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;r * zoomRatio, Color, FillFlag, LineThickness);<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 直線をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
+      &nbsp;&nbsp;// [関数]直線をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
       &nbsp;&nbsp;inline int DrawLine(int xStart, int yStart, int xEnd, int yEnd, unsigned int Color, int Thickness DEFAULTPARAM(= 1))<br>
       &nbsp;&nbsp;{ &nbsp; // カメラの(pox.x,pos.y)ぶんずらして描画<br><br>
       &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
