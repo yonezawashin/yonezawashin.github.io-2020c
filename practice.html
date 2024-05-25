@@ -7341,9 +7341,9 @@
       &nbsp;&nbsp;&nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<em>// カメラをmake_sharedで共有生成して Camera::list 辞書配列 に"プレイヤ0"というタグをつけて保持<br>
-      &nbsp;&nbsp;Camera::list["プレイヤ0"] = std::make_shared&lt;Camera&gt;("プレイヤ0", Vector2(x,y), 1.0f);<br>
-      &nbsp;&nbsp;auto camera = Camera::list["プレイヤ0"]; // タイルをスクロールして描くカメラへの共有リンクを得る</em><br>
-      &nbsp;&nbsp;camera->LookAt(x, y); // プレイヤのキャラ(x,y)位置を中心に追跡スクロール</em><br>
+      &nbsp;&nbsp;Camera::list["プレイヤ0"] = std::make_shared&lt;Camera&gt;("プレイヤ0", Vector2(x,y), 1.0f); // ズーム率初期値1.0f<br>
+      &nbsp;&nbsp;auto pCamera = Camera::list["プレイヤ0"]; // タイルをスクロールして描くカメラへの共有リンクを得る</em><br>
+      &nbsp;&nbsp;pCamera->LookAt(x, y); // プレイヤのキャラ(x,y)位置を中心に追跡スクロール</em><br>
       &nbsp;&nbsp;float camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
       &nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
       &nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
@@ -7391,7 +7391,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed[vx_idx]; // 押すたび少し羽ばたく<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump[vx_idx];<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 加速段階に応じて違うジャンプ音を鳴らす<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlaySoundMem(<em>Sound::</em>jumpSE[vx_idx], DX_PLAYTYPE_BACK);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlaySoundMem(Sound::jumpSE[vx_idx], DX_PLAYTYPE_BACK);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (isGround)<br>
@@ -7408,7 +7408,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 加速段階に応じて違うジャンプ音を鳴らす<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlaySoundMem(<em>Sound::</em>jumpSE[vx_idx], DX_PLAYTYPE_BACK);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlaySoundMem(Sound::jumpSE[vx_idx], DX_PLAYTYPE_BACK);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -vyJumpSpeed[vx_idx]; // ジャンプ方向はY上方向(マイナス方向)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump[vx_idx]; // 上昇フェーズ中の下方向へ引っ張られる力(この行がないと際限なくジャンプ)<br>
@@ -7563,12 +7563,21 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = vyDownSpeedMax[vx_idx];<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>if (vy &gt;= 0.0f && zoomAnimCount &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;--zoomAnimCount;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (zoomAnimCount &lt; 60) // 上方向の加速中は最大60までカウントしてズームアウト(広域を映す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;++zoomAnimCount;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 最大(1-0.25)=0.75倍ズームアウト<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;zoomRatio = (zoomAnimCount &lt; 2) ? 1.0f : 1.0f - 0.25f * zoomAnimCount / 60.0f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pCamera->LookAt(x, y); // プレイヤのキャラ(x,y)位置を中心に追跡スクロール</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ</u><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// ダッシュ段階に応じてキャラクタのアニメ時間を進める<br>
