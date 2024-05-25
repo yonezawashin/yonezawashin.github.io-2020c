@@ -7008,8 +7008,29 @@
       &nbsp;&nbsp;static const Vector2 positiveInfinity;// = { std::numeric_limits&lt;float&gt;::infinity(), .. };<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// [static関数]カメラを辞書から1つ消す(tagと辞書のタグが一致するものを辞書から消す、共有ポインタなのでカメラの実態も道連れにメモリから消える)<br>
-      &nbsp;&nbsp;static void erase(std::string&amp; tag) { list.erase(tag); }<br>
+      &nbsp;&nbsp;// 2つのベクトルの内積<br>
+      &nbsp;&nbsp;static float dot(const Vector2&amp; leftVec, const Vector2&amp; rightVec)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;return leftVec.x * rightVec.x + leftVec.y * rightVec.y; //普通にx同士,y同士掛けるだけ<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 2つのベクトルの外積<br>
+      &nbsp;&nbsp;static float cross(const Vector2&amp; leftVec, const Vector2&amp; rightVec)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;return leftVec.x * rightVec.y - leftVec.y * rightVec.x;// 外積のたすき掛け<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// [static版]ベクトルの長さの2乗(0から点(x,y)までの距離)(平方根しないぶん計算速い)<br>
+      &nbsp;&nbsp;static float _sqrMagnitude(const Vector2&amp; _vec)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;return _vec.x * _vec.x + _vec.y * _vec.y; // x*x + y*y<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// [static版]ベクトルの長さ(0から点(x,y)までの距離)<br>
+      &nbsp;&nbsp;static float _magnitude(const Vector2&amp; _vec)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;return std::sqrt(_sqrMagnitude(_vec)); // √x*x + y*y<br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 初期化コンストラクタ<br>
       &nbsp;&nbsp;Camera(const std::string&amp tag, Vector2 pos, float zoomRatio = 1.0f)<br>
