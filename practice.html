@@ -2723,8 +2723,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x<em> - camera_x</em>, y, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x<em> - camera_x</em>, <em>debug_x_yTop</em>, debug_x<em> - camera_x</em>, <em>debug_x_yBottom</em>, GetColor(0, 0, 255));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(<em>-camera_x</em>, debug_y, Screen::Width<em> - camera_x</em>, debug_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_x<em> - camera_x</em>, <em>debug_x_yTop</em>, debug_x<em> - camera_x</em>, <em>debug_x_yBottom</em>, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(<em>-camera_x</em>, debug_y, Screen::Width<em> - camera_x</em>, debug_y, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
@@ -3112,8 +3114,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y<em> - camera_y</em>, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, debug_x_yTop<em>- camera_y</em>, debug_x - camera_x, debug_x_yBottom<em> - camera_y</em>, GetColor(0, 0, 255));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(<em>debug_y_xLeft - camera_x</em>, debug_y<em> - camera_y</em>, <em>debug_y_xRight</em> - camera_x, debug_y<em> - camera_y</em>, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_x - camera_x, debug_x_yTop<em>- camera_y</em>, debug_x - camera_x, debug_x_yBottom<em> - camera_y</em>, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(<em>debug_y_xLeft - camera_x</em>, debug_y<em> - camera_y</em>, <em>debug_y_xRight</em> - camera_x, debug_y<em> - camera_y</em>, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
@@ -3141,7 +3145,6 @@
 <br>
     <h1><a id="mozTocId0014" class="mozTocH1"></a>トゲトゲに当たったらキャラがくるくる回ってから下に落ちて最初のスタート位置に戻されるプログラム</h1>
 <br>
-    <br>
     <br>
     <br>
     <p>さてつぎは【トゲトゲに当たると<b>isDeadフラグをtrue</b>にしてキャラをくるくる回しながら、ミス位置で少し浮かせて<b>(yAnim0 ～ yAnim1)</b>下に落ちて<b>(yAnim1 ～ yAnim2)</b>最初のスタート位置に戻るサンプル】でプレイヤーのミスの処理を実現しましょう。</p>
@@ -3610,8 +3613,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y - camera_y, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
@@ -4191,8 +4196,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y - camera_y, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
@@ -4878,8 +4885,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y - camera_y, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
@@ -4903,11 +4912,9 @@
       <br>
       <br>
       <br>
-      <br>
 <br>
     <h1><a id="mozTocId0017" class="mozTocH1"></a>for文で複数ブロックidを辞書で変化させてON OFFブロックを叩いたらidが12⇔13、14⇔15にスイッチできるプログラム</h1>
 <br>
-      <br>
       <br>
       <br>
       <p>さてつぎは【for文で複数のブロックidを<b>辞書blockChange</b>と<b>その変化させる対象をblockSwitchで管理</b>してON OFFブロックを叩いたらidが12⇔13、14⇔15にスイッチできるサンプル】でブロックをスイッチできるようにしてみましょう。</p>
@@ -5499,8 +5506,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y - camera_y, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
@@ -6251,8 +6260,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y - camera_y, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
@@ -6917,8 +6928,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawCircle(x - camera_x, y - camera_y, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1) DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1) DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_x - camera_x, debug_x_yTop - camera_y, debug_x - camera_x, debug_x_yBottom - camera_y, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;DrawLine(debug_y_xLeft - camera_x, debug_y - camera_y, debug_y_xRight - camera_x, debug_y - camera_y, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
