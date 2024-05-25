@@ -7109,6 +7109,22 @@
       &nbsp;&nbsp; &nbsp;return v2;<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;Vector2&amp; operator += (const Vector2 add_v2)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;this-&lt;x += add_v2.x;<br>
+      &nbsp;&nbsp; &nbsp;this-&lt;y += add_v2.y;<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;return *this; //*thisを返すことで v1 + v2 + v3みたく数珠繋ぎできる<br>
+      &&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;Vector2&amp; operator -= (const Vector2 minus_v2)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;this-&lt;x -= minus_v2.x;<br>
+      &nbsp;&nbsp; &nbsp;this-&lt;y -= minus_v2.y;<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;return *this;<br>
+      &&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;virtual ~Camera() {} // 破棄デストラクタ<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [関数]指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
