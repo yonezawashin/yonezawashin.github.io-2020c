@@ -7150,7 +7150,20 @@
       &nbsp;&nbsp; &nbsp;return true;<br>
       &&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;virtual ~Camera() {} // 破棄デストラクタ<br>
+      &nbsp;&nbsp;//---- 以下 DXライブラリ向けにVector3とDX版Vectorの変換方法を用意  ---------------<br>
+      &nbsp;&nbsp;<br>
+      // DXlibを#includeしていればDX_LIB_Hも定義済みなので下記関数も定義される VECTORはDXライブラリ版のVector3<br>
+      #ifdef DX_LIB_H<br>
+      &nbsp;&nbsp;// Vector3からDxLibのVECTORへの変換<br>
+      &nbsp;&nbsp;VECTOR Vec2ToVec()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;VECTOR Result;<br>
+      &nbsp;&nbsp; &nbsp;Result.x = this-&lt;x;<br>
+      &nbsp;&nbsp; &nbsp;Result.y = this-&lt;y;<br>
+      &nbsp;&nbsp; &nbsp;Result.z = 0.f;<br>
+      &nbsp;&nbsp; &nbsp;return Result;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [関数]指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
       &nbsp;&nbsp;void LookAt(Vector2 pos) { LookAt(pos.x,pos.y); }<br>
