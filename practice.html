@@ -7013,10 +7013,36 @@
       &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;zoomRatio, zoomRatio, String, Color, EdgeColor);<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 四角形をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
+      &nbsp;&nbsp;inline int DrawBox(float xLeft, float yTop, float xRight, float yBottom, unsigned int Color, int FillFlag)<br>
+      &nbsp;&nbsp;{ &nbsp; // カメラの(pox.x,pos.y)ぶんずらして描画<br>
+      &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawBox((int)(xLeft - pos.x + 0.5f), (int)(yTop - pos.y + 0.5f),<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;(int)(xRight - pos.x + 0.5f), (int)(yBottom - pos.y + 0.5f), Color, FillFlag);<br>
+      &nbsp;&nbsp; &nbsp;else<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawBox((int)(xLeft - pos.x + 0.5f) * zoomRatio + leftTop.x, (int)(yTop - pos.y + 0.5f) * zoomRatio + leftTop.y,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;(int)(xRight - pos.x + 0.5f) * zoomRatio + leftTop.x, (int)(yBottom - pos.y + 0.5f) * zoomRatio + leftTop.y, Color, FillFlag);<br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 円形をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
+      &nbsp;&nbsp;inline int DrawCircle(int x, int y, int r, unsigned int Color, int FillFlag DEFAULTPARAM(= TRUE), int LineThickness DEFAULTPARAM(= 1))<br>
+      &nbsp;&nbsp;{ &nbsp; // カメラの(pox.x,pos.y)ぶんずらして描画<br><br>
+      &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawCircle(x - pos.x, y - pos.y, r, Color, FillFlag, LineThickness);<br>
+      &nbsp;&nbsp; &nbsp;else<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawCircle((x - pos.x) * zoomRatio + leftTop.x, (y - pos.y) * zoomRatio + leftTop.y,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;r * zoomRatio, Color, FillFlag, LineThickness);<br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      private:<br>
-      <br>
+      &nbsp;&nbsp;// 直線をカメラの(pox.x,pos.y)ぶんずらして描画する<br>
+      &nbsp;&nbsp;inline int DrawLine(int xStart, int yStart, int xEnd, int yEnd, unsigned int Color, int Thickness DEFAULTPARAM(= 1))<br>
+      &nbsp;&nbsp;{ &nbsp; // カメラの(pox.x,pos.y)ぶんずらして描画<br><br>
+      &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawLine(xStart - pos.x, yStart - pos.y, xEnd - pos.x, yEnd - pos.y, Color, Thickness);<br>
+      &nbsp;&nbsp; &nbsp;else<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawLine((xStart - pos.x) * zoomRatio + leftTop.x, (yStart - pos.y) * zoomRatio + leftTop.y,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; (xEnd - pos.x) * zoomRatio + leftTop.x, (yEnd - pos.y) * zoomRatio + leftTop.y, Color, Thickness);<br>
+      &nbsp;&nbsp;}<br>
       };<br>
       #endif</p>
     <p><code>Sound.cppも新規作成</code>します。</p>
