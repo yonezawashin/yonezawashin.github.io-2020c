@@ -7076,6 +7076,39 @@
       &nbsp;&nbsp; &nbsp;return Vector2{ -this-&lt;x, -this-&lt;y };<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// Vector同士の足し算 x,y個別に足し合わせる<br>
+      &nbsp;&nbsp;Vector2 operator + (const Vector2 add_v2) const<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;Vector2 v2; //★*thisじゃダメな理由 a = vec1 + vec2のとき vec1の数値が書き変わったらあかんから<br>
+      &nbsp;&nbsp; &nbsp;v2.x = this-&lt;x + add_v2.x; //[コレはダメ] this-&lt;x = this-&lt;x + add_v3.x;<br>
+      &nbsp;&nbsp; &nbsp;v2.y = this-&lt;y + add_v2.y;<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;return v2;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// Vector同士の引き算 x,y個別に引き合わせる<br>
+      &nbsp;&nbsp;Vector2 operator - (const Vector2 minus_v2) const<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;Vector2 v2;<br>
+      &nbsp;&nbsp; &nbsp;v2.x = this-&lt;x - minus_v2.x;<br>
+      &nbsp;&nbsp; &nbsp;v2.y = this-&lt;y - minus_v2.y;<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;return v2;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// Vector同士の割り算 x,y個別に割り合わせる(0.fでは割れないようにしてある)<br>
+      &nbsp;&nbsp;Vector2 operator / (float divide_num) const<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;if (divide_num == 0.0f)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return *this; // Vector2 v2;と定義せずreturnしたほうが無駄な定義処理がかからないぶん速い<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;Vector2 v2;<br>
+      &nbsp;&nbsp; &nbsp;v2.x = this-&lt;x / divide_num;<br>
+      &nbsp;&nbsp; &nbsp;v2.y = this-&lt;y / divide_num;<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;return v2;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;virtual ~Camera() {} // 破棄デストラクタ<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [関数]指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
