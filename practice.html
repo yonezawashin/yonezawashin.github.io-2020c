@@ -7053,7 +7053,7 @@
       &nbsp;&nbsp;}<br>
       };<br>
       #endif</p>
-    <p><code>Camera.cppも新規作成</code>してstatic変数をクラス{}外定義します。</p>
+    <p><code>Camera.cppも新規作成</code>して<b>[static変数]を.cppファイルに クラスの{}の外側に 定義 (int型以外のstatic変数では必須)</b>します。</p>
     <p class="source">#include "Camera.h"<br>
       <br>
       std::unordered_map&lt;std::string, std::shared_ptr&lt;Camera&gt;&gt; Camera::list; // カメラの辞書&lt;タグ,カメラの共有ポインタ&gt;<br>
