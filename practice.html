@@ -31,6 +31,7 @@
       <li><a href="#mozTocId0017">for文で複数ブロックidを辞書で変化させてON OFFブロックを叩いたらidが12⇔13、14⇔15にスイッチできるプログラム</a></li>
       <li><a href="#mozTocId0018">Imageのロードをclass分けして画像のロード処理をファイル分けするプログラム</a></li>
       <li><a href="#mozTocId0019">Soundのロードをclass分けして音声のロード処理をファイル分けするプログラム</a></li>
+      <li><a href="#mozTocId0020">Cameraの描画ずらし処理をclass分けしてファイル分けしてさらにズーム機能を付加するプログラム</a></li>
     </ol>
     <h1><a id="mozTocId0001" class="mozTocH1"></a>静止したキャラを出すだけのプログラム</h1>
     <br>
@@ -6940,5 +6941,111 @@
       <br>
       <br>
       <br>
+<br>
+    <h1><a id="mozTocId0020" class="mozTocH1"></a>Cameraの描画ずらし処理をclass分けしてファイル分けしてさらにズーム機能を付加するプログラム</h1>
+<br>
+      <br>
+    <p>つぎにCameraクラスを作ってみましょう。</p>
+    <p><code>Camera.hを新規作成</code>します。</p>
+    <p class="source">#ifndef CAMERA_H_<br>
+      #define CAMERA_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "Vector2"<br>
+      <br>
+      #include &lt;unordered_map&gt; // 高速辞書配列(複数のカメラを管理するために使う)<br>
+      #include &lt;memory&gt; // 回し読みポインタstd::shared_ptrを使う<br>
+      #include &lt;string&gt;<br>
+      <br>
+      // [カメラ]画面のスクロール量を管理して描くときにそのスクロールぶんずらして描くクラス<br>
+      class Camera<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;Vector2 pos{ 0, 0 }; // カメラの位置 画面左上のワールド座標を表す<br>
+      &nbsp;&nbsp;Vector2 leftTop{ 0, 0 }; // 描くときのの起点位置<br>
+      &nbsp;&nbsp;float zoomRatio = 1.0f; // 拡大率(2.0fにするとカメラのDraw系関数を通したものを2.0f倍で描く)<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;std::string tag{ "" }; // カメラを管理するタグ(プレイヤカメラ1など名前をつけてタグ検索できるように)<br>
+      &nbsp;&nbsp;static std::unordered_map&lt;std::string, std::shared_ptr&lt;Camera&gt;&gt; list; // ["プレイヤ1"]などカメラ辞書にタグをつけてリンクを保持<br>
+      &nbsp;&nbsp;static void clear() { std::unordered_map&lt;std::string, std::shared_ptr&lt;Camera&gt;&gt;().swap(list); }<br>
+      &nbsp;&nbsp;static void erase(std::string&amp; tag) { list.erase(tag); }<br>
+      &nbsp;&nbsp;// 初期化コンストラクタ<br>
+      &nbsp;&nbsp;Camera(const std::string&amp tag, Vector2 pos, float zoomRatio = 1.0f)<br>
+      &nbsp;&nbsp; &nbsp;: pos{ pos }, zoomRatio{ zoomRatio }, tag{ tag } {}<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;virtual ~Camera() {} // 破棄デストラクタ<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
+      &nbsp;&nbsp;void LookAt(Vector2 pos) { LookAt(pos.x,pos.y); }<br>
+      &nbsp;&nbsp;void LookAt(float targetX, float targetY = Screen::Height / 2)<br>
+      &nbsp;&nbsp;{&nbsp; // 描画起点をずらす量がここに計算される<br>
+      &nbsp;&nbsp; &nbsp;float halfWidth = (float)Screen::Width / 2.0f;<br>
+      &nbsp;&nbsp; &nbsp;float halfHeight = (float)Screen::Height / 2.0f;<br>
+      &nbsp;&nbsp; &nbsp;pos.x = targetX - halfWidth; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
+      &nbsp;&nbsp; &nbsp;pos.y = targetY - halfHeight; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
+      &nbsp;&nbsp; &nbsp;if (zoomRatio != 1.0f)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;leftTop.x = halfWidth - halfWidth * zoomRatio;<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;leftTop.y = halfHeight - halfHeight * zoomRatio;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;if (pos.x &lt;= 0) pos.x = 0; // マップの端ではカメラスクロール止める<br>
+      &nbsp;&nbsp; &nbsp;if (pos.y &lt;= 0) pos.y = 0; // マップの端ではカメラスクロール止める<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 画像を描画<br>
+      &nbsp;&nbsp;inline int DrawRotaGraphF(float worldX, float worldY, double ExRate, double Angle, int GrHandle, int TransFlag = TRUE)<br>
+      &nbsp;&nbsp;{ &nbsp; // カメラのx,yぶんだけマイナスして描く起点をずらして描くことでスクロールさせる<br>
+      &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawRotaGraphF(worldX - pos.x, worldY - pos.y, ExRate, Angle, GrHandle, TRUE);<br>
+      &nbsp;&nbsp; &nbsp;else<br>
+      &nbsp;&nbsp; &nbsp;return DxLib::DrawRotaGraphF((worldX - pos.x) * zoomRatio + leftTop.x, (worldY - pos.y) * zoomRatio + leftTop.y,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;ExRate * zoomRatio, Angle, GrHandle, TRUE);<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 文字列を描画<br>
+      &nbsp;&nbsp;inline int DrawString(float worldX, float worldY, const TCHAR* String, unsigned int Color, unsigned int EdgeColor DEFAULTPARAM(= 0))<br>
+      &nbsp;&nbsp;{ &nbsp; // カメラのx,yぶんだけマイナスして描く起点をずらして描くことでスクロールさせる<br>
+      &nbsp;&nbsp; &nbsp;if (zoomRatio == 1.0f)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawString((int)(worldX - pos.x), (int)(worldY - pos.y), String, Color);<br>
+      &nbsp;&nbsp; &nbsp;else<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;return DxLib::DrawExtendString((int)(worldX - pos.x) * zoomRatio + leftTop.x, (int)(worldY - pos.y) * zoomRatio + leftTop.y,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;zoomRatio, zoomRatio, String, Color, EdgeColor);<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      private:<br>
+      <br>
+      };<br>
+      #endif</p>
+    <p><code>Sound.cppも新規作成</code>します。</p>
+    <p class="source">#include "Sound.h"<br>
+      <br>
+      // メモリ再生音源管理番号<br>
+      int Sound::jumpSE[4]; // 4種類のジャンプ音を読み込む<br>
+      <br>
+      <br>
+      void Sound::Load()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; jumpSE[0] = LoadSoundMem("SE/Jump0.wav");<br>
+      &nbsp;&nbsp;&nbsp; jumpSE[1] = LoadSoundMem("SE/Jump1.wav");<br>
+      &nbsp;&nbsp;&nbsp; jumpSE[2] = LoadSoundMem("SE/Jump2.wav");<br>
+      &nbsp;&nbsp;&nbsp; jumpSE[3] = LoadSoundMem("SE/Jump3.wav");<br>
+      &nbsp;&nbsp;&nbsp; assert(jumpSE[0] != -1); // 読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;&nbsp; assert(jumpSE[1] != -1); // 読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;&nbsp; assert(jumpSE[2] != -1); // 読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;&nbsp; assert(jumpSE[3] != -1); // 読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      }<br>
+      <br>
+      // メモリ上の音声を再生する。<br>
+      void Sound::Play(int handle, int PlayType)<br>
+      {&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // メモリ上から音声再生<br>
+      &nbsp;&nbsp;&nbsp; PlaySoundMem(handle, PlayType);<br>
+      }<br>
+      <br>
+    </p> 
   </body>
 </html>
