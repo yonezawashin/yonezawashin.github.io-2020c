@@ -6995,8 +6995,18 @@
       &nbsp;&nbsp; &nbsp;//this-&gt;y = y; 2行が上のxyの様にたった1行で書けるようになる<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// [static関数]カメラを管理する辞書をクリア<br>
-      &nbsp;&nbsp;static void clear() { std::unordered_map&lt;std::string, std::shared_ptr&lt;Camera&gt;&gt;().swap(list); }<br>
+      &nbsp;&nbsp;// Unityのstatic変数を参考に https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
+      &nbsp;&nbsp;static const Vector2 zero;// = { 0.f,  0.f };<br>
+      &nbsp;&nbsp;static const Vector2 one; // = { 1.f,  1.f };<br>
+      &nbsp;&nbsp;static const Vector2 up;  // = { 0.f,  1.f };<br>
+      &nbsp;&nbsp;static const Vector2 down;// = { 0.f, -1.f };<br>
+      &nbsp;&nbsp;static const Vector2 left; // = { -1.f, 0.f };<br>
+      &nbsp;&nbsp;static const Vector2 right;// = { 1.f, 0.f };<br>
+      &nbsp;&nbsp;//[負の値の最小値] https://stackoverflow.com/questions/20016600/negative-infinity<br>
+      &nbsp;&nbsp;static const Vector2 negativeInfinity;// = { -std::numeric_limits&lt;float&gt;::infinity(), .. };<br>
+      &nbsp;&nbsp;//[極大値]https://cpprefjp.github.io/reference/limits/numeric_limits/lowest.html<br>
+      &nbsp;&nbsp;static const Vector2 positiveInfinity;// = { std::numeric_limits&lt;float&gt;::infinity(), .. };<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [static関数]カメラを辞書から1つ消す(tagと辞書のタグが一致するものを辞書から消す、共有ポインタなのでカメラの実態も道連れにメモリから消える)<br>
       &nbsp;&nbsp;static void erase(std::string&amp; tag) { list.erase(tag); }<br>
