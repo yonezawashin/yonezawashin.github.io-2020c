@@ -7114,7 +7114,7 @@
       &nbsp;&nbsp; &nbsp;this-&gt;y += add_v2.y;<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;return *this; //*thisを返すことで v1 + v2 + v3みたく数珠繋ぎできる<br>
-      &&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;Vector2&amp; operator -= (const Vector2 minus_v2)<br>
       &nbsp;&nbsp;{<br>
@@ -7122,7 +7122,7 @@
       &nbsp;&nbsp; &nbsp;this-&gt;y -= minus_v2.y;<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;return *this;<br>
-      &&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 代入演算子 x,yを全部 change_numに変える<br>
       &nbsp;&nbsp;Vector2&amp; operator = (float change_num)<br>
@@ -7131,7 +7131,7 @@
       &nbsp;&nbsp; &nbsp;this-&gt;y = change_num;<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;return *this;<br>
-      &&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 一致演算子 x,yが全部一致するか 一つでも違えばfalse<br>
       &nbsp;&nbsp;bool operator == (const Vector2&amp; v2_other)<br>
@@ -7139,7 +7139,7 @@
       &nbsp;&nbsp; &nbsp;if (this-&gt;x != v2_other.x) return false;<br>
       &nbsp;&nbsp; &nbsp;if (this-&gt;y != v2_other.y) return false;<br>
       &nbsp;&nbsp; &nbsp;return true;<br>
-      &&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 不一致演算子 x,yが全部不一致か 一つでも同じならfalse<br>
       &nbsp;&nbsp;bool operator != (const Vector2&amp; v2_other)<br>
@@ -7147,7 +7147,7 @@
       &nbsp;&nbsp; &nbsp;if (this-&gt;x == v2_other.x) return false;<br>
       &nbsp;&nbsp; &nbsp;if (this-&gt;y == v2_other.y) return false;<br>
       &nbsp;&nbsp; &nbsp;return true;<br>
-      &&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;//---- 以下 DXライブラリ向けにVector3とDX版Vectorの変換方法を用意  ---------------<br>
       &nbsp;&nbsp;<br>
