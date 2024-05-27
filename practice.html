@@ -7292,20 +7292,7 @@
       &nbsp;&nbsp;// [関数]指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
       &nbsp;&nbsp;void LookAt(Vector2 pos) { LookAt(pos.x,pos.y); }<br>
       &nbsp;&nbsp;// [関数]指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
-      &nbsp;&nbsp;void LookAt(float targetX, float targetY = Screen::Height / 2)<br>
-      &nbsp;&nbsp;{&nbsp; // 描画起点をずらす量がここに計算される<br>
-      &nbsp;&nbsp; &nbsp;float halfWidth = (float)Screen::Width / 2.0f;<br>
-      &nbsp;&nbsp; &nbsp;float halfHeight = (float)Screen::Height / 2.0f;<br>
-      &nbsp;&nbsp; &nbsp;pos.x = targetX - halfWidth; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp; &nbsp;pos.y = targetY - halfHeight; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
-      &nbsp;&nbsp; &nbsp;if (zoomRatio != 1.0f)<br>
-      &nbsp;&nbsp; &nbsp;{<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;leftTop.x = halfWidth - halfWidth * zoomRatio;<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;leftTop.y = halfHeight - halfHeight * zoomRatio;<br>
-      &nbsp;&nbsp; &nbsp;}<br>
-      &nbsp;&nbsp; &nbsp;if (pos.x &lt;= 0) pos.x = 0; // マップの端ではカメラスクロール止める<br>
-      &nbsp;&nbsp; &nbsp;if (pos.y &lt;= 0) pos.y = 0; // マップの端ではカメラスクロール止める<br>
-      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;void LookAt(float targetX, float targetY = Screen::Height / 2);<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// [関数]画像を描画(回転と個別ズームも可能)<br>
       &nbsp;&nbsp;inline int DrawRotaGraphF(float worldX, float worldY, double ExRate, double Angle, int GrHandle, int TransFlag = TRUE)<br>
@@ -7363,6 +7350,21 @@
     <p class="source">#include "Camera.h"<br>
       <br>
       std::unordered_map&lt;std::string, std::shared_ptr&lt;Camera&gt;&gt; Camera::list; // カメラの辞書&lt;タグ,カメラの共有ポインタ&gt;<br>
+      <br>
+      void Camera::LookAt(float targetX, float targetY)<br>
+      {&nbsp; // 描画起点をずらす量がここに計算される<br>
+      &nbsp;&nbsp;float halfWidth = (float)Screen::Width / 2.0f;<br>
+      &nbsp;&nbsp;float halfHeight = (float)Screen::Height / 2.0f;<br>
+      &nbsp;&nbsp;pos.x = targetX - halfWidth; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
+      &nbsp;&nbsp;pos.y = targetY - halfHeight; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
+      &nbsp;&nbsp;if (zoomRatio != 1.0f)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;leftTop.x = halfWidth - halfWidth * zoomRatio;<br>
+      &nbsp;&nbsp; &nbsp;leftTop.y = halfHeight - halfHeight * zoomRatio;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;if (pos.x &lt;= 0) pos.x = 0; // マップの端ではカメラスクロール止める<br>
+      &nbsp;&nbsp;if (pos.y &lt;= 0) pos.y = 0; // マップの端ではカメラスクロール止める<br>
+      }<br>
       <br>
     </p>
     <p><code>main.cpp</code>を編集してカメラで描く起点をずらす処理(とズーム処理)をCameraクラスを使ってするようにします：</p>
