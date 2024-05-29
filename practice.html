@@ -5559,7 +5559,7 @@
       &nbsp;&nbsp;int YSize = 0; // 画像 縦 高さYSize(ピクセルドット数)<br>
       &nbsp;&nbsp;int AllNum = 0; // トータルの分割画像数<br>
       &nbsp;&nbsp;bool is3DTexture = false; // 3Dテクスチャ分割画像かtrueだと2のべき乗チェックが入る<br>
-      &nbsp;&nbsp;std::vector&lt;int&gt; HandleArray = nullptr; // DXのLoadDivGraphでロードした画像ハンドル番号の配列<br>
+      &nbsp;&nbsp;std::vector&lt;int&gt; HandleArray; // DXのLoadDivGraphでロードした画像ハンドル番号の配列<br>
       <br>
       // 初期化 : X方向分割画像数 XNum, Y方向分割画像数 YNum, 画像 横 幅XSizeピクセル, 画像 縦 高さYSizeピクセル<br>
       &nbsp;&nbsp;DivImage(int XNum, int YNum, int XSize, int YSize, bool is3DTexture=false)<br>
