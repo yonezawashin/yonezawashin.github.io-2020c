@@ -8106,8 +8106,26 @@
       };<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
-      };<br>
       <br>
+      <br>
+      class AnimBlock : public Block<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;Vector2 animPos{ 0,0 }; // アニメで(pos.x + animPos.x, pos.y + animPos.y)にずらして描く<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ブロックをバウンドさせるための 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
+      &nbsp;&nbsp;static std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; cellTime;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;std::vector<KeyFrame> anim; // 一連のアニメの時間と位置を持つキーレームの配列<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 初期化コンストラクタ<br>
+      &nbsp;&nbsp;AnimBlock(std::vector&lt;KeyFrame&gt;&amp; anim, int cellX, int cellY, int cellSize = 32, int* pHandle = nullptr, int* pID = nullptr)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;: anim{ anim }, Block(cellX, cellY, cellSize, pHandle, pID) {}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual void Update() override; // 更新処理<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual void Draw(Camera* pCamera) override; // 描画処理<br>
+      };<br>
       #endif<br>
     </p>
       <br>
