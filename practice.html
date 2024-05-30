@@ -8108,12 +8108,12 @@
       &nbsp;&nbsp;<br>
       <br>
       <br>
-      class AnimBlock : public Block<br>
+      class AnimBlock : public Block // ベースとなるBlock型を継承してアニメするブロックを定義する<br>
       {<br>
       public:<br>
       &nbsp;&nbsp;Vector2 animPos{ 0,0 }; // アニメで(pos.x + animPos.x, pos.y + animPos.y)にずらして描く<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// ブロックをバウンドさせるための 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
+      &nbsp;&nbsp;// ブロックをバウンドなどアニメさせるためマス目セルXY番号→アニメ時間の 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
       &nbsp;&nbsp;static std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; cellTime;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;std::vector<KeyFrame> anim; // 一連のアニメの時間と位置を持つキーレームの配列<br>
