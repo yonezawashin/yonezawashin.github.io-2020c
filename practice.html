@@ -8194,20 +8194,37 @@
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 画像をパラパラ画像アニメするならキーフレームの画像ハンドル番号へリンクする<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;pHandle = &anim[i].handle; // iが変わってhandle番号が変われば画像が変わりパラパラアニメする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pHandle = &amp;anim[i].handle; // iが変わってhandle番号が変われば画像が変わりパラパラアニメする<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (anim[i].isStop != true)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++cellTime[mapXY]; // アニメ時間を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;int iEnd = anim.size() - 1; // 最後の配列番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (cellTime[mapXY] &gt; anim[iEnd].time) // アニメ終了時間をこえたとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;if (anim[iEnd].tNext &gt;= 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;cellTime[mapXY] = anim[iEnd].tNext; // アニメ時刻をtNextに飛ばして辞書時刻を書き換え<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;cellTime.erase(mapXY); // 辞書からアニメをerase関数で取り除く<br>
+      &nbsp;&nbsp;}<br>
+      }<br>
+      <br>
+      // 描画処理<br>
+      void AnimBlock::Draw(Camera* pCamera)<br>
+      {<br>
+      &nbsp;&nbsp;if (pCamera == nullptr) return;<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;std::vector<KeyFrame> anim; // 一連のアニメの時間と位置を持つキーレームの配列<br>
+      &nbsp;&nbsp;// ポインタからidを読みだす<br>
+      &nbsp;&nbsp;int id = (pID != nullptr) ? *pID : -1;<br>
+      &nbsp;&nbsp;int handle = (pHandle != nullptr) ? *pHandle : -1;<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 初期化コンストラクタ<br>
-      &nbsp;&nbsp;AnimBlock(std::vector&lt;KeyFrame&gt;&amp; anim, int cellX, int cellY, int cellSize = 32, int* pHandle = nullptr, int* pID = nullptr)<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;: anim{ anim }, Block(cellX, cellY, cellSize, pHandle, pID) {}<br>
+      &nbsp;&nbsp;// マップチップを描く<br>
+      &nbsp;&nbsp;float rotaShiftX = CellSize / 2, rotaShiftY = CellSize / 2;<br>
+      &nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(pos.x + animPos.x + rotaShiftX, pos.y + animPos.y + rotaShiftY, 1.0f, 0.0f, handle, TRUE);<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;virtual void Update() override; // 更新処理<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;virtual void Draw(Camera* pCamera) override; // 描画処理<br>
-      };<br>
-      #endif<br>
+      &nbsp;&nbsp;// デバッグ用にcsvのidの数字を描く<br>
+      &nbsp;&nbsp;if (id != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawString(pos.x, pos.y, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
+      }<br>
     </p>
       <br>
       <br>
