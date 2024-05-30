@@ -6630,7 +6630,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; static void Load(<em>std::string scene=""</em>); <em>// シーンを指定して使う画像だけロードもできる</em><br>
       &nbsp;&nbsp;&nbsp; static int LoadDivGraph(const TCHAR* FileName, DivImage&amp; divImage<em>, std::string scene="", std::vector&lt;std::string&gt; useScenes={""}</em>);<br>
       &nbsp;&nbsp;&nbsp; static int LoadGraph(const TCHAR* FileName<em>, std::string scene = "", std::vector&lt;std::string&gt; useScenes = { "" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <em>static std::map&lt;std::string, DivImage*&gt; loadDic; // ロード済の画像辞書</em><br>
+      &nbsp;&nbsp;&nbsp; <em>static std::unordered_map&lt;std::string, DivImage*&gt; loadDic; // ロード済の画像辞書</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
       &nbsp;&nbsp;&nbsp; static int player; //プレイヤ画像のハンドラ<br>
