@@ -8051,6 +8051,28 @@
       <br>
       #endif<br>
     </p>
+    <p><code>Block.hを新規作成</code>してブロックのアニメの<b>時間と位置と画像ハンドル番号(チップのパラパラアニメ)</b>を持つ構造体を作成します。</p>
+    <p class="source">#ifndef KEYFRAME_H_<br>
+      #define KEYFRAME_H_<br>
+      <br>
+      #include "Vector2.h"<br>
+      <br>
+      struct KeyFrame // アニメの時間と位置(とオプションで画像ハンドル)を持つ構造体<br>
+      {<br>
+      &nbsp;&nbsp;Vector2 pos; // ある時間での位置<br>
+      &nbsp;&nbsp;int time = 0; // 時刻(経過フレーム数)<br>
+      &nbsp;&nbsp;int handle = -1; // 画像ハンドル(途中で画像を変えるなら)<br>
+      &nbsp;&nbsp;int tNext = -1; // このキーフレームのあとtime=tNextの時刻に(0にすればループに使える)<br>
+      &nbsp;&nbsp;bool isStop = false; // キーフレームの時間経過をストップするか<br>
+      &nbsp;&nbsp;KeyFrame&amp; SetStop(bool isStop) { this-&gt;isStop = isStop; return *this; }<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;KeyFrame(int time, Vector2 pos, int handle = -1, int tNext = -1, bool isStop = false)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;: time{ time }, pos{ pos }, handle{ handle }, tNext{ tNext }, isStop{ isStop } {}<br>
+      &nbsp;&nbsp;virtual ~KeyFrame() {}<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
       <br>
       <br>
   </body>
