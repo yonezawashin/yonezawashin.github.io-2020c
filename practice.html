@@ -8037,7 +8037,7 @@
       <br>
       struct KeyFrame // アニメの時間と位置(とオプションで画像ハンドル)を持つ構造体<br>
       {<br>
-      &nbsp;&nbsp;Vector2 pos; // ある時間での位置<br>
+      &nbsp;&nbsp;Vector2 pos{ 0,0 }; // ある時間での位置<br>
       &nbsp;&nbsp;int time = 0; // 時刻(経過フレーム数)<br>
       &nbsp;&nbsp;int handle = -1; // 画像ハンドル(途中で画像を変えるなら)<br>
       &nbsp;&nbsp;int tNext = -1; // このキーフレームのあとtime=tNextの時刻に(0にすればループに使える)<br>
@@ -8051,24 +8051,61 @@
       <br>
       #endif<br>
     </p>
-    <p><code>Block.hを新規作成</code>してブロックのアニメの<b>時間と位置と画像ハンドル番号(チップのパラパラアニメ)</b>を持つ構造体を作成します。</p>
-    <p class="source">#ifndef KEYFRAME_H_<br>
-      #define KEYFRAME_H_<br>
+    <p><code>Block.hを新規作成</code>してタイルマップの1つ1つのブロックの行と列番号やアニメや描画する機能を管理するクラスを作成します。</p>
+    <p class="source">#ifndef BLOCK_H_<br>
+      #define BLOCK_H_<br>
       <br>
+      #include "DxLib.h"<br>
       #include "Vector2.h"<br>
+      #include "KeyFrame.h"<br>
       <br>
-      struct KeyFrame // アニメの時間と位置(とオプションで画像ハンドル)を持つ構造体<br>
+      #include &lt;vector&gt; // アニメのキーフレームを2次元vector配列に格納<br>
+      #include &lt;string&gt; // 文字列std::stringを使う<br>
+      <br>
+      #include &lt;unordered_map&gt; // 高速辞書配列std::unordered_mapを使う<br>
+      #include &lt;utility&gt; // std::pair(データのペア型)を使うのに必要<br>
+      // [ペアを高速辞書のキーにするためハッシュ関数が必要] https://qiita.com/hamamu/items/4d081751b69aa3bb3557<br>
+      template&lt;class TypeT&gt; size_t HashCombine(const size_t seed, const TypeT&amp; value)<br>
       {<br>
-      &nbsp;&nbsp;Vector2 pos; // ある時間での位置<br>
-      &nbsp;&nbsp;int time = 0; // 時刻(経過フレーム数)<br>
-      &nbsp;&nbsp;int handle = -1; // 画像ハンドル(途中で画像を変えるなら)<br>
-      &nbsp;&nbsp;int tNext = -1; // このキーフレームのあとtime=tNextの時刻に(0にすればループに使える)<br>
-      &nbsp;&nbsp;bool isStop = false; // キーフレームの時間経過をストップするか<br>
-      &nbsp;&nbsp;KeyFrame&amp; SetStop(bool isStop) { this-&gt;isStop = isStop; return *this; }<br>
+      &nbsp;&nbsp;return seed ^ (std::hash&lt;TypeT&gt;()(value) + 0x9e3779b9 + (seed &lt;&lt; 6) + (seed &gt;&gt; 2));<br>
+      }<br>
+      <br>
+      // pair型に()をつけたときに呼び出される処理をoperator()で定義してreturnでハッシュ関数を返す<br>
+      template&lt;class TypeT, class TypeS&gt; struct std::hash&lt;std::pair&lt;TypeT, TypeS&gt;&gt;<br>
+      {<br>
+      &nbsp;&nbsp;size_t operator() (const std::pair&lt;TypeT, TypeS&gt;&amp; keyval) const noexcept<br>
+      &nbsp;&nbsp;{ &nbsp; // returnでハッシュ関数を返すことで高速辞書のキーとして認め許されるようになる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return HashCombine(std::hash&lt;TypeT&gt;()(keyval.first), keyval.second);<br>
+      &nbsp;&nbsp;}<br>
+      };<br>
+      <br>
+      class Camera; // 循環回避の前方宣言(ポインタ使用のみなら.hで#inludeせずともエラー出なくなる)<br>
+      <br>
+      class Block // 1つ1つのブロック(タイルマップのチップ)を表すクラス<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;int CellSize = 32; // マップの1マスのピクセル数<br>
+      &nbsp;&nbsp;int cellX = -1, cellY = -1; // マス目番号(csvの列と行の番号)<br>
+      &nbsp;&nbsp;Vector2 pos{ 0,0 }; // ブロックのワールド座標位置<br>
+      &nbsp;&nbsp;int* pID = nullptr; // マップチップ画像のIDへのリンク<br>
+      &nbsp;&nbsp;int* pHandle = nullptr; // 描くチップの画像ハンドル番号へのリンク<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;KeyFrame(int time, Vector2 pos, int handle = -1, int tNext = -1, bool isStop = false)<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;: time{ time }, pos{ pos }, handle{ handle }, tNext{ tNext }, isStop{ isStop } {}<br>
-      &nbsp;&nbsp;virtual ~KeyFrame() {}<br>
+      &nbsp;&nbsp;// 初期化コンストラクタ<br>
+      &nbsp;&nbsp;Block(int cellX, int cellY, int cellSize = 32, int* pHandle = nullptr, int* pID = nullptr)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;: cellX{ cellX }, cellY{ cellY }, CellSize{ cellSize }, pHandle{ pHandle }, pID{ pID }<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pos.y = (float)(cellY * CellSize); // マス目Y(行)番号×マス目サイズで y座標に戻す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pos.x = (float)(cellX * CellSize); // マス目X(列)番号×マス目サイズで x座標に戻す<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual ~Block() {} // 破棄デストラクタ<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual void Update(); // 更新処理<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual void Draw(Camera* pCamera); // 描画処理<br>
+      };<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
       };<br>
       <br>
       #endif<br>
