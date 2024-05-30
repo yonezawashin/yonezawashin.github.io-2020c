@@ -8116,6 +8116,87 @@
       &nbsp;&nbsp;// ブロックをバウンドなどアニメさせるためマス目セルXY番号→アニメ時間の 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
       &nbsp;&nbsp;static std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; cellTime;<br>
       &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;std::vector&lt;KeyFrame&gt; anim; // 一連のアニメの時間と位置を持つキーレームの配列<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 初期化コンストラクタ<br>
+      &nbsp;&nbsp;AnimBlock(std::vector&lt;KeyFrame&gt;&amp; anim, int cellX, int cellY, int cellSize = 32, int* pHandle = nullptr, int* pID = nullptr)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;: anim{ anim }, Block(cellX, cellY, cellSize, pHandle, pID) {}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual void Update() override; // 更新処理<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual void Draw(Camera* pCamera) override; // 描画処理<br>
+      };<br>
+      #endif<br>
+    </p>
+    <p><code>Block.hを新規作成</code>してタイルマップの1つ1つのブロックの行と列番号やアニメや描画する機能を管理するクラスを作成します。</p>
+    <p class="source">#include "Block.h"<br>
+      <br>
+      #include "Camera.h" // CameraでもBlockやTileを#includeする可能性を考えて循環回避(.cppで#include)<br>
+      <br>
+      std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; AnimBlock::cellTime;<br>
+      <br>
+      // 更新処理<br>
+      void Block::Update()<br>
+      {<br>
+      &nbsp;&nbsp;pos.y = (float)(cellY * CellSize); // マス目Y(行)番号×マス目サイズで y座標に戻す<br>
+      &nbsp;&nbsp;pos.x = (float)(cellX * CellSize); // マス目X(列)番号×マス目サイズで x座標に戻す<br>
+      }<br>
+      <br>
+      // 描画処理<br>
+      void Block::Draw(Camera* pCamera)<br>
+      {<br>
+      &nbsp;&nbsp;if (pCamera == nullptr) return; // カメラのリンク切れなら描けない<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ポインタからidを読みだす<br>
+      &nbsp;&nbsp;int id = (pID != nullptr) ? *pID : -1;<br>
+      &nbsp;&nbsp;int handle = (pHandle != nullptr) ? *pHandle : -1;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// マップチップを描く<br>
+      &nbsp;&nbsp;float rotaShiftX = CellSize / 2, rotaShiftY = CellSize / 2;<br>
+      &nbsp;&nbsp;pCamera->DrawRotaGraphF(pos.x + rotaShiftX, pos.y + rotaShiftY, 1.0f, 0.0f, handle, TRUE);<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// デバッグ用にcsvのidの数字を描く<br>
+      &nbsp;&nbsp;if (id != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pCamera->DrawString(pos.x, pos.y, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
+      }<br>
+      <br>
+      // 更新処理<br>
+      void AnimBlock::Update()<br>
+      {<br>
+      &nbsp;&nbsp;pos.y = (float)(cellY * CellSize); // マス目Y(行)番号×マス目サイズで y座標に戻す<br>
+      &nbsp;&nbsp;pos.x = (float)(cellX * CellSize); // マス目X(列)番号×マス目サイズで x座標に戻す<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;auto mapXY = std::make_pair(cellX, cellY);<br>
+      &nbsp;&nbsp;if (cellTime.count(mapXY) &gt; 0 && anim.size() &gt; 1)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;int blockTime = cellTime[mapXY];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;size_t i = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;for (size_t j = 1,jSize=anim.size(); j &lt; jSize; ++j)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (anim[j-1].time &lt;= blockTime &amp;&amp; blockTime &lt;= anim[j].time)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i = j - 1; // 時刻に対応するキーフレーム番号区間を見つけた<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Vector2 startPos{ anim[i].pos.x, anim[i].pos.y };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float nowTime = blockTime - anim[i].time;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (anim.size() &lt; 2) // キーフレームが1つ以下なら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animPos = startPos; // アニメせずスタート位置のまま固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Vector2 endPos{ anim[i + 1].pos.x, anim[i + 1].pos.y };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//数値例.float yAnim0 = yBase - 10, yAnim1 = yBase; // yAnim0 から yAnim1の位置までアニメする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float time = anim[i + 1].time - anim[i].time;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//数値例.float yAnim = yAnim0 * (15 - blockTime) / 15 + yAnim1 * blockTime / 15;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animPos = startPos * ((time - nowTime) / time) + endPos * (nowTime / time);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 画像をパラパラ画像アニメするならキーフレームの画像ハンドル番号へリンクする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pHandle = &anim[i].handle; // iが変わってhandle番号が変われば画像が変わりパラパラアニメする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;std::vector<KeyFrame> anim; // 一連のアニメの時間と位置を持つキーレームの配列<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 初期化コンストラクタ<br>
