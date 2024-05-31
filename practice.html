@@ -8141,7 +8141,6 @@
       #include "Camera.h" // CameraでもBlockやTileを#includeする可能性を考えて循環回避(.cppで#include)<br>
       #include "Tile.h" // 循環回避のため.cppで相互に#includeしあう<br>
       <br>
-      std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; AnimBlock::cellTime;<br>
       <br>
       // 更新処理<br>
       void Block::Update()<br>
