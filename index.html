@@ -3431,7 +3431,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp;static bool CircleCircleIntersection(<br>
         &nbsp;&nbsp;&nbsp;&nbsp;Vector3 pos1, float radius1,<br>
         &nbsp;&nbsp;&nbsp;&nbsp;Vector3 pos2, float radius2)<br>
-        &nbsp;&nbsp;{<br>
+        &nbsp;&nbsp;{ //[2乗のまま &lt; 比較すると高速] https://www.stmn.tech/entry/2016/06/15/033835<br>
         &nbsp;&nbsp;&nbsp;&nbsp;return ((pos1 - pos2).sqrMagnitude()<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; (radius1 + radius2) * (radius1 + radius2));<br>
         &nbsp;&nbsp;}</em><br>
