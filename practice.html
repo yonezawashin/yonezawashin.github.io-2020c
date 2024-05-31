@@ -8345,8 +8345,8 @@
       <br>
       // [X方向左右]地形の ダメージブロックなどにぶつかったかをチェックする関数<br>
       int Tile::hitcheckX(BlockBit checkBit,<br>
-      &nbsp;&nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
-      &nbsp;&nbsp;int* pMapX, int* pMapY)<br>
+      &nbsp; &nbsp; float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
+      &nbsp; &nbsp; int* pMapX, int* pMapY)<br>
       {<br>
       &nbsp;&nbsp;// 左端がめりこんでいるか？<br>
       &nbsp;&nbsp;if (checkID(checkBit, xLeft, yTop, pMapX, pMapY))<br>
@@ -8364,6 +8364,38 @@
       &nbsp;&nbsp; &nbsp;return (int)HitPart::Right | (int)HitPart::Bottom; // 右下がめりこんでいる<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;return (int)HitPart::None;<br>
+      }<br>
+      <br>
+      // [Y方向上下]地形の ダメージブロックなどにぶつかったかをチェックする関数<br>
+      int Tile::hitcheckY(BlockBit checkBit,<br>
+      &nbsp; &nbsp; float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
+      &nbsp; &nbsp; int* pMapX, int* pMapY)<br>
+      {<br>
+      &nbsp;&nbsp;// 頭の部分がめりこんでいるか？<br>
+      &nbsp;&nbsp;if (checkID(checkBit, xLeft, yTop, pMapX, pMapY))<br>
+      &nbsp;&nbsp; &nbsp;return (int)HitPart::Left | (int)HitPart::Top; // 左上がめりこんでいる<br>
+      &nbsp;&nbsp;if (checkID(checkBit, xMiddle, yTop, pMapX, pMapY))<br>
+      &nbsp;&nbsp; &nbsp;return (int)HitPart::XMiddle | (int)HitPart::Top; // 中上がめりこんでいる<br>
+      &nbsp;&nbsp;if (checkID(checkBit, xRight, yTop, pMapX, pMapY))<br>
+      &nbsp;&nbsp; &nbsp;return (int)HitPart::Right | (int)HitPart::Top; // 右上がめりこんでいる<br>
+      &nbsp;&nbsp;// 足元が壁にめりこんでいるか？<br>
+      &nbsp;&nbsp;if (checkID(checkBit, xLeft, yBottom, pMapX, pMapY))<br>
+      &nbsp;&nbsp; &nbsp;return (int)HitPart::Left | (int)HitPart::Bottom; // 左下がめりこんでいる<br>
+      &nbsp;&nbsp;if (checkID(checkBit, xMiddle, yBottom, pMapX, pMapY))<br>
+      &nbsp;&nbsp; &nbsp;return (int)HitPart::XMiddle | (int)HitPart::Bottom; // 中下がめりこんでいる<br>
+      &nbsp;&nbsp;if (checkID(checkBit, xRight, yBottom, pMapX, pMapY))<br>
+      &nbsp;&nbsp; &nbsp;return (int)HitPart::Right | (int)HitPart::Bottom; // 右下がめりこんでいる<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;return (int)HitPart::None;<br>
+      }<br>
+      <br>
+      // 地形の ダメージブロックなどにぶつかったかをチェックする関数<br>
+      int Tile::hitcheck(BlockBit checkBit,<br>
+      &nbsp; &nbsp; float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
+      &nbsp; &nbsp; int* pMapX, int* pMapY)<br>
+      {<br>
+      &nbsp;&nbsp;return hitcheckX(checkBit, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, pMapX, pMapY)<br>
+      &nbsp;&nbsp; &nbsp; &nbsp; | hitcheckY(checkBit, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, pMapX, pMapY);<br>
       }<br>
       <br>
       <br>
