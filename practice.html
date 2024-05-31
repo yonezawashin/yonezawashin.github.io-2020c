@@ -8416,12 +8416,12 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// マップチップを描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;auto mapXY = std::make_pair(cellX, cellY);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (AnimBlock::cellTime.count(mapXY) == 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ // 普通のBlock型(マス目XY ↑ に対応したアニメ時刻が辞書に未登録のとき)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Block block{ cellX, cellY, CellSize, &amp;Image::mapChips[id], &amp;id };<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Update();<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Draw(pCamera); // カメラのリンクを渡してブロックを描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if ((int)BlockBit::Bounce & blockBits[id])<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if ((int)BlockBit::Bounce &amp; blockBits[id])<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ //[アニメ]とりあえずローカル変数定義するが、コマ数(データ量)が増えたらループ負荷の少ない所に移動が無難か<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::vector<KeyFrame> anim = { {0, Vector2(0,-10), Image::mapChips[id]},<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {15, Vector2(0,0),  Image::mapChips[id]} };<br>
