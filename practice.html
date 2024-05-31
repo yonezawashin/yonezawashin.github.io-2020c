@@ -7626,7 +7626,7 @@
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<em>// カメラをmake_sharedで共有生成して Camera::list 辞書配列 に"プレイヤ0"というタグをつけて保持<br>
       &nbsp;&nbsp;Camera::list["プレイヤ0"] = std::make_shared&lt;Camera&gt;("プレイヤ0", Vector2(x,y), 1.0f); // ズーム率初期値1.0f<br>
-      &nbsp;&nbsp;auto pCamera = Camera::list["プレイヤ0"]; // タイルをスクロールして描くカメラへの共有リンクを得る</em><br>
+      &nbsp;&nbsp;auto pCamera = Camera::list["プレイヤ0"]; // タイルをスクロールして描くカメラへの共有リンクを得る<br>
       &nbsp;&nbsp;pCamera->LookAt(x, y); // プレイヤのキャラ(x,y)位置を中心に追跡スクロール<br>
       &nbsp;&nbsp;int zoomAnimCount = 0; // ジャンプした時のズームアウトアニメのカウンタ</em><br>
       &nbsp;&nbsp;<u>float camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
@@ -8245,6 +8245,17 @@
       class Camera; // 循環回避の前方宣言(ポインタ使用のみなら.hで#inludeせずともエラー出なくなる)<br>
       <br>
       <br>
+      enum class BlockBit // ブロックの特性を32桁のビットで表現<br>
+      {<br>
+      &nbsp;&nbsp;None = 0,<br>
+      &nbsp;&nbsp;Wall &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
+      &nbsp;&nbsp;Damage = 0b0000'0000'0000'0000'0000'0000'0000'0010,<br>
+      &nbsp;&nbsp;Bounce = 0b0000'0000'0000'0000'0000'0000'0000'0100, // 叩くと弾むブロック<br>
+      &nbsp;&nbsp;Change = 0b0000'0000'0000'0000'0000'0000'0000'1000, // 叩くとブロックの種類が変わる<br>
+      &nbsp;&nbsp;Switch = 0b0000'0000'0000'0000'0000'0000'0001'0000, // スイッチを叩くと赤ブロックや青ブロックの無効⇔有効が切替<br>
+      };<br>
+      <br>
+      <br>
       enum class HitPart // 当たった箇所を表すビット<br>
       {<br>
       &nbsp;&nbsp;None &nbsp; &nbsp;= 0,<br>
@@ -8578,7 +8589,7 @@
       &nbsp;&nbsp;auto getRight  = [&amp;hitOffsetRight, &amp;imgSizeX](float worldX) { return worldX + imgSizeX - hitOffsetRight; };<br>
       &nbsp;&nbsp;auto getBottom = [&amp;hitOffsetBottom, &imgSizeY](float worldY) { return worldY + imgSizeY - hitOffsetBottom; };<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;enum class BlockBit // ブロックの特性を32桁のビットで表現<br>
+      &nbsp;&nbsp;<u>enum class BlockBit // ブロックの特性を32桁のビットで表現<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;None = 0,<br>
       &nbsp;&nbsp;&nbsp;&nbsp;Wall &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
@@ -8586,7 +8597,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;Bounce = 0b0000'0000'0000'0000'0000'0000'0000'0100, // 叩くと弾むブロック<br>
       &nbsp;&nbsp;&nbsp;&nbsp;Change = 0b0000'0000'0000'0000'0000'0000'0000'1000, // 叩くとブロックの種類が変わる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;Switch = 0b0000'0000'0000'0000'0000'0000'0001'0000, // スイッチを叩くと赤ブロックや青ブロックの無効⇔有効が切替<br>
-      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;};</u><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<em>mapData.</em>blockBits = {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{-1,(int)BlockBit::None},<br>
@@ -8617,7 +8628,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;{ 11, {12,13,14,15} },<br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 指定された座標(worldX,worldY)の地形が 壁 や ダメージブロックかなどをチェックする一時関数<br>
+      &nbsp;&nbsp;<u>// 指定された座標(worldX,worldY)の地形が 壁 や ダメージブロックかなどをチェックする一時関数<br>
       &nbsp;&nbsp;auto checkID = [&amp;blockBits, &amp;CellSize](BlockBit checkBit, std::vector&lt;std::vector&lt;int&gt;&gt;&amp; terrain, float worldX, float worldY,<br>
       &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -8702,13 +8713,13 @@
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return hitcheckX(checkBit,terrain,xLeft,xMiddle,xRight,yTop,yMiddle,yBottom,pMapX,pMapY)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| hitcheckY(checkBit,terrain,xLeft,xMiddle,xRight,yTop,yMiddle,yBottom,pMapX,pMapY);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;};</u><br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;<em>// カメラをmake_sharedで共有生成して Camera::list 辞書配列 に"プレイヤ0"というタグをつけて保持<br>
+      &nbsp;&nbsp;// カメラをmake_sharedで共有生成して Camera::list 辞書配列 に"プレイヤ0"というタグをつけて保持<br>
       &nbsp;&nbsp;Camera::list["プレイヤ0"] = std::make_shared&lt;Camera&gt;("プレイヤ0", Vector2(x,y), 1.0f); // ズーム率初期値1.0f<br>
-      &nbsp;&nbsp;auto pCamera = Camera::list["プレイヤ0"]; // タイルをスクロールして描くカメラへの共有リンクを得る</em><br>
+      &nbsp;&nbsp;auto pCamera = Camera::list["プレイヤ0"]; // タイルをスクロールして描くカメラへの共有リンクを得る<br>
       &nbsp;&nbsp;pCamera->LookAt(x, y); // プレイヤのキャラ(x,y)位置を中心に追跡スクロール<br>
-      &nbsp;&nbsp;int zoomAnimCount = 0; // ジャンプした時のズームアウトアニメのカウンタ</em><br>
+      &nbsp;&nbsp;int zoomAnimCount = 0; // ジャンプした時のズームアウトアニメのカウンタ<br>
       &nbsp;&nbsp;<u>float camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
       &nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
       &nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
