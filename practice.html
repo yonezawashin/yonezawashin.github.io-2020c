@@ -8244,6 +8244,19 @@
       <br>
       class Camera; // 循環回避の前方宣言(ポインタ使用のみなら.hで#inludeせずともエラー出なくなる)<br>
       <br>
+      <br>
+      enum class HitPart // 当たった箇所を表すビット<br>
+      {<br>
+      &nbsp;&nbsp;None &nbsp; &nbsp;= 0,<br>
+      &nbsp;&nbsp;Left &nbsp; &nbsp;= 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
+      &nbsp;&nbsp;Right &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0010,<br>
+      &nbsp;&nbsp;Top &nbsp; &nbsp; = 0b0000'0000'0000'0000'0000'0000'0000'0100,<br>
+      &nbsp;&nbsp;Bottom &nbsp;= 0b0000'0000'0000'0000'0000'0000'0000'1000,<br>
+      &nbsp;&nbsp;XMiddle = 0b0000'0000'0000'0000'0000'0000'0001'0000,<br>
+      &nbsp;&nbsp;YMiddle = 0b0000'0000'0000'0000'0000'0000'0010'0000,<br>
+      };<br>
+      <br>
+      <br>
       class Tile // タイルマップのデータクラス<br>
       {<br>
       public:<br>
