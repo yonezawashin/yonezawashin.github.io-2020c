@@ -8720,12 +8720,6 @@
       &nbsp;&nbsp;auto pCamera = Camera::list["プレイヤ0"]; // タイルをスクロールして描くカメラへの共有リンクを得る<br>
       &nbsp;&nbsp;pCamera->LookAt(x, y); // プレイヤのキャラ(x,y)位置を中心に追跡スクロール<br>
       &nbsp;&nbsp;int zoomAnimCount = 0; // ジャンプした時のズームアウトアニメのカウンタ<br>
-      &nbsp;&nbsp;<u>float camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;else if (Width * CellSize - Screen::Width &lt;= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
-      &nbsp;&nbsp;float camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
-      &nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ</u><br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;float debug_x = -1, debug_y = -1; // [デバッグ] めり込みすぎのラインを記録しておく変数<br>
