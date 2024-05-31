@@ -8392,7 +8392,7 @@
       // 地形の ダメージブロックなどにぶつかったかをチェックする関数<br>
       int Tile::hitcheck(BlockBit checkBit,<br>
       &nbsp; &nbsp; float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
-      &nbsp; &nbsp; int* pMapX, int* pMapY)<br>
+      &nbsp; &nbsp; int* pMapX, int* pMapY) // pMapX,pMapYにはぶつかったブロックのマス目番号が代入され返却される<br>
       {<br>
       &nbsp;&nbsp;return hitcheckX(checkBit, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, pMapX, pMapY)<br>
       &nbsp;&nbsp; &nbsp; &nbsp; | hitcheckY(checkBit, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, pMapX, pMapY);<br>
