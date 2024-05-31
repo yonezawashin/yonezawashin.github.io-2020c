@@ -8167,11 +8167,14 @@
       &nbsp;&nbsp;pos.x = (float)(cellX * CellSize); // マス目X(列)番号×マス目サイズで x座標に戻す<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;auto mapXY = std::make_pair(cellX, cellY);<br>
-      &nbsp;&nbsp;if (cellTime.count(mapXY) &gt; 0 && anim.size() &gt; 1)<br>
+      &nbsp;&nbsp;size_t animSize = anim.size(); // anim配列の数(.size()関数を毎度呼ぶだけでも少し計算のムダ:1度目に変数に保持)<br>
+      &nbsp;&nbsp;if (animSize == 0) // アニメがない場合は(0,0)の固定位置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;animPos = Vector2{ 0,0 };<br>
+      &nbsp;&nbsp;else if (cellTime.count(mapXY) &gt; 0 && animSize &gt; 1)<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;int blockTime = cellTime[mapXY];<br>
       &nbsp;&nbsp;&nbsp;&nbsp;size_t i = 0;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;for (size_t j = 1,jSize=anim.size(); j &lt; jSize; ++j)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;for (size_t j = 1; j &lt; animSize; ++j)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (anim[j-1].time &lt;= blockTime &amp;&amp; blockTime &lt;= anim[j].time)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i = j - 1; // 時刻に対応するキーフレーム番号区間を見つけた<br>
@@ -8180,7 +8183,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;Vector2 startPos{ anim[i].pos.x, anim[i].pos.y };<br>
       &nbsp;&nbsp;&nbsp;&nbsp;float nowTime = blockTime - anim[i].time;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (anim.size() &lt; 2) // キーフレームが1つ以下なら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (animSize &lt; 2) // キーフレームが1つ以下なら<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animPos = startPos; // アニメせずスタート位置のまま固定<br>
       &nbsp;&nbsp;&nbsp;&nbsp;else<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -8199,7 +8202,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;if (anim[i].isStop != true)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++cellTime[mapXY]; // アニメ時間を進める<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;int iEnd = anim.size() - 1; // 最後の配列番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;int iEnd = animSize - 1; // 最後の配列番号<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (cellTime[mapXY] &gt; anim[iEnd].time) // アニメ終了時間をこえたとき<br>
       &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;if (anim[iEnd].tNext &gt;= 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;cellTime[mapXY] = anim[iEnd].tNext; // アニメ時刻をtNextに飛ばして辞書時刻を書き換え<br>
