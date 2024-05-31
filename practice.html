@@ -8285,6 +8285,9 @@
       &nbsp;&nbsp;int CellSize = 32; // マップの1マスのピクセル数<br>
       &nbsp;&nbsp;std::unordered_map&lt;int, int&gt; blockBits; // ブロックのビット辞書<br>
       &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// ブロックをアニメ(バウンドなど)させるための 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
+      &nbsp;&nbsp;std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; cellTime;<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;DataCsv Data;// csvデータ<br>
       &nbsp;&nbsp;int&amp; Width = Data.Width; // マップデータの横のマス数への&amp;参照<br>
       &nbsp;&nbsp;int&amp; Height = Data.Height; // マップデータの縦のマス数への&amp;参照<br>
@@ -8461,6 +8464,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::vector&lt;KeyFrame&gt; anim = { {0, Vector2(0,-10), Image::mapChips[id]},<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {15, Vector2(0,0),  Image::mapChips[id]} };<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>AnimBlock</b> block{ anim, cellX, cellY, CellSize};<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.SetTile(this); // ブロックにタイルへのリンクを張る(アニメ時刻辞書cellTimeにアクセスできるように)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Update(); // アニメ位置を更新してから<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Draw(pCamera); // カメラのリンクを渡してブロックを描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
