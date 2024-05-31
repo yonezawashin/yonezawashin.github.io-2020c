@@ -8933,20 +8933,14 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = vyDownSpeedMax[vx_idx];<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>if (vy &gt;= 0.0f && zoomAnimCount &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vy &gt;= 0.0f && zoomAnimCount &gt; 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;--zoomAnimCount;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;else if (zoomAnimCount &lt; 60) // 上方向の加速中は最大60までカウントしてズームアウト(広域を映す)<br>
       &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;++zoomAnimCount;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 最大(1-0.25)=0.75倍ズームアウト<br>
       &nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;zoomRatio = (zoomAnimCount &lt; 2) ? 1.0f : 1.0f - 0.25f * zoomAnimCount / 60.0f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;pCamera->LookAt(x, y); // プレイヤのキャラ(x,y)位置を中心に追跡スクロール</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<u>camera_x = x - Screen::Width / 2; // 指定されたx座標が画面の中心に来るようにScreenの幅 / 2を引く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_x &lt;= 0) camera_x = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Width * CellSize - Screen::Width <= camera_x) camera_x = Width * CellSize - Screen::Width; // ステージのはしっこ<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;camera_y = y - Screen::Height / 2; // 指定されたy座標が画面の中心に来るようにScreenの高さ / 2を引く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (camera_y &lt;= 0) camera_y = 0; // ステージのはしっこではカメラの追随を止める(csvファイルのマイナスエリアを描かないように)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Height * CellSize - Screen::Height &lt;= camera_y) camera_y = Height * CellSize - Screen::Height; // ステージのはしっこ</u><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pCamera->LookAt(x, y); // プレイヤのキャラ(x,y)位置を中心に追跡スクロール<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// ダッシュ段階に応じてキャラクタのアニメ時間を進める<br>
@@ -8966,7 +8960,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (isDead) // やられたときの描画処理<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiss = y <u>- camera_y </u>+ imgSizeY / 2; // ミスったy起点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiss = y + imgSizeY / 2; // ミスったy起点<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim0 = yMiss; // アニメy位置0 始まりのy位置<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim1 = yMiss - 10; // アニメy位置1 アニメの途中少し上方向に 10 浮く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim2 = Screen::Height + 32; // アニメy位置2 最終y位置 画面の高さ+32で画面外へ<br>
@@ -8991,23 +8985,24 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int deadAnimeStep = deadAnimeTime / 3; // 3で割って[チップのパラパラの]アニメの速度は弱める<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int chipAnime = deadAnimeStep % 3; // % 3で余りを求めれば余りはチップのパラパラ番号は0～2の間に収まる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawRotaGraphF(x <u>- camera_x </u>+ imgSizeX / 2, yDeadAnim, 1.0f, 10.0f * deadAnimeStep / 360.0f * 2 * DX_PI, Image::playerChips[chipAnime], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(x + imgSizeX / 2, yDeadAnim, 1.0f, 10.0f * deadAnimeStep / 360.0f * 2 * DX_PI, Image::playerChips[chipAnime], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++deadAnimeTime; // アニメ時間を進める<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;else<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (isFlying &amp;&amp; direction == Direction::Left) // 飛ぶと-60度傾けて表示 キャラチップは[4]で固定<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawRotaGraphF(x <u>- camera_x </u>+ imgSizeX / 2, y <u>- camera_y </u>+ imgSizeY / 2, 1.0f,-60.0f / 360.0f * 2 * DX_PI, Image::playerChips[4], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(x + imgSizeX / 2, y + imgSizeY / 2, 1.0f,-60.0f / 360.0f * 2 * DX_PI, Image::playerChips[4], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (isFlying &amp;&amp; direction == Direction::Right) // 60度回転させて表示 キャラチップは[7]で固定<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawRotaGraphF(x <u>- camera_x </u>+ imgSizeX / 2, y <u>- camera_y </u>+ imgSizeY / 2, 1.0f, 60.0f / 360.0f * 2 * DX_PI, Image::playerChips[7], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(x + imgSizeX / 2, y + imgSizeY / 2, 1.0f, 60.0f / 360.0f * 2 * DX_PI, Image::playerChips[7], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Left) // キャラのチップの[5][4][3]を[5 - animeStep]で使う(animeStep=0,1,2)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawRotaGraphF(x <u>- camera_x </u>+ imgSizeX / 2, y <u>- camera_y </u>+ imgSizeY / 2, 1.0f, 0.0f, Image::playerChips[5 - animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(x + imgSizeX / 2, y + imgSizeY / 2, 1.0f, 0.0f, Image::playerChips[5 - animeStep], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Right) // キャラのチップの[6][7][8]を[6 + animeStep]で使う(animeStep=0,1,2)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawRotaGraphF(x <u>- camera_x </u>+ imgSizeX / 2, y <u>- camera_y </u>+ imgSizeY / 2, 1.0f, 0.0f, Image::playerChips[6 + animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(x + imgSizeX / 2, y + imgSizeY / 2, 1.0f, 0.0f, Image::playerChips[6 + animeStep], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;float rotaShiftX = CellSize / 2, rotaShiftY = CellSize / 2; // DrawRotaGraphF関数は画像の真ん中が起点なので1/2ずらした位置計算<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>mapData.Draw(pCamera.get()); // タイルマップ地形を描く</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>float rotaShiftX = CellSize / 2, rotaShiftY = CellSize / 2; // DrawRotaGraphF関数は画像の真ん中が起点なので1/2ずらした位置計算<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 地形マップを[ 行のfor文×列のfor文 ]の2重ループで描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;for (int cellY = 0, ySize = mapData.size(); cellY &lt; ySize; ++cellY)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -9021,22 +9016,22 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// マップチップを描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;auto mapXY = std::make_pair(cellX, cellY);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockAnime.count(mapXY) == 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawRotaGraphF(chip_x <u>- camera_x </u>+ rotaShiftX, chip_y <u>- camera_y </u>+ rotaShiftY, 1.0f, 0.0f, Image::mapChips[id], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(chip_x + rotaShiftX, chip_y + rotaShiftY, 1.0f, 0.0f, Image::mapChips[id], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if ((int)BlockBit::Bounce &amp; blockBits[id])<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yBase = chip_y<u> - camera_y</u>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yBase = chip_y;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim0 = yBase - 10, yAnim1 = yBase; // yAnim0 から yAnim1の位置までアニメする<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int blockTime = blockAnime[mapXY];<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yAnim = yAnim0 * (15 - blockTime) / 15 + yAnim1 * blockTime / 15;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawRotaGraphF(chip_x <u>- camera_x </u>+ rotaShiftX, yAnim + rotaShiftY, 1.0f, 0.0f, Image::mapChips[id], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(chip_x + rotaShiftX, yAnim + rotaShiftY, 1.0f, 0.0f, Image::mapChips[id], TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++blockAnime[mapXY]; // アニメ時間を進める<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockTime > 15) // アニメ終了時間を15フレーム目とするとき<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockAnime.erase(mapXY); // 辞書からアニメをerase関数で取り除く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ]用にcsvのidの数字を描く<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawString(chip_x<u> - camera_x</u>, chip_y<u> - camera_y</u>, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawString(chip_x, chip_y, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</u><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たり判定の四隅を赤枠で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawBox(getLeft(x)<u> - camera_x</u>, getTop(y)<u> - camera_y</u>, getRight(x)<u> - camera_x</u>, getBottom(y)<u> - camera_y</u>, GetColor(255, 0, 0), FALSE);<br>
