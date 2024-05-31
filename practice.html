@@ -8128,7 +8128,7 @@
       };<br>
       #endif<br>
     </p>
-    <p><code>Block.hを新規作成</code>してタイルマップの1つ1つのブロックの行と列番号やアニメや描画する機能を管理するクラスを作成します。</p>
+    <p><code>Block.cppを新規作成</code>してBlock.hの処理やCamera.hを#includeしてカメラぶんずらしてブロックを描いたりアニメする処理を作成します。</p>
     <p class="source">#include "Block.h"<br>
       <br>
       #include "Camera.h" // CameraでもBlockやTileを#includeする可能性を考えて循環回避(.cppで#include)<br>
@@ -8280,31 +8280,33 @@
       &nbsp;&nbsp;&nbsp;&nbsp;Data.clear(); // csvデータをメモリからクリアする<br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;virtual void Update(); // 更新処理<br>
+      &nbsp;&nbsp;// csvファイルの読み込み<br>
+      &nbsp;&nbsp;void Load(std::string&amp; filePath)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;Data.Load(filePath);<br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;virtual void Draw(Camera* pCamera); // 描画処理<br>
-      };<br>
+      &nbsp;&nbsp;// 指定された座標(worldX,worldY)の地形が 壁 や ダメージブロックかなどをチェックする一時関数<br>
+      &nbsp;&nbsp;bool checkID(BlockBit checkBit, float worldX, float worldY,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr, int* pTerrainID = nullptr);<br>
       &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// [X方向左右]地形の ダメージブロックなどにぶつかったかをチェックする関数<br>
+      &nbsp;&nbsp;int hitcheckX(BlockBit checkBit,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr);<br>
       &nbsp;&nbsp;<br>
-      <br>
-      <br>
-      class AnimBlock : public Block // ベースとなるBlock型を継承してアニメするブロックを定義する<br>
-      {<br>
-      public:<br>
-      &nbsp;&nbsp;Vector2 animPos{ 0,0 }; // アニメで(pos.x + animPos.x, pos.y + animPos.y)にずらして描く<br>
+      &nbsp;&nbsp;// [Y方向上下]地形の ダメージブロックなどにぶつかったかをチェックする関数<br>
+      &nbsp;&nbsp;int hitcheckY(BlockBit checkBit,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr);<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// ブロックをバウンドなどアニメさせるためマス目セルXY番号→アニメ時間の 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
-      &nbsp;&nbsp;static std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; cellTime;<br>
+      &nbsp;&nbsp;// 地形の ダメージブロックなどにぶつかったかをチェックする関数<br>
+      &nbsp;&nbsp;int hitcheck(BlockBit checkBit,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
+      &nbsp;&nbsp; &nbsp; &nbsp;int* pMapX = nullptr, int* pMapY = nullptr);<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;std::vector&lt;KeyFrame&gt; anim; // 一連のアニメの時間と位置を持つキーレームの配列<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// 初期化コンストラクタ<br>
-      &nbsp;&nbsp;AnimBlock(std::vector&lt;KeyFrame&gt;&amp; anim, int cellX, int cellY, int cellSize = 32, int* pHandle = nullptr, int* pID = nullptr)<br>
-      &nbsp;&nbsp; &nbsp; &nbsp;: anim{ anim }, Block(cellX, cellY, cellSize, pHandle, pID) {}<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;virtual void Update() override; // 更新処理<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;virtual void Draw(Camera* pCamera) override; // 描画処理<br>
+      &nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;void Draw(Camera* pCamera);<br>
       };<br>
       #endif<br>
     </p>
