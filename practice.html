@@ -8812,13 +8812,13 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xMiddle = xLeft + (getRight(x) - getLeft(x)) / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiddle = yTop + (getBottom(y) - getTop(y)) / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>mapData.</em>hitcheck(BlockBit::Damage, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>mapData.</em>hitcheck(BlockBit::Damage,<u> mapData,</u> xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // やられたフラグをtrueに<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 左端が壁にめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>mapData.</em>checkID(BlockBit::Wall, mapData, xLeft, yTop) || // 左上が壁か？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall, mapData, xLeft, yMiddle) || // 左中が壁か？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall, mapData, xLeft, yBottom) )  // 左下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xLeft, yTop) || // 左上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xLeft, yMiddle) || // 左中が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xLeft, yBottom) )  // 左下が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x = xLeft; // [デバック] めり込んだラインを記録しておく<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x_yTop = y - Screen::Height / 2, debug_x_yBottom = y + Screen::Height / 2;<br>
@@ -8828,9 +8828,9 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = 0; // 壁に当たったら速度をストップ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} // ↓右端が壁にめりこんでいるか？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall, mapData, xRight, yTop) || // 右上が壁か？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall, mapData, xRight, yMiddle) || // 右中が壁か？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall, mapData, xRight, yBottom) )  // 右下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xRight, yTop) || // 右上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xRight, yMiddle) || // 右中が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xRight, yBottom) )  // 右下が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x = xRight; // [デバック] めり込んだラインを記録しておく<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x_yTop = y - Screen::Height / 2, debug_x_yBottom = y + Screen::Height / 2;<br>
@@ -8850,12 +8850,12 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xMiddle = xLeft + (getRight(x) - getLeft(x)) / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiddle = yTop + (getBottom(y) - getTop(y)) / 2;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>mapData.</em>hitcheck(BlockBit::Damage, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>mapData.</em>hitcheck(BlockBit::Damage,<u> mapData,</u> xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // やられたフラグをtrueに<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int mapX = 0, mapY = 0; // ぶつかったらそのブロックのCSVのセルの行mapYと列mapXを得る<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ( (int)HitPart::Top<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; <em>mapData.</em>hitcheck(BlockBit::Bounce, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; <em>mapData.</em>hitcheck(BlockBit::Bounce,<u> mapData,</u> xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::pair&lt;int,int&gt; mapXY = std::make_pair(mapX, mapY); // ぶつかったブロックのセルの行mapYと列mapXのペア<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>AnimBlock::cellTime</em>.count(mapXY) == 0) // 辞書にキーがあるかcountで数えて未登録==0のとき<br>
@@ -8863,7 +8863,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ((int)HitPart::Top<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; <em>mapData.</em>hitcheck(BlockBit::Switch, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; <em>mapData.</em>hitcheck(BlockBit::Switch,<u> mapData,</u> xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = mapData[mapY][mapX]; // 行mapY 列mapXの地形idを得る<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ((isSwitchOn &amp;&amp; id == id_Off || !isSwitchOn &amp;&amp; id == id_On) &amp;&amp; blockSwitch.count(id) &gt; 0)<br>
@@ -8882,15 +8882,15 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bool isBlockChanging = false; // ブロック変化フラグ(idはあとから変化させないとWallの押し戻しの跳ね返りvy = 0がなくなる)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ( (int)HitPart::Top<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; <em>mapData.</em>hitcheck(BlockBit::Change, mapData, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; <em>mapData.</em>hitcheck(BlockBit::Change,<u> mapData,</u> xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isBlockChanging = true; // ここではフラグをtrueにするだけ(めり込み押し戻しvy=0するまえにid=-1にすると壊した瞬間にすり抜けちゃう)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 頭の部分が壁にめりこんでいるか？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>mapData.</em>checkID(BlockBit::Wall, mapData, xLeft, yTop) || // 左上が壁か？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall, mapData, xMiddle, yTop) || // 中上が壁か？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall, mapData, xRight, yTop) )  // 右上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xLeft, yTop) || // 左上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xMiddle, yTop) || // 中上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xRight, yTop) )  // 右上が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y = yTop; // [デバック] めり込んだラインを記録しておく<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y_xLeft = x - Screen::Width / 2, debug_y_xRight = x + Screen::Width / 2;<br>
@@ -8899,9 +8899,9 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = 0; // 壁に当たったら速度をストップ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} // ↓足元が壁にめりこんでいるか？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall, mapData, xLeft, yBottom) || // 左下が壁か？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall, mapData, xMiddle, yBottom) || // 中下が壁か？<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall, mapData, xRight, yBottom) )  // 右下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xLeft, yBottom) || // 左下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xMiddle, yBottom) || // 中下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;<em>mapData.</em>checkID(BlockBit::Wall,<u> mapData,</u> xRight, yBottom) )  // 右下が壁か？<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y = yBottom; // [デバック] めり込んだラインを記録しておく<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y_xLeft = x - Screen::Width / 2, debug_y_xRight = x + Screen::Width / 2;<br>
