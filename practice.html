@@ -8424,7 +8424,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if ((int)BlockBit::Bounce & blockBits[id])<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ //[アニメ]とりあえずローカル変数定義するが、コマ数(データ量)が増えたらループ負荷の少ない所に移動が無難か<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::vector<KeyFrame> anim = { {0, Vector2(0,-10), Image::mapChips[id]},<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {15, Vector2(0,0),  Image::mapChips[id]} };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {15, Vector2(0,0),  Image::mapChips[id]} };<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AnimBlock block{ anim, cellX, cellY, CellSize};<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Update(); // アニメ位置を更新してから<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Draw(pCamera); // カメラのリンクを渡してブロックを描く<br>
