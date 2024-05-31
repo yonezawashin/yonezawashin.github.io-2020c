@@ -12568,7 +12568,7 @@ public:<br>
 		実際にデータを読み出してゆく際には[2]行目にアクセスしてやっていきます。<br>
 		TitleSceneやPlaySceneのコードでは[2]に着目しておきましょう。<br>
 		<br>
-		<code>TitleScene.hのスコアへアクセスする部分をあいまいなCsvValue型にアクセスする部分は(int)に変換し、CSVのセーブデータ配列の[2]行目形にアクセスする形に修正</code>をくわえましょう。</p>
+		<code>TitleScene.hのスコアへアクセスする際に、何型かあいまいなCsvValue型を(int)でキャストして型を確定する変更と、CSVのセーブデータ配列の[2]行目形にアクセスする形に修正</code>をくわえましょう。</p>
 		<p class="source">#ifndef TITLESCENE_H_<br>
       #define TITLESCENE_H_<br>
       <br>
