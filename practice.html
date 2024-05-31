@@ -8436,7 +8436,7 @@
       }<br>
       <br>
       // 描画処理<br>
-      void Block::Draw(Camera* pCamera)<br>
+      void Tile::Draw(Camera* pCamera)<br>
       {<br>
       &nbsp;&nbsp;float rotaShiftX = CellSize / 2, rotaShiftY = CellSize / 2;<br>
       &nbsp;&nbsp;for (int cellY = 0; cellY &lt; Height; ++cellY)<br>
@@ -8452,7 +8452,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// マップチップを描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;auto mapXY = std::make_pair(cellX, cellY);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (AnimBlock::cellTime.count(mapXY) == 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (cellTime.count(mapXY) == 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ // 普通のBlock型(マス目位置XY ↑ に対応したアニメ時刻が辞書に未登録count=0のとき)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Block block{ cellX, cellY, CellSize, &amp;Image::mapChips[id], &amp;id };<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Update();<br>
