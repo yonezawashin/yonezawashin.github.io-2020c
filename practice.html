@@ -9034,14 +9034,14 @@
       &nbsp;&nbsp;&nbsp;&nbsp;}</u><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たり判定の四隅を赤枠で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawBox(getLeft(x)<u> - camera_x</u>, getTop(y)<u> - camera_y</u>, getRight(x)<u> - camera_x</u>, getBottom(y)<u> - camera_y</u>, GetColor(255, 0, 0), FALSE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawBox(getLeft(x), getTop(y), getRight(x), getBottom(y), GetColor(255, 0, 0), FALSE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] キャラ原点(x,y)を緑丸で描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;</em>DrawCircle(x<u> - camera_x</u>, y<u> - camera_y</u>, 2, GetColor(0, 255, 0), TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawCircle(x, y, 2, GetColor(0, 255, 0), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// [デバッグ] 当たった際の行き過ぎの めりこみ座標(debug_x,debug_y) を青線で描画<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (debug_x != -1)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<em>pCamera-&gt;</em>DrawLine(debug_x<u> - camera_x</u>, debug_x_yTop<u> - camera_y</u>, debug_x<u> - camera_x</u>, debug_x_yBottom<u> - camera_y</u>, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;pCamera-&gt;DrawLine(debug_x, debug_x_yTop, debug_x, debug_x_yBottom, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (debug_y != -1)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<em>pCamera-&gt;</em>DrawLine(debug_y_xLeft<u> - camera_x</u>, debug_y<u> - camera_y</u>, debug_y_xRight<u> - camera_x</u>, debug_y<u> - camera_y</u>, GetColor(0, 0, 255));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;pCamera-&gt;DrawLine(debug_y_xLeft, debug_y, debug_y_xRight, debug_y, GetColor(0, 0, 255));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;// 速度などをデバッグ表示<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if(vy != 0)<br>
@@ -9062,6 +9062,7 @@
       いかがでしょう、きちんとマップ地形は表示されていますか？<br>
       TileクラスとBlockクラスにファイル分けしたことでmain.cppも少しシンプルに見通しよくなってきました。<br>
       ごちゃごちゃした処理のどの部分が地形に関連する処理かを、main.cppを書き直しながら1つ1つ実感することが大事です。<br>
+      classクラスやstruct構造体が内部にごちゃごちゃした変数や処理をパッケージングしてうまく抱え込んでいるという実感を手を動かしながら感じ取りましょう。<br>
       <br>
       <br>
       <br>
