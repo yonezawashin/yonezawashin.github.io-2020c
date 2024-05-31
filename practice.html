@@ -8461,7 +8461,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if ((int)BlockBit::Bounce &amp; blockBits[id])<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ //[アニメ]とりあえずローカル{}内で変数定義するが、コマ数(データ量)が増えたらループ負荷の少ない所に移動が無難か<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::vector&lt;KeyFrame&gt; anim = { {0, Vector2(0,-10), Image::mapChips[id]},<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {15, Vector2(0,0),  Image::mapChips[id]} };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {15, Vector2(0,0),  Image::mapChips[id]} };<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>AnimBlock</b> block{ anim, cellX, cellY, CellSize};<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.SetTile(this); // ブロックにタイルへのリンクを張る(アニメ時刻辞書cellTimeにアクセスできるように)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Update(); // アニメ位置を更新してから<br>
