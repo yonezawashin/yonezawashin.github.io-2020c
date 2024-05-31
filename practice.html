@@ -8398,99 +8398,39 @@
       &nbsp;&nbsp; &nbsp; &nbsp; | hitcheckY(checkBit, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, pMapX, pMapY);<br>
       }<br>
       <br>
-      <br>
-      // 更新処理<br>
-      void Block::Update()<br>
-      {<br>
-      &nbsp;&nbsp;pos.y = (float)(cellY * CellSize); // マス目Y(行)番号×マス目サイズで y座標に戻す<br>
-      &nbsp;&nbsp;pos.x = (float)(cellX * CellSize); // マス目X(列)番号×マス目サイズで x座標に戻す<br>
-      }<br>
-      <br>
       // 描画処理<br>
       void Block::Draw(Camera* pCamera)<br>
       {<br>
-      &nbsp;&nbsp;if (pCamera == nullptr) return; // カメラのリンク切れなら描けない<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// ポインタからidを読みだす<br>
-      &nbsp;&nbsp;int id = (pID != nullptr) ? *pID : -1;<br>
-      &nbsp;&nbsp;int handle = (pHandle != nullptr) ? *pHandle : -1;<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// マップチップを描く<br>
       &nbsp;&nbsp;float rotaShiftX = CellSize / 2, rotaShiftY = CellSize / 2;<br>
-      &nbsp;&nbsp;pCamera->DrawRotaGraphF(pos.x + rotaShiftX, pos.y + rotaShiftY, 1.0f, 0.0f, handle, TRUE);<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// デバッグ用にcsvのidの数字を描く<br>
-      &nbsp;&nbsp;if (id != -1)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;pCamera->DrawString(pos.x, pos.y, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
-      }<br>
-      <br>
-      // 更新処理<br>
-      void AnimBlock::Update()<br>
-      {<br>
-      &nbsp;&nbsp;pos.y = (float)(cellY * CellSize); // マス目Y(行)番号×マス目サイズで y座標に戻す<br>
-      &nbsp;&nbsp;pos.x = (float)(cellX * CellSize); // マス目X(列)番号×マス目サイズで x座標に戻す<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;auto mapXY = std::make_pair(cellX, cellY);<br>
-      &nbsp;&nbsp;size_t animSize = anim.size(); // anim配列の数(.size()関数を毎度呼ぶだけでも少し計算のムダ:1度目に変数に保持)<br>
-      &nbsp;&nbsp;if (animSize == 0) // アニメがない場合は(0,0)の固定位置<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;animPos = Vector2{ 0,0 };<br>
-      &nbsp;&nbsp;else if (cellTime.count(mapXY) &gt; 0 && animSize &gt; 1)<br>
+      &nbsp;&nbsp;for (int cellY = 0; cellY &lt; Height; ++cellY)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;int blockTime = cellTime[mapXY];<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;size_t i = 0;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;for (size_t j = 1; j &lt; animSize; ++j)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (anim[j-1].time &lt;= blockTime &amp;&amp; blockTime &lt;= anim[j].time)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i = j - 1; // 時刻に対応するキーフレーム番号区間を見つけた<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;Vector2 startPos{ anim[i].pos.x, anim[i].pos.y };<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;float nowTime = blockTime - anim[i].time;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (animSize &lt; 2) // キーフレームが1つ以下なら<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animPos = startPos; // アニメせずスタート位置のまま固定<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float chip_y = (float)(cellY * CellSize); // マス目Y(行)番号×マス目サイズで y座標に戻す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;for (int cellX = 0; cellX &lt; Width; ++cellX)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Vector2 endPos{ anim[i + 1].pos.x, anim[i + 1].pos.y };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float chip_x = (float)(cellX * CellSize); // マス目X(列)番号×マス目サイズで x座標に戻す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = -1;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (cellY &lt; Data.size() &amp;&amp; cellX &lt; Data[cellY].size())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;id = Data[cellY][cellX]; // [行][列]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (id &lt; 0) continue; // -1のときは描かない<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//数値例.float yAnim0 = yBase - 10, yAnim1 = yBase; // yAnim0 から yAnim1の位置までアニメする<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float time = anim[i + 1].time - anim[i].time;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//数値例.float yAnim = yAnim0 * (15 - blockTime) / 15 + yAnim1 * blockTime / 15;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animPos = startPos * ((time - nowTime) / time) + endPos * (nowTime / time);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// マップチップを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;auto mapXY = std::make_pair(cellX, cellY);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (AnimBlock::cellTime.count(mapXY) == 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Block block{ cellX, cellY, CellSize, &amp;Image::mapChips[id], &amp;id };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Update();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Draw(pCamera); // カメラのリンクを渡してブロックを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if ((int)BlockBit::Bounce & blockBits[id])<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ //[アニメ]とりあえずローカル変数定義するが、コマ数(データ量)が増えたらループ負荷の少ない所に移動が無難か<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::vector<KeyFrame> anim = { {0, Vector2(0,-10), Image::mapChips[id]},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {15, Vector2(0,0),  Image::mapChips[id]} };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AnimBlock block{ anim, cellX, cellY, CellSize};<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Update(); // アニメ位置を更新してから<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block.Draw(pCamera); // カメラのリンクを渡してブロックを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// 画像をパラパラ画像アニメするならキーフレームの画像ハンドル番号へリンクする<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;pHandle = &amp;anim[i].handle; // iが変わってhandle番号が変われば画像が変わりパラパラアニメする<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (anim[i].isStop != true)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++cellTime[mapXY]; // アニメ時間を進める<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;int iEnd = animSize - 1; // 最後の配列番号<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (cellTime[mapXY] &gt; anim[iEnd].time) // アニメ終了時間をこえたとき<br>
-      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;if (anim[iEnd].tNext &gt;= 0)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;cellTime[mapXY] = anim[iEnd].tNext; // アニメ時刻をtNextに飛ばして辞書時刻を書き換え<br>
-      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;else<br>
-      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;cellTime.erase(mapXY); // 辞書からアニメをerase関数で取り除く<br>
       &nbsp;&nbsp;}<br>
-      }<br>
-      <br>
-      // 描画処理<br>
-      void AnimBlock::Draw(Camera* pCamera)<br>
-      {<br>
-      &nbsp;&nbsp;if (pCamera == nullptr) return;<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// ポインタからidを読みだす<br>
-      &nbsp;&nbsp;int id = (pID != nullptr) ? *pID : -1;<br>
-      &nbsp;&nbsp;int handle = (pHandle != nullptr) ? *pHandle : -1;<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// マップチップを描く<br>
-      &nbsp;&nbsp;float rotaShiftX = CellSize / 2, rotaShiftY = CellSize / 2;<br>
-      &nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(pos.x + animPos.x + rotaShiftX, pos.y + animPos.y + rotaShiftY, 1.0f, 0.0f, handle, TRUE);<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// デバッグ用にcsvのidの数字を描く<br>
-      &nbsp;&nbsp;if (id != -1)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawString(pos.x, pos.y, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
       }<br>
     </p>
       <br>
