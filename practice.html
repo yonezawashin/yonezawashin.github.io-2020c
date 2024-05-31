@@ -8346,7 +8346,7 @@
       // [X方向左右]地形の ダメージブロックなどにぶつかったかをチェックする関数<br>
       int Tile::hitcheckX(BlockBit checkBit,<br>
       &nbsp; &nbsp; float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
-      &nbsp; &nbsp; int* pMapX, int* pMapY)<br>
+      &nbsp; &nbsp; int* pMapX, int* pMapY) // pMapX,pMapYにはぶつかったらブロックのマス目番号が代入され返却される<br>
       {<br>
       &nbsp;&nbsp;// 左端がめりこんでいるか？<br>
       &nbsp;&nbsp;if (checkID(checkBit, xLeft, yTop, pMapX, pMapY))<br>
@@ -8369,7 +8369,7 @@
       // [Y方向上下]地形の ダメージブロックなどにぶつかったかをチェックする関数<br>
       int Tile::hitcheckY(BlockBit checkBit,<br>
       &nbsp; &nbsp; float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
-      &nbsp; &nbsp; int* pMapX, int* pMapY)<br>
+      &nbsp; &nbsp; int* pMapX, int* pMapY) // pMapX,pMapYにはぶつかったらブロックのマス目番号が代入され返却される<br>
       {<br>
       &nbsp;&nbsp;// 頭の部分がめりこんでいるか？<br>
       &nbsp;&nbsp;if (checkID(checkBit, xLeft, yTop, pMapX, pMapY))<br>
@@ -8392,7 +8392,7 @@
       // 地形の ダメージブロックなどにぶつかったかをチェックする関数<br>
       int Tile::hitcheck(BlockBit checkBit,<br>
       &nbsp; &nbsp; float xLeft, float xMiddle, float xRight, float yTop, float yMiddle, float yBottom,<br>
-      &nbsp; &nbsp; int* pMapX, int* pMapY) // pMapX,pMapYにはぶつかったブロックのマス目番号が代入され返却される<br>
+      &nbsp; &nbsp; int* pMapX, int* pMapY) // pMapX,pMapYにはぶつかったらブロックのマス目番号が代入され返却される<br>
       {<br>
       &nbsp;&nbsp;return hitcheckX(checkBit, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, pMapX, pMapY)<br>
       &nbsp;&nbsp; &nbsp; &nbsp; | hitcheckY(checkBit, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, pMapX, pMapY);<br>
