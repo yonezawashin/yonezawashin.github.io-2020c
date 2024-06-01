@@ -33,7 +33,7 @@
       <li><a href="#mozTocId0019">Soundのロードをclass分けして音声のロード処理をファイル分けするプログラム</a></li>
       <li><a href="#mozTocId0020">Cameraの描画ずらし処理をclass分けしてファイル分けしてさらにズーム機能を付加するプログラム</a></li>
       <li><a href="#mozTocId0021">地形をBlock(アニメ機能付き)とTile(データ読込とブロック描画)という概念に切り分けたプログラム</a></li>
-      <li><a href="#mozTocId0022">PlayerクラスをGameObjectクラスを継承して作成し、実行時型判定(RTTI)もできるようにするプログラム</a></li>
+      <li><a href="#mozTocId0022">PlayerクラスをGameObjectクラスを継承して作成し、実行時型識別(RTTI)もできるようにするプログラム</a></li>
     </ol>
     <h1><a id="mozTocId0001" class="mozTocH1"></a>静止したキャラを出すだけのプログラム</h1>
     <br>
@@ -9083,7 +9083,7 @@
       <br>
       <br>
 <br>
-    <h1><a id="mozTocId0022" class="mozTocH1"></a>PlayerクラスをGameObjectクラスを継承して作成し、実行時型判定(RTTI)もできるようにするプログラム</h1>
+    <h1><a id="mozTocId0022" class="mozTocH1"></a>PlayerクラスをGameObjectクラスを継承して作成し、実行時型識別(RTTI)もできるようにするプログラム</h1>
 <br>
     <p>まずはベースとなる<code>GameObject.hを新規作成</code>します。</p>
     <p class="source">#ifndef GAMEOBJECT_H_<br>
@@ -9172,5 +9172,18 @@
       };<br>
       <br>
       #endif</p>
+      <br>
+      <br>
+      さて、このままでも <b>if (object-&gt;tag == "Player")</b> のように文字列タグでクラスの種類を判別することはできます。<br>
+      しかし、例えばプレイヤではなく大量の1万個の弾を1つ1つ文字列比較判定すると処理速度が遅くなる可能性があります。<br>
+      実際の開発現場では文字列の一致判定はバグレベルで遅いというのが一般的な評判です。<br>
+      プログラムの実行時にクラスの型を判別することを「<a href="https://ja.wikipedia.org/wiki/%E5%AE%9F%E8%A1%8C%E6%99%82%E5%9E%8B%E6%83%85%E5%A0%B1">実行時型識別(RTTI=Run-Time Type Identification)</a>」と呼びます。<br>
+      ではどうやってクラスの型を実行時に判別すれば高速となるか？<br>
+      その1つのやり方としては、<b>型をマクロ関数#define TO_STRING( x ) #x で#をつけ文字を返し</b>再生ボタンを押して<b>ビルドする瞬間に文字列に変換</b>して、<br>
+      クラスの型の名前を<b>TO_STRING(Player)で"Player"という文字に変換</b>したものを、<br>
+      ハッシュの仕組みを使って、std::hash&lt;std::string&gt;()( TO_STRING(Player) ) で64bitなど一定の桁数におさまるハッシュ数字IDに変換しておくことで、<br>
+      <b>時間のかかる文字列の比較ではなく</b>、数字<b>ハッシュIDの比較という計算時間の少ない比較方式に置き換える</b>という手段が有効です。<br>
+      <br>
+      <br>
   </body>
 </html>
