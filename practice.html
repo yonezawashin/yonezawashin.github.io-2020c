@@ -9185,5 +9185,115 @@
       <b>時間のかかる文字列の比較ではなく</b>、数字<b>ハッシュIDの比較という計算時間の少ない比較方式に置き換える</b>という手段が有効です。<br>
       <br>
       <br>
+      <p>ベースとなる<code>GameObject.hに実行時に型を識別(RTTI)するコードを追加変更</code>します。</p>
+    <p class="source">#ifndef GAMEOBJECT_H_<br>
+      #define GAMEOBJECT_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Vector2.h"<br>
+      #include &lt;string&gt; //文字タグのため<br>
+      #include &lt;memory&gt; //回し読みポインタの定義のため<br>
+      <em>#include &lt;functional&gt; //ハッシュstd::hashを使う</em><br>
+      <br>
+      <em>// C#なら is でできる実行時型判定(RTTI)がC++では難しいので#define TO_STRINGとhashを駆使して実現<br>
+      // https://stackoverflow.com/questions/44105058/implementing-component-system-from-unity-in-c</em><br>
+      <br>
+      <em>// クラスの型名(Player型など)を #x で★ビルド時に文字に変える最重要手法<br>
+      #define TO_STRING( x ) #x</em><br>
+      <br>
+      <br>
+      <br>
+      <br>
+      // ゲーム上に表示される物体の基底クラス。<br>
+      // プレイヤーや敵、アイテムなどはこのクラスを継承して作る。<br>
+      class GameObject<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;<em>static inline const std::size_t classID() // クラス名をかぶらないハッシュ数字IDに変える<br>
+      &nbsp;&nbsp;{	// 文字列をhashでハッシュ数字IDへ変換 (TO_STRINGで再生ビルド時にクラス名を文字列に変換)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;static const std::size_t _classID_ = std::hash&lt;std::string&gt;()( TO_STRING(GameObject) );<br>
+      &nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>virtual bool isClass(const std::size_t class_id) const // クラスの種類を一致判定する<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (class_id == classID())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true; // クラスの型が一致(ハッシュIDが一致)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return false;<br>
+      &nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;Vector3 pos {0,0}; // xy座標<br>
+      &nbsp;&nbsp;Vector3 v{0,0}; //xy方向の速度<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;bool isDead = false; // 死んだ（削除対象）フラグ<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<u>std::string tag = ""; // Zako0やBossやPlayerなど小カテゴリ<br>
+      &nbsp;&nbsp;std::string typeTag = ""; // EnemyやPlayerなど大カテゴリ<br>
+      &nbsp;&nbsp;std::string statusTag = ""; // 爆発状態やアイテムゲット状態など自由に使えばよい</u><br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;GameObject(Vector3 pos) : pos{ pos }<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;//★仮想デストラクタ【忘れるとメモリがヤバいダメ絶対】<br>
+      &nbsp;&nbsp;//【注意！】基底では必ず定義しないとstd::stringなど内部に配列をもつ変数のメモリが浪費され極悪なメモリ被害に発展<br>
+      &nbsp;&nbsp;virtual ~GameObject()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;//★純粋仮想関数=0は継承したZakoやPlayerなどの必須機能(継承したら絶対overrideして定義しなければならない縛り)<br>
+      &nbsp;&nbsp;// 更新処理<br>
+      &nbsp;&nbsp;virtual void Update() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;virtual void Draw() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      <br>
+      &nbsp;&nbsp;//★virtual仮想関数は共通カスタマイズ機能(継承してもoverride必須ではない:ご自由にカスタマイズ)<br>
+      &nbsp;&nbsp;// 衝突したときの関数(仮のvirtual関数 ← 純粋仮想関数と違い継承してもoverride必須ではない)<br>
+      &nbsp;&nbsp;virtual void OnCollision(std::shared_ptr&lt;GameObject&gt; other)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <p><code>Player.hを新規作成して</code>共通のベースとなるGameObjectを継承するようにします。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "Vector2.h"<br>
+      <br>
+      #include "GameObject.h"<br>
+      <br>
+      // プレイヤのクラス<br>
+      class Player : public GameObject<br>
+      { // 継承は↑ : public ～にする。publicつけ忘れるとGameObjectのposなどがすべてprivate継承されちゃうので注意<br>
+      public:<br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;Player(Vector3 pos) : GameObject( pos ) //【忘れると】GameObjectの初期化が飛ばされpos.xなどが初期化されない<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Player"; // 文字列タグでクラスの種類を判別する方式<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Player"; // 文字列タグでクラスの種類を判別する方式<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 更新処理の関数定義<br>
+      &nbsp;&nbsp;virtual void Update() override {};<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 描画処理の関数定義<br>
+      &nbsp;&nbsp;virtual void Draw() override {};<br>
+      <br>
+      };<br>
+      <br>
+      #endif</p>
   </body>
 </html>
