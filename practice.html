@@ -9081,5 +9081,62 @@
       <br>
       <br>
       <br>
+<br>
+    <h1><a id="mozTocId0022" class="mozTocH1"></a>PlayerクラスをGameObjectクラスを継承して作成し、実行時型判定(RTTI)もできるようにするプログラム</h1>
+<br>
+    <p>まずはベースとなる<code>GameObject.h</code>を作成します。</p>
+    <p class="source">#ifndef GAMEOBJECT_H_<br>
+      #define GAMEOBJECT_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Vector2.h"<br>
+      #include &lt;string&gt; //文字タグのため<br>
+      #include &lt;memory&gt; //回し読みポインタの定義のため<br>
+      <br>
+      // ゲーム上に表示される物体の基底クラス。<br>
+      // プレイヤーや敵、アイテムなどはこのクラスを継承して作る。<br>
+      class GameObject<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;Vector3 pos {0,0}; // xy座標<br>
+      &nbsp;&nbsp;Vector3 v{0,0}; //xy方向の速度<br>
+	    <br>
+      &nbsp;&nbsp;bool isDead = false; // 死んだ（削除対象）フラグ<br>
+	    <br>
+      &nbsp;&nbsp;std::string tag = ""; // Zako0やBossやPlayerなど小カテゴリ<br>
+      &nbsp;&nbsp;std::string typeTag = ""; // EnemyやPlayerなど大カテゴリ<br>
+      &nbsp;&nbsp;std::string statusTag = ""; // 爆発状態やアイテムゲット状態など自由に使えばよい<br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;GameObject(Vector3 pos) : pos{ pos }<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;} <br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;//★仮想デストラクタ【忘れるとメモリがヤバいダメ絶対】<br>
+      &nbsp;&nbsp;//【注意！】基底では必ず定義しないとstd::stringなど内部に配列をもつ変数のメモリが浪費され極悪なメモリ被害に発展<br>
+      &nbsp;&nbsp;virtual ~GameObject()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;//★純粋仮想関数=0は継承したZakoやPlayerなどの必須機能(継承したら絶対overrideして定義しなければならない縛り)<br>
+      &nbsp;&nbsp;// 更新処理<br>
+      &nbsp;&nbsp;virtual void Update() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;virtual void Draw() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      <br>
+      &nbsp;&nbsp;//★virtual仮想関数は共通カスタマイズ機能(継承してもoverride必須ではない:ご自由にカスタマイズ)<br>
+      &nbsp;&nbsp;// 衝突したときの関数(仮のvirtual関数 ← 純粋仮想関数と違い継承してもoverride必須ではない)<br>
+      &nbsp;&nbsp;virtual void OnCollision(std::shared_ptr&lt;GameObject&gt; other)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
   </body>
 </html>
