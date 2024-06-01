@@ -9085,7 +9085,7 @@
 <br>
     <h1><a id="mozTocId0022" class="mozTocH1"></a>PlayerクラスをGameObjectクラスを継承して作成し、実行時型判定(RTTI)もできるようにするプログラム</h1>
 <br>
-    <p>まずはベースとなる<code>GameObject.h</code>を作成します。</p>
+    <p>まずはベースとなる<code>GameObject.hを新規作成</code>します。</p>
     <p class="source">#ifndef GAMEOBJECT_H_<br>
       #define GAMEOBJECT_H_<br>
       <br>
@@ -9101,9 +9101,9 @@
       public:<br>
       &nbsp;&nbsp;Vector3 pos {0,0}; // xy座標<br>
       &nbsp;&nbsp;Vector3 v{0,0}; //xy方向の速度<br>
-	    <br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;bool isDead = false; // 死んだ（削除対象）フラグ<br>
-	    <br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;std::string tag = ""; // Zako0やBossやPlayerなど小カテゴリ<br>
       &nbsp;&nbsp;std::string typeTag = ""; // EnemyやPlayerなど大カテゴリ<br>
       &nbsp;&nbsp;std::string statusTag = ""; // 爆発状態やアイテムゲット状態など自由に使えばよい<br>
@@ -9139,5 +9139,38 @@
       <br>
       #endif<br>
     </p>
+    <p><code>Player.hを新規作成して</code>共通のベースとなるGameObjectを継承するようにします。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "Vector2.h"<br>
+      <br>
+      #include "GameObject.h"<br>
+      <br>
+      // プレイヤのクラス<br>
+      class Player : public GameObject<br>
+      { // 継承は↑ : public ～にする。publicつけ忘れるとGameObjectのposなどがすべてprivate継承されちゃうので注意<br>
+      public:<br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;Player(Vector3 pos) : GameObject( pos ) //【忘れると】GameObjectの初期化が飛ばされpos.xなどが初期化されない<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Player"; // 文字列タグでクラスの種類を判別する方式<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Player"; // 文字列タグでクラスの種類を判別する方式<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 更新処理の関数定義<br>
+      &nbsp;&nbsp;virtual void Update() override {};<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 描画処理の関数定義<br>
+      &nbsp;&nbsp;virtual void Draw() override {};<br>
+      <br>
+      };<br>
+      <br>
+      #endif</p>
   </body>
 </html>
