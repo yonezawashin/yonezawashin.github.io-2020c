@@ -9277,6 +9277,19 @@
       class Player : public GameObject<br>
       { // 継承は↑ : public ～にする。publicつけ忘れるとGameObjectのposなどがすべてprivate継承されちゃうので注意<br>
       public:<br>
+      &nbsp;&nbsp;<em>static inline const std::size_t classID() // クラス名をかぶらないハッシュ数字IDに変える<br>
+      &nbsp;&nbsp;{	// 文字列をhashでハッシュ数字IDへ変換 (TO_STRINGで再生ビルド時にクラス名を文字列に変換)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;static const std::size_t _classID_ = std::hash&lt;std::string&gt;()( TO_STRING(Player) );<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return _classID_; // staticで1度目のみHash値を計算してinlineで各コード箇所に数値で埋め込む<br>
+      &nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>virtual bool isClass(const std::size_t class_id) const // クラスの種類を一致判定する<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (class_id == classID())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true; // クラスの型が一致(ハッシュIDが一致)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return GameObject::isClass(class_id); // 親クラスもたどって一致するか(子Playerも親GameObjectの一種)<br>
+      &nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// コンストラクタ<br>
       &nbsp;&nbsp;Player(Vector3 pos) : GameObject( pos ) //【忘れると】GameObjectの初期化が飛ばされpos.xなどが初期化されない<br>
       &nbsp;&nbsp;{<br>
