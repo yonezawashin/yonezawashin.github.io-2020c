@@ -9293,8 +9293,8 @@
       &nbsp;&nbsp;// コンストラクタ<br>
       &nbsp;&nbsp;Player(Vector3 pos) : GameObject( pos ) //【忘れると】GameObjectの初期化が飛ばされpos.xなどが初期化されない<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Player"; // 文字列タグでクラスの種類を判別する方式<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Player"; // 文字列タグでクラスの種類を判別する方式<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<u>this-&gt;tag = "Player"; // 文字列タグでクラスの種類を判別する方式<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Player"; // 文字列タグでクラスの種類を判別する方式</u><br>
       &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ<br>
@@ -9308,5 +9308,10 @@
       };<br>
       <br>
       #endif</p>
+      <br>
+      <br>
+      これで、<b>if ( pObject->isClass( Player::classID() ) )</b> で<b>どの種類のクラスかあいまいなpObjectもisClass関数を通してPlayerクラスか判定できる</b>ようになります。<br>
+      <br>
+      <br>
   </body>
 </html>
