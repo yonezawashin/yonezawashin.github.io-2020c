@@ -9330,18 +9330,18 @@
       // クラスの型名(Player型など)を #x で★ビルド時に文字に変える最重要手法<br>
       #define TO_STRING( x ) #x<br>
       <br>
-      <em>// クラスの実行時型識別(RTTI)のハッシュ関数と親子関係をたどって型一致を判定する関数を定義するマクロ
-      #define CLASS_RTTI_DEF( childclass, parentclass ) \
-      &nbsp;&nbsp;static inline const std::size_t classID() \
-      &nbsp;&nbsp;{ \
-      &nbsp;&nbsp;&nbsp;&nbsp;static const std::size_t _classID_ = std::hash&lt;std::string&gt;()( TO_STRING(childclass) ); \
-      &nbsp;&nbsp;&nbsp;&nbsp;return _classID_; \
-      &nbsp;&nbsp;} \
-      &nbsp;&nbsp;virtual bool isClass(const std::size_t class_id) const \
-      &nbsp;&nbsp;{ \
-      &nbsp;&nbsp;&nbsp;&nbsp;if (class_id == classID()) \
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true; \
-      &nbsp;&nbsp;&nbsp;&nbsp;return parentclass::isClass(class_id); \
+      <em>// クラスの実行時型識別(RTTI)のハッシュ関数と親子関係をたどって型一致を判定する関数を定義するマクロ<br>
+      #define CLASS_RTTI_DEF( childclass, parentclass ) \<br>
+      &nbsp;&nbsp;static inline const std::size_t classID() \<br>
+      &nbsp;&nbsp;{ \<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;static const std::size_t _classID_ = std::hash&lt;std::string&gt;()( TO_STRING(childclass) ); \<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return _classID_; \<br>
+      &nbsp;&nbsp;} \<br>
+      &nbsp;&nbsp;virtual bool isClass(const std::size_t class_id) const \<br>
+      &nbsp;&nbsp;{ \<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (class_id == classID()) \<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true; \<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return parentclass::isClass(class_id); \<br>
       &nbsp;&nbsp;} \</em><br>
       <br>
       <br>
@@ -9400,7 +9400,7 @@
       <br>
       #endif<br>
     </p>
-    <p><code>Player.hの実行時型識別(RTTI)関連の長い定義をCLASS_RTTI_DEF( 子クラス型, 親クラス型 )のように</code>簡単に書けるようにします。</p>
+    <p><code>Player.hの実行時型識別(RTTI)関連の長い定義をCLASS_RTTI_DEF( 子クラス型, 親クラス型 )のように</code>シンプルに簡単に書きかえます。</p>
     <p class="source">#ifndef PLAYER_H_<br>
       #define PLAYER_H_<br>
       <br>
