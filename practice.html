@@ -9314,7 +9314,7 @@
       しかし、新しい自作のZako0やZako1などを定義する際に<b>いちいちclassID関数やisClass関数を定義する形だと、面倒</b>ですよね。<br>
       #defineマクロを使って、classID関数やisClass関数のテンプレを再生ビルドする際に楽にコード埋め込みされるように改修してみましょう。<br>
       <br>
-    <p>ベースとなる<code>GameObject.hに実行時に型を識別(RTTI)するコードを追加変更</code>します。</p>
+    <p>ベースとなる<code>GameObject.hに関数定義マクロを追加</code>してハッシュ関数と親子関係をたどって型一致を判定する関数を簡単に定義できるよう準備します。</p>
     <p class="source">#ifndef GAMEOBJECT_H_<br>
       #define GAMEOBJECT_H_<br>
       <br>
@@ -9322,15 +9322,27 @@
       #include "Vector2.h"<br>
       #include &lt;string&gt; //文字タグのため<br>
       #include &lt;memory&gt; //回し読みポインタの定義のため<br>
-      <em>#include &lt;functional&gt; //ハッシュstd::hashを使う</em><br>
+      #include &lt;functional&gt; //ハッシュstd::hashを使う<br>
       <br>
-      <em>// C#なら is でできる実行時型判定(RTTI)がC++では難しいので#define TO_STRINGとhashを駆使して実現<br>
-      // https://stackoverflow.com/questions/44105058/implementing-component-system-from-unity-in-c</em><br>
+      // C#なら is でできる実行時型判定(RTTI)がC++では難しいので#define TO_STRINGとhashを駆使して実現<br>
+      // https://stackoverflow.com/questions/44105058/implementing-component-system-from-unity-in-c<br>
       <br>
-      <em>// クラスの型名(Player型など)を #x で★ビルド時に文字に変える最重要手法<br>
-      #define TO_STRING( x ) #x</em><br>
+      // クラスの型名(Player型など)を #x で★ビルド時に文字に変える最重要手法<br>
+      #define TO_STRING( x ) #x<br>
       <br>
-      <br>
+      <em>// クラスの実行時型識別(RTTI)のハッシュ関数と親子関係をたどって型一致を判定する関数を定義するマクロ
+      #define CLASS_RTTI_DEF( childclass, parentclass ) \
+      &nbsp;&nbsp;static inline const std::size_t classID() \
+      &nbsp;&nbsp;{ \
+      &nbsp;&nbsp;&nbsp;&nbsp;static const std::size_t _classID_ = std::hash&lt;std::string&gt;()( TO_STRING(childclass) ); \
+      &nbsp;&nbsp;&nbsp;&nbsp;return _classID_; \
+      &nbsp;&nbsp;} \
+      &nbsp;&nbsp;virtual bool isClass(const std::size_t class_id) const \
+      &nbsp;&nbsp;{ \
+      &nbsp;&nbsp;&nbsp;&nbsp;if (class_id == classID()) \
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true; \
+      &nbsp;&nbsp;&nbsp;&nbsp;return parentclass::isClass(class_id); \
+      &nbsp;&nbsp;} \</em><br>
       <br>
       <br>
       // ゲーム上に表示される物体の基底クラス。<br>
@@ -9338,18 +9350,18 @@
       class GameObject<br>
       {<br>
       public:<br>
-      &nbsp;&nbsp;<em>static inline const std::size_t classID() // クラス名をかぶらないハッシュ数字IDに変える<br>
+      &nbsp;&nbsp;static inline const std::size_t classID() // クラス名をかぶらないハッシュ数字IDに変える<br>
       &nbsp;&nbsp;{	// 文字列をhashでハッシュ数字IDへ変換 (TO_STRINGで再生ビルド時にクラス名を文字列に変換)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;static const std::size_t _classID_ = std::hash&lt;std::string&gt;()( TO_STRING(GameObject) );<br>
-      &nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;<em>virtual bool isClass(const std::size_t class_id) const // クラスの種類を一致判定する<br>
+      &nbsp;&nbsp;virtual bool isClass(const std::size_t class_id) const // クラスの種類を一致判定する<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (class_id == classID())<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true; // クラスの型が一致(ハッシュIDが一致)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;return false;<br>
-      &nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;}<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;Vector3 pos {0,0}; // xy座標<br>
       &nbsp;&nbsp;Vector3 v{0,0}; //xy方向の速度<br>
