@@ -7942,9 +7942,12 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
     <br>
     <br>
     <h1><a id="mozTocId4002" class="mozTocH1"></a>CSVを読み込んで敵を生成するプログラム</h1>
-	  Tiledエディタ: <a href="https://qiita.com/muzudho1/items/ac3602a29f8536031fe4">https://qiita.com/muzudho1/items/ac3602a29f8536031fe4</a><br>
-	  <a href="image/tile_id.png">map_id.png マップに配置する敵のID配置用のタイルチップ</a><br>
-	  <a href="image/tile_id.xcf">map_id.xcf 上記pngタイルチップの番号の隣に見やすいようにZako0などの画像をGIMPで書き込んでTiledエディタで配置する方法も</a><br>
+	  <br>
+	  以下のタイルマップエディタをダウンロードしてインストールしてください(寄付リンクをクリックしなければ無料)<br>
+	  ・Tiledエディタ: <a href="https://qiita.com/muzudho1/items/ac3602a29f8536031fe4">https://qiita.com/muzudho1/items/ac3602a29f8536031fe4</a><br>
+	  以下のファイルをダウンロードしてください。
+	  ・<a href="image/tile_id.png">map_id.png (マップに配置する敵のID配置用のタイルチップ)</a><br>
+	  ・<a href="image/tile_id.xcf">map_id.xcf (上記pngタイルチップのGIMPもとファイル。番号の隣に見やすいようにZako0などの画像をGIMPで書き込んでTiledエディタで配置すれば勘違いしにくい？)</a><br><br>
     Tiledエディタを起動して新しいマップを作成します。<br>
 <img src="image/tile_map_newmap.png"><br>
 [新しいタイルセット]もしくは[アイコン]をクリックしてダウンロードしたtile_id.pngの画像を参照して、新しいタイルセットを作成します。<br>
@@ -7961,10 +7964,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 <img src="image/tile_map_newtileset6.png"><br>
 	  [ファイル]→[名前をつけてエクスポート]でcsv形式(.csv)でstage.csvをDXのプロジェクトのMapフォルダにエクスポート保存します。<br>
 <img src="image/tile_map_newtileset7.png"><br>
-<p>Tiledエディタで敵マップ(stage.csv)を作成して、<br>
+<p>Tiledエディタで敵マップ(stage.csv)を作成したら、<br>
     <code>MapフォルダをImageのフォルダを作ったときのように新規作成して</code>その中に<br>
       stage1.csvを<br>
-      <code>Map/stage1.csv</code>にcsv形式でエクスポートしましょう。<br>
+      <code>Map/stage1.csv</code>にcsv形式でエクスポートした前提条件でそれをロードするプログラムを作成していきます。<br>
       <br>
       csvファイルの準備ができたらマップの読込みプログラムを作成します。</p>
     <p><code>Map.hを新規作成</code>してマップのCSVファイルの読込みとスクロールを作成しましょう。</p>
