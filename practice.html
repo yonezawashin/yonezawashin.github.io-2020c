@@ -8288,6 +8288,13 @@
       &nbsp;&nbsp;// ブロックをアニメ(バウンドなど)させるための 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
       &nbsp;&nbsp;std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; cellTime;<br>
       &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;bool isSwitchOn = false; // ステージ全体のスイッチのオン、オフ状態(オンのときはオンを押せないようにする)<br>
+      &nbsp;&nbsp;int id_On = 10, id_Off = 11; // オンのときにオンを押したりオフのときにオフを押せないように判定する<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;std::unordered_map&lt;int, std::vector&lt;int&gt;&gt; blockSwitch; // 登録されたidを叩くとblockChangeの設定に応じて変化<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;std::unordered_map&lt;int, int&gt; blockChange; // ブロックの&lt;変化前int→変化先id int&gt;の辞書<br>
+      &nbsp;&nbsp;<br>
       &nbsp;&nbsp;DataCsv Data;// csvデータ<br>
       &nbsp;&nbsp;int&amp; Width = Data.Width; // マップデータの横のマス数への&amp;参照<br>
       &nbsp;&nbsp;int&amp; Height = Data.Height; // マップデータの縦のマス数への&amp;参照<br>
