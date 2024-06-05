@@ -9198,9 +9198,9 @@
       ハッシュの仕組みを使って、<b>std::hash&lt;std::string&gt;()( TO_STRING(Player) )</b> で64bitなど<b>一定の桁数におさまるハッシュ数字IDに変換</b>しておくことで、<br>
       <b>時間のかかる文字列の比較ではなく</b>、数字<b>ハッシュIDの比較という計算時間の少ない比較方式に置き換える</b>という手段が有効です。<br>
       <br>
-      [文字列比較(遅い)] if(object-&gt;tag == "Player") &nbsp; 文字の==の一致判定を1万個のGameObjectに対してやると低速<br>
+      <b>[文字列比較(遅い)]</b> 例. if(object-&gt;tag == "Player") &nbsp; 文字の==の一致判定を1万個のGameObjectに対してやると低速<br>
       <br>
-      [数字比較(高速)] if(object-&gt;hashID == 234567....) &nbsp; 数字IDの==一致判定なら高速なので<b>ハッシュ関数</b>で"Player"という<b>文字を数字IDに変換</b>してやる。<br>
+      <b>[数字比較(高速)]</b> 例. if(object-&gt;hashID == 234567....) &nbsp; 数字IDの==の一致判定なら高速なので<b>ハッシュ関数</b>で"Player"という<b>文字を数字IDに変換</b>してやる。<br>
       <br>
     <p>ベースとなる<code>GameObject.hに実行時に型を識別(RTTI)するコードを追加変更</code>します。</p>
     <p class="source">#ifndef GAMEOBJECT_H_<br>
