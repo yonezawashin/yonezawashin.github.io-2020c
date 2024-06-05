@@ -34,6 +34,7 @@
       <li><a href="#mozTocId0020">Cameraの描画ずらし処理をclass分けしてファイル分けしてさらにズーム機能を付加するプログラム</a></li>
       <li><a href="#mozTocId0021">地形をBlock(アニメ機能付き)とTile(データ読込とブロック描画)という概念に切り分けたプログラム</a></li>
       <li><a href="#mozTocId0022">PlayerクラスをGameObjectクラスを継承して作成し、実行時型識別(RTTI)もできるようにするプログラム</a></li>
+      <li><a href="#mozTocId0023">PlayerやGameObjectクラスにmain.cppのプレイヤ関連の処理を移植したプログラム</a></li>
     </ol>
     <h1><a id="mozTocId0001" class="mozTocH1"></a>静止したキャラを出すだけのプログラム</h1>
     <br>
@@ -9475,5 +9476,201 @@
       <br>
       #endif</p>
       <br>
+      <br>
+      さて、とりあえずは最もシンプルにGameObject.hとPlayer.hのひな形を作ってお膳立ての準備をしました。<br>
+      (main.cppではまだPlayer.hをインクルードしていないので、エラーも動作の変化もまだありえません)。<br>
+      次の項では、main.cppの大量のプレイヤに関するコードをPlayer.hへと移植します。<br>
+      <br>
+      <br>
+<br>
+    <h1><a id="mozTocId0023" class="mozTocH1"></a>PlayerやGameObjectクラスにmain.cppのプレイヤ関連の処理を移植したプログラム</h1>
+<br>
+    <br>
+    <p>まずはベースとなる<code>GameObject.hにプレイヤ以外も使うような共通の変数を移植</code>してGameObjectを継承したPlayerが当たり判定のはしっこなどを計算できるよう準備します。</p>
+    <p class="source">#ifndef GAMEOBJECT_H_<br>
+      #define GAMEOBJECT_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Vector2.h"<br>
+      #include &lt;string&gt; //文字タグのため<br>
+      #include &lt;memory&gt; //回し読みポインタの定義のため<br>
+      #include &lt;functional&gt; //ハッシュstd::hashを使う<br>
+      <br>
+      // C#なら is でできる実行時型識別(RTTI)がC++では難しいので#define TO_STRINGとhashを駆使して実現<br>
+      // https://stackoverflow.com/questions/44105058/implementing-component-system-from-unity-in-c<br>
+      <br>
+      // クラスの型名(Player型など)を #x で★ビルド時に文字に変える最重要手法<br>
+      #define TO_STRING( x ) #x<br>
+      <br>
+      // クラスの実行時型識別(RTTI)のハッシュ関数と親子関係をたどって型一致を判定する関数を定義するマクロ<br>
+      #define CLASS_RTTI_DEF( childclass, parentclass ) \<br>
+      &nbsp;&nbsp;static inline const std::size_t classID() \<br>
+      &nbsp;&nbsp;{ \<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;static const std::size_t _classID_ = std::hash&lt;std::string&gt;()( TO_STRING(childclass) ); \<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return _classID_; \<br>
+      &nbsp;&nbsp;} \<br>
+      &nbsp;&nbsp;virtual bool isClass(const std::size_t class_id) const \<br>
+      &nbsp;&nbsp;{ \<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (class_id == classID()) \<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true; \<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return parentclass::isClass(class_id); \<br>
+      &nbsp;&nbsp;} \<br>
+      <br>
+      <br>
+      // ゲーム上に表示される物体の基底クラス。<br>
+      // プレイヤーや敵、アイテムなどはこのクラスを継承して作る。<br>
+      class GameObject<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;static inline const std::size_t classID() // クラス名をかぶらないハッシュ数字IDに変える<br>
+      &nbsp;&nbsp;{	// 文字列をhashでハッシュ数字IDへ変換 (TO_STRINGで再生ビルド時にクラス名を文字列に変換)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;static const std::size_t _classID_ = std::hash&lt;std::string&gt;()( TO_STRING(GameObject) );<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual bool isClass(const std::size_t class_id) const // クラスの種類を一致判定する<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (class_id == classID())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true; // クラスの型が一致(ハッシュIDが一致)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return false;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;Vector3 pos {0,0}; // xy座標<br>
+      &nbsp;&nbsp;Vector3 v{0,0}; //xy方向の速度<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>int imgSizeX = 32, imgSizeY = 32; // 画像の縦横サイズ<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;int hitOffsetLeft = 0; // 当たり判定の左端のオフセット<br>
+      &nbsp;&nbsp;int hitOffsetRight = 0; // 当たり判定の右端のオフセット<br>
+      &nbsp;&nbsp;int hitOffsetTop = 0; // 当たり判定の上端のオフセット<br>
+      &nbsp;&nbsp;int hitOffsetBottom = 0; // 当たり判定の下端のオフセット<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 当たり判定のはしっこを求めるための関数<br>
+      &nbsp;&nbsp;float getLeft(float worldX) { return worldX + hitOffsetLeft; };<br>
+      &nbsp;&nbsp;float getTop(float worldY) { return worldY + hitOffsetTop; };<br>
+      &nbsp;&nbsp;float getRight(float worldX) { return worldX + imgSizeX - hitOffsetRight; };<br>
+      &nbsp;&nbsp;float getBottom(float worldY) { return worldY + imgSizeY - hitOffsetBottom; };</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;bool isDead = false; // 死んだ（削除対象）フラグ<br>
+      &nbsp;&nbsp;<br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;GameObject(Vector3 pos) : pos{ pos }<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;//★仮想デストラクタ【忘れるとメモリがヤバいダメ絶対】<br>
+      &nbsp;&nbsp;//【注意！】基底では必ず定義しないとstd::stringなど内部に配列をもつ変数のメモリが浪費され極悪なメモリ被害に発展<br>
+      &nbsp;&nbsp;virtual ~GameObject()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;//★純粋仮想関数=0は継承したZakoやPlayerなどの必須機能(継承したら絶対overrideして定義しなければならない縛り)<br>
+      &nbsp;&nbsp;// 更新処理<br>
+      &nbsp;&nbsp;virtual void Update() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;virtual void Draw() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      <br>
+      &nbsp;&nbsp;//★virtual仮想関数は共通カスタマイズ機能(継承してもoverride必須ではない:ご自由にカスタマイズ)<br>
+      &nbsp;&nbsp;// 衝突したときの関数(仮のvirtual関数 ← 純粋仮想関数と違い継承してもoverride必須ではない)<br>
+      &nbsp;&nbsp;virtual void OnCollision(std::shared_ptr&lt;GameObject&gt; other)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <p><code>Player.hにmain.cppからプレイヤに関する変数をごっそりと移植</code>します。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      <em>#include &lt;vector&gt; //可変長配列std::vectorを使う</em><br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "Vector2.h"<br>
+      <em>#include "Camera.h"</em><br>
+      <br>
+      #include "GameObject.h"<br>
+      <br>
+      // プレイヤのクラス<br>
+      class Player : public GameObject<br>
+      { // 継承は↑ : public ～にする。publicつけ忘れるとGameObjectのposなどがすべてprivate継承されちゃうので注意<br>
+      public:<br>
+      &nbsp;&nbsp;CLASS_RTTI_DEF( Player, GameObject )<br>
+      &nbsp;&nbsp;static inline const std::size_t classID() // クラス名をかぶらないハッシュ数字IDに変える<br>
+      &nbsp;&nbsp;{	// 文字列をhashでハッシュ数字IDへ変換 (TO_STRINGで再生ビルド時にクラス名を文字列に変換)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;static const std::size_t _classID_ = std::hash&lt;std::string&gt;()( TO_STRING(Player) );<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return _classID_; // staticで1度目のみHash値を計算してinlineで各コード箇所に数値で埋め込む<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual bool isClass(const std::size_t class_id) const // クラスの種類を一致判定する<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (class_id == classID())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true; // クラスの型が一致(ハッシュIDが一致)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return GameObject::isClass(class_id); // 親クラスもたどって一致するか(子Playerも親GameObjectの一種)<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>enum class Direction { Left, Right }; // enumでキャラの向いてる方向をDirection型として2種類(LeftとRight)定義<br>
+      &nbsp;&nbsp;Direction direction = Direction::Right; // キャラの向いてる方向</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>int animeTime = 0; // アニメ時間<br>
+      &nbsp;&nbsp;int deadAnimeTime = 0; // やられたときのアニメ時間</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>Vector2 posStart{0,0}; // キャラの初期スタート(ミス後の再開位置)<br>
+      &nbsp;&nbsp;float yJumpStart = 0; // ジャンプした瞬間のyの位置</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>int vx_idx = 0; // 横方向の加速の段階<br>
+      &nbsp;&nbsp;float vxSpeedMax = 15; // X左右方向の限界速度<br>
+      &nbsp;&nbsp;std::vector&lt;float&gt; vyJumpSpeed = { 14, 15, 16, 4 }, vyDownSpeedMax = { 16, 16, 16, 8 }; // ジャンプの上昇と降下スピードのリミット<br>
+      &nbsp;&nbsp;float vyForce = 0; // y方向にかかる力・加速の勢い<br>
+      &nbsp;&nbsp;std::vector&lt;float&gt; vyForceJump = { 0.5f,0.4f,0.3f,0.1f }, vyGravity = { 0.8f,0.8f,0.8f,0.8f };<br>
+      &nbsp;&nbsp;bool isGround = false; // 着地しているか<br>
+      &nbsp;&nbsp;bool isFlying = false; // 飛行モード</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>float debug_x = -1, debug_y = -1;<br>
+      &nbsp;&nbsp;float debug_x_yTop = -1, debug_x_yBottom = -1; // [デバッグ] カメラが動くのでめり込んだ瞬間の上下端も記録<br>
+      &nbsp;&nbsp;float debug_y_xLeft = -1, debug_y_xRight = -1; // [デバッグ] カメラが動くのでめり込んだ瞬間の左右端も記録</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>std::shared_ptr&lt;Camera&gt; pCamera = Camera::list["プレイヤ1"]; // タイルマップをスクロールして描くカメラ<br>
+      &nbsp;&nbsp;int zoomAnimCount = 0; // カメラのズームアウトのアニメのカウンタ</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>Tile* pMapData{nullptr}; // マップへのリンク</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;Player(Vector3 pos<em>, Tile* pMapData</em>)<br>
+      &nbsp;&nbsp; &nbsp; :<em>pMapData{ pMapData }, posStart{pos}, </em>GameObject( pos ) //【忘れると】GameObjectの初期化が飛ばされpos.xなどが初期化されない<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;GetGraphSize(Image::playerChips[0], &imgSizeX, &imgSizeY); // GetGraphSize関数で画像の縦横を得られる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;hitOffsetLeft = 2; // 当たり判定の左端のオフセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;hitOffsetRight = 2; // 当たり判定の右端のオフセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;hitOffsetTop = 1; // 当たり判定の上端のオフセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;hitOffsetBottom = 0; // 当たり判定の下端のオフセット<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 更新処理の関数定義<br>
+      &nbsp;&nbsp;virtual void Update() override<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 描画処理の関数定義<br>
+      &nbsp;&nbsp;virtual void Draw() override<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;};<br>
+      <br>
+      };<br>
+      <br>
+      #endif</p>
   </body>
 </html>
