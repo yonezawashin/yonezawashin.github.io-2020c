@@ -8633,10 +8633,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;{14,(int)BlockBit::Wall}, // Offに連動するブロック<br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// ブロックをバウンドさせるための 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
-      &nbsp;&nbsp;std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; blockAnime;<br>
+      &nbsp;&nbsp;<u>// ブロックをバウンドさせるための 高速辞書&lt;ペア&lt;cellX,cellY&gt;, intアニメ時間&gt;<br>
+      &nbsp;&nbsp;std::unordered_map&lt;std::pair&lt;int, int&gt;, int&gt; blockAnime;</u><br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;std::unordered_map&lt;int, int&gt; blockChange = {<br>
+      &nbsp;&nbsp;<em>mapData.</em>blockChange = {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{  2,  3 }, // 叩くと 2 → 3 にかわる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{  3, -1 }, // 叩くと 3 → -1 にかわる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{ 12, 13 }, // 11(OFF) を押すと 12→13<br>
@@ -8645,7 +8645,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;{ 15, 14 }, // 11(OFF) を押すと 15→14<br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;std::unordered_map&lt;int, std::vector&lt;int&gt;&gt; blockSwitch = {<br>
+      &nbsp;&nbsp;<em>mapData.</em>blockSwitch = {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{ 10, {12,13,14,15} }, // 叩くと12,13,14,15がblockChangeの設定内容に応じて変化する<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{ 11, {12,13,14,15} },<br>
       &nbsp;&nbsp;};<br>
@@ -8882,15 +8882,16 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; <em>mapData.</em>hitcheck(BlockBit::Switch,<u> mapData,</u> xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = mapData[mapY][mapX]; // 行mapY 列mapXの地形idを得る<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ((isSwitchOn &amp;&amp; id == id_Off || !isSwitchOn &amp;&amp; id == id_On) &amp;&amp; blockSwitch.count(id) &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ((<em>mapData.</em>isSwitchOn &amp;&amp; id == <em>mapData.</em>id_Off || !<em>mapData.</em>isSwitchOn &amp;&amp; id == <em>mapData.</em>id_On) <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp;&amp; <em>mapData.</em>blockSwitch.count(id) &gt; 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isSwitchOn = !isSwitchOn; // trueとfalseを!で反転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>mapData.</em>isSwitchOn = !<em>mapData.</em>isSwitchOn; // trueとfalseを!で反転<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int cellY = 0; cellY &lt; Height; ++cellY) // 行をすべて調べる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int cellX = 0; cellX &lt; Width; ++cellX) // 列をすべて調べる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (auto switchID : blockSwitch[id]) // スイッチに反応するブロックのIDすべてを調べる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (auto switchID : <em>mapData.</em>blockSwitch[id]) // スイッチに反応するブロックのIDすべてを調べる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (mapData[cellY][cellX] == switchID)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mapData[cellY][cellX] = blockChange[switchID]; // 変化先のIDへ書き換える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mapData[cellY][cellX] = <em>mapData.</em>blockChange[switchID]; // 変化先のIDへ書き換える<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break; // 次の列のループへ移る(3重for文の一番内側のループをbreakして1つ外のループへ)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -8936,9 +8937,9 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (isBlockChanging) // ブロック変化フラグ==true(すでに↑めりこみ判定でvy=0で勢いを止め反射が効くからid=-1にしてもすりぬけずにすむ)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = mapData[mapY][mapX]; // 行mapY 列mapXの地形idを得る<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (blockChange.count(id) &gt; 0) // blockChangeの辞書に登録のあるidのときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>mapData.</em>blockChange.count(id) &gt; 0) // blockChangeの辞書に登録のあるidのときは<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int changeID = blockChange[id]; // 変化先のID<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int changeID = <em>mapData.</em>blockChange[id]; // 変化先のID<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::pair&lt;int, int&gt; mapXY = std::make_pair(mapX, mapY); // ぶつかったブロックのセルの行mapYと列mapXのペア<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (!(<em>mapData.</em>blockBits[changeID] &amp; (int)BlockBit::Bounce)) // 変化先ブロックがバウンスするならアニメ時間をeraseせずに辞書に残す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (<em>mapData.cellTime</em>.count(mapXY) &gt; 0)<br>
