@@ -6408,7 +6408,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       void Game::Init()<br>
       {// Init処理<br>
-      &nbsp;&nbsp;&nbsp; Image::Load("PlayScene"); //画像の読込み<br>
+      &nbsp;&nbsp;&nbsp; Image::Load(); //画像の読込み<br>
       &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数シードの初期化<br>
 	    <br>
       &nbsp;&nbsp;&nbsp; <u>gm.player = std::make_shared&lt;Player&gt;(Vector3((float)100, (float)(Screen::Height / 2))); // 自機の初期化<br>
