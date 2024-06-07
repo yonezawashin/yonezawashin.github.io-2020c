@@ -577,9 +577,9 @@
       &nbsp;&nbsp;// これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
       &nbsp;&nbsp;SetDrawScreen(DX_SCREEN_BACK);<br>
       <br>
-      &nbsp;&nbsp;// Init初期化処理<br>
-      &nbsp;&nbsp;<em>Game game; //Gameの定義と同時にC++ではコンストラクタで初期化される<br>
-        &nbsp;&nbsp;game.Init(); // gameのInit準備</em><br>
+      &nbsp;&nbsp;<em>// Init初期化処理<br>
+      &nbsp;&nbsp;Game game; //Gameの定義(定義と同時に初期化コンストラクタが実行される)<br>
+      &nbsp;&nbsp;game.Init(); // gameのInit準備</em><br>
       <br>
       &nbsp;&nbsp;ScreenFlip();<br>
       <br>
