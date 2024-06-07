@@ -1077,11 +1077,9 @@
       <br>
       #include&nbsp;"Image.h"<br>
       #include&nbsp;"Screen.h"<br>
-      <br>
-      <em>#include&nbsp;"Player.h"<br>
+      #include&nbsp;"Player.h"<br>
         <br>
-        <br>//前方宣言でPlayerという【ポインタの型】があることだけは宣言しておく(.hで定義されている型の定義はロードするが.cppの実装はロードしない<br>
-        class&nbsp;Player;&nbsp;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルード問題】を回避<br>
+        <br><em>//前方宣言でPlayerBulletという【ポインタの型】があることだけを宣言すれば#includeせずにstd::vectorの中身にPlayerBulletのリンクだけなら入れられる<br>
         class&nbsp;PlayerBullet;</em><br>
       <br>
       class&nbsp;Game<br>
