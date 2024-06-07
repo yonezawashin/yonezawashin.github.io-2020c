@@ -4265,8 +4265,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 敵のリストから死んでるものを除去する<br>
       &nbsp;&nbsp;gm.EraseRemoveIf(gm.enemies,<br>
       &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Enemy&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
-      &nbsp;&nbsp;// 敵弾のリストから死んでるものを除去する<br>
-      &nbsp;&nbsp;<em>gm.EraseRemoveIf(gm.enemyBullets,<br>
+      &nbsp;&nbsp;<em>// 敵弾のリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;gm.EraseRemoveIf(gm.enemyBullets,<br>
         &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;EnemyBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
       &nbsp;&nbsp;<br>
       };<br>
