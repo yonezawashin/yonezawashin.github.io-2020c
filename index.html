@@ -877,18 +877,18 @@
     <h2>√2の定義</h2>
     <p>【C++でも】斜め方向の移動速度を√2で割って補正するために、自分用数学定義クラスを作ってみましょう。ソリューションエクスプローラーのプロジェクトを右クリックし、追加＞ヘッダファイル(.h)<br>
       MyMath.hという名前でヘッダファイルを生成し、そのファイルにクラスを記述します。</p>
-    <p><code>MyMath.h</code>を編集します：</p>
+    <p><code>MyMath.hを新規作成して</code>その内容を編集します：</p>
     <p class="source">#ifndef _MYMATH_H<br>
       #define _MYMATH_H<br>
       // 数学関連クラス<br>
       class MyMath<br>
       {<br>
       public: <br>
-      &nbsp; // C ++標準では、静的static定数の【整数型】または【列挙型】のみをクラス内で初期化できます。<br>
-      &nbsp; // これが、一部の初期化が許可されているのに他のstatic floatなどが初期化できない理由です。<br>
+      &nbsp; // C++標準では、静的static定数は【整数型】または【列挙型】のみを.hのクラス内で初期化できます。<br>
+      &nbsp; // これが、intやenumの初期化はエラーにならないのに他のstatic floatなどがエラーになる理由です。<br>
       <br>
       &nbsp; // ルート2(変数名の定義だけ)<br>
-      static const float Sqrt2;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // = 1.41421356237f;<br>
+      &nbsp; static const float Sqrt2;&nbsp;// = 1.41421356237f;(.hではfloat小数型の初期化はできない int型はできるのに)<br>
       <br>
       }; // 【注意】セミコロン抜けで【宣言が必要ですエラー】<br>
       <br>
@@ -896,7 +896,7 @@
     <br>
     <br>
     <br>
-    <p><code>MyMath.cpp</code>を編集して変数名にSqrt2 = √2 = 1.41421356237f を 割り当てます。</p>
+    <p><code>MyMath.cppを新規作成して</code>その内容を編集して変数名にSqrt2 = √2 = 1.41421356237f を 割り当てます。</p>
     <p class="source">#include "MyMath.h"<br>
       <br>
       const float MyMath::Sqrt2 = 1.41421356237f;//(floatは有効桁は実質7桁まで正確だがそれ以降は環境によって誤差出る)<br>
@@ -976,9 +976,9 @@
     <br>
     <br>
     <h1><a id="mozTocId0007" class="mozTocH1"></a>自機弾PlayerBulletクラスの作成</h1>
-    <h2>PlayerBulletクラスを作成しましょう。 </h2>
+    <h2>PlayerBulletクラスを新規作成しましょう。 </h2>
     <br>
-    <p>ソリューションエクスプローラーからプロジェクトを右クリックし、追加＞ヘッダファイル<br>
+    <p>ソリューションエクスプローラーからプロジェクトを[右クリック]し、[追加] → [新しい項目] → PlayerBullet.hというファイル名を入力<br>
       「PlayerBullet.h」という名前でヘッダファイルを作り、クラスを定義します。<br>
       <br>
       <code>PlayerBullet.h</code>の内容を次のようにします：</p>
@@ -8834,8 +8834,8 @@ public:<br>
       class MyMath<br>
       {<br>
       public:<br>
-      &nbsp;&nbsp;&nbsp; // C ++標準では、静的static定数の【整数型】または【列挙型】のみをクラス内で初期化できます。<br>
-      &nbsp;&nbsp;&nbsp; // これが、一部の初期化が許可されているのに他のstatic floatなどが初期化できない理由です。<br>
+      &nbsp; // C++標準では、静的static定数は【整数型】または【列挙型】のみを.hのクラス内で初期化できます。<br>
+      &nbsp; // これが、intやenumの初期化はエラーにならないのに他のstatic floatなどがエラーになる理由です。<br>
       <br>
       &nbsp;&nbsp;&nbsp; // float小数を定義するためだけにcppファイルを作成しないと<br>
       &nbsp;&nbsp;&nbsp; //static const float Sqrt2 =【このイコールでエラー】 1.41421356237f;<br>
