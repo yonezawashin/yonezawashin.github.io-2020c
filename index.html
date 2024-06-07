@@ -2386,10 +2386,8 @@
       &nbsp;&nbsp;float y = 0; // y座標<br>
       &nbsp;&nbsp;float z = 0; //【3D】z座標<br>
       <br>
-      &nbsp;&nbsp;Vector3() = default; // デフォルト初期化コンストラクタ<br>
-      <br>
-      &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Vector3(float x, float y, float z = 0.f) //初期化 z = 0.fでzのデフォルト値があるので2Dとしても使える<br>
+      &nbsp;&nbsp;// コンストラクタ 初期化 z = 0.fでzのデフォルト値があるので2Dとしても使える<br>
+      &nbsp;&nbsp;Vector3(float x = 0.f, float y = 0.f, float z = 0.f)<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
@@ -2436,11 +2434,9 @@
 		  &nbsp;&nbsp;&nbsp;&nbsp;}; //[匿名共用体とは] https://zenn.dev/block/articles/beda29f11f05afc147ef<br>
 		  &nbsp;&nbsp;&nbsp;&nbsp;std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
 	    &nbsp;&nbsp;}; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる</em><br>
-
-      &nbsp;&nbsp;Vector3() = default; // デフォルト初期化コンストラクタ<br>
-      <br>
-      &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Vector3(float x, float y, float z = 0.f) //初期化 z = 0.fでzのデフォルト値があるので2Dとしても使える<br>
+	<br>
+      &nbsp;&nbsp;// コンストラクタ 初期化 z = 0.fでzのデフォルト値があるので2Dとしても使える<br>
+      &nbsp;&nbsp;Vector3(float x = 0.f, float y = 0.f, float z = 0.f)<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;xyz = { x,y,z };// たった1行で書ける</em><br>
       &nbsp;&nbsp;} <br>
@@ -2485,11 +2481,9 @@
 		  &nbsp;&nbsp;&nbsp;&nbsp;}; //[匿名共用体とは] https://zenn.dev/block/articles/beda29f11f05afc147ef<br>
 		  &nbsp;&nbsp;&nbsp;&nbsp;std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
 	    &nbsp;&nbsp;}; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる<br>
-
-      &nbsp;&nbsp;Vector3() = default; // デフォルト初期化コンストラクタ<br>
       <br>
-      &nbsp;&nbsp;// コンストラクタ<br>
-      &nbsp;&nbsp;Vector3(float x, float y, float z = 0.f) //初期化 z = 0.fでzのデフォルト値があるので2Dとしても使える<br>
+      &nbsp;&nbsp;// コンストラクタ 初期化 z = 0.fでzのデフォルト値があるので2Dとしても使える<br>
+      &nbsp;&nbsp;Vector3(float x = 0.f, float y = 0.f, float z = 0.f)<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;xyz = { x,y,z };// たった1行で書ける<br>
       &nbsp;&nbsp;} <br>
@@ -2812,7 +2806,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;</u><br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angle;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>v = Vector3((float)std::cos(angle) * Speed,(float)std::sin(angle) * Speed, 0);</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;v = Vector3((float)std::cos(angle) * Speed,(float)std::sin(angle) * Speed, 0);</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<u>vx = (float)std::cos(angle) * Speed;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;vy = (float)std::sin(angle) * Speed;</u><br>
       &nbsp;&nbsp;}<br>
