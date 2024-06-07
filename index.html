@@ -344,8 +344,8 @@
         &nbsp;&nbsp;&nbsp;&nbsp;}<br>
         &nbsp;&nbsp;&nbsp;&nbsp;x += vx; // X位置の更新<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, bossImage, TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理(位置x, y, 拡大率, 回転, 画像ID, TRUEなら透過有効)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, 200, 1.0f, 0, bossImage, TRUE);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
         &nbsp;&nbsp;}<br>
@@ -439,6 +439,9 @@
       <br>
       &nbsp;&nbsp;// ゲームのwhileループを開始する前の初期化処理<br>
       &nbsp;&nbsp;<em>Image::Load();</em><br>
+      &nbsp;&nbsp;<u>int bossImage = -1;<br>
+      &nbsp;&nbsp;bossImage = LoadGraph("Image/boss1.png");<br>
+      &nbsp;&nbsp;assert(bossImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
       &nbsp;&nbsp;int x = 100; // Xの初期位置<br>
       &nbsp;&nbsp;int vx = 10;<br>
       <br>
@@ -460,8 +463,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;x += vx; // X位置の更新<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, <em>Image::bossImage</em>, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理(位置x, y, 拡大率, 回転, 画像ID, TRUEなら透過有効)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, 200, 1.0f, 0, <em>Image::bossImage</em>, TRUE);<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
       &nbsp;&nbsp;}<br>
@@ -542,7 +545,7 @@
       <br>
       void Game::Draw()<br>
       {// 描画処理<br>
-      &nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+      &nbsp;&nbsp;DrawRotaGraphF(x, 200, 1.0f, 0, Image::bossImage, TRUE);<br>
       <br>
       }</p>
     <h2>【Gameクラスを使って】表示してみる</h2>
