@@ -3091,9 +3091,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #include&nbsp;"GameManager.h"<br>
       <br>
-      <em>// 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意</em><br>
       class Player <em>: public GameObject</em><br>
-      {<br>
+      {<em> // 継承は↑: public ～にする。publicをつけ忘れるとGameObjectの変数がすべてprivateとして継承されちゃう</em><br>
       public:<br>
 	    <br>
       &nbsp;&nbsp;<em>//【★注意！】ここに【positionの定義が残ってるとGameObjectと被る】ので<br>
@@ -3138,9 +3137,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <em>#include "GameObject.h"</em><br>
       <br>
       // 自機弾クラス<br>
-      <em>// 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意</em><br>
       class PlayerBullet<em>: public GameObject</em><br>
-      {<br>
+      {<em> // 継承は↑: public ～にする。publicをつけ忘れるとGameObjectの変数がすべてprivateとして継承されちゃう</em><br>
       public:<br>
 	    &nbsp;&nbsp;<em>//【★注意！GameObjectと被る変数は全部消す】</em><br>
       &nbsp;&nbsp;<u>Vector3 position; // xyz座標<br>
@@ -3516,9 +3514,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "GameObject.h"<br>
       <br>
       // 自機弾クラス<br>
-      // 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意<br>
       class PlayerBullet: public GameObject<br>
-      {<br>
+      { // 継承は↑: public ～にする。publicをつけ忘れるとGameObjectの変数がすべてprivateとして継承されちゃう<br>
       public:<br>
       &nbsp;&nbsp;const float Speed = 25; // 移動速度<br>
       &nbsp;&nbsp;const int VisibleRadius = 16; // 見た目の半径<br>
@@ -3712,9 +3709,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #include&nbsp;"GameManager.h"<br>
       <br>
-      // 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意<br>
       class Player : public GameObject<br>
-      {<br>
+      { // 継承は↑: public ～にする。publicをつけ忘れるとGameObjectの変数がすべてprivateとして継承されちゃう<br>
       public:<br>
       &nbsp;&nbsp;const float MoveSpeed = 6; // 移動速度<br>
       <br>
@@ -3933,9 +3929,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #include&nbsp;"GameManager.h"<br>
       <br>
-      // 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意<br>
       class Player : public GameObject<br>
-      {<br>
+      { // 継承は↑: public ～にする。publicをつけ忘れるとGameObjectの変数がすべてprivateとして継承されちゃう<br>
       public:<br>
       &nbsp;&nbsp;const float MoveSpeed = 6; // 移動速度<br>
       &nbsp;&nbsp;<em>int MutekiJikan = 120; // 無敵時間</em><br>
@@ -4721,9 +4716,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #include&nbsp;"GameManager.h"<br>
       <br>
-      // 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意<br>
       class Player : public GameObject<br>
-      {<br>
+      { // 継承は↑: public ～にする。publicをつけ忘れるとGameObjectの変数がすべてprivateとして継承されちゃう<br>
       public:<br>
       <br>
       &nbsp;&nbsp;(中略)...........<br>
@@ -9356,9 +9350,8 @@ Update()関数内にX方向の動きも追加すると..<br>
       <br>
       #include "GameManager.h"<br>
       <br>
-      // 継承するときは↓ : public ～にする。publicをつけ忘れると色々エラー出るので注意<br>
       class Player : public GameObject<br>
-      {<br>
+      { // 継承は↑: public ～にする。publicをつけ忘れるとGameObjectの変数がすべてprivateとして継承されちゃう<br>
       public:<br>
       &nbsp;&nbsp;&nbsp; <em>Pad pad = Pad::None; // デフォルトは未割当て</em><br>
       &nbsp;&nbsp;&nbsp; const float MoveSpeed = 6; // 移動速度<br>
