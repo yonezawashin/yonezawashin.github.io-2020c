@@ -1402,7 +1402,7 @@
       &nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機の初期化<br>
       <br>
       &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
-      &nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      &nbsp;&nbsp;// 複数リスト↑vector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       protected:<br>
       &nbsp;&nbsp;GameManager() {}; // 外部からのインスタンス作成は禁止<br>
@@ -1849,7 +1849,7 @@
       &nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機の初期化<br>
       <br>
       &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
-      &nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      &nbsp;&nbsp;// 複数リスト↑vector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
       <br>
@@ -2323,7 +2323,7 @@
       #define GAMEMANAGER_H_<br>
       <br>
       #include &lt;memory&gt;<br>
-      #include &lt;vector&gt;<br>
+      <u>#include &lt;vector&gt;</u><br>
       <em>#include &lt;list&gt;</em><br>
       <br>
       #include&nbsp;"Singleton.h"<br>
@@ -2339,7 +2339,7 @@
       &nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機の初期化<br>
       <br>
       &nbsp;&nbsp;std::<em>list</em>&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
-      &nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      &nbsp;&nbsp;// 複数リスト↑<em>list</em> ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
       <br>
@@ -3310,7 +3310,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機のポインタ<br>
       &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
       &nbsp;&nbsp;<em>std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト</em><br>
-      &nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      &nbsp;&nbsp;// 複数リスト↑list ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
       (中略).............. <br>
@@ -4165,7 +4165,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
       &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       &nbsp;&nbsp;<em>std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト</em><br>
-      &nbsp;&nbsp;// List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      &nbsp;&nbsp;// 複数リスト↑list ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
       (中略).............. <br>
@@ -5185,7 +5185,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
       &nbsp;&nbsp;<em>std::list&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト</em><br>
-      &nbsp;&nbsp;// List↑と同じlist ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      &nbsp;&nbsp;// 複数リスト↑list ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
       (中略).............. <br>
@@ -8144,7 +8144,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
-      &nbsp;&nbsp;&nbsp; // List↑と同じvector ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      &nbsp;&nbsp;&nbsp; // 複数リスト↑list ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
       &nbsp;&nbsp; (中略)..........<br>
@@ -10136,7 +10136,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
-      &nbsp;&nbsp;&nbsp; // List↑と同じlist ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      &nbsp;&nbsp;&nbsp; // 複数リスト↑list ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
       &nbsp;&nbsp;&nbsp; (中略)....................<br>
