@@ -2275,7 +2275,7 @@
       class MyMath<br>
       {<br>
       public: <br>
-      &nbsp;&nbsp;static const float Sqrt2;&nbsp;&nbsp;// = 1.41421356237f;<br>
+      &nbsp;&nbsp;static const float Sqrt2;&nbsp;&nbsp;// = 1.41421356237f;(.hではfloat小数型の初期化はできない int型はできるのに)<br>
       &nbsp;&nbsp;<em>static const float PI; // 円周率 3.14159265359f;</em><br>
       &nbsp;&nbsp;<em>static const float Deg2Rad; // 度からラジアンに変換する定数 PI / 180f;</em><br>
       <br>
@@ -3430,7 +3430,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       class MyMath<br>
       {<br>
       public: <br>
-      &nbsp;&nbsp;static const float Sqrt2;&nbsp;&nbsp;// = 1.41421356237f;<br>
+      &nbsp;&nbsp;static const float Sqrt2;&nbsp;&nbsp;// = 1.41421356237f;(.hではfloat小数型の初期化はできない int型はできるのに)<br>
       &nbsp;&nbsp;static const float PI; // 円周率 3.14159265359f;<br>
       &nbsp;&nbsp;static const float Deg2Rad; // 度からラジアンに変換する定数 PI / 180f;<br>
       <br>
