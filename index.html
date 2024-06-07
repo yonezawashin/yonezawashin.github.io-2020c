@@ -1420,11 +1420,9 @@
       <br>
       #include&nbsp;"Image.h"<br>
       #include&nbsp;"Screen.h"<br>
-      <em>#include&nbsp;"Input.h"</em><br>
-      <br>
       <u>#include&nbsp;"Player.h"</u><br>
       <br>
-      <u>class&nbsp;Player;&nbsp;//←【エラー地獄に注意！】ここにPlayerクラスがあるものとして書くことで【循環相互インクルードどうぞどうぞ問題】を回避<br>
+      <u>//前方宣言でPlayerBulletという【ポインタの型】があることだけを宣言すれば#includeせずにstd::vectorの中身にPlayerBulletのリンクだけなら入れられる<br>
         class&nbsp;PlayerBullet;</u><br>
       <br>
       <em>#include&nbsp;"GameManager.h"</em><br>
@@ -1457,8 +1455,8 @@
       <code>Game.cpp</code>の内容を次のように変更します：</p>
     <p class="source">#include "Game.h"<br>
       <br>
-      <em>#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
-      #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      <em>#include&nbsp;"Player.h"&nbsp;//&nbsp;★初期化やUpdate(),Draw()など【実際の処理の関数を呼出すのでインクルード必要】</em><br>
+      #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;★Update(),Draw()など【実際の処理の関数を呼出すのでインクルード必要】<br>
       <br>
       void Game::Init()<br>
       {// Init処理<br>
