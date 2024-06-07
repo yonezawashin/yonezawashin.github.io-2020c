@@ -5604,7 +5604,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 	    Zako0～Zako3の動きを応用して自分オリジナルのボスの行動パターンを自作してみてください。<br>
 	    例として下記に実装例を置いてはおきますがあくまで参考として、自分で考えて組んでみることが大事です。<br>
 	    ここまでの復習と集大成として、Zako0～Zako3のコードを移植しながら、プログラミングすることが肝要です。</p>
-	<p class="source">#ifndef BOSS_H_<br>
+	<p><code>Boss.hの行動パターンのプログラム例</code>(lifeとenumの状態をAngry以外にも増やせばもっと長期戦も演出できる)</p>
+	  <p class="source">#ifndef BOSS_H_<br>
       #define BOSS_H_<br>
       <br>
       #include "Enemy.h"<br>
