@@ -577,6 +577,10 @@
       &nbsp;&nbsp;// これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
       &nbsp;&nbsp;SetDrawScreen(DX_SCREEN_BACK);<br>
       <br>
+      &nbsp;&nbsp;<u>// ゲームのwhileループを開始する前の初期化処理<br>
+      &nbsp;&nbsp;Image::Load();<br>
+      &nbsp;&nbsp;int x = 100; // Xの初期位置<br>
+      &nbsp;&nbsp;int vx = 10;</u><br>
       &nbsp;&nbsp;<em>// Init初期化処理<br>
       &nbsp;&nbsp;Game game; //Gameの定義(定義と同時に初期化コンストラクタが実行される)<br>
       &nbsp;&nbsp;game.Init(); // gameのInit準備</em><br>
