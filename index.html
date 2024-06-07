@@ -1094,9 +1094,10 @@
       &nbsp;&nbsp;int x = 0;<br>
       &nbsp;&nbsp;int vx = 0;<br>
       <br>
+      &nbsp;&nbsp;<u>Player player{ 100, Screen::Height / 2 }; // 自機の初期化</u><br>
       &nbsp;&nbsp;<em>std::shared_ptr&lt;Player&gt;&nbsp;player{ std::make_shared&lt;Player&gt;(100, Screen::Height / 2, this) }; // 自機の初期化</em><br>
       &nbsp;&nbsp;<em>//↑プレイヤを回し読みポインタ型に。std::make_shared&lt;Player&gt;でメモリ上に実体を生成<br>
-        &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト</em><br>
+      &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト</em><br>
       &nbsp;&nbsp;//可変長配列vector&nbsp;↑【shared_ptr:共有ポインタ】<br>
       <br>
       &nbsp;&nbsp;//&nbsp;★【shared_ptr:共有ポインタ】とは【データの回し読み(読まれなくなったら廃棄)】<br>
