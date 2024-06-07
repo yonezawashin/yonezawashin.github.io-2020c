@@ -675,10 +675,10 @@
       #endif<em>&nbsp;&nbsp;//ここでエラー出た人は↑【注意】の;コロン忘れ</em></p>
     <br>
     <p>次に対となるcppファイルを作成します。<br>
-      ソリューションエクスプローラーからプロジェクトを右クリックし、追加＞cppファイル<br>
+      ソリューションエクスプローラーからプロジェクトを[右クリック]し、[追加] → [新しい項目] → Input.cppというファイル名を入力<br>
       「Input.cpp」という名前でcppファイルを作ります(たった2行の初期化static int変数の初期化のために必須)。<br>
       <br>
-      <code>Input.cpp</code>の内容を次のようにします：</p>
+      <code>Input.cppを新規作成して</code>、その内容を次のようにします：</p>
     <p class="source">#include "Input.h"<br>
       <br>
       int <em>Input::</em>prevState <em>{ 0 }</em>; // 1フレーム前の状態<br>
@@ -686,7 +686,7 @@
       <em>// ↑static intのときはこの行書かないとシンボリックエラーになる件(このためだけにcpp書かなきゃならん)</em><br>
       <br>
     </p>
-    <p>Playerクラスを作成する前に、忘れずにプレイヤ画像はImageフォルダにコピー貼り付けしましょう。<br>
+    <p>Playerクラスを作成する前に、忘れずにプレイヤ画像はDXのプロジェクトのImageフォルダにコピー貼り付けしましょう。<br>
       Imageフォルダにコピーしたらプロジェクトで</p>
     <p>次は画像ファイルをプロジェクトに追加します。画像は【プロジェクトを右クリックで「追加」→「既存の項目」で画像を追加】します。<br>
       <img src="image/player_image_add.gif" alt=""><br>
@@ -736,7 +736,7 @@
       Playerクラスをつくるだけで安心すると【落とし穴】があります。Game.cppでInput.Update();を忘れるとプレイヤが動きません。</p>
     <p>Update()やDraw()やInput.Update()を忘れないように注意して進めましょう。<br>
     </p>
-    <p>ソリューションエクスプローラーからプロジェクトを右クリックし、追加＞ヘッダファイル<br>
+    <p>ソリューションエクスプローラーからプロジェクトを[右クリック]し、[追加] → [新しい項目] → Player.hというファイル名を入力<br>
       「Player.h」という名前でヘッダファイルを作り、クラスを定義します。<br>
       <br>
       <code>Player.h</code>の内容を次のようにします：</p>
@@ -750,39 +750,39 @@
       class Player<br>
       {<br>
       public:<br>
-      &nbsp;<em>&nbsp;</em>const float MoveSpeed = <em>6;</em> // 移動速度<br>
+      &nbsp;&nbsp;const float MoveSpeed = 6; // 移動速度<br>
       <br>
-      &nbsp;<em>&nbsp;</em>float x; // x座標<br>
-      &nbsp;<em>&nbsp;</em>float y; // y座標<br>
+      &nbsp;&nbsp;float x; // x座標<br>
+      &nbsp;&nbsp;float y; // y座標<br>
       <br>
       &nbsp;&nbsp;// コンストラクタ<br>
       &nbsp;&nbsp;// x : 初期位置x<br>
       &nbsp;&nbsp;// y : 初期位置y<br>
-      &nbsp;<em>&nbsp;</em>Player(float x, float y)<br>
+      &nbsp;&nbsp;Player(float x, float y)<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;x = x</em>;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<em>this-&gt;y = y</em>;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;x = x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;y = y;<br>
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 更新処理<br>
-      &nbsp;<em>&nbsp;</em>void Update()<br>
+      &nbsp;&nbsp;void Update()<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;float vx = 0; // x方向移動速度<br>
       &nbsp;&nbsp;&nbsp;&nbsp;float vy = 0; // y方向移動速度<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(<em>&nbsp;</em>PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_LEFT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = -MoveSpeed; // 左<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input<em>::</em>GetButton(<em>&nbsp;</em>PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_RIGHT))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx = MoveSpeed; // 右<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (Input<em>::</em>GetButton(<em>&nbsp;</em>PAD_INPUT_UP))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_UP))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = -MoveSpeed; // 上<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input<em>::</em>GetButton(<em>&nbsp;</em>PAD_INPUT_DOWN))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButton(PAD_INPUT_DOWN))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy = MoveSpeed; // 下<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
@@ -793,9 +793,9 @@
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// 描画処理<br>
-      &nbsp;<em>&nbsp;</em>void Draw()<br>
+      &nbsp;&nbsp;void Draw()<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;<em>&nbsp;</em>DrawRotaGraphF(x, y, 1, 0, <em>Image::</em>player<em>, TRUE</em>);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(x, y, 1.0f, 0, Image::player, TRUE);<br>
       &nbsp;&nbsp;}<br>
       };<br>
       <br>
@@ -857,7 +857,7 @@
       <br>
       void Game::Draw()<br>
       {// 描画処理<br>
-      &nbsp;&nbsp;DrawRotaGraphF(x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+      &nbsp;&nbsp;DrawRotaGraphF(x, 200, 1.0f, 0, Image::bossImage, TRUE);<br>
       <br>
       &nbsp;&nbsp;<em>player.Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】</em><br>
       }</p>
