@@ -1097,12 +1097,12 @@
       &nbsp;&nbsp;<em>std::shared_ptr&lt;Player&gt;&nbsp;player{ std::make_shared&lt;Player&gt;(100, Screen::Height / 2, this) }; // 自機の初期化</em><br>
       &nbsp;&nbsp;<em>//↑プレイヤを回し読みポインタ型に。std::make_shared&lt;Player&gt;でメモリ上に実体を生成<br>
         &nbsp;&nbsp;std::vector&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト</em><br>
-      &nbsp;&nbsp;//&nbsp;List↑と同じvector&nbsp;↑【shared_ptr】<br>
+      &nbsp;&nbsp;//可変長配列vector&nbsp;↑【shared_ptr:共有ポインタ】<br>
       <br>
-      &nbsp;&nbsp;//&nbsp;★【shared_ptr】とは【データの回し読み(読まれなくなったら廃棄)】<br>
-      &nbsp;&nbsp;//&nbsp;「兄弟で週刊少年ジャンプを【回し読みする】が<br>
-      &nbsp;&nbsp;//&nbsp;おかんに【全員読み終わるまでは捨てられないように】する<br>
-      &nbsp;&nbsp;//&nbsp;【読むつもりの人カウンタ】がゼロになると【おかんに捨てられる(リンク切れ廃棄)】」<br>
+      &nbsp;&nbsp;//&nbsp;★【shared_ptr:共有ポインタ】とは【データの回し読み(読まれなくなったら廃棄)】<br>
+      &nbsp;&nbsp;//&nbsp;「例えば、兄弟で週刊少年ジャンプを【回し読みするときは】<br>
+      &nbsp;&nbsp;//&nbsp;おかんに【全員読み終わるまではメモリから捨てられないように】する<br>
+      &nbsp;&nbsp;//&nbsp;【読むつもりの人のカウンタ.use_count()】がゼロになると【おかんに捨てられる(リンク切れはメモリから廃棄する)】」<br>
       <br>
       };<br>
       <br>
