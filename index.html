@@ -6285,6 +6285,107 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #endif<br>
     </p>
+	  <p><code>Game.cpp</code>にアイテムの当たり判定の処理を追加します。</p>
+    <p class="source">#include "Game.h"<br>
+	    <br>
+      #include&nbsp;"MyRandom.h"<br>
+	    <br>
+      #include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"EnemyBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Explosion.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako1.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako2.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako3.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako3.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      <em>#include&nbsp;"Item0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+      <br>
+      void Game::Init()<br>
+      {// Init処理<br>
+      <br>
+      &nbsp;&nbsp;(中略)..................<br>
+      };<br>
+      <br>
+      void Game::Update()<br>
+      {// 更新処理<br>
+      <br>
+      &nbsp;&nbsp;Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+      <br>
+      &nbsp;&nbsp;(中略)..................<br>
+      <br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 爆発エフェクトの更新処理<br>
+      &nbsp;&nbsp;for (const auto&amp; e : gm.explosions)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;e-&gt;Update();<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>// アイテムの更新処理<br>
+      &nbsp;&nbsp;for (const auto&amp; itm : gm.items)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;itm-&gt;Update();<br>
+      &nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>// 自機とアイテムの衝突判定<br>
+      &nbsp;&nbsp;for (const auto&amp; itm : gm.items)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 自機が死んでたらこれ以上判定しない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (gm.player-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;break;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// アイテムが死んでたらスキップ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (itm-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;continue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 円同士の衝突判定で調べる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (MyMath::CircleCircleIntersection(<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;gm.player-&gt;position, gm.player-&gt;collisionRadius,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;itm-&gt;position, itm-&gt;collisionRadius) )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;itm-&gt;OnCollisionPlayer(gm.player);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;<br>
+      <br>
+      &nbsp;&nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// 自機弾のリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;gm.EraseRemoveIf(gm.playerBullets,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;PlayerBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+      &nbsp;&nbsp;// 敵のリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;gm.EraseRemoveIf(gm.enemies,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Enemy&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+      &nbsp;&nbsp;// 敵弾のリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;gm.EraseRemoveIf(gm.enemyBullets,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;EnemyBullet&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+      &nbsp;&nbsp;//爆発エフェクトのリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;gm.EraseRemoveIf(gm.explosions,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Explosion&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
+      nbsp;&nbsp;<em>//アイテムのリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;gm.EraseRemoveIf(gm.items,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Item&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
+      &nbsp;&nbsp;<br>
+      };<br>
+      <br>
+      void Game::Draw()<br>
+      {// 描画処理<br>
+      &nbsp;&nbsp;(中略)......<br>
+      <br>
+      &nbsp;&nbsp;// 敵弾の描画処理<br>
+      &nbsp;&nbsp;for (const auto&amp; b : gm.enemyBullets)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;b-&gt;Draw();<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>// アイテムの描画処理<br>
+      &nbsp;&nbsp;for (const auto&amp; itm : gm.items)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;itm-&gt;Draw();<br>
+      &nbsp;&nbsp;}</em><br>
+      }<br>
+    </p>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
     <br>
