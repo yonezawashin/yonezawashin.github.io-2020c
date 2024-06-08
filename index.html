@@ -6094,6 +6094,71 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       さらに、このItem0をザコがやられる直前にドロップさせる処理を追加します。<br>
       <br>
+<p>まずはベースとなる<code>Enemy.hにアイテムをドロップするvirtual仮想関数を追加</code>して継承overrideできるように準備します。</p>
+    <p class="source">#ifndef ENEMY_H_<br>
+      #define ENEMY_H_<br>
+      <br>
+      #include "GameObject.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      <br>
+      // 敵の基底クラス。<br>
+      // 全ての敵は、このクラスを継承して作る。<br>
+      // ★【勉強】abstract型はC++にない!!【純粋仮想関数】を使って作る<br>
+      class Enemy : public GameObject<br>
+      {<br>
+      public:<br>
+      <br>
+      &nbsp;&nbsp;//【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp;float collisionRadius = 32; // 当たり判定の半径<br>
+      &nbsp;&nbsp;float life = 1; // 耐久力<br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;Enemy(Vector3 pos) : GameObject( pos ) // GameObjectをベースとして初期化処理を継承する<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;typeTag = "Enemy";<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 更新処理。派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp;virtual void Update() = 0;//virtual ～ = 0;で【純粋仮想関数に】これで【C#のabstract型に】<br>
+      <br>
+      &nbsp;&nbsp;// 描画処理。派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp;virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
+      <br>
+      &nbsp;&nbsp;//【勉強】関数 = 0って何?と思った人は【関数もメモリ上では住所アドレスに過ぎない】ことを知ろう<br>
+      &nbsp;&nbsp;// ★関数 = 0はつまり関数の住所ポインタの針が【メモリ上の何かを針で参照してない(住所不定無処理)】<br>
+      &nbsp;&nbsp;// つまり【関数が未定義ってこと】＝【あいまい部分があるabstractクラスってこと】<br>
+      &nbsp;&nbsp;//http://etc2myday.jugem.jp/?eid=204<br>
+      &nbsp;&nbsp;//http://wisdom.sakura.ne.jp/programming/c/c54.html<br>
+      &nbsp;&nbsp;//逆にいうと【関数を配列】にするっていうトリッキーなこともできる!<br>
+      &nbsp;&nbsp;//http://www.ced.is.utsunomiya-u.ac.jp/lecture/2012/prog/p3/kadai3/virtualfunc2.php<br>
+      <br>
+      &nbsp;&nbsp;// 自機弾に当たったときの処理 関数の【★引数をGameObject型↓にすることで循環インクルード抑止】<br>
+      &nbsp;&nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;life -= 1; // ライフを減らす<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// ライフが無くなったら、死亡<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (life &lt;= 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>DropItem(); // アイテムを落とす処理(落とすかどうかはoverrideされた関数次第)</em><br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>// アイテムを落とす処理 継承overrideして各ザコごとに違うドロップを実装できる<br>
+      &nbsp;&nbsp;virtual void DropItem()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 継承overrideして各ザコごとに違う処理を実装する<br>
+      &nbsp;&nbsp;}</em><br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+<br>
 <p>例として、<code>Zako1.hにアイテム0をドロップさせる処理を追加</code>します。</p>
     <p class="source">#ifndef ZAKO_1_H_<br>
       #define ZAKO_1_H_<br>
