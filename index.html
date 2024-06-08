@@ -11019,6 +11019,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       class Enemy;<br>
       class EnemyBullet;<br>
       class Explosion;<br>
+      class Item;<br>
       <br>
       class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
       {<br>
@@ -11032,6 +11033,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Iten&gt;&gt; explosions; // アイテムのリスト<br>
       &nbsp;&nbsp;&nbsp; // 複数リスト↑list ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
@@ -11076,6 +11078,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       #include "PlayerBullet.h"<br>
       #include "EnemyBullet.h"<br>
       #include "Explosion.h"<br>
+      #include "Item0.h"<br>
       <br>
       class PlayScene : public Scene<br>
       {<br>
@@ -11123,6 +11126,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.playerBullets.clear(); // プレイヤの弾のメモリからの解放<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemyBullets.clear(); // 敵弾のメモリからの解放<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.explosions.clear(); // 爆発エフェクトのメモリからの解放<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.items.clear(); // アイテムのメモリからの解放<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲーム終了時のスコアがMAXなら記録して終了<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(score &gt; sm.scoreMax) sm.scoreMax = score;<br>
@@ -11272,6 +11276,39 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; e-&gt;Update();<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
       <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // アイテムの更新処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; itm : gm.items)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; itm-&gt;Update();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+	    <br>
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機とアイテムの衝突判定<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; itm : gm.items)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// アイテムが死んでたらスキップ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (itm-&gt;isDead)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;continue;</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (const auto&amp; pair : gm.players)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; auto player = pair.second;</em><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>// 自機が死んでたらこれ以上判定しない<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>if (<em>player</em>-&gt;isDead)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;&nbsp;&nbsp; break;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em><u>// アイテムが死んでたらスキップ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>if (itm-&gt;isDead)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>&nbsp;&nbsp; &nbsp;continue;</u><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>// 円同士の衝突判定で調べる<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>if (MyMath::CircleCircleIntersection(<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em> &nbsp; &nbsp;<em>player</em>-&gt;position, <em>player</em>-&gt;collisionRadius,<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em> &nbsp; &nbsp;itm-&gt;position, itm-&gt;collisionRadius) )<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>&nbsp;&nbsp; &nbsp;itm-&gt;OnCollisionPlayer(gm.player);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 自機弾の削除処理<br>
@@ -11290,6 +11327,9 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.EraseRemoveIf(gm.explosions,<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; [](std::shared_ptr&lt;Explosion&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除<br>
       <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //アイテムのリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.EraseRemoveIf(gm.items,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; [](std::shared_ptr&lt;Item&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>int aliveCount = 0; // 生きているプレイヤ数のカウント<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; pair : gm.players)<br>
@@ -11347,6 +11387,13 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; b : gm.enemyBullets)<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; b-&gt;Draw();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // アイテムの描画処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; itm : gm.items)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; itm-&gt;Draw();<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; }<br>
       };<br>
