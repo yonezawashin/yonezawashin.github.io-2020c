@@ -6031,6 +6031,69 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #endif</p>
       <br>
+      このベース基底となるItem.hを継承してItem0やItem1などを作成します。<br>
+      <br>
+<code>Item0.hを新規作成</code>します。<br>
+    <p class="source">#ifndef ITEM_0_H_<br>
+      #define ITEM_0_H_<br>
+      <br>
+      #include "Item.h"<br>
+      #include "Image.h"<br>
+      <br>
+      // アイテム0クラス ライフを回復するアイテム<br>
+      class Item0 : public Item<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; int amount = 1; // 回復量など<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Item0(Vector3 pos,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Vector3 v = Vector3{ -0.5f,0.0f }, // デフォルトは-0.5fで遅めのスクロール量<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; int amount = 1)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; : amount{ amount }, Item(pos, v)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Item0"; // オブジェクトの判別タグ<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;position += this-&gt;v; // vのx,y量ぶん移動<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::item0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 自機に当たったときの処理 上書きoverrideする<br>
+      &nbsp;&nbsp; &nbsp;void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
+      };<br>
+      <br>
+      #endif</p>
+      <br>
+<br>
+<code>Item0.cppを新規作成</code>します。<br>
+    <p class="source">#include "Item0.h"<br>
+      <br>
+      #include "Player.h" // アイテムとプレイヤは相互にインクルードしそうなのでcppで#include<br>
+      <br>
+      // 自機に当たったときの処理 上書きoverrideする<br>
+      void Item0::OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; //[共有ポインタをダウンキャスト(親GameObject → 子Playerに)]<br>
+      &nbsp;&nbsp;&nbsp; // https://cpprefjp.github.io/reference/memory/shared_ptr/dynamic_pointer_cast.html<br>
+      &nbsp;&nbsp;&nbsp; if (std::shared_ptr&lt;Player&gt; pPlayer = std::dynamic_pointer_cast&lt;Player&gt;(object))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer->RecoverLife(amount); // ライフを回復する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; isDead = true; // 取ったら消される<br>
+      }<br>
+      </p>
+      <br>
+      さらに、このItem0をザコがやられる直前にドロップさせる処理を追加します。<br>
+      <br>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
     <br>
