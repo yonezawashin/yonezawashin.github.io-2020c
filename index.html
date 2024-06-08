@@ -5456,6 +5456,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       完全に消滅</p>
     <p><br>
     </p>
+<code>Boss.hを新規作成</code>します。<br>
     <p class="source">#ifndef BOSS_H_<br>
       #define BOSS_H_<br>
       <br>
@@ -5929,7 +5930,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       int Image::boss3{-1};<br>
       // ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定<br>
       DivImage Image::explosion{ 8, 2, 64, 64 };<br>
-      int Image::item0{-1};<br>
+      <em>int Image::item0{-1};</em><br>
       <br>
       void Image::Load()<br>
       {<br>
@@ -5988,7 +5989,48 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;divImage.XNum, divImage.YNum, divImage.XSize, divImage.YSize, divImage.HandleArray);<br>
       };<br>
     </p>
-    <br>	  
+    <br>
+<code>Item.hを新規作成</code>します。<br>
+    <p class="source">#ifndef ITEM_H_<br>
+      #define ITEM_H_<br>
+      <br>
+      #include "GameObject.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      <br>
+      // アイテムのベース基底クラス<br>
+      class Item : public GameObject<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; //【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; GameManager& gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&)を得る<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; float collisionRadius; // 当たり判定の半径<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ v:移動速度(方向) radius:当たり判定の半径<br>
+      &nbsp;&nbsp;&nbsp; Item(Vector3 pos, Vector3 v, float radius = 8)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; : collisionRadius{ radius }, GameObject( pos ) // GameObjectをベースとして初期化処理を継承する<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "Item"; // オブジェクトの種類判別タグ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;v = v; // GameObjectの速度vを利用する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理。派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() = 0;//virtual ～ = 0;で【純粋仮想関数に】これで【C#のabstract型に】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理。派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 自機に当たったときの処理 派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp; &nbsp;void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object) override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// アイテムごとに継承でoverrideして個別処理を書く<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+      <br>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
     <br>
