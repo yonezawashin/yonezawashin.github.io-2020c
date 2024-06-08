@@ -6398,7 +6398,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;//爆発エフェクトのリストから死んでるものを除去する<br>
       &nbsp;&nbsp;gm.EraseRemoveIf(gm.explosions,<br>
       &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Explosion&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除<br>
-      nbsp;&nbsp;<em>//アイテムのリストから死んでるものを除去する<br>
+      &nbsp;&nbsp;<em>//アイテムのリストから死んでるものを除去する<br>
       &nbsp;&nbsp;gm.EraseRemoveIf(gm.items,<br>
       &nbsp;&nbsp;&nbsp;&nbsp;[](std::shared_ptr&lt;Item&gt;&amp;&nbsp;ptr)&nbsp;{&nbsp;return ptr-&gt;isDead;&nbsp;});//isDead==trueの条件のものを削除</em><br>
       &nbsp;&nbsp;<br>
