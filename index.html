@@ -11776,12 +11776,6 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;}
 (中略)...........<br>
-		    // 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)
-    void Finalize() override
-    {
-        bool res = Font::DeleteFontToHandle(&font); // フォントデータを削除してメモリ節約
-        assert(res != -1);
-    }
       &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
       &nbsp;&nbsp; &nbsp;void Finalize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
