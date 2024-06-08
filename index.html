@@ -11289,22 +11289,22 @@ Update()関数内にX方向の動きも追加すると..<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (itm-&gt;isDead)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;continue;</em><br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (const auto&amp; pair : gm.players)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>for (const auto&amp; pair : gm.players)</em><br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; auto player = pair.second;</em><br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>// 自機が死んでたらこれ以上判定しない<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>if (<em>player</em>-&gt;isDead)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>&nbsp;&nbsp;&nbsp; break;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em><u>// アイテムが死んでたらスキップ<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>if (itm-&gt;isDead)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>&nbsp;&nbsp; &nbsp;continue;</u><br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<u>// アイテムが死んでたらスキップ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (itm-&gt;isDead)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;continue;</u><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>// 円同士の衝突判定で調べる<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>if (MyMath::CircleCircleIntersection(<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em> &nbsp; &nbsp;<em>player</em>-&gt;position, <em>player</em>-&gt;collisionRadius,<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em> &nbsp; &nbsp;itm-&gt;position, itm-&gt;collisionRadius) )<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>&nbsp;&nbsp; &nbsp;itm-&gt;OnCollisionPlayer(gm.player);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>&nbsp;&nbsp; &nbsp;itm-&gt;OnCollisionPlayer(<em>player</em>);<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em>}<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp;&nbsp; </em><br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
