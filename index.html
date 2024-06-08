@@ -5832,32 +5832,32 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       void Player::DrawLifeBar()<br>
       {<br>
       &nbsp;&nbsp;// ライフをバー表示する際の色設定<br>
-      &nbsp;&nbsp;unsigned int frameColor = GetColor(255, 255, 255);<br>
-      &nbsp;&nbsp;unsigned int backColor = GetColor(0, 0, 0);<br>
-      &nbsp;&nbsp;unsigned int lineColor = GetColor(0, 0, 0);<br>
-      &nbsp;&nbsp;unsigned int red = GetColor(255, 0, 0), orange = GetColor(255, 100, 0);<br>
-      &nbsp;&nbsp;unsigned int green = GetColor(0, 255, 0), blue = GetColor(0, 255, 255);<br>
-      &nbsp;&nbsp;int barMax = (lifeMax &gt; 10) ? 10 : lifeMax;<br>
+      &nbsp;&nbsp;unsigned int frameColor = GetColor(255, 255, 255); // バーの枠の色<br>
+      &nbsp;&nbsp;unsigned int backColor = GetColor(0, 0, 0); // バーの背景の色<br>
+      &nbsp;&nbsp;unsigned int lineColor = GetColor(0, 0, 0); // バーの区切り目盛りの色<br>
+      &nbsp;&nbsp;unsigned int red = GetColor(255, 0, 0), orange = GetColor(255, 100, 0); // ピンチ時の赤、オレンジ<br>
+      &nbsp;&nbsp;unsigned int green = GetColor(0, 255, 0), blue = GetColor(0, 255, 255); // 10までは緑、11以上は水色<br>
+      &nbsp;&nbsp;int barMax = (lifeMax &gt; 10) ? 10 : lifeMax; // バーの目盛りの数<br>
       &nbsp;&nbsp;int barWidth = 40, barPart = barWidth / barMax, rectWidth = (barPart + 1) * barMax;<br>
-      &nbsp;&nbsp;int barHeight = 4;<br>
-      &nbsp;&nbsp;Vector3 barPos{ position.x - rectWidth / 2, position.y + collisionRadius };<br>
+      &nbsp;&nbsp;int barHeight = 4; // バーの表示する高さ(4+1+1) 枠は上+1, 下+1, 目盛ぶん↑+1して×10し直すとバーの四角形幅になる<br>
+      &nbsp;&nbsp;Vector3 barPos{ position.x - rectWidth / 2, position.y + collisionRadius }; // バーの表示位置<br>
       &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;// バーの背景<br>
+      &nbsp;&nbsp;// バーの背景を描画<br>
       &nbsp;&nbsp;DrawBox(barPos.x - 1, barPos.y - 1, barPos.x + 1 + rectWidth, barPos.y + 1 + barHeight, backColor, TRUE);<br>
-      &nbsp;&nbsp;// バーの枠<br>
+      &nbsp;&nbsp;// バーの枠を描画<br>
       &nbsp;&nbsp;DrawBox(barPos.x - 1, barPos.y - 1, barPos.x + 1 + rectWidth, barPos.y + 1 + barHeight, frameColor, FALSE);<br>
       &nbsp;&nbsp;auto barColor = (life &lt;= 1) ? red : (life &lt;= 2) ? orange : green; // lifeが 残り1:赤,残り2:橙 10以下:緑<br>
-      &nbsp;&nbsp;// バーの中身<br>
+      &nbsp;&nbsp;// バーの中身を10まで描画<br>
       &nbsp;&nbsp;int barNum = (life &lt; 10) ? life : 10;<br>
       &nbsp;&nbsp;for (int i = 0; i &lt; barNum; ++i)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawBox(barPos.x + i * (barPart + 1), barPos.y,<br>
       &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;barPos.x + (i + 1) * (barPart + 1), barPos.y + barHeight, barColor, TRUE);<br>
-      &nbsp;&nbsp;// バーの中身(水色)<br>
+      &nbsp;&nbsp;// バーの中身(水色)を20まで描画<br>
       &nbsp;&nbsp;int blueNum = (life &gt; 20) ? 10 : (life &gt; 10) ? life - 10 : 0; // lifeが残り10以上のときは水色<br>
       &nbsp;&nbsp;for (int i = 0; i &lt; blueNum; ++i)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawBox(barPos.x + i * (barPart + 1), barPos.y,<br>
       &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;barPos.x + (i + 1) * (barPart + 1), barPos.y + barHeight, blue, TRUE);<br>
-      &nbsp;&nbsp;// バーの目盛り<br>
+      &nbsp;&nbsp;// バーの目盛りを描画<br>
       &nbsp;&nbsp;for (int i = 0; i &lt; 9; ++i)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;DrawLine(barPos.x + (i + 1) * (barPart + 1), barPos.y,<br>
       &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; barPos.x + (i + 1) * (barPart + 1), barPos.y + barHeight, (i + 1 == life) ? barColor : lineColor, TRUE);<br>
