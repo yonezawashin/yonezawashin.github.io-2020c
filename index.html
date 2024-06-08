@@ -6285,7 +6285,49 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #endif<br>
     </p>
-	  <p><code>Game.cpp</code>にアイテムの当たり判定の処理を追加します。</p>
+<br>
+さて、これでザコ1からアイテムがドロップはしますが、まだプレイヤとアイテムの当たり判定がありません。<br>
+プレイヤとアイテムの当たり判定処理を追加しましょう。<br>
+<br>
+	  <p><code>GameManager.h</code>にItemを管理するリストの定義を追加します。</p>
+    <p class="source"> #ifndef GAMEMANAGER_H_<br>
+      #define GAMEMANAGER_H_<br>
+      <br>
+      #include &lt;memory&gt;<br>
+      #include &lt;vector&gt;<br>
+      <br>
+      #include&nbsp;"Singleton.h"<br>
+      <br>
+      class&nbsp;Player;&nbsp;//&nbsp;クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+      class&nbsp;PlayerBullet;<br>
+      class&nbsp;Enemy;<br>
+      class&nbsp;EnemyBullet;<br>
+      class&nbsp;Explosion;<br>
+      <em>class&nbsp;Item;</em><br>
+      <br>
+      class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;friend class Singleton&lt;GameManager&gt;; // Singleton でのインスタンス作成は許可<br>
+      <br>
+      &nbsp;&nbsp;std::shared_ptr&lt;Player&gt; player{ nullptr }; // 自機のポインタ<br>
+      &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト<br>
+      &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+      &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
+      &nbsp;&nbsp;std::list&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
+      &nbsp;&nbsp;<em>std::list&lt;std::shared_ptr&lt;Item&gt;&gt; items; // アイテムのリスト</em><br>
+      &nbsp;&nbsp;// 複数リスト↑list ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
+      <br>
+      <br>
+      (中略).............. <br>
+      protected:<br>
+      &nbsp;&nbsp;GameManager() {}; // 外部からのインスタンス作成は禁止<br>
+      &nbsp;&nbsp;virtual ~GameManager() {}; //外部からのインスタンス破棄も禁止<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+<p><code>Game.cpp</code>にアイテムの当たり判定の処理を追加します。</p>
     <p class="source">#include "Game.h"<br>
 	    <br>
       #include&nbsp;"MyRandom.h"<br>
@@ -6386,6 +6428,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;}</em><br>
       }<br>
     </p>
+	  <br>
+	  さて、ザコ1を倒すと回復アイテムを50%の確率でドロップし、プレイヤがそれを取るとライフが1回復するようになりましたか？<br>
+	  <br>
+	  <br>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
     <br>
