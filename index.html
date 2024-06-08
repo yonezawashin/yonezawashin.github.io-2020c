@@ -6094,6 +6094,67 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       さらに、このItem0をザコがやられる直前にドロップさせる処理を追加します。<br>
       <br>
+<p>例として、<code>Zako1.hにアイテム0をドロップさせる処理を追加</code>します。</p>
+    <p class="source">#ifndef ZAKO_1_H_<br>
+      #define ZAKO_1_H_<br>
+      <br>
+      #include "Enemy.h"<br>
+      <br>
+      #include &lt;cmath&gt; // Sinの計算に使う<br>
+      #include "MyMath.h"<br>
+      #include "Image.h"<br>
+      <br>
+      <em>#include "MyRandom.h" // 乱数でアイテムのドロップを抽選する<br>
+      #include "Item0.h"</em><br>
+      <br>
+      // ザコ1クラス<br>
+      class Zako1 : public Enemy<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;float sinMove = 0; // Sinの動きをする際の0～360度<br>
+      &nbsp;&nbsp;float sinRadius = 70; // Sinの動きをするときの半径<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;Zako1(Vector3 pos) : Enemy ( pos )<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako1";//オブジェクトの種類判別タグ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;life = 5;<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 更新処理<br>
+      &nbsp;&nbsp;void Update() override<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;position.x -= 1; // 左へ移動<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;sinMove += 2.5f; // Sinの波運動の角度を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;position.y += currentSinY - prevSinY; // 上下方向のSinの波運動<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;void Draw() override<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako1, TRUE);<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;<em>// アイテムを落とす処理<br>
+      &nbsp;&nbsp;void DropItem() override<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isDead) // 消えるまえに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (MyRandom::Percent(50.0f)) // 10%の確率でアイテムをドロップ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.items.emplace_back(std::make_shared&lt;Item0&gt;(position));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}</em><br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
     <br>
