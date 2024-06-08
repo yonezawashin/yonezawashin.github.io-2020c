@@ -9001,6 +9001,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       class Enemy;<br>
       class EnemyBullet;<br>
       class Explosion;<br>
+      class Item;<br>
       <br>
       class GameManager : public Singleton&lt;GameManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
       {<br>
@@ -9013,6 +9014,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Item&gt;&gt; items; // アイテムのリスト<br>
       &nbsp;&nbsp;&nbsp; // 複数リスト↑list ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
@@ -9048,6 +9050,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "PlayerBullet.h"<br>
       #include "EnemyBullet.h"<br>
       #include "Explosion.h"<br>
+      #include "Item0.h"<br>
       <br>
       class PlayScene : public Scene<br>
       {<br>
@@ -9092,6 +9095,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.playerBullets.clear(); // プレイヤの弾のメモリからの解放<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.enemyBullets.clear(); // 敵弾のメモリからの解放<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.explosions.clear(); // 爆発エフェクトのメモリからの解放<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.items.clear(); // アイテムのメモリからの解放<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ゲーム終了時のスコアがMAXなら記録して終了<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(score &gt; sm.scoreMax) sm.scoreMax = score;<br>
@@ -9881,6 +9885,9 @@ public:<br>
       #include "MyMath.h"<br>
       #include "Image.h"<br>
       <br>
+      #include "MyRandom.h" // 乱数でアイテムのドロップを抽選する<br>
+      #include "Item0.h"<br>
+      <br>
       <em>#include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意</em><br>
       <br>
       // ザコ1クラス<br>
@@ -9909,6 +9916,12 @@ public:<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako1, TRUE);<br>
       &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アイテムを落とす処理<br>
+      &nbsp;&nbsp;&nbsp; void DropItem() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (中略).......<br>
+      &nbsp;&nbsp;&nbsp; }<br>
       };<br>
       <br>
       #endif</p>
@@ -9925,6 +9938,9 @@ public:<br>
       #include &lt;cmath&gt; // Sinの計算に使う<br>
       #include "MyMath.h"<br>
       #include "Image.h"<br>
+      <br>
+      #include "MyRandom.h" // 乱数でアイテムのドロップを抽選する<br>
+      #include "Item0.h"<br>
       <br>
       #include "Player.h" // Player.hでもZako1.hをインクルードすると循環するので注意<br>
       <br>
@@ -9963,6 +9979,12 @@ public:<br>
       &nbsp;&nbsp;&nbsp; void Draw() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako1, TRUE);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アイテムを落とす処理<br>
+      &nbsp;&nbsp;&nbsp; void DropItem() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (中略).......<br>
       &nbsp;&nbsp;&nbsp; }<br>
       };<br>
       <br>
@@ -10264,6 +10286,8 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; // 描画処理<br>
       &nbsp;&nbsp;&nbsp; void Draw();<br>
       <br>
+      &nbsp;&nbsp;&nbsp; (中略)....<br>
+      <br>
       &nbsp;&nbsp;&nbsp; // 敵にぶつかった時の処理<br>
       &nbsp;&nbsp;&nbsp; void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other);<br>
       <br>
@@ -10272,6 +10296,9 @@ Update()関数内にX方向の動きも追加すると..<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ダメージを受ける処理<br>
       &nbsp;&nbsp;&nbsp; void TakeDamage();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ライフが回復する処理<br>
+      &nbsp;&nbsp;&nbsp; void RecoverLife(int amount);<br>
       };<br>
       <br>
       #endif<br>
