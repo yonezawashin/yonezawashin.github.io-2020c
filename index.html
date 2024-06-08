@@ -4670,6 +4670,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       </li>
       <li><a href="#mozTocId3003">ボスの作成</a></li>
       <li><a href="#mozTocId3004">【練習問題】ボスの状態ごとの行動パターンのプログラミング</a></li>
+      <li><a href="#mozTocId3005">プレイヤのライフをバーで表示させる</a></li>
+      <li><a href="#mozTocId3006">アイテムクラスとザコからのドロップ処理の作成</a></li>
       <br>
       <p>次のテキスト4はこちら。</p>
       <br>
@@ -5763,6 +5765,115 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 	  (これを発展させると、プレイヤの状態に合わせて知的に行動するAIにつながっていきます)<br>
 	  <br>
 	  <br>
+<h1><a id="mozTocId3005" class="mozTocH1"></a>プレイヤのライフをバーで表示させる</h1>
+<p><code>Player.h</code>に現在のライフをバーで表示する処理の定義を追加します。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include&nbsp;"GameObject.h"<br>
+      <br>
+      #include&nbsp;"GameManager.h"<br>
+      <br>
+      class Player : public GameObject<br>
+      { // 継承は↑: public ～にする。publicをつけ忘れるとGameObjectの変数がすべてprivateとして継承されちゃう<br>
+      public:<br>
+      <br>
+      &nbsp;&nbsp;(中略)...........<br>
+      <br>
+      &nbsp;&nbsp;<em>int lifeMax = 20; // 最大ライフ</em><br>
+      &nbsp;&nbsp;int life = 3; // ライフ<br>
+      &nbsp;&nbsp;int mutekiTimer = 0; // 残り無敵時間。0以下なら無敵じゃないってこと<br>
+      <br>
+      &nbsp;&nbsp;(中略)...........<br>
+      <br>
+      &nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;void Draw();//【★←Player.cppを新規作成してそちらに処理を書き移す】<br>
+      <br>
+      <em>&nbsp;&nbsp;// ライフをバーで表示する処理<br>
+      &nbsp;&nbsp;void DrawLifeBar();</em><br>
+      <br>
+      &nbsp;&nbsp;// 敵にぶつかった時の処理<br>
+      &nbsp;&nbsp;void OnCollisionEnemy(std::shared_ptr&lt;GameObject&gt; other);<br>
+      <br>
+      &nbsp;&nbsp;// 敵弾とぶつかった時の処理<br>
+        &nbsp;&nbsp;void OnCollisionEnemyBullet(std::shared_ptr&lt;GameObject&gt; other);<br>
+      <br>
+      &nbsp;&nbsp;// ダメージを受ける処理<br>
+      &nbsp;&nbsp;void TakeDamage();<br>
+      };<br>
+      <br>
+      #endif</p>
+    <p><code>Player.cpp</code>に現在のライフをバーで表示する処理の定義を追加します。</p>
+    <p class="source"> #include&nbsp;"Player.h"<br>
+      <br>
+      &nbsp;&nbsp;(中略).........<br>
+      <br>
+      // 更新処理<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;(中略).........<br>
+      }<br>
+      <br>
+      // 描画処理<br>
+      void Player::Draw()<br>
+      {<br>
+      &nbsp;&nbsp;(中略).........<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;<em>// ライフをバーで表示する処理<br>
+      &nbsp;&nbsp;DrawLifeBar();</em><br>
+      }<br>
+      <br>
+      <em>// ライフをバーで表示する処理<br>
+      void Player::DrawLifeBar()<br>
+      {<br>
+      &nbsp;&nbsp;// ライフをバー表示する際の色設定<br>
+      &nbsp;&nbsp;unsigned int frameColor = GetColor(255, 255, 255);<br>
+      &nbsp;&nbsp;unsigned int backColor = GetColor(0, 0, 0);<br>
+      &nbsp;&nbsp;unsigned int lineColor = GetColor(0, 0, 0);<br>
+      &nbsp;&nbsp;unsigned int red = GetColor(255, 0, 0), orange = GetColor(255, 100, 0);<br>
+      &nbsp;&nbsp;unsigned int green = GetColor(0, 255, 0), blue = GetColor(0, 255, 255);<br>
+      &nbsp;&nbsp;int barMax = (lifeMax &gt; 10) ? 10 : lifeMax;<br>
+      &nbsp;&nbsp;int barWidth = 40, barPart = barWidth / barMax, rectWidth = (barPart + 1) * barMax;<br>
+      &nbsp;&nbsp;int barHeight = 4;<br>
+      &nbsp;&nbsp;Vector3 barPos{ position.x - rectWidth / 2, position.y + collisionRadius };<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// バーの背景<br>
+      &nbsp;&nbsp;DrawBox(barPos.x - 1, barPos.y - 1, barPos.x + 1 + rectWidth, barPos.y + 1 + barHeight, backColor, TRUE);<br>
+      &nbsp;&nbsp;// バーの枠<br>
+      &nbsp;&nbsp;DrawBox(barPos.x - 1, barPos.y - 1, barPos.x + 1 + rectWidth, barPos.y + 1 + barHeight, frameColor, FALSE);<br>
+      &nbsp;&nbsp;auto barColor = (life &lt;= 1) ? red : (life &lt;= 2) ? orange : green; // lifeが 残り1:赤,残り2:橙 10以下:緑<br>
+      &nbsp;&nbsp;// バーの中身<br>
+      &nbsp;&nbsp;int barNum = (life &lt; 10) ? life : 10;<br>
+      &nbsp;&nbsp;for (int i = 0; i &lt; barNum; ++i)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawBox(barPos.x + i * (barPart + 1), barPos.y,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;barPos.x + (i + 1) * (barPart + 1), barPos.y + barHeight, barColor, TRUE);<br>
+      &nbsp;&nbsp;// バーの中身(水色)<br>
+      &nbsp;&nbsp;int blueNum = (life &gt; 20) ? 10 : (life &gt; 10) ? life - 10 : 0; // lifeが残り10以上のときは水色<br>
+      &nbsp;&nbsp;for (int i = 0; i &lt; blueNum; ++i)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawBox(barPos.x + i * (barPart + 1), barPos.y,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;barPos.x + (i + 1) * (barPart + 1), barPos.y + barHeight, blue, TRUE);<br>
+      &nbsp;&nbsp;// バーの目盛り<br>
+      &nbsp;&nbsp;for (int i = 0; i &lt; 9; ++i)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawLine(barPos.x + (i + 1) * (barPart + 1), barPos.y,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; barPos.x + (i + 1) * (barPart + 1), barPos.y + barHeight, (i + 1 == life) ? barColor : lineColor, TRUE);<br>
+      }</em><br>
+      <br>
+      &nbsp;&nbsp;(以下略).........<br>
+    </p>
+<br>
+いかがでしょうか、プレイヤの下にライフのバーが表示されるようになりましたか？<br>
+現状では、ライフを回復するすべがないので、ライフが10を超えることはないですが、<br>
+ライフが10を超えると、10までの緑色のバーの上のレイヤに、0から折り返して水色で20までライフが表示される機能もプログラミングしておきました。<br>
+<br>	  
+次はザコがライフを回復するアイテムをドロップする処理をプログラミングしてみましょう。<br>	  
+<br>	  
+<h1><a id="mozTocId3006" class="mozTocH1"></a>アイテムクラスとザコからのドロップ処理の作成</h1>
+	  
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
     <br>
