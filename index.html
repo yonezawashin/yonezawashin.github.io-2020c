@@ -11033,7 +11033,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;EnemyBullet&gt;&gt; enemyBullets; // 敵弾のリスト<br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Explosion&gt;&gt; explosions; // 爆発エフェクトのリスト<br>
-      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Iten&gt;&gt; explosions; // アイテムのリスト<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Item&gt;&gt; items; // アイテムのリスト<br>
       &nbsp;&nbsp;&nbsp; // 複数リスト↑list ↑【shared_ptr】回し読みポインタ:メモリにデータを回し読み状態として確保できる<br>
       <br>
       <br>
@@ -11388,7 +11388,6 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; b-&gt;Draw();<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
-      &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // アイテムの描画処理<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; itm : gm.items)<br>
