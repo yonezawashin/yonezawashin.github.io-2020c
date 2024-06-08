@@ -5989,6 +5989,71 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;divImage.XNum, divImage.YNum, divImage.XSize, divImage.YSize, divImage.HandleArray);<br>
       };<br>
     </p>
+<p><code>Player.h</code>にライフを回復する処理を追加します。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include&nbsp;"GameObject.h"<br>
+      <br>
+      #include&nbsp;"GameManager.h"<br>
+      <br>
+      class Player : public GameObject<br>
+      { // 継承は↑: public ～にする。publicをつけ忘れるとGameObjectの変数がすべてprivateとして継承されちゃう<br>
+      public:<br>
+      <br>
+      &nbsp;&nbsp;(中略)...........<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;// ダメージを受ける処理<br>
+      &nbsp;&nbsp;void TakeDamage();<br>
+      <br>
+      &nbsp;&nbsp;<em>// ライフが回復する処理<br>
+      &nbsp;&nbsp;void RecoverLife(int amount);</em><br>
+      };<br>
+      <br>
+      #endif</p>
+    <p><code>Player.cpp</code>にライフを回復する処理を追加します。</p>
+    <p class="source"> #include&nbsp;"Player.h"<br>
+      <br>
+      &nbsp;&nbsp;(中略).........<br>
+      <br>
+      // 更新処理<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;(中略).........<br>
+      }<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;(中略).........<br>
+      <br>
+      // ダメージを受ける処理<br>
+      void Player::TakeDamage()<br>
+      {<br>
+      &nbsp;&nbsp;life -= 1; // ライフ減少<br>
+      <br>
+      &nbsp;&nbsp;if (life &lt;= 0)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// ライフが無くなったら死亡<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+      &nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;else<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 無敵時間発動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;mutekiTimer = MutekiJikan;<br>
+      &nbsp;&nbsp;}<br>
+      }<br>
+      <br>
+      <em>// ライフが回復する処理br>
+      void Player::RecoverLife(int amount)<br>
+      {<br>
+      &nbsp;&nbsp;life += amount; // ライフ回復<br>
+      }</em><br>
+    </p>
     <br>
 <code>Item.hを新規作成</code>します。<br>
     <p class="source">#ifndef ITEM_H_<br>
@@ -6210,7 +6275,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (isDead) // 消えるまえに<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (MyRandom::Percent(50.0f)) // 10%の確率でアイテムをドロップ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (MyRandom::Percent(50.0f)) // 50%の確率でアイテムをドロップ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.items.emplace_back(std::make_shared&lt;Item0&gt;(position));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
