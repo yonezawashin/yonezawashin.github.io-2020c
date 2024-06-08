@@ -6192,13 +6192,6 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;// 描画処理。派生クラスでオーバーライドして使う<br>
       &nbsp;&nbsp;virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
       <br>
-      &nbsp;&nbsp;//【勉強】関数 = 0って何?と思った人は【関数もメモリ上では住所アドレスに過ぎない】ことを知ろう<br>
-      &nbsp;&nbsp;// ★関数 = 0はつまり関数の住所ポインタの針が【メモリ上の何かを針で参照してない(住所不定無処理)】<br>
-      &nbsp;&nbsp;// つまり【関数が未定義ってこと】＝【あいまい部分があるabstractクラスってこと】<br>
-      &nbsp;&nbsp;//http://etc2myday.jugem.jp/?eid=204<br>
-      &nbsp;&nbsp;//http://wisdom.sakura.ne.jp/programming/c/c54.html<br>
-      &nbsp;&nbsp;//逆にいうと【関数を配列】にするっていうトリッキーなこともできる!<br>
-      &nbsp;&nbsp;//http://www.ced.is.utsunomiya-u.ac.jp/lecture/2012/prog/p3/kadai3/virtualfunc2.php<br>
       <br>
       &nbsp;&nbsp;// 自機弾に当たったときの処理 関数の【★引数をGameObject型↓にすることで循環インクルード抑止】<br>
       &nbsp;&nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet)<br>
