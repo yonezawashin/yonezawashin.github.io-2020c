@@ -7041,7 +7041,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemies.clear(); // 敵のメモリからの解放<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.playerBullets.clear(); // プレイヤの弾のメモリからの解放<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.enemyBullets.clear(); // 敵弾のメモリからの解放<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.explosions.clear(); // 爆発エフェクトのメモリからの解放</em><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.explosions.clear(); // 爆発エフェクトのメモリからの解放<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.items.clear(); // アイテムのメモリからの解放</em><br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ゲーム終了時のスコアがMAXなら記録して終了<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(score &gt; sm.scoreMax) sm.scoreMax = score;<br>
@@ -7149,6 +7150,32 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;e-&gt;Update();<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
         <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// アイテムの更新処理<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; itm : gm.items)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;itm-&gt;Update();<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機とアイテムの衝突判定<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; itm : gm.items)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機が死んでたらこれ以上判定しない<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (gm.player-&gt;isDead)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;break;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// アイテムが死んでたらスキップ<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (itm-&gt;isDead)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;continue;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 円同士の衝突判定で調べる<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (MyMath::CircleCircleIntersection(<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;gm.player-&gt;position, gm.player-&gt;collisionRadius,<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;itm-&gt;position, itm-&gt;collisionRadius) )<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;itm-&gt;OnCollisionPlayer(gm.player);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        <br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
         <br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機弾の削除処理<br>
@@ -7165,7 +7192,11 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         <br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//爆発エフェクトのリストから死んでるものを除去する<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.EraseRemoveIf(gm.explosions,<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;[](std::shared_ptr&lt;Explosion&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除</em><br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;[](std::shared_ptr&lt;Explosion&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//アイテムのリストから死んでるものを除去する<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.EraseRemoveIf(gm.items,<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;[](std::shared_ptr&lt;Item&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除</em><br>
       <br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ゲームオーバー判定と画面チェンジ処理<br>
@@ -7209,8 +7240,15 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; b : gm.enemyBullets)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;b-&gt;Draw();<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;}<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// アイテムの描画処理<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; itm : gm.items)<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;itm-&gt;Draw();<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
-      &nbsp;&nbsp; &nbsp;}<br>
+        &nbsp;&nbsp; &nbsp;}<br>
       };<br>
       <br>
       #endif</p>
@@ -7228,6 +7266,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         #include "Zako1.h"<br>
         #include "Zako2.h"<br>
         #include "Zako3.h"<br>
+        #include "Item0.h"<br>
         #include "Boss.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</u><br>
       <br>
       void Game::Init()<br>
@@ -7295,6 +7334,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e-&gt;Update();<br>
         &nbsp;&nbsp;&nbsp; }<br>
+	<br>
+	&nbsp;&nbsp;&nbsp; (中略)................<br>
         <br>
         &nbsp;&nbsp;&nbsp; //return; //【★実験】ここでreturnで処理を終わると弾のメモリを解放しない！下のerase前でそこまで処理が行かないからメモリ解放せずに終わる実験<br>
         <br>
@@ -7306,7 +7347,11 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         <br>
         &nbsp;&nbsp;&nbsp; //爆発エフェクトのリストから死んでるものを除去する<br>
         &nbsp;&nbsp;&nbsp; gm.EraseRemoveIf(gm.explosions,<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [](std::shared_ptr&lt;Explosion&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除</u><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [](std::shared_ptr&lt;Explosion&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; //アイテムのリストから死んでるものを除去する<br>
+        &nbsp;&nbsp;&nbsp; gm.EraseRemoveIf(gm.items,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [](std::shared_ptr&lt;Item&gt;&amp; ptr) { return ptr-&gt;isDead; });//isDead==trueの条件のものを削除</u><br>
       <br>
       <br>
       <br>
@@ -7342,6 +7387,12 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp;&nbsp; for (const auto&amp; b : gm.enemyBullets)<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; b-&gt;Draw();<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // アイテムの描画処理<br>
+        &nbsp;&nbsp;&nbsp; for (const auto&amp; itm : gm.items)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itm-&gt;Draw();<br>
         &nbsp;&nbsp;&nbsp; }</u><br>
       }</p>
     <br>
@@ -7469,6 +7520,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; static int boss2; // ボス気絶<br>
       &nbsp;&nbsp;&nbsp; static int boss3; // ボス発狂<br>
       &nbsp;&nbsp;&nbsp; static DivImage explosion; // [分割画像]爆発エフェクト<br>
+      &nbsp;&nbsp;&nbsp; static int item0; // アイテム0 画像のハンドラ(読込画像番号)<br>
       <br>
       private:<br>
       <br>
@@ -7493,6 +7545,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       int Image::boss3{ -1 };<br>
       // ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定<br>
       DivImage Image::explosion{ 8, 2, 64, 64 };<br>
+      int Image::item0{ -1 };<br>
       <br>
       void Image::Load(<em>std::string scene</em>)<br>
       {<br>
@@ -7536,6 +7589,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (explosion.HandleArray[i] == -1)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert("画像読込失敗(画像ファイル名やフォルダが正しい?)" == "");<br>
         &nbsp;&nbsp;&nbsp; }</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; item0 = LoadGraph("Image/heart.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; <u>assert(item0 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      <br>
       }<br>
       <br>
       <em>// DXライブラリのLoadGraphを同じ関数名でラッピング(既存コードの書換えを最小限にする工夫)<br>
@@ -8017,7 +8074,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// テスト用のボス画像をタイトルでアニメで左右移動させる<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawRotaGraphF((float)x, 200, 0.9f, 0, Image::bossImage, TRUE);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawRotaGraphF((float)x, 200, 1.0f, 0, Image::bossImage, TRUE);<br>
       &nbsp;&nbsp; &nbsp;}<br>
       };<br>
       <br>
