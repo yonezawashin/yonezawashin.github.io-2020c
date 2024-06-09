@@ -6534,6 +6534,81 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #endif</p>
       <br>
+<p>例として、<code>Zako1.hにアイテム0の初速度と反射する回数と乱数で飛ぶ角度を決めて初期化する処理を追加</code>します。</p>
+    <p class="source">#ifndef ZAKO_1_H_<br>
+      #define ZAKO_1_H_<br>
+      <br>
+      #include "Enemy.h"<br>
+      <br>
+      #include &lt;cmath&gt; // Sinの計算に使う<br>
+      #include "MyMath.h"<br>
+      #include "Image.h"<br>
+      <br>
+      #include "MyRandom.h" // 乱数でアイテムのドロップ<em>と飛ぶ角度</em>を抽選する<br>
+      #include "Item0.h"<br>
+      <br>
+      // ザコ1クラス<br>
+      class Zako1 : public Enemy<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;float sinMove = 0; // Sinの動きをする際の0～360度<br>
+      &nbsp;&nbsp;float sinRadius = 70; // Sinの動きをするときの半径<br>
+      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;Zako1(Vector3 pos) : Enemy ( pos )<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;tag = "Zako1";//オブジェクトの種類判別タグ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;life = 5;<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 更新処理<br>
+      &nbsp;&nbsp;void Update() override<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;position.x -= 1; // 左へ移動<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float prevSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;sinMove += 2.5f; // Sinの波運動の角度を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float currentSinY = std::sin(sinMove * MyMath::Deg2Rad) * sinRadius;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// (前の角度でのY) - (今の角度でのY)の差を足すことで【ベースのyの位置 ± sinの動き】になる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;position.y += currentSinY - prevSinY; // 上下方向のSinの波運動<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;void Draw() override<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, 0, Image::zako1, TRUE);<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// アイテムを落とす処理<br>
+      &nbsp;&nbsp;void DropItem() override<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isDead) // 消えるまえに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (MyRandom::Percent(50.0f)) // 50%の確率でアイテムをドロップ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>float itemSpeed = 25.0f; // アイテムの飛び出すスピード<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float angle = MyRandom::Range(0.0f, 360.0f) * MyMath::Deg2Rad; // 飛び出す角度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Vector3 v_Item{ std::cos(angle) * itemSpeed, std::sin(angle) * itemSpeed }; // 飛ぶ方向ベクトル<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int bounceNum = 10; // バウンド回数</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gm.items.emplace_back(std::make_shared&lt;Item0&gt;(position<em>, v_Item, true, bounceNum</em>));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+<br>
+いかがでしょう、アイテムが画面のはしっこでバウンドして、一瞬画面がフラッシュするようになりましたか？<br>
+現状シューティングの構成要素は「プレイヤ」「敵」「弾」「アイテム」ですが、そのうち自由にアレンジできるのは「敵、弾、アイテム」です。<br>
+「敵、弾」が増えたとしてもゲームが難しくなるだけなので工夫したところで、プレイヤが苦戦するだけで面白さのアレンジの限界が来るはずです。<br>
+一方、3つのうち<b>「アイテム」だけがプレイヤ側のメリットとなる変化をゲームに起こす</b>ことができます。<br>
+敵の弾がバウンドしたとしても、画面に弾があふれかえっている状況だと何が何だかわからなくなるでしょう。<br>
+なので、効果的にバウンドさせて見せるなら「アイテム」のほうがよいかな、と思いました。<br>
+また、アイテムは取れなくてもそれはそれでゲームは進むので、ゆったり単調に動くよりは、高速で動くほうが、ゲームにメリハリがつくかと思います。<br>
+<br>
+ただのバウンドではありますが、モンストもただのバウンドをひたすら発展させてヒットに向かったわけなので<b>「シンプルなものこそあなどることなかれ」</b>ですね。<br>
 <br>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
