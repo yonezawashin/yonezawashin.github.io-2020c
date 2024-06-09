@@ -6110,7 +6110,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       class Item0 : public Item<br>
       {<br>
       public:<br>
-      &nbsp;&nbsp;&nbsp; int amount = 1; // 回復量など<br>
+      &nbsp;&nbsp;&nbsp; int amount; // 回復量など<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
       &nbsp;&nbsp;&nbsp; Item0(Vector3 pos,<br>
@@ -6447,9 +6447,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       class Item0 : public Item<br>
       {<br>
       public:<br>
-      &nbsp;&nbsp;&nbsp; int amount = 1; // 回復量など<br>
-      &nbsp;&nbsp;&nbsp; <em>int bounceNum = 0; // 跳ね返る回数<br>
-      &nbsp;&nbsp;&nbsp; bool isFlash = false; // 画面が一瞬真っ白になる(跳ね返る瞬間)</em><br>
+      &nbsp;&nbsp;&nbsp; int amount; // 回復量など<br>
+      &nbsp;&nbsp;&nbsp; <em>int bounceNum; // 跳ね返る回数<br>
+      &nbsp;&nbsp;&nbsp; bool isFlash; // 画面が一瞬真っ白になる(跳ね返る瞬間)</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
       &nbsp;&nbsp;&nbsp; Item0(Vector3 pos,<br>
