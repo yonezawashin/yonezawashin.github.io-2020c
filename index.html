@@ -4672,6 +4672,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <li><a href="#mozTocId3004">【練習問題】ボスの状態ごとの行動パターンのプログラミング</a></li>
       <li><a href="#mozTocId3005">プレイヤのライフをバーで表示させる</a></li>
       <li><a href="#mozTocId3006">アイテムクラスとザコからのドロップ処理の作成</a></li>
+      <li><a href="#mozTocId3007">Item0を画面のはしっこで光らせてバウンドさせる処理の作成</a></li>
       <br>
       <p>次のテキスト4はこちら。</p>
       <br>
@@ -5186,14 +5187,14 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 	    <br>
       #include&nbsp;"MyRandom.h"<br>
 	    <br>
-      #include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"EnemyBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      <em>#include&nbsp;"Explosion.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
-      #include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"Zako1.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"Zako2.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"Zako3.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include "Player.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include "PlayerBullet.h" // Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include "EnemyBullet.h" // Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      <em>#include "Explosion.h" // Update(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+      #include "Zako0.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include "Zako1.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include "Zako2.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include "Zako3.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       <br>
       void Game::Init()<br>
       {// Init処理<br>
@@ -6333,16 +6334,16 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 	    <br>
       #include&nbsp;"MyRandom.h"<br>
 	    <br>
-      #include&nbsp;"Player.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"PlayerBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"EnemyBullet.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"Explosion.h"&nbsp;//&nbsp;Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"Zako0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"Zako1.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"Zako2.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"Zako3.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"Zako3.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      <em>#include&nbsp;"Item0.h"&nbsp;//&nbsp;初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+      #include&nbsp;"Player.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"PlayerBullet.h // Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"EnemyBullet.h" // Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Explosion.h" // Update(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako0.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako1.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako2.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako3.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Zako3.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      <em>#include&nbsp;"Item0.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
       <br>
       void Game::Init()<br>
       {// Init処理<br>
@@ -6433,6 +6434,107 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 	  さて、ザコ1を倒すと回復アイテムを50%の確率でドロップし、プレイヤがそれを取るとライフが1回復するようになりましたか？<br>
 	  <br>
 	  <br>
+<h1><a id="mozTocId3007" class="mozTocH1"></a>Item0を画面のはしっこで光らせてバウンドさせる処理の作成</h1>
+<code>Item0.hに画面のはしっこの反射処理とisFlashフラグで一瞬光らせる処理を追加</code>します。<br>
+    <p class="source">#ifndef ITEM_0_H_<br>
+      #define ITEM_0_H_<br>
+      <br>
+      #include "Item.h"<br>
+      #include "Image.h"<br>
+      <em>#include "Screen.h"</em><br>
+      <br>
+      // アイテム0クラス ライフを回復するアイテム<br>
+      class Item0 : public Item<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; int amount = 1; // 回復量など<br>
+      &nbsp;&nbsp;&nbsp; <em>int bounceNum = 0; // 跳ね返る回数<br>
+      &nbsp;&nbsp;&nbsp; bool isFlash = false; // 画面が一瞬真っ白になる(跳ね返る瞬間)</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Item0(Vector3 pos,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Vector3 v = Vector3{ -0.5f,0.0f }, // デフォルトは-0.5fで遅めのスクロール量<br>
+      &nbsp;&nbsp;&nbsp; <em>&nbsp; &nbsp; &nbsp; bool isFlash = false, int bounceNum = 0,</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; int amount = 1)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; : <em>isFlash{ isFlash }, bounceNum{ bounceNum }, </em>amount{ amount }, Item(pos, v, 8)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Item0"; // オブジェクトの判別タグ<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;this-&gt;position += this-&gt;v; // vのx,y量ぶん移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<em>if (bounceNum &lt; 0) // 反射可能回数が 0 以上なら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;bool isBounce = false; // 反射するか<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (position.x &lt; collisionRadius)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;v.x = -v.x; // x逆方向に反射(マイナスをつけて方向反転)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position.x = collisionRadius; // めりこんだぶんをスクリーンの境界線に沿わす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isBounce = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (Screen::Width - collisionRadius &lt; position.x)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;v.x = -v.x; // x逆方向に反射(マイナスをつけて方向反転)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position.x = Screen::Width - collisionRadius; // めりこんだぶんを境界線に沿わす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isBounce = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (position.y &lt; collisionRadius)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;v.y = -v.y; // y逆方向に反射(マイナスをつけて方向反転)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position.y = collisionRadius; // めりこんだぶんをスクリーンの境界線に沿わす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isBounce = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else if (Screen::Height - collisionRadius &lt; position.y)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;v.y = -v.y; // y逆方向に反射(マイナスをつけて方向反転)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position.y = Screen::Height - collisionRadius; // めりこんだぶんを境界線に沿わす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isBounce = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (isBounce) // 反射判定がtrueならば<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;--bounceNum; // 跳ね返り可能回数を -1 する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;v *= 0.94f; // 反射時のスピード減衰率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isFlash = true; // 画面を一瞬フラッシュする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;// スクリーンの画面外になったらisDeadにして消す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;if (position.x + collisionRadius &lt; 0 || Screen::Width &lt; position.x - collisionRadius<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; || position.y + collisionRadius &lt; 0 || Screen::Height &lt; position.y - collisionRadius )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isDead = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if (isFlash) // 画面を一瞬真っ白にする(跳ね返る瞬間)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;// 画面のスクリーンと同じサイズの大きな白い四角を描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;DrawBox(0, 0, Screen::Width, Screen::Height, GetColor(200, 200, 200), TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;// 白画面の上に黒丸を描くとバウンド位置が目立つ(衝撃波っぽい)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;DrawCircle(position.x, position.y, collisionRadius * 5, GetColor(0, 0, 0), TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, <em>(isFlash)? 2.0f : </em>1, 0, Image::item0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>isFlash = false; // すぐにfalseに戻せば一瞬だけしか光らない</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 自機に当たったときの処理 上書きoverrideする<br>
+      &nbsp;&nbsp; &nbsp;void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
+      };<br>
+      <br>
+      #endif</p>
+      <br>
+<br>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
     <br>
