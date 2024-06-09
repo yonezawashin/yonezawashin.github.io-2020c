@@ -6115,7 +6115,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; Item0(Vector3 pos,<br>
       &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Vector3 v = Vector3{ -0.5f,0.0f }, // デフォルトは-0.5fで遅めのスクロール量<br>
       &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; int amount = 1)<br>
-      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; : amount{ amount }, Item(pos, v)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; : amount{ amount }, Item(pos, v, 8)<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Item0"; // オブジェクトの判別タグ<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -6123,7 +6123,15 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; // 更新処理<br>
       &nbsp;&nbsp;&nbsp; virtual void Update() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;position += this-&gt;v; // vのx,y量ぶん移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;this-&gt;position += this-&gt;v; // vのx,y量ぶん移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;// スクリーンの画面外になったらisDeadにして消す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;if (position.x + collisionRadius &lt; 0 || Screen::Width &lt; position.x - collisionRadius<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; || position.y + collisionRadius &lt; 0 || Screen::Height &lt; position.y - collisionRadius )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isDead = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 描画処理<br>
