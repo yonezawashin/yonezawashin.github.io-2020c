@@ -11704,7 +11704,7 @@ Update()関数内にX方向の動きも追加すると..<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (minPlayer != nullptr)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>// 自機狙い弾<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>float angle = MyMath::PointToPointAngle(x, y, <em>minPlayer</em>-&gt;position);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>float angle = MyMath::PointToPointAngle(position, <em>minPlayer</em>-&gt;position);<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>&nbsp;&nbsp; &nbsp;</em>gm.enemyBullets.emplace_back(std::make_shared&lt;EnemyBullet&gt;(position, angle, 8));<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>}</em><br>
       <br>
