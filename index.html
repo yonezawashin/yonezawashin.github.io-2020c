@@ -6089,7 +6089,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 自機に当たったときの処理 派生クラスでオーバーライドして使う<br>
-      &nbsp;&nbsp; &nbsp;void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object) override<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object) override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// アイテムごとに継承でoverrideして個別処理を書く<br>
       &nbsp;&nbsp; &nbsp;}<br>
@@ -6105,6 +6105,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #include "Item.h"<br>
       #include "Image.h"<br>
+      #include "Screen.h"<br>
       <br>
       // アイテム0クラス ライフを回復するアイテム<br>
       class Item0 : public Item<br>
@@ -6142,7 +6143,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 自機に当たったときの処理 上書きoverrideする<br>
-      &nbsp;&nbsp; &nbsp;void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
       };<br>
       <br>
       #endif</p>
@@ -6466,7 +6467,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;this-&gt;position += this-&gt;v; // vのx,y量ぶん移動<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<em>if (bounceNum &lt; 0) // 反射可能回数が 0 以上なら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<em>if (bounceNum &gt; 0) // 反射可能回数が 0 以上なら<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;bool isBounce = false; // 反射するか<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (position.x &lt; collisionRadius)<br>
