@@ -6089,7 +6089,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 自機に当たったときの処理 派生クラスでオーバーライドして使う<br>
-      &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object) override<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// アイテムごとに継承でoverrideして個別処理を書く<br>
       &nbsp;&nbsp; &nbsp;}<br>
@@ -6442,7 +6442,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #include "Item.h"<br>
       #include "Image.h"<br>
-      <em>#include "Screen.h"</em><br>
+      #include "Screen.h"<br>
       <br>
       // アイテム0クラス ライフを回復するアイテム<br>
       class Item0 : public Item<br>
