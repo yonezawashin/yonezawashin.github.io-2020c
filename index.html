@@ -4673,7 +4673,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <li><a href="#mozTocId3005">プレイヤのライフをバーで表示させる</a></li>
       <li><a href="#mozTocId3006">アイテムクラスとザコからのドロップ処理の作成</a></li>
       <li><a href="#mozTocId3007">Item0を画面のはしっこで光らせてバウンドさせる処理の作成</a></li>
-      <li><a href="#mozTocId3008">Item1クラスでボスへのクリティカルヒットしたらバリアーとなる星のアイテムをドロップする処理の作成</a></li>
+      <li><a href="#mozTocId3008">Item1クラスでボスへクリティカルヒットしたらバリアーとなる星のアイテムをドロップする処理の作成</a></li>
       <br>
       <p>次のテキスト4はこちら。</p>
       <br>
@@ -6615,7 +6615,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 ただのバウンドではありますが、モンストもただのバウンドをひたすら発展させてヒットに向かったわけなので<b>「シンプルなものこそあなどることなかれ」</b>ですね。<br>
 <br>
 	  
-<h1><a id="mozTocId3008" class="mozTocH1"></a>Item1クラスでボスへのクリティカルヒットしたらバリアーとなる星のアイテムをドロップする処理の作成</h1>
+<h1><a id="mozTocId3008" class="mozTocH1"></a>Item1クラスでボスへクリティカルヒットしたらバリアーとなる星のアイテムをドロップする処理の作成</h1>
 <p>ボスから「プレイヤの周りをまわって、敵の弾からプレイヤを守る星バリアのアイテム」をドロップさせてみましょう。<br>
       GIMPで16×16のスターのドット絵画像を自作して<code>star.pngという名前でpng画像としてDXプロジェクトのImageフォルダにエクスポート</code>しておきましょう。</p>
 ・<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/image/star.xcf">star.xcf(GIMPの編集ファイル)</a>←右クリック[名前をつけてリンク先を保存]でダウンロードすればGIMPで編集できる<br>
@@ -7234,6 +7234,16 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;(中略)......<br>
       }<br>
     </p>
+<br>
+<br>
+いかがですか、ボスに弾を打ち込むとときどきクリティカルヒットして、星が飛び出し、<br>
+左方向に加速しながら流れ星して、取るとプレイヤの周りをまわるバリアとなり、敵の弾から身代わりとなってガードしてくれれば成功です。<br>
+<br>
+流れ星の動き方は、今回はアイテムとして作りましたが、<br>
+敵から秘密兵器のミサイルとして「EnemyBullet2」クラスとして自作すれば、敵のミサイル攻撃としても使える動きになると思います。<br>
+<br>
+また、星もバリアじゃなく<a href="https://youtu.be/37oQA2Vaz1M?t=87">カービーのようなエフェクト</a>としての使い方や、取るとスコアアップなど色んな使い方が企画できます。<br>
+<br>
 <br>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
