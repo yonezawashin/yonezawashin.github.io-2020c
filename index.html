@@ -6878,13 +6878,18 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 敵弾とぶつかった時の処理<br>
-      &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionEnemyBullet(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (!((int)collisionTo &amp; (int)CollisionTo::EnemyBullet))<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return; // プレイヤと当たり判定しない設定のときは何もせずreturn<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return; // 敵弾と当たり判定しない設定のときは何もせずreturn<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isDead = true; // 当たった直後に消える<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isHiting = true; // 一瞬拡大して表示<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (life &lt;= 0) // ライフ(バリアの耐久回数)が0以下になったら<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isDead = true; // 当たった直後に消える<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isHiting = true; // 一瞬拡大して表示<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;--life; // ライフ(バリアの耐久回数)を減らす<br>
       &nbsp;&nbsp; &nbsp;}<br>
       };<br>
       <br>
