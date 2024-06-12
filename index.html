@@ -7075,7 +7075,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawBox(0, 0, Screen::Width, Screen::Height, GetColor(200, 200, 200), TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 白フラッシュの上に黒丸を描くとクリティカルヒットした位置が目立つ(衝撃波っぽい)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawCircle(position.x, position.y, 10, GetColor(0, 0, 0), TRUE);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isCritical = true; // クリティカルフラグをtrueに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isCritical = false; // クリティカルフラグをfalseにすぐ戻す(フラッシュ点滅)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
@@ -7088,6 +7088,14 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;life -= 1; // ライフを減らす<br>
       <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float posY = position.y; // [ボス中心y]と[当たった瞬間の弾のy]が±2ならクリティカル<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (posY - 20 &lt;= playerBullet-&gt;position.y &amp;&amp; playerBullet-&gt;position.y &lt;= posY + 2)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isCritical = true; // クリティカルフラグをtrueに<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;criticalPos = playerBullet->position; // クリティカルヒットした位置を記録する<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DropItem(); // バリアの星アイテムを落とす<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</em><br>
+      <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (life &lt;= 0)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ライフが無くなったら、すぐ消滅するのではなく、死亡状態へ移行<br>
@@ -7099,6 +7107,19 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;state = State::Swoon;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;<em>// アイテムを落とす処理<br>
+      &nbsp;&nbsp; &nbsp;void DropItem() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (MyRandom::Percent(100.0f)) // 100%の確率でバリアになる星をドロップ<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float itemSpeed = 25.0f; // アイテムの飛び出すスピード<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;float angle = MyRandom::Range(0.0f, 360.0f) * MyMath::Deg2Rad; // 飛び出す角度<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Vector3 v_Item{ std::cos(angle) * itemSpeed, std::sin(angle) * itemSpeed }; // 飛ぶ方向ベクトル<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int barrierLife = 3; // バリアは敵弾に3回当たるまでガードしてくれる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.items.emplace_back(std::make_shared&lt;Item1&gt;(position, v_Item, barrierLife));<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;}</em><br>
       };<br>
       <br>
       #endif</p>
