@@ -5878,6 +5878,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 <h1><a id="mozTocId3006" class="mozTocH1"></a>アイテムクラスとザコからのドロップ処理の作成</h1>
 <p>ザコからプレイヤのライフを回復するアイテムをドロップさせてみましょう。<br>
       GIMPで16×16のハートのドット絵画像を自作して<code>heart.pngという名前でpng画像としてDXプロジェクトのImageフォルダにエクスポート</code>しておきましょう。</p>
+・<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/image/heart.xcf">heart.xcf(GIMPの編集ファイル)</a>←右クリック[名前をつけてリンク先を保存]でダウンロードすればGIMPで編集できる<br>
+・<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/image/heart.png">heart.png(↑GIMPから名前をつけてエクスポートしたpng画像ファイル)</a>←右クリック[名前をつけてリンク先を保存]でダウンロード<br>    
 <img src="image/gimp_heart_dot.png">
     <p><code>Image.h</code>にheart.pngの読込み処理を追加します。</p>
     <p class="source">#ifndef IMAGE_H_<br>
@@ -6616,6 +6618,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 <h1><a id="mozTocId3008" class="mozTocH1"></a>Item1クラスでボスへのクリティカルヒットしたらバリアーとなる星のアイテムをドロップする処理の作成</h1>
 <p>ボスから「プレイヤの周りをまわって、敵の弾からプレイヤを守る星バリアのアイテム」をドロップさせてみましょう。<br>
       GIMPで16×16のスターのドット絵画像を自作して<code>star.pngという名前でpng画像としてDXプロジェクトのImageフォルダにエクスポート</code>しておきましょう。</p>
+・<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/image/star.xcf">star.xcf(GIMPの編集ファイル)</a>←右クリック[名前をつけてリンク先を保存]でダウンロードすればGIMPで編集できる<br>
+・<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/image/star.png">star.png(↑GIMPから名前をつけてエクスポートしたpng画像ファイル)</a>←右クリック[名前をつけてリンク先を保存]でダウンロード<br>    
 <img src="image/gimp_star_dot.png">
     <p><code>Image.h</code>にstar.pngの読込み処理を追加します。</p>
     <p class="source">#ifndef IMAGE_H_<br>
