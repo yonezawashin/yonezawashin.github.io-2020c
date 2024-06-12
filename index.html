@@ -6900,7 +6900,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       void Item0::OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; if (!((int)collisionTo &amp; (int)CollisionTo::Player))<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return; // プレイヤと当たり判定しない設定のときは何もせずreturn<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return; // プレイヤと当たり判定しないenumビット設定のときは何もせずreturn<br>
       &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; //[共有ポインタをダウンキャスト(親GameObject → 子Playerに)]<br>
       &nbsp;&nbsp;&nbsp; // https://cpprefjp.github.io/reference/memory/shared_ptr/dynamic_pointer_cast.html<br>
@@ -6910,6 +6910,28 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; state = State::Barrier; // バリアモードへ移行<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collisionTo = CollisionTo::EnemyBullet; // 敵弾との当たり判定モードに移行<br>
       &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      </p>
+      <br>
+<br>
+<code>Item0.cppにも当たり判定の種類の判定(PlayerかEnemyBulletかの判定)を追加</code>します。<br>
+    <p class="source">#include "Item0.h"<br>
+      <br>
+      #include "Player.h" // アイテムとプレイヤは相互にインクルードしそうなのでcppで#include<br>
+      <br>
+      // 自機に当たったときの処理 上書きoverrideする<br>
+      void Item0::OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; <em>if (!((int)collisionTo &amp; (int)CollisionTo::Player))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return; // プレイヤと当たり判定しないenumビット設定のときは何もせずreturn</em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; //[共有ポインタをダウンキャスト(親GameObject → 子Playerに)]<br>
+      &nbsp;&nbsp;&nbsp; // https://cpprefjp.github.io/reference/memory/shared_ptr/dynamic_pointer_cast.html<br>
+      &nbsp;&nbsp;&nbsp; if (std::shared_ptr&lt;Player&gt; pPlayer = std::dynamic_pointer_cast&lt;Player&gt;(object))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer->RecoverLife(amount); // ライフを回復する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; isDead = true; // 取ったら消される<br>
       }<br>
       </p>
       <br>
