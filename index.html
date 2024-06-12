@@ -6738,6 +6738,61 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;divImage.XNum, divImage.YNum, divImage.XSize, divImage.YSize, divImage.HandleArray);<br>
       };<br>
     </p>
+<code>Item.hに敵弾と衝突した際に呼び出されるベースとなるコールバック関数を定義</code>します。<br>
+    <p class="source">#ifndef ITEM_H_<br>
+      #define ITEM_H_<br>
+      <br>
+      #include "GameObject.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      <br>
+      // アイテムのベース基底クラス<br>
+      class Item : public GameObject<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; //【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; GameManager& gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&)を得る<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; float collisionRadius; // 当たり判定の半径<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <em>enum class CollisionTo // 当たり判定の対象(ビット32桁に1を立てて表現)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; None = 0,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Player &nbsp; &nbsp; &nbsp;= 0b0000'0000'0000'0000'0000'0000'0000'0001,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; EnemyBullet = 0b0000'0000'0000'0000'0000'0000'0000'0010,<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; CollisionTo collisionTo = CollisionTo::Player; // デフォルトはプレイヤとの当たりを判定する</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ v:移動速度(方向) radius:当たり判定の半径<br>
+      &nbsp;&nbsp;&nbsp; Item(Vector3 pos, Vector3 v, float radius = 8)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; : collisionRadius{ radius }, GameObject( pos ) // GameObjectをベースとして初期化処理を継承する<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "Item"; // オブジェクトの種類判別タグ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;v = v; // GameObjectの速度vを利用する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理。派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() = 0;//virtual ～ = 0;で【純粋仮想関数に】これで【C#のabstract型に】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理。派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 自機に当たったときの処理 派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// アイテムごとに継承でoverrideして個別処理を書く<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;<em>// 敵弾とぶつかった時の処理<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionEnemyBullet(std::shared_ptr&lt;GameObject&gt; object)<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// アイテムごとに継承でoverrideして個別処理を書く<br>
+      &nbsp;&nbsp; &nbsp;}</em><br>
+      };<br>
+      <br>
+      #endif</p>
+      <br>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
     <br>
