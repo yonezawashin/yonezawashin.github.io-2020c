@@ -6738,6 +6738,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;divImage.XNum, divImage.YNum, divImage.XSize, divImage.YSize, divImage.HandleArray);<br>
       };<br>
     </p>
+<br>
 <code>Item.hに敵弾と衝突した際に呼び出されるベースとなるコールバック関数を定義</code>します。<br>
     <p class="source">#ifndef ITEM_H_<br>
       #define ITEM_H_<br>
@@ -6792,6 +6793,125 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       };<br>
       <br>
       #endif</p>
+<br>
+<code>Item1.hを新規作成</code>します。<br>
+    <p class="source">#ifndef ITEM_1_H_<br>
+      #define ITEM_1_H_<br>
+      <br>
+      #include "Item.h"<br>
+      #include "Image.h"<br>
+      #include "Screen.h"<br>
+      #include "MyMath.h"<br>
+      #include &lt;cmath&gt;<br>
+      <br>
+      // アイテム1クラス プレイヤを敵弾から守り身代わりになるバリアアイテム<br>
+      class Item1 : public Item<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; int life; // バリアー(星)の耐える回数<br>
+      &nbsp;&nbsp;&nbsp; float xForce = 0.1f; // 加速の力(流れ星の加速)<br>
+      &nbsp;&nbsp;&nbsp; enum class State<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Popping, // ポップ(飛び出した勢いのあるあいだ)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Shooting,// 流れ星(加速して流れていく)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Barrier, // バリアモードのとき<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; State state = State::Popping; // 動作状態<br>
+      &nbsp;&nbsp;&nbsp; GameObject* pParent{ nullptr }; // 親となっているプレイヤなどへのリンク(バリアの中心点)<br>
+      &nbsp;&nbsp;&nbsp; float barrierRadius; // バリアの円回転の半径<br>
+      &nbsp;&nbsp;&nbsp; float barrierAngle = 0.0f; // バリアの回転角度<br>
+      &nbsp;&nbsp;&nbsp; bool isHiting = false; // 敵弾にヒットした時に一瞬拡大して表示<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Item1(Vector3 pos,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Vector3 v = Vector3{ -0.5f,0.0f }, // デフォルトは-0.5fで遅めのスクロール量<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; int life = 3, float xForce = 0.8f, float barrierRadius = 32.0f)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; : life{ life }, xForce{ xForce }, barrierRadius{ barrierRadius },<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Item(pos, speed, 8)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Item1"; // オブジェクトの判別タグ<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;if (state == State::Popping) // 飛び出した勢いは段々減る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position += v; // vのx,y量ぶん移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;v *= 0.85f; // 速度が減衰<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (v.magnitude() &lt; 0.01f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;state = State::Shooting; // 流れ星モードに移行<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;else if (state == State::Shooting)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;{br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position += v; // vのx,y量ぶん移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;v.x -= xForce; // 流れ星が少しずつ加速する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;else if (state == State::Barrier &amp;&amp; pParent != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;barrierAngle += 5.5f; // 毎フレーム5.5度ずつ回転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position.x = pParent-&gt;position.x + barrierRadius * std::cos(barrierAngle * MyMath::Deg2Rad);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position.y = pParent-&gt;position.y + barrierRadius * std::sin(barrierAngle * MyMath::Deg2Rad);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (pParent-&gt;isDead)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isDead = true; // 親のプレイヤリンク先がisDeadなら連動して消す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;if (state != State::Barrier) // バリア状態でないときに画面外に出たら消す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// スクリーンの画面外になったらisDeadにして消す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (position.x + collisionRadius &lt; 0 || Screen::Width &lt; position.x - collisionRadius<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; || position.y + collisionRadius &lt; 0 || Screen::Height &lt; position.y - collisionRadius )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isDead = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, (isHiting)? 2.0f : 1, 0, Image::item0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 自機に当たったときの処理 上書きoverrideする<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 敵弾とぶつかった時の処理<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (!((int)collisionTo &amp; (int)CollisionTo::EnemyBullet))<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return; // プレイヤと当たり判定しない設定のときは何もせずreturn<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isDead = true; // 当たった直後に消える<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isHiting = true; // 一瞬拡大して表示<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+      <br>
+<br>
+<code>Item1.cppを新規作成</code>します。<br>
+    <p class="source">#include "Item1.h"<br>
+      <br>
+      #include "Player.h" // アイテムとプレイヤは相互にインクルードしそうなのでcppで#include<br>
+      <br>
+      // 自機に当たったときの処理 上書きoverrideする<br>
+      void Item0::OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (!((int)collisionTo &amp; (int)CollisionTo::Player))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return; // プレイヤと当たり判定しない設定のときは何もせずreturn<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; //[共有ポインタをダウンキャスト(親GameObject → 子Playerに)]<br>
+      &nbsp;&nbsp;&nbsp; // https://cpprefjp.github.io/reference/memory/shared_ptr/dynamic_pointer_cast.html<br>
+      &nbsp;&nbsp;&nbsp; if (std::shared_ptr&lt;Player&gt; pPlayer = std::dynamic_pointer_cast&lt;Player&gt;(object))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pParent = pPlayer.get(); // プレイヤへのリンクを親リンクとしてリンクされた(x,y)を中心に回転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; state = State::Barrier; // バリアモードへ移行<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collisionTo = CollisionTo::EnemyBullet; // 敵弾との当たり判定モードに移行<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      </p>
       <br>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
