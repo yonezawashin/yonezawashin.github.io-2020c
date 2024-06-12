@@ -4673,6 +4673,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <li><a href="#mozTocId3005">プレイヤのライフをバーで表示させる</a></li>
       <li><a href="#mozTocId3006">アイテムクラスとザコからのドロップ処理の作成</a></li>
       <li><a href="#mozTocId3007">Item0を画面のはしっこで光らせてバウンドさせる処理の作成</a></li>
+      <li><a href="#mozTocId3008">Item1クラスでボスへのクリティカルヒットしたらバリアーとなる星のアイテムをドロップする処理の作成</a></li>
       <br>
       <p>次のテキスト4はこちら。</p>
       <br>
@@ -6611,6 +6612,128 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 <br>
 ただのバウンドではありますが、モンストもただのバウンドをひたすら発展させてヒットに向かったわけなので<b>「シンプルなものこそあなどることなかれ」</b>ですね。<br>
 <br>
+	  
+<h1><a id="mozTocId3008" class="mozTocH1"></a>Item1クラスでボスへのクリティカルヒットしたらバリアーとなる星のアイテムをドロップする処理の作成</h1>
+<p>ボスから「プレイヤの周りをまわって、敵の弾からプレイヤを守る星バリアのアイテム」をドロップさせてみましょう。<br>
+      GIMPで16×16のスターのドット絵画像を自作して<code>star.pngという名前でpng画像としてDXプロジェクトのImageフォルダにエクスポート</code>しておきましょう。</p>
+<img src="image/gimp_star_dot.png">
+    <p><code>Image.h</code>にstar.pngの読込み処理を追加します。</p>
+    <p class="source">#ifndef IMAGE_H_<br>
+      #define IMAGE_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+      #include "DivImage.h" // 分割画像の読込みに使う<br>
+      <br>
+      class Image<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;Image() {}; // 初期化コンストラクタ:定義と{}空の処理<br>
+      &nbsp;&nbsp;~Image() {}; // 破棄する処理デストラクタ:定義と{}空の処理<br>
+      &nbsp;&nbsp;static void Load();<br>
+      &nbsp;&nbsp;static int LoadDivGraph(const TCHAR* FileName, DivImage&amp; divImage);<br>
+      <br>
+      &nbsp;&nbsp;static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;static int player; //プレイヤ画像のハンドラ<br>
+      &nbsp;&nbsp;static int playerBullet; //プレイヤの弾画像のハンドラ<br>
+      &nbsp;&nbsp;static int enemyBullet16; //敵弾 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;static int zako0; //ザコ0 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;static int zako1; //ザコ1 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;static int zako2; //ザコ2 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;static int zako3; //ザコ3 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;static int boss1; //ボス通常 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;static int boss2; //ボス2気絶 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;static int boss3; //ボス3発狂 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;static DivImage explosion; // [分割画像]爆発エフェクト<br>
+      &nbsp;&nbsp;static int item0; //アイテム0 画像のハンドラ(読込画像番号)<br>
+      &nbsp;&nbsp;<em>static int item1; //アイテム1 画像のハンドラ(読込画像番号)</em><br>
+      <br>
+      private:<br>
+      <br>
+      };<br>
+      #endif<br>
+    </p>
+    <br>
+    <p>次に対となるcppファイルも変更します。<br>
+      <code>Image.cpp</code>の内容を次のようにします：</p>
+    <p class="source">#include "Image.h"<br>
+      <br>
+      int Image::bossImage{-1}; // Load終わっても-1(初期値)のままだと画像ロードが失敗してますね<br>
+      int Image::player{-1};<br>
+      int Image::playerBullet{-1};<br>
+      int Image::enemyBullet16{-1};<br>
+      int Image::zako0{-1};<br>
+      int Image::zako1{-1};<br>
+      int Image::zako2{-1};<br>
+      int Image::zako3{-1};<br>
+      int Image::boss1{-1};<br>
+      int Image::boss2{-1};<br>
+      int Image::boss3{-1};<br>
+      // ★分割画像は初期化のときに{X方向画像数, Y方向画像数, 画像横幅XSize,画像縦幅YSize}を指定<br>
+      DivImage Image::explosion{ 8, 2, 64, 64 };<br>
+      int Image::item0{-1};<br>
+      <em>int Image::item1{-1};</em><br>
+      <br>
+      void Image::Load()<br>
+      {<br>
+      &nbsp;&nbsp;bossImage = LoadGraph("Image/boss1.png");<br>
+      &nbsp;&nbsp;assert(bossImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;player= LoadGraph("Image/player.png");<br>
+      &nbsp;&nbsp;assert(player!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;playerBullet = LoadGraph("Image/player_bullet.png");<br>
+      &nbsp;&nbsp;assert(playerBullet!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;enemyBullet16 = LoadGraph("Image/enemy_bullet_16.png");<br>
+      &nbsp;&nbsp;assert(enemyBullet16!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;zako0 = LoadGraph("Image/zako0.png");<br>
+      &nbsp;&nbsp;assert(zako0!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;zako1 = LoadGraph("Image/zako1.png");<br>
+      &nbsp;&nbsp;assert(zako1!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;zako2 = LoadGraph("Image/zako2.png");<br>
+      &nbsp;&nbsp;assert(zako2!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;zako3 = LoadGraph("Image/zako3.png");<br>
+      &nbsp;&nbsp;assert(zako3!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;boss1 = LoadGraph("Image/boss1.png");<br>
+        &nbsp;&nbsp;assert(boss1!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;boss2 = LoadGraph("Image/boss2.png");<br>
+        &nbsp;&nbsp;assert(boss2!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;boss3 = LoadGraph("Image/boss3.png");<br>
+        &nbsp;&nbsp;assert(boss3!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;Image::LoadDivGraph("Image/explosion.png", explosion); // div分割画像をロード<br>
+      &nbsp;&nbsp;for (int i = 0; i &lt; explosion.AllNum; i++)<br>
+      &nbsp;&nbsp;{ // 画像読込失敗<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (explosion.HandleArray[i] == -1) assert("爆発分割画像読込失敗" == "");<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;item0 = LoadGraph("Image/heart.png");<br>
+      &nbsp;&nbsp;assert(item0!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;<em>item1 = LoadGraph("Image/star.png");<br>
+      &nbsp;&nbsp;assert(item1!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
+      <br>
+      }<br>
+      <br>
+      // DXライブラリのLoadDivGraphを使いやすくラッピング<br>
+      // ★関数に参照渡しを行う<br>
+      // 関数の引数に参照渡しを行うことでdivImageの中身を書き換えることができる(値渡しでは書換不可)<br>
+      //　https://qiita.com/agate-pris/items/05948b7d33f3e88b8967<br>
+      // https://qiita.com/RuthTaro/items/f35c3a26779c0ca1a41a<br>
+      int Image::LoadDivGraph(const TCHAR* FileName, DivImage&amp; divImage)<br>
+      {<br>
+      &nbsp;&nbsp;return DxLib::LoadDivGraph(FileName, divImage.XNum * divImage.YNum,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;divImage.XNum, divImage.YNum, divImage.XSize, divImage.YSize, divImage.HandleArray);<br>
+      };<br>
+    </p>
     <a id="mozTocId4000" class="mozTocH1"></a>
     <p class="title">[C++]シューティングゲーム 4</p>
     <br>
