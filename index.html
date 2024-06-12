@@ -6825,7 +6825,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
       &nbsp;&nbsp;&nbsp; Item1(Vector3 pos,<br>
       &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Vector3 v = Vector3{ -0.5f,0.0f }, // デフォルトは-0.5fで遅めのスクロール量<br>
-      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; int life = 3, float xForce = 0.8f, float barrierRadius = 32.0f)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; int life = 3, float xForce = 0.8f, float barrierRadius = 40.0f)<br>
       &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; : life{ life }, xForce{ xForce }, barrierRadius{ barrierRadius },<br>
       &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Item(pos, speed, 8)<br>
       &nbsp;&nbsp;&nbsp; {<br>
@@ -6843,7 +6843,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;state = State::Shooting; // 流れ星モードに移行<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;else if (state == State::Shooting)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;{br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;position += v; // vのx,y量ぶん移動<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;v.x -= xForce; // 流れ星が少しずつ加速する<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;}<br>
@@ -7093,7 +7093,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;life -= 1; // ライフを減らす<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float posY = position.y; // [ボス中心y]と[当たった瞬間の弾のy]が±2ならクリティカル<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float posY = position.y; // [ボス中心y]と[当たった瞬間の弾のy]が ±2 ならクリティカル<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (posY - 20 &lt;= playerBullet-&gt;position.y &amp;&amp; playerBullet-&gt;position.y &lt;= posY + 2)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isCritical = true; // クリティカルフラグをtrueに<br>
