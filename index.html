@@ -6347,7 +6347,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include&nbsp;"Zako2.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       #include&nbsp;"Zako3.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       #include&nbsp;"Zako3.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      <em>#include&nbsp;"Item0.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
+      <em>#include&nbsp;"Item.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</em><br>
       <br>
       void Game::Init()<br>
       {// Init処理<br>
@@ -7228,7 +7228,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include&nbsp;"Zako2.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       #include&nbsp;"Zako3.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       #include&nbsp;"Zako3.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
-      #include&nbsp;"Item0.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      #include&nbsp;"Item.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       <br>
       void Game::Init()<br>
       {// Init処理<br>
@@ -7913,7 +7913,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         #include "PlayerBullet.h"<br>
         #include "EnemyBullet.h"<br>
         #include "Explosion.h"<br>
-        #include "Item0.h"</em><br>
+        #include "Item.h"</em><br>
       <br>
       class PlayScene : public Scene<br>
       {<br>
@@ -8172,7 +8172,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
         #include "Zako1.h"<br>
         #include "Zako2.h"<br>
         #include "Zako3.h"<br>
-        #include "Item0.h"<br>
+        #include "Item.h"<br>
         #include "Boss.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】</u><br>
       <br>
       void Game::Init()<br>
@@ -9008,7 +9008,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "PlayerBullet.h"<br>
       #include "EnemyBullet.h"<br>
       #include "Explosion.h"<br>
-      #include "Item0.h"<br>
+      #include "Item.h"<br>
       <br>
       class PlayScene : public Scene<br>
       {<br>
@@ -9955,7 +9955,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include "PlayerBullet.h"<br>
       #include "EnemyBullet.h"<br>
       #include "Explosion.h"<br>
-      #include "Item0.h"<br>
+      #include "Item.h"<br>
       <br>
       class PlayScene : public Scene<br>
       {<br>
@@ -11963,7 +11963,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       <br>
     </p>
     <p>まずはプレイヤをたくさん使ってるだけあってエラーもたくさん出ている<br>
-      <code>PlayScene.hのプレイヤを単数から複数に変更</code>するとこから修正始めましょう。</p>
+      <code>PlayScene.hのプレイヤを単数から複数に変更</code>するとこから修正を始めましょう。</p>
     <p class="source">#ifndef PLAYSCENE_H_<br>
       #define PLAYSCENE_H_<br>
       <br>
@@ -11983,7 +11983,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       #include "PlayerBullet.h"<br>
       #include "EnemyBullet.h"<br>
       #include "Explosion.h"<br>
-      #include "Item0.h"<br>
+      #include "Item.h"<br>
       <br>
       class PlayScene : public Scene<br>
       {<br>
