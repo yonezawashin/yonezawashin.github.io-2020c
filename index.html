@@ -5639,9 +5639,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; int swoonTime = 120; // 残り気絶時間<br>
       &nbsp;&nbsp;&nbsp; int dyingTime = 180; // 死亡時のアニメーション時間<br>
       <br>
-      &nbsp;&nbsp;&nbsp; int coolTime = 0; // クールタイム(冷却時間。0になるまで次の弾が撃てない)<br>
+      &nbsp;&nbsp;&nbsp; <em>int coolTime = 0; // クールタイム(冷却時間。0になるまで次の弾が撃てない)<br>
       &nbsp;&nbsp;&nbsp; float sinMove = 0; // Sinの動きをする際の0～360度<br>
-      &nbsp;&nbsp;&nbsp; float sinRadius = 120; // Sinの動きをするときの半径<br>
+      &nbsp;&nbsp;&nbsp; float sinRadius = 120; // Sinの動きをするときの半径</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
       &nbsp;&nbsp;&nbsp; Boss(Vector3 pos) : Enemy( pos )<br>
