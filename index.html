@@ -8133,35 +8133,34 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// ここにプレイ画面の描画処理を持ってくる<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// 敵の描画処理<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>// 敵の描画処理<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; b : gm.enemies)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;b-&gt;Draw();<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 爆発エフェクトの描画処理<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; e : gm.explosions)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;e-&gt;Draw();<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (!gm.player-&gt;isDead) // 自機が死んでいなければ<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;gm.player-&gt;Draw(); // プレイヤの更新【忘れるとプレイヤ表示されない】<br>
-        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 自機弾の描画処理<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// for文で全自機弾をループで回してUpdateで更新する<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; b : gm.playerBullets)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{&nbsp; // autoキーワードはビルドのコンパイル機械語翻訳の時に型を自動推論してくれる<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;b-&gt;Draw();<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        <br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 敵弾の描画処理<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; b : gm.enemyBullets)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;b-&gt;Draw();<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        <br>
+        &nbsp;&nbsp; &nbsp;<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// アイテムの描画処理<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for (const auto&amp; itm : gm.items)<br>
         &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
