@@ -9179,7 +9179,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; static std::string playingMusic; // 再生中のBGM(同一BGMをPlayMusic指定しても再生し直さない<br>
       &nbsp;&nbsp;&nbsp; <em>static int musicId; // 音楽ID -3,-4,-5..メモリ上にのせないが番号を管理し個別に音量設定できるよう</em><br>
       <br>
-      &nbsp;&nbsp;&nbsp; static void Load(<em>std::string scene = ""</em>); <em>// シーンを指定して使うサウンドだけロードもできる</em><br>
+      &nbsp;&nbsp;&nbsp; static void Load(<em>std::string scene = ""</em>); <em>// シーンを指定してそのシーンで使うサウンドだけロードすればメモリ節約できる</em><br>
       &nbsp;&nbsp;&nbsp; // メモリから音声を再生(個別の音量設定も効かせられる)<br>
       &nbsp;&nbsp;&nbsp; static void Play(int handle, int PlayType = DX_PLAYTYPE_BACK);<br>
       &nbsp;&nbsp;&nbsp; // ディスク上の音楽を直接再生する(メモリ上に展開しない)<br>
