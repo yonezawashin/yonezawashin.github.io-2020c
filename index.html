@@ -9232,10 +9232,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <em>// シーンを指定してそのシーンで使うサウンドだけロードすればメモリ節約できる</em><br>
       void Sound::Load(<em>std::string scene</em>)<br>
       {<br>
-      &nbsp;&nbsp;&nbsp; start = Sound::LoadSoundMem("SE/start.ogg"<em>, scene, { "TitleScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; start = <em>Sound::</em>LoadSoundMem("SE/start.ogg"<em>, scene, { "TitleScene" }</em>);<br>
       &nbsp;&nbsp;&nbsp; assert(start != -1); // 読込失敗、ファイル名かフォルダ名が間違ってる<br>
       &nbsp;&nbsp;&nbsp; <em>// オプションで同時[8つ]爆発音再生を可能に(デフォルトは3)falseをtrueにするとBGM扱い</em><br>
-      &nbsp;&nbsp;&nbsp; bomb = Sound::LoadSoundMem("SE/bomb.wav"<em>,scene,{"TitleScene","PlayScene"},false, 8);<br>
+      &nbsp;&nbsp;&nbsp; bomb = <em>Sound::</em>LoadSoundMem("SE/bomb.wav"<em>,scene,{"TitleScene","PlayScene"},false, 8);<br>
         &nbsp;&nbsp;&nbsp; </em>assert(bomb != -1); // 読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; <em>title = SetMusicFile("BGM/title.mp3");<br>
