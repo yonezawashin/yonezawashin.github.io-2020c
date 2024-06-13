@@ -11217,7 +11217,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
       &nbsp;&nbsp;&nbsp; <em>// pad : 対応するコントローラ</em><br>
       &nbsp;&nbsp;&nbsp; // pos : 初期位置<br>
-      &nbsp;&nbsp;&nbsp; Player(<em>Pad pad, </em>Vector3 pos) : GameObject() //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
+      &nbsp;&nbsp;&nbsp; Player(<em>Pad pad, </em>Vector3 pos) : GameObject(pos) //【忘れると】GameObjectの初期化処理が飛ばされて大混乱！<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>this-&gt;pad = pad;</em><br>
       &nbsp;&nbsp;&nbsp; };<br>
