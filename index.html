@@ -4124,7 +4124,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;// プレイヤにぶつかった時の処理<br>
-      &nbsp;&nbsp;void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; other)<br>
+      &nbsp;&nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; other)<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
       &nbsp;&nbsp;}<br>
@@ -4597,7 +4597,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp;// 【勉強】共通処理を上書きオーバーライドで上塗りして共通処理を無効化・乗っ取るテクニック<br>
       &nbsp;&nbsp;// 自機弾との衝突処理を★【上書きオーバーライド】して死亡フラグが立たないように<br>
-      &nbsp;&nbsp;void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet) override<br>
+      &nbsp;&nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet) override<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;life -= 1; // ライフを減らす<br>
       <br>
@@ -5552,7 +5552,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 自機弾に当たったときの処理をoverride（上書き）する<br>
-      &nbsp;&nbsp; &nbsp;void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet) override<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet) override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 登場時、気絶時、死亡時は被弾しても何もしない<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (state == State::Appear || state == State::Swoon || state == State::Dying)<br>
@@ -5740,7 +5740,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 自機弾に当たったときの処理をoverride（上書き）する<br>
-      &nbsp;&nbsp; &nbsp;void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet) override<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet) override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 登場時、気絶時、死亡時は被弾しても何もしない<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (state == State::Appear || state == State::Swoon || state == State::Dying)<br>
@@ -6295,7 +6295,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 さて、これでザコ1からアイテムがドロップはしますが、まだプレイヤとアイテムの当たり判定がありません。<br>
 プレイヤとアイテムの当たり判定処理を追加しましょう。<br>
 <br>
-	  <p><code>GameManager.h</code>にItemを管理するリストの定義を追加します。</p>
+<p><code>GameManager.h</code>にItemを管理するリストの定義を追加します。</p>
     <p class="source"> #ifndef GAMEMANAGER_H_<br>
       #define GAMEMANAGER_H_<br>
       <br>
@@ -6827,7 +6827,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Vector3 v = Vector3{ -0.5f,0.0f }, // デフォルトは-0.5fで遅めのスクロール量<br>
       &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; int life = 3, float xForce = 0.8f, float barrierRadius = 40.0f)<br>
       &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; : life{ life }, xForce{ xForce }, barrierRadius{ barrierRadius },<br>
-      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Item(pos, speed, 8)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Item(pos, v, 8)<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Item1"; // オブジェクトの判別タグ<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -6871,14 +6871,14 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; // 描画処理<br>
       &nbsp;&nbsp;&nbsp; virtual void Draw() override<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, (isHiting)? 2.0f : 1, 0, Image::item0, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawRotaGraphF(position.x, position.y, (isHiting)? 2.0f : 1, 0, Image::item1, TRUE);<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 自機に当たったときの処理 上書きoverrideする<br>
       &nbsp;&nbsp; &nbsp;virtual void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 敵弾とぶつかった時の処理<br>
-      &nbsp;&nbsp; &nbsp;virtual void OnCollisionEnemyBullet(std::shared_ptr&lt;GameObject&gt; object)  override;<br>
+      &nbsp;&nbsp; &nbsp;virtual void OnCollisionEnemyBullet(std::shared_ptr&lt;GameObject&gt; object)  override<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (!((int)collisionTo &amp; (int)CollisionTo::EnemyBullet))<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return; // 敵弾と当たり判定しない設定のときは何もせずreturn<br>
@@ -6940,7 +6940,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       }<br>
       </p>
       <br>
-<p>例として<code>Boss.hで弾が当たったy位置が ±2 以内のときクリティカルと判定してバリアーの星を出す処理</code>を追加します。</p>
+<p>例として<code>Boss.hで弾が当たったy位置が ±5 以内のときクリティカルと判定してバリアーの星を出す処理</code>を追加します。</p>
 <p class="source">#ifndef BOSS_H_<br>
       #define BOSS_H_<br>
       <br>
@@ -7093,8 +7093,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;life -= 1; // ライフを減らす<br>
       <br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float posY = position.y; // [ボス中心y]と[当たった瞬間の弾のy]が ±2 ならクリティカル<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (posY - 20 &lt;= playerBullet-&gt;position.y &amp;&amp; playerBullet-&gt;position.y &lt;= posY + 2)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>float posY = position.y; // [ボス中心y]と[当たった瞬間の弾のy]が ±5 ならクリティカル<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (posY - 5 &lt;= playerBullet-&gt;position.y &amp;&amp; playerBullet-&gt;position.y &lt;= posY + 5)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;isCritical = true; // クリティカルフラグをtrueに<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;criticalPos = playerBullet->position; // クリティカルヒットした位置を記録する<br>
