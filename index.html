@@ -7129,6 +7129,91 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       #endif</p>
 <br>
+<p><code>EnemyBullet.hにアイテムと衝突したさいの関数</code>を追加します。</p>
+    <p class="source">#ifndef ENEMYBULLET_H_<br>
+      #define ENEMYBULLET_H_<br>
+      <br>
+      #include &lt;cmath&gt;&nbsp;//sin,cosを使うのに必要<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Image.h"<br>
+      #include "Screen.h"<br>
+      #include "Vector3.h"<br>
+      <br>
+      #include "GameObject.h"<br>
+      <br>
+      // 敵弾クラス<br>
+      class EnemyBullet: public GameObject<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;const int VisibleRadius = 8; // 見た目の半径<br>
+      &nbsp;&nbsp;<br>
+      <br>
+      &nbsp;&nbsp;float angle; // 移動角度(垂直Vertical)<br>
+      &nbsp;&nbsp;float angleH=0; // 移動角度(水平Horizontal)<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;EnemyBullet(Vector3 pos, float angle, float speed) : GameObject( pos )<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angle;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 角度からx方向の移動速度を算出<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.x = (float)std::cos(angle) * speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 角度からy方向の移動速度を算出<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.y = (float)std::sin(angle) * speed;<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp;EnemyBullet(Vector3 pos, float angleV, float angleH, float speed) : GameObject( pos )<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angle = angleV;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this-&gt;angleH = angleH;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// [3Dの角度は水平・垂直に分割]https://teratail.com/questions/126004<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float cosAngleV = (float)std::cos(angle);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 角度からx方向の移動速度を算出<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.x = cosAngleV * (float)std::sin(angleH) * speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 角度からy方向の移動速度を算出<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.y = (float)std::sin(angle) * speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 角度からz方向の移動速度を算出<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.z = cosAngleV * (float)std::cos(angleH) * speed;<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 更新処理<br>
+      &nbsp;&nbsp;void Update()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 速度の分だけ移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;position += v;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 画面外に出たら死亡フラグを立てる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (position.y + VisibleRadius &lt; 0 || position.y - VisibleRadius &gt; Screen::Height ||<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position.x + VisibleRadius &lt; 0 || position.x - VisibleRadius &gt; Screen::Width)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;void Draw()<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;DrawRotaGraphF(position.x, position.y, 1, angle, Image::enemyBullet16,TRUE);<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;// プレイヤにぶつかった時の処理<br>
+      &nbsp;&nbsp;void OnCollisionPlayer(std::shared_ptr&lt;GameObject&gt; other)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;<em>// アイテム(プレイヤの回りをまわるバリア)にぶつかった時の処理<br>
+      &nbsp;&nbsp;void OnCollisionItem(std::shared_ptr&lt;GameObject&gt; other)<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
+      &nbsp;&nbsp;}</em><br>
+      };<br>
+      <br>
+      #endif</p>
 <p><code>Game.cpp</code>にアイテムの当たり判定の処理を追加します。</p>
     <p class="source">#include "Game.h"<br>
 	    <br>
