@@ -12099,7 +12099,7 @@ Update()関数内にX方向の動きも追加すると..<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // マップデータの読出し位置のスクロール<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if(gm.players.size() &gt; 0) //プレイヤ配列0の内はスクロールしない</em><br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; gm.map-&gt;Scroll(scrollSpeed);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>gm.map-&gt;Scroll(scrollSpeed);<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// プレイヤの更新処理<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (const auto&amp; pair : gm.players)<br>
