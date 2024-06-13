@@ -8421,9 +8421,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       public:<br>
       &nbsp;&nbsp;&nbsp; Image() {}; // 初期化コンストラクタの定義だけ<br>
       &nbsp;&nbsp;&nbsp; ~Image() {}; // 破棄する処理デストラクタの定義だけ<br>
-      &nbsp;&nbsp;&nbsp; static void Load(<em>std::string scene=""</em>); <em>// シーンを指定して使う画像だけロードもできる</em><br>
+      &nbsp;&nbsp;&nbsp; static void Load(<em>std::string scene=""</em>); <em>// シーンを指定して使う画像だけロードすればメモリを節約できる</em><br>
       &nbsp;&nbsp;&nbsp; static int LoadDivGraph(const TCHAR* FileName, DivImage&amp; divImage<em>, std::string scene="", std::vector&lt;std::string&gt; useScenes={""}</em>);<br>
-      &nbsp;&nbsp;&nbsp; static int LoadGraph(const TCHAR* FileName<em>, std::string scene = "", std::vector&lt;std::string&gt; useScenes = { "" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; <em>static int LoadGraph(const TCHAR* FileName, std::string scene = "", std::vector&lt;std::string&gt; useScenes = { "" }</em>);<br>
       &nbsp;&nbsp;&nbsp; <em>static std::unordered_map&lt;std::string, DivImage*&gt; loadDic; // ロード済の画像辞書</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; static int bossImage; //ボス画像のハンドラ(読込画像番号)<br>
@@ -8510,6 +8510,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       &nbsp;&nbsp;&nbsp; item0 = LoadGraph("Image/heart.png"<em>, scene, { "PlayScene" }</em>);<br>
       &nbsp;&nbsp;&nbsp; <u>assert(item0 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; item1 = LoadGraph("Image/star.png"<em>, scene, { "PlayScene" }</em>);<br>
+      &nbsp;&nbsp;&nbsp; <u>assert(item1 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
       <br>
       }<br>
       <br>
