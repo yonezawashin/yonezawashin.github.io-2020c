@@ -7828,7 +7828,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       #include &lt;memory&gt;//スマートなポインタを使うのに必要(shared_ptrなど)<br>
       <br>
       #include "Image.h"<br>
-      <u>#include "Screen.h"</u><br>
+      #include "Screen.h"<br>
       #include "Input.h"<br>
       <br>
       #include "GameManager.h"<br>
@@ -7852,13 +7852,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       <br>
       };<br>
       #endif</p>
-    <p><code>Game.cppから移植したコードを削除します。</code></p>
+    <p><code>Game.cppから移植したコードを削除し、ImageやRandomなどの共通機能の初期化だけに絞ります。</code></p>
     <p class="source">#include "Game.h"<br>
       <br>
-      <u>#include "MyRandom.h"<br>
-      #include "Player.h" // ★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
+      <em>#include "MyRandom.h"</em><br>
+      <u>#include "Player.h" // ★初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       ....</u><br>
-      (中略).. その他いろいろなヘッダもTileSceneに移行するので削除............<br>
+      (中略)... その他いろいろなヘッダもTileSceneに移行するので削除............<br>
       <u>....<br>
       #include "Zako2.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
       #include "Zako3.h" // 初期化やUpdate(),Draw()など【実際の処理を行うのでインクルード必要】<br>
@@ -7870,7 +7870,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数シードの初期化<br>
       <br>
       &nbsp;&nbsp;&nbsp; <u>x = 100; // Xの初期位置<br>
-        &nbsp;&nbsp;&nbsp; vx = 10; // ボスの初期速度</u><br>
+      &nbsp;&nbsp;&nbsp; vx = 10; // ボスの初期速度</u><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <u>gm.player = std::make_shared&lt;Player&gt;(Vector3((float)100, (float)(Screen::Height / 2))); // 自機の初期化<br>
+      &nbsp;&nbsp;&nbsp; // とりあえず適当に敵を生成<br>
+      &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Zako0&gt;(Vector3((float)600, (float)100)));<br>
+      &nbsp;&nbsp;&nbsp; (中略).....<br>
+      &nbsp;&nbsp;&nbsp; gm.enemies.emplace_back(std::make_shared&lt;Boss&gt;(Vector3(Screen::Width + 90, Screen::Height / 2)));</u><br>
       }<br>
       <br>
       void Game::Update()<br>
