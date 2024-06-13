@@ -11252,6 +11252,7 @@ Update()関数内にX方向の動きも追加すると..<br>
     <p><code>Player.cppのInput判定にコントローラpadの指定</code>を追加しましょう。<br>
       なおデフォルトの<b>Pad::Noneの状態のままの時は反応しなくなります！</b></p>
     <p class="source">#include "Player.h"<br>
+      #include "MyMath.h"<br>
       <br>
       #include "PlayerBullet.h" // ★弾を生成して【使う処理があるのでインクルード必要】<br>
       <br>
