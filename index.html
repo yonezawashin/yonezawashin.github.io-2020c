@@ -7211,7 +7211,7 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;}<br>
       <br>
       &nbsp;&nbsp;<em>// アイテム(プレイヤの回りをまわるバリア)にぶつかった時の処理<br>
-      &nbsp;&nbsp;void OnCollisionItem(std::shared_ptr&lt;GameObject&gt; other)<br>
+      &nbsp;&nbsp;virtual void OnCollisionItem(std::shared_ptr&lt;GameObject&gt; other) override<br>
       &nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;isDead = true;<br>
       &nbsp;&nbsp;}</em><br>
