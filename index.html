@@ -5080,7 +5080,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;zako3 = LoadGraph("Image/zako3.png");<br>
       &nbsp;&nbsp;assert(zako3!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
-      &nbsp;&nbsp;<em>Image::LoadDivGraph("Image/explosion.png", explosion); // div分割画像をロード<br>
+	&nbsp;&nbsp;<em>// div分割画像をロード<br>
+      &nbsp;&nbsp;Image::LoadDivGraph("Image/explosion.png", explosion);<br>
         &nbsp;&nbsp;for (int i = 0; i &lt; explosion.AllNum; i++)<br>
         &nbsp;&nbsp;{ // 画像読込失敗<br>
         &nbsp;&nbsp;&nbsp;&nbsp;if (explosion.HandleArray[i] == -1) assert("爆発分割画像読込失敗" == "");<br>
@@ -5425,7 +5426,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;<em>boss3 = LoadGraph("Image/boss3.png");<br>
         &nbsp;&nbsp;assert(boss3!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
       <br>
-      &nbsp;&nbsp;Image::LoadDivGraph("Image/explosion.png", explosion); // div分割画像をロード<br>
+      &nbsp;&nbsp;// div分割画像をロード<br>
+      &nbsp;&nbsp;Image::LoadDivGraph("Image/explosion.png", explosion);<br>
       &nbsp;&nbsp;for (int i = 0; i &lt; explosion.AllNum; i++)<br>
       &nbsp;&nbsp;{ // 画像読込失敗<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (explosion.HandleArray[i] == -1) assert("爆発分割画像読込失敗" == "");<br>
@@ -5971,7 +5973,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;boss3 = LoadGraph("Image/boss3.png");<br>
         &nbsp;&nbsp;assert(boss3!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
-      &nbsp;&nbsp;Image::LoadDivGraph("Image/explosion.png", explosion); // div分割画像をロード<br>
+      &nbsp;&nbsp;// div分割画像をロード<br>
+      &nbsp;&nbsp;Image::LoadDivGraph("Image/explosion.png", explosion);<br>
       &nbsp;&nbsp;for (int i = 0; i &lt; explosion.AllNum; i++)<br>
       &nbsp;&nbsp;{ // 画像読込失敗<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (explosion.HandleArray[i] == -1) assert("爆発分割画像読込失敗" == "");<br>
@@ -6713,7 +6716,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp;boss3 = LoadGraph("Image/boss3.png");<br>
         &nbsp;&nbsp;assert(boss3!= -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
-      &nbsp;&nbsp;Image::LoadDivGraph("Image/explosion.png", explosion); // div分割画像をロード<br>
+      &nbsp;&nbsp;// div分割画像をロード<br>
+      &nbsp;&nbsp;Image::LoadDivGraph("Image/explosion.png", explosion);<br>
       &nbsp;&nbsp;for (int i = 0; i &lt; explosion.AllNum; i++)<br>
       &nbsp;&nbsp;{ // 画像読込失敗<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (explosion.HandleArray[i] == -1) assert("爆発分割画像読込失敗" == "");<br>
@@ -8468,51 +8472,51 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       void Image::Load(<em>std::string scene</em>)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; bossImage = LoadGraph("Image/boss1.png"<em>, scene, { "TitleScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(bossImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(bossImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; player = LoadGraph("Image/player.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(player != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(player != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; playerBullet = LoadGraph("Image/player_bullet.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(playerBullet != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(playerBullet != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; enemyBullet16 = LoadGraph("Image/enemy_bullet_16.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(enemyBullet16 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(enemyBullet16 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; zako0 = LoadGraph("Image/zako0.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(zako0 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(zako0 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; zako1 = LoadGraph("Image/zako1.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(zako1 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(zako1 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; zako2 = LoadGraph("Image/zako2.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(zako2 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(zako2 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; zako3 = LoadGraph("Image/zako3.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(zako3 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(zako3 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; boss1 = LoadGraph("Image/boss1.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(boss1 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(boss1 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; boss2 = LoadGraph("Image/boss2.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(boss2 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(boss2 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; boss3 = LoadGraph("Image/boss3.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(boss3 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(boss3 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; // div分割画像をロード<em> or メモリ開放</em><br>
-      &nbsp;&nbsp;&nbsp; Image::LoadDivGraph("Image/explosion.png", explosion<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>for (int i = 0; i &lt; explosion.AllNum; i++)<br>
-        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 画像読込失敗<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (explosion.HandleArray[i] == -1)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert("画像読込失敗(画像ファイル名やフォルダが正しい?)" == "");<br>
-        &nbsp;&nbsp;&nbsp; }</u><br>
+      &nbsp;&nbsp;&nbsp; if( Image::LoadDivGraph("Image/explosion.png", explosion<em>, scene, { "PlayScene" }</em>) != -2 )<u>;</u><br>
+      &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>for (int i = 0; i &lt; explosion.AllNum; i++)<br>
+        &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>{&nbsp;&nbsp;&nbsp; // 画像読込失敗<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;&nbsp; </em>&nbsp;&nbsp;&nbsp; if (explosion.HandleArray[i] == -1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<em>&nbsp;&nbsp;&nbsp; </em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert("画像読込失敗(画像ファイル名やフォルダが正しい?)" == "");<br>
+        &nbsp;&nbsp;&nbsp; <em>&nbsp;&nbsp;&nbsp; </em>}<br>
       <br>
       &nbsp;&nbsp;&nbsp; item0 = LoadGraph("Image/heart.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(item0 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(item0 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       &nbsp;&nbsp;&nbsp; item1 = LoadGraph("Image/star.png"<em>, scene, { "PlayScene" }</em>);<br>
-      &nbsp;&nbsp;&nbsp; <u>assert(item1 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</u><br>
+      &nbsp;&nbsp;&nbsp; assert(item1 != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       <br>
       }<br>
       <br>
