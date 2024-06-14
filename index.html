@@ -13219,6 +13219,12 @@ extern	int	DrawString( int x, int y, <b>const TCHAR *String</b>,      unsigned i
       (中略)...........<br>
       &nbsp;&nbsp; &nbsp;<em>int font1 = -1; //フォントのハンドルをCreateFontToHandle関数で得る</em><br>
       &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;TitleScene() : Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;tag = "TitleScene";<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// 初期化処理<br>
       &nbsp;&nbsp; &nbsp;void Initialize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
