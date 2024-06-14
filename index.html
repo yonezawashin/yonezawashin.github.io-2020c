@@ -13863,8 +13863,8 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
 		<br>
 		自分でソート処理を書かなくてもC++の<a href="https://cpprefjp.github.io/reference/algorithm/sort.html">std::sort関数を使えば楽</a>だが、<br>
 		教養として最低限、<b>std::sort関数</b>が<b>クイックソートの改良版のイントロソート</b>をベースとした<a href="http://blog.livedoor.jp/dgd17/archives/11610522.html">不安定ソートであることを知ったうえで使うべき</a>であり、<br>
-		安定ソートが必要に応じて、<b>std::stable_sort関数</b>で<a href="https://qiita.com/mima_ita/items/b4cb3be38d64a397216b">安定なマージソート系の並べ替えの仕方もあることを知っておく必要</a>がある。<br>
-		<br>
+		安定ソートが必要な場合は、必要性に応じて、<b>std::stable_sort関数</b>で<a href="https://qiita.com/mima_ita/items/b4cb3be38d64a397216b">安定なマージソート系の並べ替えの仕方もあることも知識として知っている必要</a>はあります。<br>
+		(色んなソートの種類があるとを知ったうえで、std::sort関数で1,2行プログラムを書いて並べ替えるのと、何もわからないけどとりあえずstd::sort関数使うだけなのとは、素人の魔法使いと熟練の魔法使いぐらいの差があります)<br>
 		<br>
 		<br>
 		さて、今回は勉強を兼ねて、<b>比較的コードも単純</b>で、<b>安定ソートである挿入ソート</b>を自分で書いて、<b>ランキングにゲームのスコアを挿入する</b>練習をしてみましょう。<br>
