@@ -15183,15 +15183,23 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか<br>
 	<br>
       #include "DxLib.h"<br>
       (中略)...........<br>		
-      <br>		
-      <em>&nbsp;&nbsp; &nbsp;std::string keyboardText{""}; // キーボード入力テキスト<br>
-      &nbsp;&nbsp; &nbsp;int keyDownCount[256]; // 各キーを押している時間をカウントして長押し動作<br>
-      &nbsp;&nbsp; &nbsp;int longPushNum = 30; // 30フレーム0.5秒長押しで文字がだーっと出る<br></em>
-<br>
+      <br>
       class TitleScene : public Scene<br>
       {<br>
       public:<br>
 (中略)...........<br>
+<br>
+<em>&nbsp;&nbsp; &nbsp;std::string keyboardText{""}; // キーボード入力テキスト<br>
+&nbsp;&nbsp; &nbsp;int keyDownCount[256]; // 各キーを押している時間をカウントして長押し動作<br>
+&nbsp;&nbsp; &nbsp;int longPushNum = 30; // 30フレーム0.5秒長押しで文字がだーっと出る<br></em>
+<br>
+&nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+&nbsp;&nbsp; &nbsp;TitleScene() : Scene()<br>
+&nbsp;&nbsp; &nbsp;{<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;tag = "TitleScene";<br>
+&nbsp;&nbsp; &nbsp;}<br>
+<br>
+&nbsp;&nbsp; &nbsp;(中略)...........<br>
 <br>
 &nbsp;&nbsp; &nbsp;// ボタン入力に応じた処理<br>
 &nbsp;&nbsp; &nbsp;void HandleInput()<br>
