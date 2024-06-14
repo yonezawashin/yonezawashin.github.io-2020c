@@ -13027,7 +13027,7 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (bgX &lt; -bgWidth) bgX = 0; // 画像サイズの幅ぶんスクロールしたら0に戻してループ<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 背景の描画(一番後ろに表示させるものから最初に描く、描く順が早い方が後ろのレイヤー)<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawGraphF(0, 0, Image::background, TRUE); // DrawGraphF関数はDrawRotaGraphFと違い(0,0)を指定すると左上が(0,0)になるように描く。<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawGraphF(<em>bgX</em>, 0, Image::background, TRUE); // DrawGraphF関数はDrawRotaGraphFと違い(0,0)を指定すると左上が(0,0)になるように描く。<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// <b>2枚背景を画像の幅のぶんだけ右端にずらして描くことで無限にループしてるようにみせる</b><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawGraphF(bgX + bgWidth, 0, Image::background, TRUE);<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </em><br>
