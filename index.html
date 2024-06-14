@@ -13174,7 +13174,7 @@ extern	int	DrawString( int x, int y, <b>const TCHAR *String</b>,      unsigned i
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int prevFontSize = GetFontSize(); // フォントのサイズを一旦保管<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;SetFontSize(40); // フォントのサイズを変える</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;DrawString(0, 0, "TitleSceneです。<em>\n</em>ボタン押下でPlaySceneへ。", GetColor(<em>0</em>, 255, <em>0</em>));<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;SetFontSize(prevFontSize); // フォントのサイズを元に戻す(戻さないと以降のすべての文字が40のサイズになる)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>SetFontSize(prevFontSize); // フォントのサイズを元に戻す(戻さないと以降のすべての文字が40のサイズになる)</em><br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if (sm.scoreMax &gt;= 0)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;{<br>
