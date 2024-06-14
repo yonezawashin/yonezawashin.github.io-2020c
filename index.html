@@ -13413,6 +13413,12 @@ int Font::DeleteFontToHandle(Setting* setting)<br>
       &nbsp;&nbsp; &nbsp;Font::Setting font = Font::Setting("設定1", "HG丸ｺﾞｼｯｸM-PRO", 40, 7, DX_FONTTYPE_ANTIALIASING_EDGE_4X4, -1, 3, FALSE);</em><br>
       &nbsp;&nbsp; &nbsp;int font1 = -1; //フォントのハンドルをCreateFontToHandle関数で得る<br>
       &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;TitleScene() : Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;tag = "TitleScene";<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// 初期化処理<br>
       &nbsp;&nbsp; &nbsp;void Initialize() override<br>
       &nbsp;&nbsp; &nbsp;{<br>
