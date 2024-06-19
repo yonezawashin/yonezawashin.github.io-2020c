@@ -9847,6 +9847,28 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>v.x *= 0.97f; // 減速率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;v.y += vyForce; // 勢い(力・フォースを加算</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>if (v.y &gt;= vyDownSpeedMax[vx_idx]) // 無限に落下速度が加速しないようにリミット(空気抵抗みたいなもの)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.y = vyDownSpeedMax[vx_idx];</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>if (v.y &gt;= 0.0f &amp&amp; zoomAnimCount &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--zoomAnimCount;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (zoomAnimCount &lt; 60) // 上方向の加速中は最大60までカウントしてズームアウト(広域を映す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++zoomAnimCount;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 最大(1-0.25)倍ズーム<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;zoomRatio = (zoomAnimCount &lt; 2) ? 1.0f : 1.0f - 0.25f * zoomAnimCount / 60.0f;</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>pCamera-&gt;LookAt(pos.x, pos.y); // プレイヤのキャラ(x,y)位置を中心に追跡スクロール</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>// ダッシュ段階に応じてキャラクタのアニメ時間を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;float vx_dash = (v.x &lt; 0) ? -v.x : v.x; // 絶対値でプラスだけにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 0.5f) animeTime += 1; // 時間 +1 ( 合計 1 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 6) animeTime += 1;  // 時間 +1 (計 1+1=2 ) 1フレームごとに2アニメ時間が進む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (vx_dash &gt; 9) animeTime += 2; // 最終段階ではアニメ時間をさらに +2 (計 1+1+2=4 )</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 描画処理の関数定義<br>
