@@ -9754,7 +9754,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;if (!isDead)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>if (!isDead)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pos.y += v.y;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (!isDead)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
@@ -9796,7 +9796,57 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bool isBlockChanging = false; // ブロック変化フラグ(あとから変化させないとWallの押し戻しの跳ね返りがなくなる)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ((int)HitPart::Top<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; pMapData-&gt;hitcheck(BlockBit::Change, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isBlockChanging = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 頭の部分が壁にめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (pMapData-&gt;checkID(BlockBit::Wall, xLeft, yTop) || // 左上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;pMapData-&gt;checkID(BlockBit::Wall, xMiddle, yTop) || // 中上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;pMapData-&gt;checkID(BlockBit::Wall, xRight, yTop))   // 右上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y = yTop;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y_xLeft = pos.x - Screen::Width / 2, debug_y_xRight = pos.x + Screen::Width / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallBottom = yTop + pMapData-&gt;CellSize - (float)std::fmod(yTop, pMapData-&gt;CellSize); // 壁の下側の境界<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pos.y = wallBottom - hitOffsetTop;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.y = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} // 足元が壁にめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;pMapData-&gt;checkID(BlockBit::Wall, xLeft, yBottom) || // 壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;pMapData-&gt;checkID(BlockBit::Wall, xMiddle, yBottom) || // 壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;pMapData-&gt;checkID(BlockBit::Wall, xRight, yBottom))   // 壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y = yBottom;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_y_xLeft = pos.x - Screen::Width / 2, debug_y_xRight = pos.x + Screen::Width / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallTop = yBottom - (float)std::fmod(yBottom, pMapData->CellSize); // 壁の上側の境界<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pos.y = wallTop + hitOffsetBottom - imgSizeX;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isFlying = false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.y = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (isBlockChanging)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = (*pMapData)[mapY][mapX]; // 行mapY 列mapXの地形idを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (pMapData-&gt;blockChange.count(id) &gt; 0) // blockChangeの辞書に登録のあるidのときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int changeID = pMapData-&gt;blockChange[id]; // 変化先のID<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::pair&lt;int, int&gt; mapXY = std::make_pair(mapX, mapY); // ぶつかったブロックのセルの行mapYと列mapXのペア<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (!(pMapData-&gt;blockBits[changeID] &amp; (int)BlockBit::Bounce)) // 変化先ブロックがバウンスするならアニメを続けたい<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (pMapData-&gt;cellTime.count(mapXY) &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pMapData-&gt;cellTime.erase(mapXY); // ブロックの種類変える前にアニメをリセットしておかないと辞書に残り続ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(*pMapData)[mapY][mapX] = changeID; // idを入れ替える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 描画処理の関数定義<br>
