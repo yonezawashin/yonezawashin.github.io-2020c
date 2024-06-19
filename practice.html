@@ -9675,11 +9675,47 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.x += 0.35;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// 飛行モード中にZキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>// 飛行モード中にZキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (isFlying &amp;&amp; !isDead &amp;&amp; Input::GetButtonDown(PAD_INPUT_A))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 3; // [3]番には飛行中のパラメータが入ってる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.y = -vyJumpSpeed[vx_idx]; // 押すたび少し羽ばたく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump[vx_idx];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 加速段階に応じて違うジャンプ音を鳴らす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlaySoundMem(Sound::jumpSE[vx_idx], DX_PLAYTYPE_BACK);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>if (isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButtonDown(PAD_INPUT_A)) // Zキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 0; // 加速の段階をリセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float vx_abs = (v.x &lt; 0) ? -v.x : v.x; // absはvxの絶対値(マイナスなら-をつけてプラスに直す)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 6) ++vx_idx; // 一定値を超えるごとに加速段階を+1<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &gt; 9) ++vx_idx; // 最大0～2段階まで +1ずつされる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (vx_abs &lt; 9) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isFlying = true; // 飛行モードにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 加速段階に応じて違うジャンプ音を鳴らす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlaySoundMem(Sound::jumpSE[vx_idx], DX_PLAYTYPE_BACK);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.y = -vyJumpSpeed[vx_idx]; // ジャンプ方向はY上方向(マイナス方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyForceJump[vx_idx];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yJumpStart = pos.y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (v.y &gt;= 0) // 下落開始(vyが0未満のときはまだジャンプ中)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity[vx_idx]; // ジャンプ上昇力が0になって以降に初めて重力をオンにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else if (Input::GetButtonUp(PAD_INPUT_A)) // Zキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (yJumpStart - pos.y &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity[vx_idx]; // ジャンプ上昇中(vy未満のとき)にボタンを離したら早めに重力をかけ始める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 描画処理の関数定義<br>
