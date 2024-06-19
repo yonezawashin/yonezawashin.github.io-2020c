@@ -9756,7 +9756,27 @@
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (!isDead)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pos.y += v.y;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (!isDead)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 当たり判定の四隅の座標(±0.01fで1ピクセル隣)を取得<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xLeft = getLeft(pos.x) + 0.01f, xRight = getRight(pos.x) - 0.01f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yTop = getTop(pos.y) + 0.01f, yBottom = getBottom(pos.y) - 0.01f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xMiddle = xLeft + (getRight(pos.x) - getLeft(pos.x)) / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiddle = yTop + (getBottom(pos.y) - getTop(pos.y)) / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (pMapData-&gt;hitcheck(BlockBit::Damage, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // やられたフラグをtrueに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int mapX = 0, mapY = 0; // ぶつかったらそのブロックのCSVのセルの行mapYと列mapXを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ((int)HitPart::Top<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp; pMapData->hitcheck(BlockBit::Bounce, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom, &amp;mapX, &amp;mapY))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::pair&lt;int, int&gt; mapXY = std::make_pair(mapX, mapY); // ぶつかったブロックのセルの行mapYと列mapXのペア<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (pMapData-&gt;cellTime.count(mapXY) == 0) // 辞書にキーがあるかcountで数えて未登録==0のとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pMapData-&gt;cellTime[mapXY] = 0; // ブロックのアニメ時間を辞書に登録(時間が辞書にあるものだけアニメが走る)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 描画処理の関数定義<br>
