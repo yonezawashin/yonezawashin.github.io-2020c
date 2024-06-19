@@ -9660,7 +9660,26 @@
       &nbsp;&nbsp;// 更新処理の関数定義<br>
       &nbsp;&nbsp;virtual void Update() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>if (Input::GetButton(PAD_INPUT_LEFT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;direction = Direction::Left;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (v.x &gt; 0) v.x = 0; // 急ブレーキ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (v.x &gt;= -vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.x += -0.35;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (Input::GetButton(PAD_INPUT_RIGHT))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;direction = Direction::Right;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (v.x &lt; 0) v.x = 0; // 急ブレーキ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (v.x &lt;= vxSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.x += 0.35;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;// 飛行モード中にZキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 描画処理の関数定義<br>
