@@ -9716,6 +9716,47 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (yJumpStart - pos.y &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけない<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vyForce = vyGravity[vx_idx]; // ジャンプ上昇中(vy未満のとき)にボタンを離したら早めに重力をかけ始める<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>if (!isDead) // やられたときは移動を停止<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pos.x += v.x; // 速度のぶん現在の位置から移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (!isDead &amp;&amp; pMapData != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 当たり判定の四隅の座標(±0.01fで1ピクセル隣)を取得<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xLeft = getLeft(pos.x) + 0.01f, xRight = getRight(pos.x) - 0.01f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yTop = getTop(pos.y) + 0.01f, yBottom = getBottom(pos.y) - 0.01f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiddle = yTop + (getBottom(pos.y) - getTop(pos.y)) / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float xMiddle = xLeft + (getRight(pos.x) - getLeft(pos.x)) / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (pMapData-&gt;hitcheck(BlockBit::Damage, xLeft, xMiddle, xRight, yTop, yMiddle, yBottom))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isDead = true; // やられたフラグをtrueに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 左端が壁にめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (pMapData-&gt;checkID(BlockBit::Wall, xLeft, yTop) || // 左上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;pMapData-&gt;checkID(BlockBit::Wall, xLeft, yMiddle) || // 左中が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;pMapData-&gt;checkID(BlockBit::Wall, xLeft, yBottom))   // 左下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x = xLeft;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x_yTop = pos.y - Screen::Height / 2, debug_x_yBottom = pos.y + Screen::Height / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// std::fmodで小数点の余りを計算 めり込みすぎの余り = std::fmod(xLeft, CellSize)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallRight = xLeft + pMapData-&gt;CellSize - (float)std::fmod(xLeft, pMapData-&gt;CellSize); // 壁の右端<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pos.x = wallRight - hitOffsetLeft; // 左端を壁の右端に沿わす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.x = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} // 右端が壁にめりこんでいるか？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pMapData-&gt;checkID(BlockBit::Wall, xRight, yTop) || // 右上が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pMapData-&gt;checkID(BlockBit::Wall, xRight, yMiddle) || // 右中が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pMapData-&gt;checkID(BlockBit::Wall, xRight, yBottom))  // 右下が壁か？<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x = xRight;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debug_x_yTop = v.y - Screen::Height / 2, debug_x_yBottom = v.y + Screen::Height / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float wallLeft = xRight - (float)std::fmod(xRight, pMapData-&gt;CellSize); // 壁の左端<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pos.x = wallLeft + hitOffsetRight - imgSizeX; // 右端を壁の左端に沿わす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v.x = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (!isDead)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pos.y += v.y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;};<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 描画処理の関数定義<br>
