@@ -9907,8 +9907,13 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isGround = false, isFlying = false;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx_idx = 0;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int deadAnimeStep = deadAnimeTime / 3;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int chipAnime = deadAnimeStep % 3; // % 3で余りを求めれば余りは0～2の間に収まる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera->DrawRotaGraphF(v.x + imgSizeX / 2, yDeadAnim, 1.0f, 60.0f * deadAnimeStep / 5.0f / 360.0f * 2 * DX_PI, Image::playerChips[chipAnime], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++deadAnimeTime; // アニメ時間を進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;};<br>
       <br>
       };<br>
