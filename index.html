@@ -15429,6 +15429,42 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか<br>
       &nbsp;&nbsp; &nbsp;currentScene-&gt;Initialize(); // 初期化を呼び出す<br>
       }</p>
     <br>
+      <code>PlayScene.hにゲームクリア画面への遷移予約がある場合に遷移させるため、引数無しのLoadScene();関数呼び出し</code>を追加しましょう。</p>
+    <p class="source">#ifndef PLAYSCENE_H_<br>
+      #define PLAYSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+(中略).........<br>	    
+      <br>
+      class PlayScene : public Scene<br>
+      {<br>
+      public:<br>
+(中略).........<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略).........<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isGameover)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sound::PlayMusic(Sound::ending); //BGMを変更する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.LoadScene("GameOverScene"); //シーン遷移<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>sm.LoadScene(); // シーン遷移予約がNextScneneで事前予約されていたら遷移</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略).........<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <br>
+    <br>
     <br>
 	<h2><a id="mozTocId50022" class="mozTocH1"></a>【課題】シューティングとして完成させるための残された課題</h2>
     <br>
