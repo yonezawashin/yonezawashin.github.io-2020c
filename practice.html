@@ -9874,14 +9874,14 @@
       &nbsp;&nbsp;// 描画処理の関数定義<br>
       &nbsp;&nbsp;virtual void Draw() override<br>
       &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;int animeStep = animeTime / 10; // 10を5に変えたらアニメ速度が上がる(10ごとに1コマアニメが進む)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>int animeStep = animeTime / 10; // 10を5に変えたらアニメ速度が上がる(10ごとに1コマアニメが進む)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (animeStep &gt;= 3) // アニメのステップ数が0,1,2の3段階までなら3を超えたら0へループ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animeTime = 0; // 0へ戻り再びアニメ時間を再ループ<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;animeStep = 0;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;// 描画処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<em>// 描画処理<br>
       &nbsp;&nbsp;&nbsp;&nbsp;if (isDead)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;float yMiss = pos.y + imgSizeY / 2;<br>
@@ -9914,6 +9914,20 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++deadAnimeTime; // アニメ時間を進める<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (isFlying &amp;&amp; direction == Direction::Left) // 飛ぶと-60度傾けて表示 キャラチップは[4]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(pos.x + imgSizeX / 2, pos.y + imgSizeY / 2, 1.0f, -60.0f / 360.0f * 2 * DX_PI, Image::playerChips[4], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (isFlying && direction == Direction::Right) // 60度回転させて表示 キャラチップは[7]で固定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(pos.x + imgSizeX / 2, pos.y + imgSizeY / 2, 1.0f, 60.0f / 360.0f * 2 * DX_PI, Image::playerChips[7], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Left) // キャラのチップの[5][4][3]を[5 - animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(pos.x + imgSizeX / 2, pos.y + imgSizeY / 2, 1.0f, 0.0f, Image::playerChips[5 - animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (direction == Direction::Right) // キャラのチップの[6][7][8]を[6 + animeStep]で使う(animeStep=0,1,2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawRotaGraphF(pos.x + imgSizeX / 2, pos.y + imgSizeY / 2, 1.0f, 0.0f, Image::playerChips[6 + animeStep], TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<br>
       &nbsp;&nbsp;};<br>
       <br>
       };<br>
