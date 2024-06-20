@@ -7467,11 +7467,11 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;// シーン名を比較、何の変化もなければfalseでシーン移動不必要の判定<br>
       &nbsp;&nbsp; &nbsp;bool isChanging(const std::string&amp; nextSceneName);<br>
 	    <br>
-      &nbsp;&nbsp; &nbsp;// 次のシーンの予約だけして、元のシーンのUpdateが終わるまで待つUpdateが終わったらシーンを遷移する<br>
+      &nbsp;&nbsp; &nbsp;// 次のシーンの予約だけしてLoadScene()を引数なしで呼び出したタイミングで遷移する(ループの途中じゃないキリのいいタイミングを狙って遷移させる)<br>
       &nbsp;&nbsp; &nbsp;void NextScene(const std::string&amp; nextSceneName);<br>
 	    <br>
       &nbsp;&nbsp; &nbsp;// シーンをチェンジし遷移する(前のシーンのリセット処理もする)<br>
-      &nbsp;&nbsp; &nbsp;void LoadScene(const std::string&amp; sceneName);<br>
+      &nbsp;&nbsp; &nbsp;void LoadScene(const std::string&amp; sceneName = "");<br>
       <br>
       protected:<br>
       &nbsp;&nbsp; &nbsp;SceneManager() {}; // 外部からのインスタンス作成は禁止<br>
@@ -7690,9 +7690,9 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
 <br>
       void SceneManager::NextScene(const std::string&amp; nextSceneName)<br>
       {<br>
-      &nbsp;&nbsp; &nbsp;// シーン名とオプションを比較、何の変化もなければfalseでシーン移動不必要の判定<br>
+      &nbsp;&nbsp; &nbsp;// 遷移予定nextシーン名と現在のシーン名を比較、何の変化もなければfalseでシーン移動不必要の判定<br>
       &nbsp;&nbsp; &nbsp;if (isChanging(nextSceneName) == false) return; //特に変更なしでシーン移動の必要なし<br>
-
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;changingSceneName = nextSceneName; // 次に移動予定のシーン名を保管しておく<br>
       }<br>
 <br>
@@ -7702,13 +7702,13 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;// sceneNameの指定が空の場合にはNextScene()での事前のシーン変更予約があるかチェック<br>
       &nbsp;&nbsp; &nbsp;if (sceneName == "" &amp;&amp; changingSceneName != "")<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;loadSceneName = changingSceneName;<br>
-<br>
-          &nbsp;&nbsp; &nbsp;if (loadSceneName == "") return; // シーン指定がないときは終了<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;if (loadSceneName == "") return; // シーン指定がないときは終了<br>
       &nbsp;&nbsp; &nbsp;// 現在のシーンの終了処理<br>
-	    <br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;if(currentScene !=nullptr)<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene-&gt;Finalize(); // 終了処理を呼び出す<br>
-      <br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;if (loadSceneName == "TitleScene")<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 次のシーンの生成<br>
@@ -7726,9 +7726,10 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       &nbsp;&nbsp; &nbsp;}<br>
       &nbsp;&nbsp; &nbsp;else<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert("指定されたシーン名の生成処理が見つからなかった→SceneManager.cppを見直しましょう" == "");<br>
-<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;currentSceneName = loadSceneName; // 現在のシーン名の更新<br>
-      <br>
+      &nbsp;&nbsp; &nbsp;changingSceneName = ""; // NextScenceのシーン予約名をリセット<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// 次のシーンの初期化<br>
       &nbsp;&nbsp; &nbsp;currentScene-&gt;Initialize(); // 初期化を呼び出す<br>
       }</p>
