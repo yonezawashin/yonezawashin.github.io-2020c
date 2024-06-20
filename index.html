@@ -7683,8 +7683,8 @@ Vector3 const Vector3::positiveInfinity = Vector3(std::numeric_limits&lt;float&g
       bool SceneManager::isChanging(const std::string&amp; nextSceneName)<br>
       {<br>
       &nbsp;&nbsp; &nbsp;if (currentSceneName != nextSceneName) //シーン名不一致<br>
-      &nbsp;&nbsp; &nbsp;return true; // シーン名が変更<br>
-<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return true; // シーン名が変更<br>
+      &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;return false; // シーン名に変更無し<br>
       }<br>
 <br>
@@ -15360,6 +15360,74 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか<br>
       <br>
       #endif<br>
     </p>
+    <br>
+    <p><code>SceneManager.cppにGameClearシーンの生成処理を追加</code>してクリアシーンへ遷移する機能を作成しましょう。</p>
+    <p class="source">#include "SceneManager.h"<br>
+      <br>
+      #include "Scene.h"<br>
+      #include "TitleScene.h"<br>
+      #include "PlayScene.h"<br>
+      #include "GameOverScene.h"<br>
+      <em>#include "GameClearScene.h"</em><br>
+      <br>
+      bool SceneManager::isChanging(const std::string&amp; nextSceneName)<br>
+      {<br>
+      &nbsp;&nbsp; &nbsp;if (currentSceneName != nextSceneName) //シーン名不一致<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return true; // シーン名が変更<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;return false; // シーン名に変更無し<br>
+      }<br>
+      <br>
+      void SceneManager::NextScene(const std::string&amp; nextSceneName)<br>
+      {<br>
+      &nbsp;&nbsp; &nbsp;// 遷移予定nextシーン名と現在のシーン名を比較、何の変化もなければfalseでシーン移動不必要の判定<br>
+      &nbsp;&nbsp; &nbsp;if (isChanging(nextSceneName) == false) return; //特に変更なしでシーン移動の必要なし<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;changingSceneName = nextSceneName; // 次に移動予定のシーン名を保管しておく<br>
+      }<br>
+      <br>
+      void SceneManager::LoadScene(const std::string&amp; sceneName)<br>
+      {<br>
+      &nbsp;&nbsp; &nbsp;std::string loadSceneName = sceneName;
+      &nbsp;&nbsp; &nbsp;// sceneNameの指定が空の場合にはNextScene()での事前のシーン変更予約があるかチェック<br>
+      &nbsp;&nbsp; &nbsp;if (sceneName == "" &amp;&amp; changingSceneName != "")<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;loadSceneName = changingSceneName;<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;if (loadSceneName == "") return; // シーン指定がないときは終了<br>
+      &nbsp;&nbsp; &nbsp;// 現在のシーンの終了処理<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;if(currentScene !=nullptr)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene-&gt;Finalize(); // 終了処理を呼び出す<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;if (loadSceneName == "TitleScene")<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 次のシーンの生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene = std::make_shared&lt;TitleScene&gt;();<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;else if (loadSceneName == "PlayScene")<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 次のシーンの生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene = std::make_shared&lt;PlayScene&gt;();<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;else if (loadSceneName == "GameOverScene")<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 次のシーンの生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene = std::make_shared&lt;GameOverScene&gt;();<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;<em>else if (loadSceneName == "GameClearScene")<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 次のシーンの生成<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;currentScene = std::make_shared&lt;GameClearScene&gt;();<br>
+      &nbsp;&nbsp; &nbsp;}</em><br>
+      &nbsp;&nbsp; &nbsp;else<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert("指定されたシーン名の生成処理が見つからなかった→SceneManager.cppを見直しましょう" == "");<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;currentSceneName = loadSceneName; // 現在のシーン名の更新<br>
+      &nbsp;&nbsp; &nbsp;changingSceneName = ""; // NextScenceのシーン予約名をリセット<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// 次のシーンの初期化<br>
+      &nbsp;&nbsp; &nbsp;currentScene-&gt;Initialize(); // 初期化を呼び出す<br>
+      }</p>
     <br>
     <br>
 	<h2><a id="mozTocId50022" class="mozTocH1"></a>【課題】シューティングとして完成させるための残された課題</h2>
