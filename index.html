@@ -11008,7 +11008,8 @@ Update()関数内にX方向の動きも追加すると..<br>
 	<li><a href="#mozTocId50018">スコアのランキング表示</a></li>
 	<li><a href="#mozTocId50019">スコアのセーブ保存とCSVのセルを受けint,float,文字列に柔軟に化けるCsvValue型</a></li>
 	<li><a href="#mozTocId50020">キーボードとマウスの入力</a></li>
-      	<li><a href="#mozTocId50021">【課題】シューティングとして完成させるための残された課題</a></li>
+      	<li><a href="#mozTocId50021">ゲームクリア画面への遷移</a></li>
+      	<li><a href="#mozTocId50022">【課題】シューティングとして完成させるための残された課題</a></li>
       
       <br>
       <br>
@@ -15300,7 +15301,67 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか<br>
 		気が向いたらトライしてみるのもよいかもしれません。<br>
     <br>
     <br>
-	<h2><a id="mozTocId50021" class="mozTocH1"></a>【課題】シューティングとして完成させるための残された課題</h2>
+	<h2><a id="mozTocId50021" class="mozTocH1"></a>ゲームクリア画面への遷移</h2>
+    <br>
+    <p><code>GameClearScene.hを新規作成</code>して、ベースのScene.hを継承してクリア画面を作成しましょう。</p>
+    <p class="source">#ifndef GAMECLEARSCENE_H_<br>
+      #define GAMECLEARSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Image.h"<br>
+      <br>
+      #include "GameManager.h"<br>
+      #include "SceneManager.h"<br>
+      <br>
+      class GameClearScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;//★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp; &nbsp;SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;GameManager&amp; gm = GameManager::GetInstance(); //唯一のゲームマネージャへの参照(&amp;)を得る<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp; &nbsp;// コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;GameClearScene() : Scene()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this-&gt;tag = "GameClearScene";<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 初期化処理<br>
+      &nbsp;&nbsp; &nbsp;void Initialize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
+      &nbsp;&nbsp; &nbsp;void Finalize() override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(Pad::All, PAD_INPUT_1))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.LoadScene("TitleScene"); //シーン遷移<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawString(0, 0, "おめでとう!!!!GameClear....ボタン押下でPlaySceneへ", GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+	<h2><a id="mozTocId50022" class="mozTocH1"></a>【課題】シューティングとして完成させるための残された課題</h2>
     <br>
     さて、ここまでで、ひととおりのインフラは整いました。<br>
     ここまであえて残してきた、下記の未完成ポイントをここまで導入してきた要素を応用して埋めてみてください。<br>
