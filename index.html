@@ -12918,8 +12918,8 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか</em><
       void Image::Load()<br>
       {<br>
 (中略)..........<br>
-      &nbsp;&nbsp;&nbsp; background = LoadGraph("Image/background.jpg");<br>
-      &nbsp;&nbsp;&nbsp; assert(background != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      &nbsp;&nbsp;&nbsp; <em>background = LoadGraph("Image/background.jpg"); //[メモリ節約機能付の場合追記→] scene, { "TitleScene" });<br>
+      &nbsp;&nbsp;&nbsp; assert(background != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる</em><br>
       <br>
 (中略)..........<br>
 	    <br>
