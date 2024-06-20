@@ -9173,16 +9173,10 @@
       &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 更新処理の関数定義<br>
-      &nbsp;&nbsp;virtual void Update() override<br>
-      &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;virtual void Update() override { };<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 描画処理の関数定義<br>
-      &nbsp;&nbsp;virtual void Draw() override<br>
-      &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;virtual void Draw() override { };<br>
       <br>
       };<br>
       <br>
@@ -9219,6 +9213,8 @@
       <em>// クラスの型名(Player型など)を #x で★ビルド時に文字に変える最重要手法<br>
       #define TO_STRING( x ) #x</em><br>
       <br>
+      <em>// クラス名の文字列"Player"などからハッシュで数値に変換して if ( obj-&gt;isClass( TO_HASH("Player") ) )でobjのクラスを判別<br>
+      #define TO_HASH( classnameStr ) std::hash&lt;std::string&gt;()( classnameStr )</em><br>
       <br>
       <br>
       <br>
@@ -9318,16 +9314,10 @@
       &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 更新処理の関数定義<br>
-      &nbsp;&nbsp;virtual void Update() override<br>
-      &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;virtual void Update() override { };<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 描画処理の関数定義<br>
-      &nbsp;&nbsp;virtual void Draw() override<br>
-      &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;virtual void Draw() override { };<br>
       <br>
       };<br>
       <br>
@@ -9353,6 +9343,9 @@
       <br>
       // クラスの型名(Player型など)を #x で★ビルド時に文字に変える最重要手法<br>
       #define TO_STRING( x ) #x<br>
+      <br>
+      // クラス名の文字列"Player"などからハッシュで数値に変換して if ( obj-&gt;isClass( TO_HASH("Player") ) )でobjのクラスを判別<br>
+      #define TO_HASH( classnameStr ) std::hash&lt;std::string&gt;()( classnameStr )<br>
       <br>
       <em>// クラスの実行時型識別(RTTI)のハッシュ関数と親子関係をたどって型一致を判定する関数を定義するマクロ<br>
       #define CLASS_RTTI_DEF( childclass, parentclass ) \<br>
@@ -9461,16 +9454,10 @@
       &nbsp;&nbsp;virtual ~Player() {}; // 仮想デストラクタ<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 更新処理の関数定義<br>
-      &nbsp;&nbsp;virtual void Update() override<br>
-      &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;virtual void Update() override { };<br>
       &nbsp;&nbsp;<br>
       &nbsp;&nbsp;// 描画処理の関数定義<br>
-      &nbsp;&nbsp;virtual void Draw() override<br>
-      &nbsp;&nbsp;{<br>
-      &nbsp;&nbsp;<br>
-      &nbsp;&nbsp;};<br>
+      &nbsp;&nbsp;virtual void Draw() override { };<br>
       <br>
       };<br>
       <br>
@@ -9501,6 +9488,9 @@
       <br>
       // クラスの型名(Player型など)を #x で★ビルド時に文字に変える最重要手法<br>
       #define TO_STRING( x ) #x<br>
+      <br>
+      // クラス名の文字列"Player"などからハッシュで数値に変換して if ( obj-&gt;isClass( TO_HASH("Player") ) )でobjのクラスを判別<br>
+      #define TO_HASH( classnameStr ) std::hash&lt;std::string&gt;()( classnameStr )<br>
       <br>
       // クラスの実行時型識別(RTTI)のハッシュ関数と親子関係をたどって型一致を判定する関数を定義するマクロ<br>
       #define CLASS_RTTI_DEF( childclass, parentclass ) \<br>
