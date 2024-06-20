@@ -15463,6 +15463,84 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか<br>
     </p>
     <br>
     <br>
+例として<code>Boss.hがisDead=true;になったタイミングで連動してGameClearSceneに遷移するように</code>NextScene関数の呼び出しを追加します。</p>
+<p class="source">#ifndef BOSS_H_<br>
+      #define BOSS_H_<br>
+      <br>
+      #include "Enemy.h"<br>
+      <br>
+      (中略).........<br>
+      <br>
+      <br>
+      <em>#include "SceneManager.h"</em><br>
+      <br>
+      // ボスクラス。Enemyを継承して作る<br>
+      class Boss : public Enemy<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; (中略).........<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <em>SceneManager&amp; sm = SceneManager::GetInstance(); //唯一のシーンマネージャへの参照(&amp;)を得る</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Boss(Vector3 pos) : Enemy( pos )<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Boss"; // オブジェクトの種類判別タグ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = 100; // ライフ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collisionRadius = 70; // 当たり判定半径<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (state == State::Appear) // 登場状態<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略).........<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Normal) // 通常状態<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略).........<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Swoon) // 気絶状態<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略).........<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Angry) // 発狂モード<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略).........<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (state == State::Dying) // 死亡中<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dyingTime--; // タイマー減少<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (dyingTime &lt;= 0) // タイマーが0になったら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isDead = true; // 完全に消滅<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>sm.NextScene("GameClearScene"); // ゲームクリア画面への遷移を予約</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略).........<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 自機弾に当たったときの処理をoverride（上書き）する<br>
+      &nbsp;&nbsp; &nbsp;void OnCollisionPlayerBullet(std::shared_ptr&lt;GameObject&gt; playerBullet) override<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略).........<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp; (中略).........<br>
+      };<br>
+      <br>
+      #endif</p>
+<br>
+    <br>
+    <br>
+    いかがですか？ボスを倒したらゲームクリア画面に遷移するようになりましたか？<br>
     <br>
     <br>
     <br>
