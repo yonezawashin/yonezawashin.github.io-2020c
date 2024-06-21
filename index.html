@@ -15423,7 +15423,7 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;assert("指定されたシーン名の生成処理が見つからなかった→SceneManager.cppを見直しましょう" == "");<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;currentSceneName = loadSceneName; // 現在のシーン名の更新<br>
-      &nbsp;&nbsp; &nbsp;changingSceneName = ""; // NextScenceのシーン予約名をリセット<br>
+      &nbsp;&nbsp; &nbsp;changingSceneName = ""; // NextScene関数のシーン予約名をリセット(リセットしないと次回LoadSceneを引数なしで呼ぶと残存したchangingSceneNameへ飛んじゃう)<br>
       &nbsp;&nbsp; &nbsp;<br>
       &nbsp;&nbsp; &nbsp;// 次のシーンの初期化<br>
       &nbsp;&nbsp; &nbsp;currentScene-&gt;Initialize(); // 初期化を呼び出す<br>
