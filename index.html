@@ -15440,7 +15440,8 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか<br>
       class PlayScene : public Scene<br>
       {<br>
       public:<br>
-(中略).........<br>
+<br>
+      &nbsp;&nbsp;&nbsp; (中略).........<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 更新処理<br>
       &nbsp;&nbsp;&nbsp; void Update() override<br>
@@ -15459,7 +15460,9 @@ bool Input::isBugCheckMode = false; //バグチェックを開始するか<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>sm.LoadScene(); // シーン遷移予約がNextScneneで事前予約されていたら遷移</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略).........<br>
+      &nbsp;&nbsp;&nbsp; (中略).........<br>
+      <br>
+      <br>
       };<br>
       <br>
       #endif<br>
