@@ -14868,7 +14868,7 @@ enum class Mouse<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; GetHitKeyStateAll(currentKey); // https://dxlib.xsrv.jp/function/dxfunc_input.html#R5N28<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (GetButtonUp(Pad::Keyboard, KEY_INPUT_CAPSLOCK))<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isCapsLocked != isCapsLocked; // CapsLock状態を反転<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isCapsLocked = !isCapsLocked; // CapsLock状態を反転<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // シフトが押された状態かを更新<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isShifted = (GetButton(Pad::Keyboard, KEY_INPUT_LSHIFT) || GetButton(Pad::Keyboard, KEY_INPUT_RSHIFT));<br>
       &nbsp;&nbsp;&nbsp; }</em><br>
