@@ -27,7 +27,7 @@
 アニメを切替えする</a></li>
 </ol>
 <br>
-<h2><a id="mozTocId0001" class="mozTocH1"></a>試しにポリゴンを表示してみる</h2>
+<h1><a id="mozTocId0001" class="mozTocH1"></a>試しにポリゴンを表示してみる</h1>
 <p><code>main.cpp</code>にプログラムを追加し、ポリゴン画像が正しく表示できるかテストします。<br>
 (DXの<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId0002">プロジェクトとScreen.hはシューティングの別記事を参考</a>に作っておいてください、<br>
   画像ファイルは<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId0003">シューティングの別記事を参考</a>にImage/boss1.pngで保管されている前提で進めます)</p>
@@ -521,9 +521,9 @@ y, z), 4.0f, 8, GetColor(255, 255, 0), GetColor(255, 255, 0),TRUE); //
 <br>
 <br>
 <br>
-<h2><a id="mozTocId0002" class="mozTocH1"></a>ポリゴンの光の色表示の基礎となっている「拡散反射光:
+<h1><a id="mozTocId0002" class="mozTocH1"></a>ポリゴンの光の色表示の基礎となっている「拡散反射光:
 ディ
-フューズ値」の値を変更してみる</h2>
+フューズ値」の値を変更してみる</h1>
 <p><code>main.cpp</code>のプログラムを変更し、ポリゴンの<span
  style="text-decoration: underline;">difの値(拡散反射光:ディフューズ値)</span>がポリゴンの反射
 する色に影響を与えることを確認しましょう。</p>
@@ -768,9 +768,9 @@ y, z), 4.0f, 8, GetColor(255, 255, 0), GetColor(255, 255, 0),TRUE); //
 <br>
 <br>
 <br>
-<h2><a id="mozTocId0003" class="mozTocH1"></a>シンプルな.ply形式の3Dデータフォーマットを読み
+<h1><a id="mozTocId0003" class="mozTocH1"></a>シンプルな.ply形式の3Dデータフォーマットを読み
 取ってポ
-リゴン表示してみる</h2>
+リゴン表示してみる</h1>
 <p><code>メモ帳を開いて下記データをコピペして
 dicetest.plyという名前でImageフォルダに保存</code><a id="mozTocId0003"
  class="mozTocH1">しましょう。</a></p>
@@ -2090,8 +2090,8 @@ position.y, keyControlAngle.x, keyControlAngle.y, keyControlAngle.z);<br>
 <br>
 <br>
 </a>
-<h2><a id="mozTocId0003" class="mozTocH1">Blenderをインストールして3Dのサイコロとテクスチャ画
-像を書き出してXYZ軸を見極める</a></h2>
+<h1><a id="mozTocId0003" class="mozTocH1">Blenderをインストールして3Dのサイコロとテクスチャ画
+像を書き出してXYZ軸を見極める</a></h1>
 <p><a id="mozTocId0003" class="mozTocH1">Blenderを下記サイトを参考にインストールしましょう。<br>
 </a><a href="https://www.blender.jp/install">https://www.blender.jp/install</a>
 <br>
@@ -3055,14 +3055,13 @@ GetColor(255,255,255), FALSE);</em><br>
 &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
 &nbsp;&nbsp;&nbsp; return 0;<br>
 }</a></p>
-<p><a id="mozTocId0004" class="mozTocH1">このサブのスクリーンの機能をこてこてに魔改造するとウィンドウズ
+<p>このサブのスクリーンの機能をこてこてに魔改造するとウィンドウズ
 のようなドラッグできるウィンドウをつくることもできます。<br>
-</a></p>
-<p><code><a id="mozTocId0004" class="mozTocH1">Input.hを新規作成</a></code><a
- id="mozTocId0004" class="mozTocH1">してドラッグや複数のスクリーンがあるときの一番上のレイヤーを保管する変数
+</p>
+<p><code>Input.hを新規作成</code>してドラッグや複数のスクリーンがあるときの一番上のレイヤーを保管する変数
 やマウスのドラッ
-グを取れるようにしましょう。</a></p>
-<p class="source"><a id="mozTocId0004" class="mozTocH1">#ifndef INPUT_H_<br>
+グを取れるようにしましょう。</p>
+<p class="source">#ifndef INPUT_H_<br>
 #define INPUT_H_<br>
 <br>
 #include &lt;climits&gt; //int型の最大値2147483647につかう<br>
@@ -3856,14 +3855,13 @@ KeyString[KEY_INPUT_NUMPADENTER] = "\n";<br>
 &nbsp;&nbsp;&nbsp; }<br>
 };<br>
 <br>
-#endif</a></p>
-<p><a id="mozTocId0004" class="mozTocH1"><br>
-</a></p>
-<p><code><a id="mozTocId0004" class="mozTocH1">Input.cppを新規作成</a></code><a
- id="mozTocId0004" class="mozTocH1">してドラッグや複数のスクリーンがあるときの一番上のレイヤーを保管する変数
+#endif</p>
+<p><<br>
+</p>
+<p><code>Input.cppを新規作成</code>してドラッグや複数のスクリーンがあるときの一番上のレイヤーを保管する変数
 などの
-static変数を定義しましょう。</a></p>
-<p class="source"><a id="mozTocId0004" class="mozTocH1">#include
+static変数を定義しましょう。</p>
+<p class="source">#include
 "Input.h"<br>
 <br>
 int Input::prevStates[]; // 1フレーム前の状態<br>
@@ -4883,11 +4881,10 @@ zoomScreen-&gt;SetZoomRate(zoomScreen-&gt;zoomRate + 0.1f *
 </em><br>
 <br>
 #endif<br>
-</a></p>
-<p><code><a id="mozTocId0004" class="mozTocH1">Screen.cppを新規作成</a></code><a
- id="mozTocId0004" class="mozTocH1">して
-static変数を定義しましょう。</a></p>
-<p class="source"><a id="mozTocId0004" class="mozTocH1">#include
+</p>
+<p><code>Screen.cppを新規作成</code>して
+static変数を定義しましょう。</p>
+<p class="source">#include
 "Screen.h"<br>
 <br>
 int SubScreen::serialDivID{ 0 }; // サブスクリーンを新たに生成するときの通し番号(シリアルID)<br>
@@ -4913,18 +4910,18 @@ int SubScreen::clickDownID{ -1 }; //
 int SubScreen::prevDragX{ -1 }; // 直前のドラッグ中のマウスの位置<br>
 int SubScreen::prevDragY{ -1 }; // 直前のドラッグ中のマウスの位置<br>
 int SubScreen::dragingID{ -1 }; // ドラッグ中のサブスクリーンのID<br>
-</a></p>
-<p><a id="mozTocId0004" class="mozTocH1">ウィンドウのドラッグってどうやってるのって、シンプルにいうなら<br>
+</p>
+<p>ウィンドウのドラッグってどうやってるのって、シンプルにいうなら<br>
 <span style="font-weight: bold; text-decoration: underline;">前の瞬間(prev)と
 現在の位置に移動があれば、その差ぶんだけ+=する</span>、というだけなのでベースとなっているアイデア自体は実はシンプルなものです<br>
 (まあレイヤーの並べ替えとか一番上じゃないレイヤーをクリックしたときにフォーカスして一番上にするとか考え出すと結構たいへんですが)<br>
 <br>
-</a></p>
+</p>
 <p></p>
-<p><code><a id="mozTocId0004" class="mozTocH1">main.cpp</a></code><a
+<p><code>main.cpp</code><a
  id="mozTocId0004" class="mozTocH1">のコードにSubScreenクラスを使ってドラッグできるウィンドウズみた
 いなサブのスクリーンを表
-示させてみましょう。</a></p>
+示させてみましょう。</p>
 <p class="source"><a id="mozTocId0004" class="mozTocH1">#include
 "DxLib.h"<br>
 #include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
@@ -5547,8 +5544,7 @@ static変数はclass内で初期化できないが、class外では = 0できる
 <br>
 #endif<br>
 </a></p>
-<p><a id="mozTocId0005" class="mozTocH1"><br>
-</a></p>
+<br>
 <p><code><a id="mozTocId0005" class="mozTocH1">Editor.hを新規作成</a></code><a
  id="mozTocId0005" class="mozTocH1">して マウスの右ドラッグでカメラを回転、左ドラッグでカメラの視点を移動、<br>
 キーボードのT,Yキーでカメラz軸回転、キーボードのH,Jキーでカメラy軸回転、キーボードのV,Bキーでカメラx軸回転できるようにする。</a></p>
@@ -6365,8 +6361,8 @@ DxLib::DrawString(0, 0, "枠の無いスクリーンを使えば2Pの分割画�
 <br>
 <br>
 </a></p>
-<h2><a id="mozTocId0006" class="mozTocH1">キーボードのWSキーでカメラ視点を手前や奥に移動できるように
-する</a></h2>
+<h1><a id="mozTocId0006" class="mozTocH1"></a>キーボードのWSキーでカメラ視点を手前や奥に移動できるように
+する</h1>
 <p><code><a id="mozTocId0006" class="mozTocH1">Editor.h</a></code><a
  id="mozTocId0006" class="mozTocH1">を変更してキーボードのWSキーでカメラ視点を手前や奥に移動できるようにし
 ます。</a></p>
@@ -7068,8 +7064,8 @@ GetWorldDirByCameraScreenXYDir関数の中でもDxLib::ConvScreenPosToWorldPos�
 <br>
 <br>
 </a>
-<h2><a id="mozTocId0008" class="mozTocH1">Unityのアセットストアからとってきたテクスチャ1枚のシン
-プルな3DモデルをDXのモデルビューアで.mv1形式に変換して表示させてみる</a></h2>
+<h1><a id="mozTocId0008" class="mozTocH1"></a>Unityのアセットストアからとってきたテクスチャ1枚のシン
+プルな3DモデルをDXのモデルビューアで.mv1形式に変換して表示させてみる</h1>
 <p><a id="mozTocId0008" class="mozTocH1">複雑な3Dモデルだとテクスチャリンクつけなおしやボーンが崩れた
 りして大変なので下記リンクのシンプルな無料3DモデルをUnityにインポート
 します<br>
