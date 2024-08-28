@@ -7051,7 +7051,7 @@ DxLib::GetColor(255, 255, 255),
 <br>
 #endif<br>
 </a></p>
-<p><a id="mozTocId0007" class="mozTocH1">いかがでしょう?キーボードのDAキーとEQキーでカメラ視点を左
+<p>いかがでしょう?キーボードのDAキーとEQキーでカメラ視点を左
 右や上下に移動できるようになりましたか?<br>
 カメラの上下左右方向でも重要なのは 2Dのスクリーン から 3Dのワールド座標 での方向のベクトルを求めることです<br>
 GetWorldDirByCameraScreenXYDir関数の中でもDxLib::ConvScreenPosToWorldPos関数を使って
@@ -7059,17 +7059,17 @@ GetWorldDirByCameraScreenXYDir関数の中でもDxLib::ConvScreenPosToWorldPos�
 カメラの左右移動方向は<span style="text-decoration: underline;">「スクリーンの枠」の左右方向</span>、
 カメラの上下移動方向は<span style="text-decoration: underline;">「スクリーンの枠」の上下方向</span>と
 平行になるベクトルです<br>
-</a></p>
-<a id="mozTocId0007" class="mozTocH1"><br>
+</p>
 <br>
 <br>
-</a>
+<br>
+
 <h1><a id="mozTocId0009" class="mozTocH1"></a>Unityのアセットストアからとってきたテクスチャ1枚のシン
 プルな3DモデルをDXのモデルビューアで.mv1形式に変換して表示させてみる</h1>
-<p><a id="mozTocId0008" class="mozTocH1">複雑な3Dモデルだとテクスチャリンクつけなおしやボーンが崩れた
+<p>複雑な3Dモデルだとテクスチャリンクつけなおしやボーンが崩れた
 りして大変なので下記リンクのシンプルな無料3DモデルをUnityにインポート
 します<br>
-</a><a
+<a
  href="https://assetstore.unity.com/packages/3d/characters/humanoids/fantasy/devil-animated-character-60777?locale=ja-JP&amp;srsltid=AfmBOor53ggeWTlrD6CMx0iQtZj3gZrHiPBdYgzpG2Ljhm4FIBT912Q3">https://assetstore.unity.com/packages/3d/characters/humanoids/fantasy/devil-animated-character-60777?locale=ja-JP&amp;srsltid=AfmBOor53ggeWTlrD6CMx0iQtZj3gZrHiPBdYgzpG2Ljhm4FIBT912Q3</a>
 <br>
 </p>
@@ -7717,8 +7717,7 @@ DXの初期化にエラーが発生したらプログラム自体を終了(retur
 &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
 &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
 <br>
-&nbsp;&nbsp;&nbsp; // ゲームのwhileループを開始する前の初期化処理<a id="mozTocId0009"
- class="mozTocH1"><br>
+&nbsp;&nbsp;&nbsp; // ゲームのwhileループを開始する前の初期化処理<br>
 &nbsp;&nbsp;&nbsp; int devil3DModel =
 DxLib::MV1LoadModel("Image/devil@fly.mv1"); // 3Dモデルをmv1形式で読込み<br>
 <br>
@@ -7753,7 +7752,7 @@ index);
 //
 アニメをループさせるためにアニメの総再生時間を辞書に記録しておく<br>
 &nbsp;&nbsp;&nbsp; }</em><br>
-&nbsp;&nbsp;&nbsp; </a><a id="mozTocId0009" class="mozTocH1"><br>
+&nbsp;&nbsp;&nbsp; <a id="mozTocId0009" class="mozTocH1"><br>
 &nbsp;&nbsp;&nbsp; int texImage = -1;<br>
 &nbsp;&nbsp;&nbsp; texImage = LoadGraph("Image/dice.png");<br>
 &nbsp;&nbsp;&nbsp; assert(texImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
@@ -8261,25 +8260,25 @@ DxLib::DrawString(0, 0, "枠の無いスクリーンを使えば2Pの分割画�
 &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
 &nbsp;&nbsp;&nbsp; return 0;<br>
 }</a></p>
-<a id="mozTocId0009" class="mozTocH1"><br>
+<br>
 アニメ名をDXモデルビューアーの[アニメ]から確認<br>
-</a>
-<p><a id="mozTocId0009" class="mozTocH1"> <img
+
+<p> <img
  src="image/mv1_from_unity_asset12.png" alt=""><br>
-</a></p>
-<p><a id="mozTocId0009" class="mozTocH1"><br>
+</p>
+<p><br>
 アニメの総再生時間とアニメのインデックス番号はここ<br>
-</a></p>
-<p><a id="mozTocId0009" class="mozTocH1"><img
+</p>
+<p><img
  src="image/mv1_from_unity_asset13.png" alt=""><br>
-</a></p>
-<p><a id="mozTocId0009" class="mozTocH1">いかがですか?3Dキャラがアニメーションしたでしょうか?<br>
+</p>
+<p>いかがですか?3Dキャラがアニメーションしたでしょうか?<br>
 アニメーションの時刻を進めるプログラムを書くには<br>
 アニメーション番号(No.)かアニメーション名(例.Take
 001)を使う必要があるのでDXモデルビューアーで確認して間違わないようにしましょう<br>
-</a></p>
-<a id="mozTocId0009" class="mozTocH1"><br>
-</a>
+</p>
+<br>
+
 <h1><a id="mozTocId0010" class="mozTocH1"></a>複数の3DモデルやアニメをResourceクラスで2
 重ロード
 しないよう読み込んで複数アニメを切替えする</h1>
