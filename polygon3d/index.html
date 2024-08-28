@@ -23,8 +23,7 @@
   <li><a href="#mozTocId0008">キーボードのDAキーとEQキーでカメラ視点を左右や上下に移動できるようにする</a></li>
   <li><a href="#mozTocId0009">Unityのアセットストアからとってきたテクスチャ1枚のシンプルな3DモデルをDXの
 モデルビューアで.mv1形式に変換して表示させてみる</a></li>
-  <li><a href="#mozTocId0010">MV1形式の3Dモデルをアニメーション描画する</a></li>
-  <li><a href="#mozTocId0011">複数の3DモデルやアニメをResourceクラスで2重ロードしないよう読み込んで複数
+  <li><a href="#mozTocId0010">複数の3DモデルやアニメをResourceクラスで2重ロードしないよう読み込んで複数
 アニメを切替えする</a></li>
 </ol>
 <br>
@@ -7676,7 +7675,7 @@ DxLib::SetTransformToWorld(&amp;mat); // [ワールド行列を指定] <br>
 <br>
 <br>
 <br>
-<h1><a id="mozTocId00010" class="mozTocH1"></a>MV1形式の3Dモデルをアニメーション描画する</h1>
+<h1>MV1形式の3Dモデルをアニメーション描画する</h1>
 <br>
 <p><code>main.cpp</code>のコードに.mv1形式の3Dモデルにデフォルトでアニメがついていたら、そ
 のアニメをモデルにアタッチしてアニメーションさせるプログラムを追加してみましょう。</p>
@@ -8281,7 +8280,7 @@ DxLib::DrawString(0, 0, "枠の無いスクリーンを使えば2Pの分割画�
 </a></p>
 <a id="mozTocId0009" class="mozTocH1"><br>
 </a>
-<h1><a id="mozTocId0011" class="mozTocH1"></a>複数の3DモデルやアニメをResourceクラスで2
+<h1><a id="mozTocId0010" class="mozTocH1"></a>複数の3DモデルやアニメをResourceクラスで2
 重ロード
 しないよう読み込んで複数アニメを切替えする</h1>
 <p><code>Resource.hを新規作成</code>
@@ -8480,9 +8479,8 @@ shared_from_this()); // 辞書へ登録<br>
 <br>
 #endif<br>
 </p>
-<a id="mozTocId0010" class="mozTocH1"><br>
-</a>
-<p><code><a id="mozTocId0010" class="mozTocH1"></a>DataMV1.hを新規作成</code>し
+<br>
+<p><code>DataMV1.hを新規作成</code>し
 てResourceクラスを継承して3Dモデルのロードやアニメをアタッチ
 して管理する
 機能を追加する。</p>
