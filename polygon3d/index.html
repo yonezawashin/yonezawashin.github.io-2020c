@@ -16,14 +16,15 @@
   <li><a href="#mozTocId0002">ポリゴンの光の色表示の基礎となっている「拡散反射光:ディフューズ値」の値を変更してみ
 る</a></li>
   <li><a href="#mozTocId0003">シンプルな.ply形式の3Dデータフォーマットを読み取ってポリゴン表示してみる</a></li>
-  <li><a href="#mozTocId0004">別の描画スクリーンを作って、Windowsみたいなサブのウィンドウを描く</a></li>
-  <li><a href="#mozTocId0005">エディタを自作して視点カメラを動かせるようにする</a></li>
-  <li><a href="#mozTocId0006">キーボードのWSキーでカメラ視点を手前や奥に移動できるようにする</a></li>
-  <li><a href="#mozTocId0007">キーボードのDAキーとEQキーでカメラ視点を左右や上下に移動できるようにする</a></li>
-  <li><a href="#mozTocId0008">Unityのアセットストアからとってきたテクスチャ1枚のシンプルな3DモデルをDXの
+  <li><a href="#mozTocId0004">Blenderをインストールして3Dのサイコロとテクスチャ画像を書き出してXYZ軸を見極める</a></li>
+  <li><a href="#mozTocId0005">別の描画スクリーンを作って、Windowsみたいなサブのウィンドウを描く</a></li>
+  <li><a href="#mozTocId0006">エディタを自作して視点カメラを動かせるようにする</a></li>
+  <li><a href="#mozTocId0007">キーボードのWSキーでカメラ視点を手前や奥に移動できるようにする</a></li>
+  <li><a href="#mozTocId0008">キーボードのDAキーとEQキーでカメラ視点を左右や上下に移動できるようにする</a></li>
+  <li><a href="#mozTocId0009">Unityのアセットストアからとってきたテクスチャ1枚のシンプルな3DモデルをDXの
 モデルビューアで.mv1形式に変換して表示させてみる</a></li>
-  <li><a href="#mozTocId0009">MV1形式の3Dモデルをアニメーション描画する</a></li>
-  <li><a href="#mozTocId0010">複数の3DモデルやアニメをResourceクラスで2重ロードしないよう読み込んで複数
+  <li><a href="#mozTocId0010">MV1形式の3Dモデルをアニメーション描画する</a></li>
+  <li><a href="#mozTocId0011">複数の3DモデルやアニメをResourceクラスで2重ロードしないよう読み込んで複数
 アニメを切替えする</a></li>
 </ol>
 <br>
@@ -2090,10 +2091,10 @@ position.y, keyControlAngle.x, keyControlAngle.y, keyControlAngle.z);<br>
 <br>
 <br>
 </a>
-<h1><a id="mozTocId0003" class="mozTocH1">Blenderをインストールして3Dのサイコロとテクスチャ画
-像を書き出してXYZ軸を見極める</a></h1>
-<p><a id="mozTocId0003" class="mozTocH1">Blenderを下記サイトを参考にインストールしましょう。<br>
-</a><a href="https://www.blender.jp/install">https://www.blender.jp/install</a>
+<h1><a id="mozTocId0004" class="mozTocH1"></a>Blenderをインストールして3Dのサイコロとテクスチャ画
+像を書き出してXYZ軸を見極める</h1>
+<p>Blenderを下記サイトを参考にインストールしましょう。<br>
+<a href="https://www.blender.jp/install">https://www.blender.jp/install</a>
 <br>
 </p>
 Blenderを開いて、上部のメニューバーから[テクスチャペイント]をクリックし[+新規]をクリックしてdiceと名前をつけてテクスチャ画像を生
@@ -2554,7 +2555,7 @@ keyControlAngle.y, keyControlAngle.z);<br>
 <br>
 <br>
 <br>
-<h1><a id="mozTocId0004" class="mozTocH1"></a>別の描画スクリーンを作って、Windowsみたいなサブのウィ
+<h1><a id="mozTocId0005" class="mozTocH1"></a>別の描画スクリーンを作って、Windowsみたいなサブのウィ
 ンドウを描く</h1>
 <a id="mozTocId0004" class="mozTocH1"><br>
 </a>
@@ -5489,7 +5490,7 @@ DxLib::DrawString(0, 0, "枠の無いスクリーンを使えば2Pの分割画�
 <br>
 <br>
 </a>
-<h1><a id="mozTocId0005" class="mozTocH1"></a>エディタを自作して視点カメラを動かせるようにする</h1>
+<h1><a id="mozTocId0006" class="mozTocH1"></a>エディタを自作して視点カメラを動かせるようにする</h1>
 <a id="mozTocId0005" class="mozTocH1"><br>
 </a>
 <p><code><a id="mozTocId0005" class="mozTocH1">Singleton.hを新規作成</a></code><a
@@ -6361,7 +6362,7 @@ DxLib::DrawString(0, 0, "枠の無いスクリーンを使えば2Pの分割画�
 <br>
 <br>
 </a></p>
-<h1><a id="mozTocId0006" class="mozTocH1"></a>キーボードのWSキーでカメラ視点を手前や奥に移動できるように
+<h1><a id="mozTocId0007" class="mozTocH1"></a>キーボードのWSキーでカメラ視点を手前や奥に移動できるように
 する</h1>
 <p><code><a id="mozTocId0006" class="mozTocH1">Editor.h</a></code><a
  id="mozTocId0006" class="mozTocH1">を変更してキーボードのWSキーでカメラ視点を手前や奥に移動できるようにし
@@ -6685,7 +6686,7 @@ GetCameraWorldDirByScreenXY関数の中では DxLib::ConvScreenPosToWorldPos を
 <br>
 <br>
 </a>
-<h1><a id="mozTocId0007" class="mozTocH1"></a>キーボードのDAキーとEQキーでカメラ視点を左右や上下に移動
+<h1><a id="mozTocId0008" class="mozTocH1"></a>キーボードのDAキーとEQキーでカメラ視点を左右や上下に移動
 できるようにする</h1>
 <p><code><a id="mozTocId0007" class="mozTocH1">Editor.h</a></code><a
  id="mozTocId0007" class="mozTocH1">を変更してキーボードのDAキーとEQキーでカメラ視点を左右や上下に移動で
@@ -7064,7 +7065,7 @@ GetWorldDirByCameraScreenXYDir関数の中でもDxLib::ConvScreenPosToWorldPos�
 <br>
 <br>
 </a>
-<h1><a id="mozTocId0008" class="mozTocH1"></a>Unityのアセットストアからとってきたテクスチャ1枚のシン
+<h1><a id="mozTocId0009" class="mozTocH1"></a>Unityのアセットストアからとってきたテクスチャ1枚のシン
 プルな3DモデルをDXのモデルビューアで.mv1形式に変換して表示させてみる</h1>
 <p><a id="mozTocId0008" class="mozTocH1">複雑な3Dモデルだとテクスチャリンクつけなおしやボーンが崩れた
 りして大変なので下記リンクのシンプルな無料3DモデルをUnityにインポート
@@ -7675,7 +7676,7 @@ DxLib::SetTransformToWorld(&amp;mat); // [ワールド行列を指定] <br>
 <br>
 <br>
 <br>
-<h1><a id="mozTocId0009" class="mozTocH1"></a>MV1形式の3Dモデルをアニメーション描画する</h1>
+<h1><a id="mozTocId00010" class="mozTocH1"></a>MV1形式の3Dモデルをアニメーション描画する</h1>
 <br>
 <p><code>main.cpp</code>のコードに.mv1形式の3Dモデルにデフォルトでアニメがついていたら、そ
 のアニメをモデルにアタッチしてアニメーションさせるプログラムを追加してみましょう。</p>
@@ -8280,7 +8281,7 @@ DxLib::DrawString(0, 0, "枠の無いスクリーンを使えば2Pの分割画�
 </a></p>
 <a id="mozTocId0009" class="mozTocH1"><br>
 </a>
-<h1><a id="mozTocId0010" class="mozTocH1"></a>複数の3DモデルやアニメをResourceクラスで2
+<h1><a id="mozTocId0011" class="mozTocH1"></a>複数の3DモデルやアニメをResourceクラスで2
 重ロード
 しないよう読み込んで複数アニメを切替えする</h1>
 <p><code>Resource.hを新規作成</code>
