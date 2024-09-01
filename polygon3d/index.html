@@ -10327,7 +10327,7 @@ DxLib::SetTransformToWorld(&amp;matWorldDefault); // デフォルトのワール
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 DxLib::MV1DrawModel(devil3DModel); // 3Dモデル(.mv1形式)を描く<br>
 <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0<em></em><em></em>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0,
 100,
 GetColor(255,
 255,
@@ -10344,8 +10344,8 @@ keyControlAngle.y, keyControlAngle.z);<br>
 アニメ名でアクセス<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string animPathName =
 (animeButton<span style="font-weight: bold;"> </span>== 0) ?
-"Image/devil@kick.mv1:mixamo.com" : "Image/devil@jump.mv1:mixamo.com"<em>;<br>
-</em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"Image/devil@kick.mv1:mixamo.com" : "Image/devil@jump.mv1:mixamo.com";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 assert(pDevilData-&gt;count(animPathName)
 &gt; 0 &amp;&amp;
 "指定されたアニメ名のアニメはMV1に付属していませんでした");<em><br>
