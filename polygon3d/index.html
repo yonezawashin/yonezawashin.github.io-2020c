@@ -9431,5 +9431,996 @@ DxLib::DrawString(0, 0, "枠の無いスクリーンを使えば2Pの分割画�
 <br>
 <br>
 <br>
+<h1><a id="mozTocId0012" class="mozTocH1"></a>.ply形式の3DモデルデータをResourceクラ
+スを継承したDataPly構造体で読み込む</h1>
+<br>
+<p><code>DataPly.hを新規作成</code>し
+てResourceクラスを継承して
+.ply形式の3Dモデルデータを読み込む機能を追加してmain.cppのコードをすっきりさせてしまいましょう。</p>
+<p class="source">#ifndef DATAPLY_H_<br>
+#define DATAPLY_H_<br>
+<br>
+#include "Dxlib.h"<br>
+<br>
+#include &lt;memory&gt;<br>
+#include &lt;vector&gt;<br>
+#include &lt;string&gt;<br>
+<br>
+#include &lt;assert.h&gt; // 読込み失敗表示用<br>
+<br>
+#include "Ply.h"<br>
+<br>
+#include "Resource.h"<br>
+<br>
+// .ply形式の3Dモデルデータを読み込む構造体<br>
+struct DataPly : public Resource<br>
+{<br>
+protected: //
+ファクトリーパターンでコンストラクタ経由の生成経路をprotected隠蔽(ResourceクラスのMakeShared関数経由でしか新規生成は
+できない)<br>
+&nbsp;&nbsp;&nbsp; DataPly(std::string filePath = "", bool
+isGPUBufferRendering = false)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Resource(filePath,
+Type::Ply), isGPUBufferRendering{ isGPUBufferRendering } {}<br>
+public:<br>
+&nbsp;&nbsp;&nbsp; size_t numIndex = 0;<br>
+&nbsp;&nbsp;&nbsp; int VertexBufHandle{ -1 }; // GPU側の頂点バッファへのハンドル番号<br>
+&nbsp;&nbsp;&nbsp; int IndexBufHandle{ -1 }; // GPU側のインデックスバッファへのハンドル番号<br>
+&nbsp;&nbsp;&nbsp; bool isSendDataToGPU = false; // GPUへデータを転送済みか<br>
+&nbsp;&nbsp;&nbsp; bool isGPUBufferRendering; //
+GPUバッファにVertexとIndexデータを送ってCPU側にはデータをもたないようにするか?<br>
+&nbsp;&nbsp;&nbsp; std::vector&lt;uint32_t&gt; Index; //
+3Dモデルのポリゴンのインデックス配列<br>
+&nbsp;&nbsp;&nbsp; std::vector&lt;VERTEX3DSHADER&gt; Vertex; //
+3Dモデルのポリゴンの頂点配列<br>
+<br>
+&nbsp;&nbsp;&nbsp; Ply::Data Data; //.plyのデータ<br>
+<br>
+&nbsp;&nbsp;&nbsp; bool isInitialized = false;
+//[継承2重ロード対策]ロード済みになったらtrueに falseのときにLoadするとリロード<br>
+<br>
+&nbsp;&nbsp;&nbsp; virtual ~DataPly()<br>
+&nbsp;&nbsp;&nbsp; {// 仮想デストラクタ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clear();// 2次元配列データのお掃除<br>
+&nbsp;&nbsp;&nbsp; };<br>
+<br>
+&nbsp;&nbsp;&nbsp; virtual void clearCPUData() // CPU上の配列データをクリアする<br>
+&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // [確実にメモリを空にするには]
+http://vivi.dyndns.org/tech/cpp/vector.html#shrink_to_fit<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+std::vector&lt;VERTEX3DSHADER&gt;().swap(Vertex); // 空のテンポラリオブジェクトでリセット<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;unsigned
+int&gt;().swap(Index); // 空のテンポラリオブジェクトでリセット<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; virtual void clearGPUData() // GPU上のバッファデータをクリアする<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DeleteVertexBuffer(VertexBufHandle); // GPUの頂点バッファを削除する<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DeleteIndexBuffer(IndexBufHandle); // GPUのインデックスバッファを削除する<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VertexBufHandle = -1;
+IndexBufHandle = -1;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isSendDataToGPU = false;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isGPUBufferRendering = false;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; // データをクリアしてメモリを節約する<br>
+&nbsp;&nbsp;&nbsp; virtual void clear()<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Data.clear();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clearCPUData(); //
+CPU上の配列データをクリアする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clearGPUData(); //
+GPUのインデックスバッファを削除する<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isInitialized = false;
+//ロード済みフラグをOFF<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; // ファイルの読み込み<br>
+&nbsp;&nbsp;&nbsp; virtual int Load(const std::string&amp; filePath =
+"") override<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (filePath == ""
+&amp;&amp; m_FilePath == "") return -1; //ファイル名がない<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if
+(files.count(filePath) &gt; 0 &amp;&amp; isInitialized) return 0; //
+すでに辞書にロード済みファイルがあった<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (filePath != ""
+&amp;&amp; m_FilePath == "") m_FilePath = filePath; // 読み出しファイルパスを記録<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clear(); //データを一旦クリア<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Ply::load(m_FilePath, Data);
+// .plyデータをロード<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto vertex =
+Data["vertex"]; // 頂点へのアクセス<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(vertex-&gt;size() !=
+0 &amp;&amp; "Plyデータの頂点サイズが0です。ファイルのパスは大丈夫ですか?");<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex.resize(vertex-&gt;size()); // 配列の数の事前確保<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+[std::shared_ptrへthis&darr;ポインタをつかうためには]
+https://www.kabuku.co.jp/developers/cpp_enable_shared_from_this<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; files.emplace(m_FilePath,
+shared_from_this()); // リソースの辞書へ登録
+https://cpprefjp.github.io/reference/memory/enable_shared_from_this.html<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+[.plyの頂点のプロパティ情報]https://jp.mathworks.com/help/vision/ug/the-ply-
+format.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float* p_x =
+vertex-&gt;properties["x"]-&gt;ptr&lt;float&gt;();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float* p_y =
+vertex-&gt;properties["y"]-&gt;ptr&lt;float&gt;();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float* p_z =
+vertex-&gt;properties["z"]-&gt;ptr&lt;float&gt;();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float* p_nx =
+(vertex-&gt;properties.has_key("nx")) ?
+vertex-&gt;properties["nx"]-&gt;ptr&lt;float&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float* p_ny =
+(vertex-&gt;properties.has_key("ny")) ?
+vertex-&gt;properties["ny"]-&gt;ptr&lt;float&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float* p_nz =
+(vertex-&gt;properties.has_key("nz")) ?
+vertex-&gt;properties["nz"]-&gt;ptr&lt;float&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool has_norm = !(p_nx ==
+nullptr || p_ny == nullptr || p_nz == nullptr);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float* p_s =
+(vertex-&gt;properties.has_key("s")) ?
+vertex-&gt;properties["s"]-&gt;ptr&lt;float&gt;() : nullptr; //
+Blender書き出しでは(u,v)ではなく(s,t)として書き出されている<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float* p_t =
+(vertex-&gt;properties.has_key("t")) ?
+vertex-&gt;properties["t"]-&gt;ptr&lt;float&gt;() : nullptr;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const unsigned char* p_R =
+(vertex-&gt;properties.has_key("red")) ?
+vertex-&gt;properties["red"]-&gt;ptr&lt;unsigned char&gt;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+(vertex-&gt;properties.has_key("r")) ?
+vertex-&gt;properties["r"]-&gt;ptr&lt;unsigned char&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const unsigned char* p_G =
+(vertex-&gt;properties.has_key("green")) ?
+vertex-&gt;properties["green"]-&gt;ptr&lt;unsigned char&gt;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+(vertex-&gt;properties.has_key("g")) ?
+vertex-&gt;properties["g"]-&gt;ptr&lt;unsigned char&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const unsigned char* p_B =
+(vertex-&gt;properties.has_key("blue")) ?
+vertex-&gt;properties["blue"]-&gt;ptr&lt;unsigned char&gt;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+(vertex-&gt;properties.has_key("b")) ?
+vertex-&gt;properties["b"]-&gt;ptr&lt;unsigned char&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const unsigned char* p_A =
+(vertex-&gt;properties.has_key("alpha")) ?
+vertex-&gt;properties["alpha"]-&gt;ptr&lt;unsigned char&gt;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+(vertex-&gt;properties.has_key("a")) ?
+vertex-&gt;properties["a"]-&gt;ptr&lt;unsigned char&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool has_color = !(p_R ==
+nullptr || p_G == nullptr || p_B == nullptr || p_A == nullptr);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (size_t i = 0, iEnd =
+Vertex.size(); i &lt; iEnd; i += 1)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+頂点のデータをセット 各ツールの系一覧 https://zenn.dev/it_ks/articles/cbe27860548ea1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//Vertex[i].pos = VGet(p_x[i], p_y[i], p_z[i]); // 右手系(裏面は時計回り)
+https://yttm-work.jp/gmpg/gmpg_0014.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//Vertex[i].pos = VGet(p_x[i], -p_y[i], p_z[i]); //
+右手Y&uarr;&rarr;左手Y&uarr;系(裏面は反時計回り)
+http://www.ohshiro.tuis.ac.jp/~ohshiro/gamesoft/coordinate/index.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//Vertex[i].norm = (has_norm) ? VNorm(VGet(p_nx[i], -p_ny[i], p_nz[i]))
+: VGet(0.0f, 0.0f, 0.0f);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+右手Z&uarr;&rarr;左手Y&uarr;系(裏面は反時計回り)
+http://www.ohshiro.tuis.ac.jp/~ohshiro/gamesoft/coordinate/index.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[i].pos = VGet(-(p_y[i]), p_z[i], p_x[i]);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[i].norm = (has_norm) ? VNorm(VGet(-p_ny[i], p_nz[i], p_nx[i])) :
+VGet(0.0f, 0.0f, 0.0f);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[i].dif = (has_color) ? GetColorU8(p_R[i], p_G[i], p_B[i],
+p_A[i]) : GetColorU8(255, 255, 255, 255);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[i].spc = GetColorU8(255, 255, 255, 255);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[i].u = (p_s == nullptr) ? 0.0f : p_s[i];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[i].v = (p_t == nullptr) ? 0.0f : 1 - p_t[i];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[i].su = -1.0f;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[i].sv = 0.0f;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const auto&amp; face_index =
+Data["face"]-&gt;properties["vertex_indices"];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float* face_uv =
+(Data["face"]-&gt;properties.has_key("texcoord")) ?
+Data["face"]-&gt;properties["texcoord"]-&gt;ptr&lt;float&gt;() :
+nullptr;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Index.resize(face_index-&gt;size() * 3);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (size_t i = 0, iEnd =
+face_index-&gt;size(), nFace = 0; i &lt; iEnd; i += 3)// i +
+face_index-&gt;listCounts[nFace], ++nFace)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//size_t count = face_index-&gt;listCounts[nFace]; // ポリゴンならインデックス数は3
+四角形ならインデックス数は4 .. 5 .. 6<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//size_t nPolygon = count - 2; // 三角ポリゴンの数 = インデックスの数 - 2 (例) 3 - 2 =
+1ポリゴン , 4 - 2 = 2ポリゴン ..<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//for (size_t n = 0; n &lt; nPolygon; ++n)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//for
+(size_t j = 0; j &lt; 3; ++j) // 右手系(裏面は時計回り)
+https://yttm-work.jp/gmpg/gmpg_0014.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for
+(size_t j = 2; j + 1 &gt; 0; --j) // 左手系(裏面は反時計回り)
+http://www.ohshiro.tuis.ac.jp/~ohshiro/gamesoft/coordinate/index.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+unsigned
+int index = face_index-&gt;at&lt;unsigned int&gt;(i + j);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+size_t uvIndex = 2 * (i + j); // uとv 2つ * ( i + j )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if
+(Vertex[index].su != -1.0f) // su sv の
+suが初期値-1でなく設定済なら頂点の被りとして新しいnewIndexとして新規Index番号で点を新規登録<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+unsigned int newIndex = Vertex.size();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex.emplace_back(Vertex[index]);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+index
+= newIndex;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Index.push_back(newIndex);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[index].su
+= 0.0f;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//Index[i
++ j] = index;&nbsp;&nbsp; // 右手系(裏面は時計回り)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Index[i
++ 2 - j] = index; // 左手系(裏面は反時計回り)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if
+(face_uv != nullptr)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[index].u
+= face_uv[uvIndex];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[index].v
+= 1.0f - face_uv[uvIndex + 1];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+三角形の2辺のベクトルの外積から法線を計算(法線がないとライトの光の反射方向をシェーディングできないから)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if
+(j == 0 &amp;&amp; !has_norm &amp;&amp; Vertex[index].norm.x == 0.0f
+&amp;&amp; Vertex[index].norm.y == 0.0f &amp;&amp; Vertex[index].norm.z
+== 0.0f)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+unsigned int index0 = Index[i];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+unsigned int index1 = Index[i + 1];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+unsigned int index2 = Index[i + 2];<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+外積 a&times;b cross_a_b を求める
+https://examist.jp/mathematics/space-vector/vector-gaiseki/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+VECTOR a = VSub(Vertex[index1].pos, Vertex[index0].pos);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+VECTOR b = VSub(Vertex[index2].pos, Vertex[index0].pos);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+左手系(表面は時計回り) 右手系と左手系では裏面の時計回りと反時計回りが変わる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+VECTOR cross1_2 = VCross(a, b);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+右手系(表面は反時計回り)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//const
+VECTOR cross2_1 = VCross(b, a);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+単位ベクトル(ノルム)に直す [単位ベクトル]は&radic;(x*x + y*y + z*z) = 1となる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+VECTOR norm1_2 = VNorm(cross1_2);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//const
+VECTOR norm2_1 = VNorm(cross2_1);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[index0].norm
+= norm1_2; Vertex[index1].norm = norm1_2;
+Vertex[index2].norm = norm1_2;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//Vertex[index0].norm
+= norm2_1; Vertex[index1].norm = norm2_1;
+Vertex[index2].norm = norm2_1; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+++numIndex;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isGPUBufferRendering)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+SendDataToGPU(); // GPUのバッファへVertexとIndexデータ配列を送信<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isInitialized = true;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 0;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; void SendDataToGPU() // GPUのバッファへVertexとIndexデータ配列を送信<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int result = false;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VertexBufHandle =
+DxLib::CreateVertexBuffer(Vertex.size(), DX_VERTEX_TYPE_SHADER_3D); //
+頂点バッファを作成<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result =
+DxLib::SetVertexBufferData(0, Vertex.data(), Vertex.size(),
+VertexBufHandle); // 頂点バッファに頂点データを転送する<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//UpdateVertexBuffer(VertexBufHandle, UpdateStartIndex,
+UpdateVertexNum); // 頂点バッファハンドルの頂点バッファへの変更を適用する( GetBufferVertexBuffer
+で取得したバッファへの変更を反映する )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (result == -1) return;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; IndexBufHandle =
+DxLib::CreateIndexBuffer(Index.size(), DX_INDEX_TYPE_32BIT); //
+インデックスバッファを作成<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result =
+DxLib::SetIndexBufferData(0, Index.data(), Index.size(),
+IndexBufHandle); // インデックスバッファにインデックスデータを転送する<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (result == -1) return;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isGPUBufferRendering = true;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isSendDataToGPU = true;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+};<br>
+<br>
+#endif<br>
+</p>
+<br>
+<p><code>main.cpp</code>のコードを.ply形式の3DデータをDataPly構造体経由で読み込む形に変更する。</p>
+<p class="source">#include "DxLib.h"<br>
+#include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
+#include "Input.h"<br>
+#include "Screen.h"<br>
+#include "Ply.h"<br>
+#include "DataMV1.h"<br>
+<em>#include "DataPly.h"</em><br>
+<br>
+#include "Editor.h"<br>
+<br>
+//
+設定画面の【リンカー】&rarr;【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMain
+からプログラムが開始する<br>
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
+lpCmdLine, int nCmdShow)<br>
+{<br>
+&nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+&nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); //
+画面サイズWidth&times;Heightのカラービット数32ビットで起動<br>
+&nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);//
+ウィンドウサイズWidth&times;Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+&nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+&nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+&nbsp;&nbsp;&nbsp;
+SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間
+違ってるかも<br>
+<br>
+&nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+&nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+&nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+&nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; // ゲームのwhileループを開始する前の初期化処理<br>
+&nbsp;&nbsp;&nbsp; float animTime = 0.0f; // アニメの現在時刻<br>
+&nbsp;&nbsp;&nbsp; float animSpeed = 2.0f; // MV1のアニメの再生速度設定 2.0fなら2倍速<br>
+&nbsp;&nbsp;&nbsp; float animStepTime = 1.0f; // MV1のアニメの毎時間の進む時間の設定<br>
+&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataMV1&gt; pDevilData =
+Resource::MakeShared&lt;DataMV1&gt;("Image/devil@kick.mv1");<br>
+&nbsp;&nbsp;&nbsp; pDevilData-&gt;Load(); // 3Dモデルをmv1形式で読込み<br>
+&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataMV1&gt; pDevilAttackAnimData
+= Resource::MakeShared&lt;DataMV1&gt;("Image/devil@jump.mv1");<br>
+&nbsp;&nbsp;&nbsp; pDevilAttackAnimData-&gt;Load(); //
+3Dの追加アニメデータをmv1形式で読込み<br>
+&nbsp;&nbsp;&nbsp; pDevilData-&gt;AttachAnim(*pDevilAttackAnimData); //
+アニメを追加でflyのほうをベースとしたモデルにアタッチ<br>
+&nbsp;&nbsp;&nbsp; int animeButton
+= 0; // ボタンでアニメを切り替えられるようにする<br>
+<u></u><br>
+&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; pTexImage =
+Resource::MakeShared&lt;Texture&gt;("Image/dice.png");<br>
+&nbsp;&nbsp;&nbsp; pTexImage-&gt;Load(); //
+MakeSharedとLoadを分けた(フォルダだけ設定しておいて、あとからロードもできるように)<br>
+&nbsp;&nbsp;&nbsp; assert((int)*pTexImage != -1); //
+画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+<br>
+&nbsp;&nbsp;&nbsp; <em>std::shared_ptr&lt;DataPly&gt; pPlyData =
+Resource::MakeShared&lt;DataPly&gt;("Image/dice.ply");<br>
+&nbsp;&nbsp;&nbsp; pPlyData-&gt;Load(); //
+MakeSharedとLoadを分けた(フォルダだけ設定しておいて、あとからロードもできるように)</em><br>
+&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; <u>Ply::Data Data; // .plyのデータのクラス<br>
+&nbsp;&nbsp;&nbsp; Ply::load("Image/dice.ply",
+Data); // .plyデータをロード 軸を変えてdice1.plyや
+dice2.plyなどいろいろ試してみよう</u><br>
+<br>
+&nbsp;&nbsp;&nbsp; <u>size_t numIndex = 0; // インデックスの数<br>
+&nbsp;&nbsp;&nbsp; std::vector&lt;uint32_t&gt; Index; //
+3Dモデルのポリゴンのインデックス配列<br>
+&nbsp;&nbsp;&nbsp; std::vector&lt;VERTEX3D&gt; Vertex; //
+3Dモデルのポリゴンの頂点配列<br>
+<br>
+&nbsp;&nbsp;&nbsp; auto vertex = Data["vertex"]; // 頂点へのアクセス<br>
+&nbsp;&nbsp;&nbsp; assert(vertex-&gt;size() != 0 &amp;&amp;
+"Plyデータの頂点サイズが0です。ファイルのパスは大丈夫ですか?");<br>
+&nbsp;&nbsp;&nbsp; Vertex.resize(vertex-&gt;size()); // 配列の数の事前確保<br>
+<br>
+&nbsp;&nbsp;&nbsp; // [.plyの頂点のプロパティ情報]
+https://jp.mathworks.com/help/vision/ug/the-ply-format.html<br>
+&nbsp;&nbsp;&nbsp; const float* p_x =
+vertex-&gt;properties["x"]-&gt;ptr&lt;float&gt;();<br>
+&nbsp;&nbsp;&nbsp; const float* p_y =
+vertex-&gt;properties["y"]-&gt;ptr&lt;float&gt;();<br>
+&nbsp;&nbsp;&nbsp; const float* p_z =
+vertex-&gt;properties["z"]-&gt;ptr&lt;float&gt;();<br>
+&nbsp;&nbsp;&nbsp; const float* p_nx =
+(vertex-&gt;properties.has_key("nx")) ?
+vertex-&gt;properties["nx"]-&gt;ptr&lt;float&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp; const float* p_ny =
+(vertex-&gt;properties.has_key("ny")) ?
+vertex-&gt;properties["ny"]-&gt;ptr&lt;float&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp; const float* p_nz =
+(vertex-&gt;properties.has_key("nz")) ?
+vertex-&gt;properties["nz"]-&gt;ptr&lt;float&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp; bool has_norm = !(p_nx == nullptr || p_ny == nullptr
+|| p_nz == nullptr);<br>
+&nbsp;&nbsp;&nbsp; const float* p_s =
+(vertex-&gt;properties.has_key("s")) ?
+vertex-&gt;properties["s"]-&gt;ptr&lt;float&gt;() : nullptr; //
+Blender書き出しでは(u,v)ではなく(s,t)として書き出されている<br>
+&nbsp;&nbsp;&nbsp; const float* p_t =
+(vertex-&gt;properties.has_key("t")) ?
+vertex-&gt;properties["t"]-&gt;ptr&lt;float&gt;() : nullptr;<br>
+<br>
+&nbsp;&nbsp;&nbsp; const unsigned char* p_R =
+(vertex-&gt;properties.has_key("red")) ?
+vertex-&gt;properties["red"]-&gt;ptr&lt;unsigned char&gt;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+(vertex-&gt;properties.has_key("r")) ?
+vertex-&gt;properties["r"]-&gt;ptr&lt;unsigned char&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp; const unsigned char* p_G =
+(vertex-&gt;properties.has_key("green"))
+? vertex-&gt;properties["green"]-&gt;ptr&lt;unsigned char&gt;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+(vertex-&gt;properties.has_key("g")) ?
+vertex-&gt;properties["g"]-&gt;ptr&lt;unsigned char&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp; const unsigned char* p_B =
+(vertex-&gt;properties.has_key("blue"))
+? vertex-&gt;properties["blue"]-&gt;ptr&lt;unsigned char&gt;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+(vertex-&gt;properties.has_key("b")) ?
+vertex-&gt;properties["b"]-&gt;ptr&lt;unsigned char&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp; const unsigned char* p_A =
+(vertex-&gt;properties.has_key("alpha"))
+? vertex-&gt;properties["alpha"]-&gt;ptr&lt;unsigned char&gt;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+(vertex-&gt;properties.has_key("a")) ?
+vertex-&gt;properties["a"]-&gt;ptr&lt;unsigned char&gt;() : nullptr;<br>
+&nbsp;&nbsp;&nbsp; bool has_color = !(p_R == nullptr || p_G == nullptr
+|| p_B == nullptr || p_A == nullptr);<br>
+<br>
+&nbsp;&nbsp;&nbsp; for (size_t i = 0, iEnd = Vertex.size(); i &lt;
+iEnd; i += 1)<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 頂点のデータをセット 各ツールの系一覧
+https://zenn.dev/it_ks/articles/cbe27860548ea1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //Vertex[i].pos =
+VGet(p_x[i], p_y[i], p_z[i]); // 右手系(裏面は時計回り)
+https://yttm-work.jp/gmpg/gmpg_0014.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //Vertex[i].pos =
+VGet(p_x[i], -p_y[i], p_z[i]); //
+右手Y&uarr;&rarr;左手Y&uarr;系(裏面は反時計回り)
+http://www.ohshiro.tuis.ac.jp/~ohshiro/gamesoft/coordinate/index.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //Vertex[i].norm =
+(has_norm) ? VNorm(VGet(p_nx[i], -p_ny[i], p_nz[i])) : VGet(0.0f, 0.0f,
+0.0f);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+右手Z&uarr;&rarr;左手Y&uarr;系(裏面は反時計回り)
+http://www.ohshiro.tuis.ac.jp/~ohshiro/gamesoft/coordinate/index.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[i].pos =
+VGet(-(p_y[i]),
+p_z[i], p_x[i]);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[i].norm = (has_norm)
+? VNorm(VGet(-p_ny[i], p_nz[i], p_nx[i])) : VGet(0.0f, 0.0f,
+0.0f);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[i].dif = (has_color)
+? GetColorU8(p_R[i], p_G[i], p_B[i], p_A[i]) : GetColorU8(255, 255,
+255, 255);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[i].spc =
+GetColorU8(255, 255, 255, 255);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[i].u = (p_s ==
+nullptr) ? 0.0f : p_s[i];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[i].v = (p_t ==
+nullptr) ? 0.0f : 1 - p_t[i];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[i].su = -1.0f;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[i].sv = 0.0f;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; const auto&amp; face_index =
+Data["face"]-&gt;properties["vertex_indices"];<br>
+&nbsp;&nbsp;&nbsp; Index.resize(face_index-&gt;size() * 3);<br>
+<br>
+&nbsp;&nbsp;&nbsp; for (size_t i = 0, iEnd = face_index-&gt;size(),
+nFace = 0; i &lt; iEnd; i += 3)<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //for (size_t j = 0; j &lt;
+3; ++j) // 右手系(裏面は時計回り) https://yttm-work.jp/gmpg/gmpg_0014.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (size_t j = 2; j + 1
+&gt; 0; --j) // 左手系(裏面は反時計回り)
+http://www.ohshiro.tuis.ac.jp/~ohshiro/gamesoft/coordinate/index.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+unsigned int index = face_index-&gt;at&lt;unsigned int&gt;(i + j);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const size_t uvIndex = 2 * (i + j); // uとv 2つ * ( i + j )<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//Index[i + j] = index;&nbsp;&nbsp; // 右手系(裏面は時計回り)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Index[i + 2 - j] = index; // 左手系(裏面は反時計回り)<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+三角形の2辺のベクトルの外積から法線を計算(法線がないとライトの光の反射方向をシェーディングできないから)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if
+(j == 0 &amp;&amp; !has_norm &amp;&amp;
+Vertex[index].norm.x == 0.0f &amp;&amp; Vertex[index].norm.y == 0.0f
+&amp;&amp; Vertex[index].norm.z == 0.0f)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+unsigned
+int
+index0
+=
+Index[i];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+unsigned
+int
+index1
+=
+Index[i
++
+1];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+unsigned
+int
+index2
+=
+Index[i
++
+2];<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+外積 a&times;b cross_a_b を求める
+https://examist.jp/mathematics/space-vector/vector-gaiseki/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+VECTOR
+a
+=
+VSub(Vertex[index1].pos,
+Vertex[index0].pos);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+VECTOR
+b
+=
+VSub(Vertex[index2].pos,
+Vertex[index0].pos);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+左手系(表面は時計回り) 右手系と左手系では裏面の時計回りと反時計回りが変わる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+VECTOR
+cross1_2
+=
+VCross(a,
+b);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+右手系(表面は反時計回り)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//const
+VECTOR
+cross2_1
+=
+VCross(b,
+a);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+単位ベクトル(ノルム)に直す [単位ベクトル]は&radic;(x*x + y*y + z*z) = 1となる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const
+VECTOR
+norm1_2
+=
+VNorm(cross1_2);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//const
+VECTOR
+norm2_1
+=
+VNorm(cross2_1);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Vertex[index0].norm
+=
+norm1_2;
+Vertex[index1].norm
+=
+norm1_2;
+Vertex[index2].norm
+=
+norm1_2;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//Vertex[index0].norm
+=
+norm2_1;
+Vertex[index1].norm
+=
+norm2_1;
+Vertex[index2].norm
+=
+norm2_1;
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+++numIndex;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; }</u><br>
+<br>
+<br>
+&nbsp;&nbsp;&nbsp; VECTOR keyControlXYZ; // 上下左右キーでxy位置を動かせるように<br>
+&nbsp;&nbsp;&nbsp; keyControlXYZ.x = 0.0f; keyControlXYZ.y = 0.0f;
+keyControlXYZ.z
+= 0;<br>
+&nbsp;&nbsp;&nbsp; VECTOR keyControlAngle = VGet(0.0f,0.0f,0.0f); // 回転<br>
+<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する<br>
+&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen1 =
+SubScreen::Create()-&gt;Set(600, 450, 600, 100, 255, 0,
+"サブスクリーン1")-&gt;SetIsBarFrameShow(true,true);<br>
+&nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する<br>
+&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen2 =
+SubScreen::Create()-&gt;Set(200, 100, 150, 100, 255, 1,
+"サブスクリーン2\nバーを30で太めに")-&gt;SetFrame(1,GetColor(255,255,255),true,30);<br>
+&nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する 透明度を128にして半透明にしてみる<br>
+&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen3 =
+SubScreen::Create()-&gt;Set(150, 450, 300, 100, 128, 1,
+"サブスクリーン3")-&gt;SetIsBarFrameShow(true)-&gt;SetBarColor(GetColor(0, 0,
+255));<br>
+&nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する<br>
+&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen4 =
+SubScreen::Create()-&gt;Set(300, 100, 600, 100, 255, 1, "サブスクリーン4");<br>
+<br>
+&nbsp;&nbsp;&nbsp; // バックカリングするか?(裏面になっているポリゴンを書かない処理)<br>
+&nbsp;&nbsp;&nbsp; DxLib::SetUseBackCulling(TRUE);<br>
+<br>
+&nbsp;&nbsp;&nbsp; Editor&amp; editor = Editor::GetInstance(); //
+エディタのシングルトン参照を得る<br>
+<br>
+&nbsp;&nbsp;&nbsp; //奥行0.1～5000までをカメラの描画範囲とする<br>
+&nbsp;&nbsp;&nbsp; DxLib::SetCameraNearFar(0.1f, 5000.0f);<br>
+<br>
+&nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+<br>
+&nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+&nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+&nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは&times;ボタン押したときなど<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen();//
+一旦キャンバスをきれいにまっさらに<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Input::Update(); //
+マウスのドラッグなどを更新<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubScreen::UpdateScreens();
+// スクリーンの位置やドラッグによる移動を更新する<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateKeyInput();
+// エディタのキーのインプットを更新<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateMouseInput();
+// エディタのマウスのインプットを更新<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateCamera(); //
+エディタのカメラを更新<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // キーボードの 0 1
+キーで3Dアニメを切り替えられるようにする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if
+(Input::GetButton(Pad::Keyboard, KEY_INPUT_0))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+animeButton = 0;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if
+(Input::GetButton(Pad::Keyboard, KEY_INPUT_1))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+animeButton = 1;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int PadInput =
+GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int speed = 5;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 上下左右キーでポリゴンを描く起点(x,y)を移動<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp;
+PAD_INPUT_LEFT)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyControlXYZ.x -=
+speed;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (PadInput &amp;
+PAD_INPUT_RIGHT) keyControlXYZ.x += speed;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp;
+PAD_INPUT_UP)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyControlXYZ.y
++= speed;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (PadInput &amp;
+PAD_INPUT_DOWN) keyControlXYZ.y -= speed;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR position =
+VGet(keyControlXYZ.x, keyControlXYZ.y, keyControlXYZ.z); // 3Dモデルの位置<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float width =&nbsp;
+pTexImage-&gt;m_XSize;
+float
+height
+=&nbsp; pTexImage-&gt;m_YSize; // テクスチャ画像のサイズ<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR scale = VGet(1.0f,
+1.0f, 1.0f); // 拡大縮小スケール<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+キーボードのzキー(A)とxキー(B)とcキー(C)でx,y,z軸まわりに画像を回転<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp;
+PAD_INPUT_A) keyControlAngle.x += speed;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp;
+PAD_INPUT_B) keyControlAngle.y += speed;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp;
+PAD_INPUT_C) keyControlAngle.z += speed;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float Deg2Rad =
+DX_PI_F / 180.0f; // 角度(単位:&deg;度)からラジアン(単位:rad)へ変換する係数<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float xRotate =
+keyControlAngle.x * Deg2Rad;&nbsp; const float
+yRotate = keyControlAngle.y * Deg2Rad; const float zRotate =
+keyControlAngle.z * Deg2Rad;<br>
+<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX&nbsp;
+matWorldDefault; // デフォルトのワールド行列<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::GetTransformToWorldMatrix(&amp;matWorldDefault); //
+デフォルトのワールド行列を記憶しておく<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//[ワールド行列] https://ny-program.hatenablog.com/entry/2019/09/15/114245<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+MATRIX mat; // モデルのスケール&times;回転&times;移動を行列計算で設定する<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//[スケール]拡大縮小のスケール行列を得る<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat
+= MGetScale(scale); // まずは拡大縮小のスケール行列からはじめる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+[勉強]&darr;スケール行列は 斜めに x , y , zのスケールの倍率がならんでいる行列<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//mat.m[0][0] = scale.x;&nbsp; mat.m[0][1] = 0.0f;&nbsp;&nbsp;&nbsp;
+mat.m[0][2] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[0][3] = 0.0f;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//mat.m[1][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[1][1] = scale.y;
+mat.m[1][2] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[1][3] = 0.0f;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//mat.m[2][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[2][1] =
+0.0f;&nbsp;&nbsp;&nbsp; mat.m[2][2] = scale.z;&nbsp; mat.m[2][3] = 0.0f;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//mat.m[3][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[3][1] =
+0.0f;&nbsp;&nbsp;&nbsp; mat.m[3][2] = 0.0f;&nbsp;&nbsp; &nbsp;
+mat.m[3][3] = 1.0f;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//[回転]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+MATRIX matRot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::CreateIdentityMatrix(&amp;matRot);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+★MMultは行列の乗算【乗算した順にz軸回転&rarr;x軸回転&rarr;y軸回転&rarr;平行移動】<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+matRot = MMult(matRot, MGetRotZ(zRotate));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+matRot = MMult(matRot, MGetRotX(xRotate));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+matRot = MMult(matRot, MGetRotY(yRotate));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat
+= MMult(mat, matRot); //スケール &times; 回転<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//[移動]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+MATRIX matTrans = MGetTranslate(VGet(position.x, position.y,
+position.z)); // 位置positionをここで設定<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat
+= MMult(mat, matTrans); //スケール&times;回転&times;移動<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::SetTransformToWorld(&amp;mat); // [ワールド行列を指定]
+https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4341<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::DrawPolygon32bitIndexed3D(<em>pPlyData-&gt;</em>Vertex.data(),
+<em>pPlyData-&gt;</em>Vertex.size(), <em>pPlyData-&gt;</em>Index.data(),
+<em>pPlyData-&gt;</em>numIndex / 3, (int)*pTexImage,
+FALSE); //
+三角形ポリゴンをたくさん描画<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::SetTransformToWorld(&amp;matWorldDefault); // デフォルトのワールド行列に戻しておく<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::MV1DrawModel(devil3DModel); // 3Dモデル(.mv1形式)を描く<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0<em></em><em></em>,
+100,
+GetColor(255,
+255,
+0),
+"x:%f
+y:%f
+Angle:%f
+%f
+%f",
+position.x, position.y, keyControlAngle.x,
+keyControlAngle.y, keyControlAngle.z);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ファイルのパス + ":" +
+アニメ名でアクセス<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string animPathName =
+(animeButton<span style="font-weight: bold;"> </span>== 0) ?
+"Image/devil@kick.mv1:mixamo.com" : "Image/devil@jump.mv1:mixamo.com"<em>;<br>
+</em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+assert(pDevilData-&gt;count(animPathName)
+&gt; 0 &amp;&amp;
+"指定されたアニメ名のアニメはMV1に付属していませんでした");<em><br>
+</em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime +=
+animStepTime *
+animSpeed; // 1.0&times;2倍 なら2倍速でアニメ時刻が進む<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (animTime &gt;
+(*pDevilData)[animPathName].endTime)<em><br>
+</em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+animTime = 0.0f; // 0秒目へとアニメをループさせる<em><br>
+<br>
+</em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 再生時間をセットする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::MV1SetAttachAnimTime((int)*pDevilData,
+(*pDevilData)[animPathName].index,
+animTime);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+subscreen1-&gt;ClearDrawScreen(); // 描く前に一旦キャンバスをきれいにまっさらに<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen1-&gt;DrawStart();
+// このDrawStartとDrawEndのあいだにDraw～されたらサブのスクリーンに描かれるようになる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //
+サブの別のスクリーンの(0,0)位置を起点に文字列を描く<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::DrawString(0, 0, "サブのスクリーンを使ってWindowsみたいな自作ウインドウを描画してみる",
+GetColor(255, 255, 255));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen1-&gt;DrawEnd();<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+subscreen3-&gt;ClearDrawScreen(); // 描く前に一旦キャンバスをきれいにまっさらに<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen3-&gt;DrawStart();
+// このDrawStartとDrawEndのあいだにDraw～されたらサブのスクリーンに描かれるようになる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //
+半透明のスクリーンも描ける<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::DrawBox(0, 0, subscreen3-&gt;Width, subscreen3-&gt;Height,
+GetColor(0, 255, 0), TRUE);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::DrawString(0, 0, "アルファを設定すれば\n半透明スクリーンも可能", GetColor(255, 255,
+255));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen3-&gt;DrawEnd();<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+subscreen4-&gt;ClearDrawScreen(); // 描く前に一旦キャンバスをきれいにまっさらに<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen4-&gt;DrawStart();
+// このDrawStartとDrawEndのあいだにDraw～されたらサブのスクリーンに描かれるようになる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //
+サブの別のスクリーンの(0,0)位置を起点に文字列を描く<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DxLib::DrawString(0, 0, "枠の無いスクリーンを使えば2Pの分割画面などにも応用できる", GetColor(255,
+255, 255));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen4-&gt;DrawEnd();<br>
+<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubScreen::DrawScreens(); //
+サブのスクリーンを全部描く<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.Draw(); //
+エディタのDraw処理<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip();
+//隠れて裏側で描いておいた画像を表面に入れ替え<br>
+&nbsp;&nbsp;&nbsp; }<br>
+<br>
+&nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+&nbsp;&nbsp;&nbsp; WaitKey();<br>
+&nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+&nbsp;&nbsp;&nbsp; DxLib_End();<br>
+&nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+&nbsp;&nbsp;&nbsp; return 0;<br>
+}</p>
+いかがでしょう? devilのデータに隠れて見えにくいですが、ダイスの.ply形式のデータが今まで通り表示されていますでしょうか?
+<br>
+<br>
+<br>
 </body>
 </html>
