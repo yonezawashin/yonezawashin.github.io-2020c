@@ -4928,9 +4928,7 @@ int SubScreen::dragingID{ -1 }; // ドラッグ中のサブスクリーンのID<
 </p>
 <p></p>
 <p><code>main.cpp</code><a
- id="mozTocId0004" class="mozTocH1">のコードにSubScreenクラスを使ってドラッグできるウィンドウズみた
-いなサブのスクリーンを表
-示させてみましょう。</p>
+ id="mozTocId0004" class="mozTocH1">のコードにSubScreenクラスを使ってドラッグできるウィンドウズみたいなサブのスクリーンを表示させてみましょう。</p>
 <p class="source"><a id="mozTocId0004" class="mozTocH1">#include
 "DxLib.h"<br>
 #include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
@@ -5245,7 +5243,7 @@ SubScreen::Create()-&gt;Set(150, 450, 300, 100, 128, 1,
 &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen4 =
 SubScreen::Create()-&gt;Set(300, 100, 600, 100, 255, 1, "サブスクリーン4");</em><br>
 <br>
-&nbsp;&nbsp;&nbsp; <u>float subscreenX = 0, subscreenY = 0; //
+<u>&nbsp;&nbsp;&nbsp; float subscreenX = 0, subscreenY = 0; //
 別描画スクリーンを描く位置<br>
 &nbsp;&nbsp;&nbsp; int subscreenWidth = 600, subscreenHeight = 100;<br>
 &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(TRUE); //
