@@ -25,6 +25,7 @@
       <li><a href="#mozTocId0006">Vector2にベクトルの大きさを三平方の定理で計算するmagnitude関数を追加する</a></li>
       <li><a href="#mozTocId0007">Vector2に内積dotと外積cross関数を追加してMyMathクラスで円と線の当たり判
           定をできるようにする</a></li>
+      <li><a href="#mozTocId0008">MyMathクラスで円と線が当たったら線に沿って押し戻す処理ができるようにする</a></li>
     </ol>
     <a id="mozTocId0001" class="mozTocH1">
       <h1>Vector2を使って簡単な直線などを描いてみる</h1>
@@ -2061,8 +2062,7 @@
         <br>
         #endif</p>
       <br>
-      <code>MyMath.h</code>を変更して円と円の距離をsqrMagnitude関数(円どうしの距離の2乗)を使った形に置き換えてみましょ
-      う。<br>
+      <code>MyMath.h</code>を変更して円と線が接触しているか判定する関数CircleSegment関数を追加してみましょ う。<br>
       <p class="source">#ifndef MYMATH_H_<br>
         #define MYMATH_H_<br>
         <br>
@@ -2291,6 +2291,300 @@
       ます。<br>
       ゲームの当たり判定に、内積dot、外積cross、大きさmagnitude、単位ベクトルnormalizedが活躍していることが実感できたでしょう
       か?<br>
+      <br>
+    </a> <a id="mozTocId0008" class="mozTocH1">
+      <h1>MyMathクラスで円と線が当たったら線に沿って押し戻す処理ができるようにする</h1>
+      <code>MyMath.h</code>を変更して円と線が接触したら押し戻した位置をreturnする関数CircleBoundを追加してみましょ
+      う。<br>
+      <p class="source">#ifndef MYMATH_H_<br>
+        #define MYMATH_H_<br>
+        <br>
+        #include "Vector2.h" // 線との当たり判定にVector2を使う<br>
+        <br>
+        #include &lt;cmath&gt;<br>
+        <br>
+        // 数学関連クラス<br>
+        class MyMath<br>
+        {<br>
+        public:<br>
+        &nbsp;&nbsp; &nbsp;static const float Sqrt2; // = 1.41421356237f;　// √2<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;static const float PI; // = 3.14159265359f; // 円周率<br>
+        &nbsp;&nbsp; &nbsp;static const float Deg2Rad; // = PI / 180f; //
+        度からラジアンに変換する定数<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; /// &lt;summary&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// 円と円が重なっているかを調べる<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="pc1"&gt;円1の中心pc1&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="radius1"&gt;円1の半径&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="pc2"&gt;円2の中心pc2&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="radius2"&gt;円2の半径&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; ///
+        &lt;returns&gt;重なっていればtrue、重なっていなければfalseを返却する&lt;/returns&gt;<br>
+        &nbsp;&nbsp;&nbsp; static bool CircleCircleIntersection(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc1, float radius1,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc2, float radius2)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (pc1 -
+        pc2).sqrMagnitude() &lt; ((radius1 + radius2) * (radius1 + radius2));<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; /// &lt;summary&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// 円と線が重なっているかを調べる<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="pc"&gt;円の中心&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="r"&gt;円の半径&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="p1"&gt;線の端p1&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="p2"&gt;線の端p2&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; ///
+        &lt;returns&gt;重なっていればtrue、重なっていなければfalseを返却する&lt;/returns&gt;<br>
+        &nbsp;&nbsp;&nbsp; static bool CircleSegment(Vector2 pc, float r,
+        Vector2 p1, Vector2 p2)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v12 = p2 - p1; //
+        線p1p2の始点p1から終点p2へ向かうベクトル<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v1 = pc - p1; //
+        点p1から円の中心pcへ向かうベクトル<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v2 = pc - p2; //
+        点p2から円の中心pcへ向かうベクトル<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ev12 =
+        v12.normalized(); // 単位ベクトル 線p1p2のp1からp2へ向かう単位ベクトル<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float L; // 円と線の距離<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        //円の中心pcが線p1p2の外側にあるかの判定のため内積を計算して線の外側の場合を考慮する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (dot(v12, v1) &lt; 0)
+        //点pcが線p1p2の外側にあるときは 内積 &lt; 0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; L =
+        v1.magnitude(); //点pcと直線p1p2の距離は単なる直線距離でいい<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (dot(-v1, v2) &lt; 0)
+        //点pcが線p1p2の外側にあるときは 内積 &lt; 0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; L =
+        v2.magnitude(); //点pcと直線p1p2の距離は単なる直線距離でいい<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else
+        //外積を求めれば点pcと直線p1_p2の距離Lが求まる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; L =
+        std::abs(cross(ev12, v1)); // |外積| (外積の絶対値をabsで求める)<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (L &lt; r) //衝突条件　L &lt;
+        r(L &lt;= rにするかは地面から丁度半径r離れた位置で触れていると判定したいか次第)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        return true; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        return false;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; <em>/// &lt;summary&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// 円と線が重なっているかを調べる<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="pc"&gt;円の中心&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="r"&gt;円の半径&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="p1"&gt;線の端p1&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="p2"&gt;線の端p2&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;returns&gt;押し戻しした円の中心の点&lt;/returns&gt;<br>
+          &nbsp;&nbsp;&nbsp; static Vector2 CircleBound(Vector2 pc, float r,
+          Vector2 p1, Vector2 p2)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v12 = p2 - p1; //
+          線p1p2の始点p1から終点p2へ向かうベクトル<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v1 = pc - p1; //
+          点p1から円の中心pcへ向かうベクトル<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v2 = pc - p2; //
+          点p2から円の中心pcへ向かうベクトル<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ev12 =
+          v12.normalized(); // 単位ベクトル 線p1p2のp1からp2へ向かう単位ベクトル<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          //円の中心pcが線p1p2の外側にあるかの判定のため内積を計算して線の外側の場合を考慮する<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (dot(v12, v1) &lt; 0)
+          //点pcが線p1p2の外側にあるときは 内積 &lt; 0<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          return p1 + v1.normalized() * (r + 0.001f); //
+          半径よりちょっとだけ0.001f離れた位置まで押し戻す<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (dot(-v1, v2) &lt;
+          0) //点p0が線p1p2の外側にあるときは 内積 &lt; 0<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          return p2 + v2.normalized() * (r + 0.001f); //
+          半径よりちょっとだけ0.001f離れた位置まで押し戻す<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else
+          //外積を求めれば点pcと直線p1_p2の距離Lが求まる<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          float L = dot(ev12, v1); // 内積で点p1から交点Qまでの距離を求める<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          Vector2 Q = p1 + L * ev12; // 円と線の衝突点Q<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          Vector2 e = (pc - Q).normalized(); // 跳ね返り方向のの半径1の単位ベクトル<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          return Q + e * (r + 0.001f); // 押し戻し処理<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; }</em><br>
+        <br>
+        };<br>
+        <br>
+        #endif </p>
+       下図で上記コードのv12をvに、ev12をevに置き換えて式との対応関係を確認してみてください。<br>
+      <p> <img src="image/circle_line_collision2.png" alt=""></p>
+      <br>
+      <br>
+      <p><code>main.cpp</code>を変更して円と線の当たり判定をして接触している際はMyMath::CircleBoundで円を押し戻
+        した位置を描く処理を追加してみます。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
+        lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);//
+        ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); //
+        画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp;
+        SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2
+        ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); //
+        画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        mathGraph.DrawGrid(GetColor(100, 100, 100)); //
+        100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 1,1 }; // (x,y) =
+        (1,1)の位置の点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ <em>8,8</em> };
+        // (x,y) = (<em>8,8</em>)の位置の点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 3,3 }; // (x,y) =
+        (3,3)の位置の点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 1; // 円の半径<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc1{ 6,5 }; // 円1の中心<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r1 = 2; // 円1の半径<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc2{ 8,9 }; // 円2の中心<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r2 = 3; // 円1の半径<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v13 = p3 - p1; //
+        終点p3 から 始点p1を引くとp1からp3へ向かう方向ベクトルになる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 円1と円2が当たっているかの判定<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision12 =
+        MyMath::CircleCircleIntersection(pc1, r1, pc2, r2);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 円1と線p1p2が当たっているかの判定<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision1_12 =
+        MyMath::CircleSegment(pc1, r1, p1, p2);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 円2と線p1p2が当たっているかの判定<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision2_12 =
+        MyMath::CircleSegment(pc2, r2, p1, p2);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 pb1 = pc1; //
+          線に押し戻された円1の中心<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision1_12) <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pb1
+          = MyMath::CircleBound(pc1, r1, p1, p2);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pb2 = pc2; //
+          線に押し戻された円2の中心<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision2_12)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pb2
+          = MyMath::CircleBound(pc2, r2, p1, p2);</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc1.x,
+        pc1.y, r1, (isCollision1_12) ? GetColor(255, 0, 0): GetColor(255, 255,
+        255), FALSE); // 円1を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc2.x,
+        pc2.y, r2, (isCollision2_12) ? GetColor(255, 0, 0) : GetColor(255, 255,
+        255), FALSE); // 円2を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if (pb1 != pc1) //
+          線に当たって押し戻された円1を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          mathGraph.DrawCircle(pb1.x, pb1.y, r1, GetColor(255, 0, 255), FALSE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pb2 != pc2) //
+          線に当たって押し戻された円2を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          mathGraph.DrawCircle(pb2.x, pb2.y, r2, GetColor(255, 0, 255), FALSE);</em><br>
+        <br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x,
+        p1.y, p2.x, p2.y, (isCollision1_12 || isCollision2_12) ? GetColor(255,
+        0, 0) : GetColor(255, 255, 255)); // 線分p1p2<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x,
+        p1.y, 3, GetColor(255, 0, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String =
+        "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) +
+        ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x,
+        p1.y, p1_String.c_str(), GetColor(255, 0, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x,
+        p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String =
+        "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) +
+        ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x,
+        p2.y, p0_String.c_str(), GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x,
+        p1.y, p1.x + Vector2::up.x * 3, p1.y + Vector2::up.y * 3, GetColor(0,
+        255, 255)); // upベクトルを3倍した線を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x,
+        p1.y, p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); //
+        線分p1p3の2倍した線を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x,
+        p1.y, p1.x + v13.x, p1.y + v13.y, GetColor(255, 255, 255)); // 線分p1p3を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(p3.x,
+        p3.y, r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //
+        裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかかでしょう? 線と 円1 と 円2 の両方が接触して 押し戻されて線にぴったり沿う位置に円が描かれていますか。<br>
+      <br>
       <br>
     </a>
   </body>
