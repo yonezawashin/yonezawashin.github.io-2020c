@@ -19,442 +19,538 @@
       <li><a href="#mozTocId0001">Vector2を使って簡単な直線を描いてみる</a></li>
       <li><a href="#mozTocId0002">operator +などを定義して、Vector2どうしの足し算などができるようにする</a></li>
       <li><a href="#mozTocId0003">Unityの定義に習って、zeroベクトルupベクトルなどの定義を追加</a></li>
-      <li><a href="#mozTocId0004">数学グラフクラスを作成して数学っぽいマス目を引いたり画面上y方向プラス、画面中心(0,0)、(x,y)が(3,9)のとき(30,90)など拡大した位置に描く</a></li>
+      <li><a href="#mozTocId0004">数学グラフクラスを作成して数学っぽいマス目を引いたり画面上y方向プラス、画面中心(0,0)、
+          (x,y)が(3,9)のとき(30,90)など拡大した位置に描く</a></li>
       <li><a href="#mozTocId0005">数学クラスMyMathを作成して円と円の当たり判定をしてみる</a></li>
+      <li><a href="#mozTocId0006">Vector2にベクトルの大きさを三平方の定理で計算するmagnitude関数を追加する</a></li>
     </ol>
     <a id="mozTocId0001" class="mozTocH1">
-      <h1>Vector2を使って簡単な直線などを描いてみる</h1>
-      まずは2Dで(x,y)座標の2つのfloat型を保持する構造体Vector2を作成しましょう。<br>
-      <p><code>Vector2.hの簡易版を新規作成</code>して以下のコードを実装します。</p>
-      <p class="source">#ifndef VECTOR2_H_<br>
-        #define VECTOR2_H_<br>
-        <br>
-        #include &lt;array&gt; //基本配列と同じ(有限個数)。生配列より便利な機能がある.size()関数とかstd::vector系関数が使える<br>
-        <br>
-        <br>
-        //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
-        <br>
-        //★【UnityのVector演算コード】https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
-        //★【UnityのMath演算コード】https://github.com/Unity-Technologies/UnityCsReference/blob/master/Runtime/Export/Math/Mathf.cs<br>
-        <br>
-        <br>
-        // 2変数x,yを持つ構造体。2つの数字をまとめて扱うならXY座標以外にも使えるよ。x,y別々に足したり引いたり面倒でしょう。 <br>
-        struct Vector2<br>
-        {<br>
-        &nbsp;&nbsp; &nbsp;union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; struct { // [参考ビットサイズ] https://marycore.jp/prog/c-lang/data-type-ranges-and-bit-byte-sizes/<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float x;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float y;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }; //[匿名共用体とは] https://code.i-harness.com/ja-jp/q/4d437c<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 2&gt; xy; // float xy[2];と同じ意味 float 2個ぶんのデータサイズでx,y 2個ぶんと一致するので★unionで共用<br>
-        &nbsp;&nbsp; &nbsp;}; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y分けて記述するの面倒なとき配列xy[2]をfor文i=0～2で回せる<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;// float型のポインタへ(float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
-        &nbsp;&nbsp; &nbsp;inline operator float* () const { return (float*)this; }<br>
-        &nbsp;&nbsp; &nbsp;// float型のポインタへ(const float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
-        &nbsp;&nbsp; &nbsp;inline operator const float* () const { return (const float*)this; }<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;// 初期化コンストラクタ<br>
-        &nbsp;&nbsp; &nbsp;Vector2(float x = 0.0f, float y = 0.0f) //初期化<br>
-        &nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; this-&gt;xy = { x,y }; // たった1行で書ける<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;x = x;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;y = y; 2行が上のxyzの様にたった1行で書けるようになる<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        };<br>
-        <br>
-        <br>
-        #endif</p>
-      <br>
-      <br>
-      <p><code>main.cppを作成</code>して以下のコードでVector2を使って直線や円を描いてみます。 </p>
-      <p class="source">#include "DxLib.h"<br>
-        <br>
-        #include "Screen.h"<br>
-        #include "Vector2.h"<br>
-        <br>
-        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
-        {<br>
-        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
-        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
-        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
-        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
-        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
-        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
-        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
-        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
-        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 100,100 }; // (x,y) = (100,100)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 200,200 }; // (x,y) = (200,200)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 300,300 }; // (x,y) = (300,300)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 30; // 円の半径<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine(p1.x, p1.y, p2.x, p2.y, GetColor(255, 255, 255)); // 線分p1p2を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCircle(p3.x, p3.y, r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-        &nbsp;&nbsp;&nbsp; WaitKey();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
-        &nbsp;&nbsp;&nbsp; return 0;<br>
-        }</p>
-      <br>
-      どうでしょうか？線と円が表示されましたか？ <br>
-      <br>
-    </a><a id="mozTocId0002" class="mozTocH1">
-      <h1>operator +などを定義して、Vector2どうしの足し算などができるようにする</h1>
-      こんどはVector2どうしの足し算などができるように足し算オペレーターoperator +などを定義してみましょう。<br>
-      <p><code>Vector2.h</code>に以下のoperator関連のコードを追加します。</p>
-      <p class="source">#ifndef VECTOR2_H_<br>
-        #define VECTOR2_H_<br>
-        <br>
-        #include &lt;array&gt; //基本配列と同じ(有限個数)。生配列より便利な機能がある.size()関数とかstd::vector系関数が使える<br>
-        <br>
-        <br>
-        //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
-        <br>
-        //★【UnityのVector演算コード】https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
-        //★【UnityのMath演算コード】https://github.com/Unity-Technologies/UnityCsReference/blob/master/Runtime/Export/Math/Mathf.cs<br>
-        <br>
-        <br>
-        // 2変数x,yを持つ構造体。2つの数字をまとめて扱うならXY座標以外にも使えるよ。x,y別々に足したり引いたり面倒でしょう。 <br>
-        struct Vector2<br>
-        {<br>
-        &nbsp;&nbsp; &nbsp;union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; struct { // [参考ビットサイズ] https://marycore.jp/prog/c-lang/data-type-ranges-and-bit-byte-sizes/<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float x;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float y;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }; //[匿名共用体とは] https://code.i-harness.com/ja-jp/q/4d437c<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 2&gt; xy; // float xy[2];と同じ意味 float 2個ぶんのデータサイズでx,y 2個ぶんと一致するので★unionで共用<br>
-        &nbsp;&nbsp; &nbsp;}; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y分けて記述するの面倒なとき配列xy[2]をfor文i=0～2で回せる<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;// float型のポインタへ(float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
-        &nbsp;&nbsp; &nbsp;inline operator float* () const { return (float*)this; }<br>
-        &nbsp;&nbsp; &nbsp;// float型のポインタへ(const float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
-        &nbsp;&nbsp; &nbsp;inline operator const float* () const { return (const float*)this; }<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;// 初期化コンストラクタ<br>
-        &nbsp;&nbsp; &nbsp;Vector2(float x = 0.0f, float y = 0.0f) //初期化<br>
-        &nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; this-&gt;xy = { x,y }; // たった1行で書ける<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;x = x;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;y = y; 2行が上のxyzの様にたった1行で書けるようになる<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        <br>
-        <br>
-        &nbsp;&nbsp;&nbsp; <em>/*-----　演算子オーバーロード　-----*/<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; // 逆ベクトル<br>
-          &nbsp;&nbsp;&nbsp; inline Vector2 operator -() const<br>
-          &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector2{ -this-&gt;x, -this-&gt;y };<br>
-          &nbsp;&nbsp;&nbsp; }<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; // Vectorをそのまま足し合わせる<br>
-          &nbsp;&nbsp;&nbsp; inline Vector2 operator + () const<br>
-          &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
-          &nbsp;&nbsp;&nbsp; }<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; Vector2&amp; operator += (const Vector2 add_v2)<br>
-          &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x += add_v2.x;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y += add_v2.y;<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this; //*thisを返すことで v1 + v2 + v3見たく数珠繋ぎできる<br>
-          &nbsp;&nbsp;&nbsp; }<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; Vector2&amp; operator -= (const Vector2 minus_v2)<br>
-          &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x -= minus_v2.x;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y -= minus_v2.y;<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
-          &nbsp;&nbsp;&nbsp; }<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; Vector2&amp; operator *= (float multiply_num)<br>
-          &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x *= multiply_num;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y *= multiply_num;<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
-          &nbsp;&nbsp;&nbsp; }<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; // 0.fで割ったときは±無限大を返す<br>
-          &nbsp;&nbsp;&nbsp; inline Vector2&amp; operator /= (float divide_num)<br>
-          &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (divide_num == 0.0f) // 0で割ったら±無限大を返す<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *this = Vector2{ ((this-&gt;x &lt; 0) ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity(),<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;((this-&gt;y &lt; 0) ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity() };<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x /= divide_num;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y /= divide_num;<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
-          &nbsp;&nbsp;&nbsp; }<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; // 代入演算子 x,y,zを全部 change_numに変える<br>
-          &nbsp;&nbsp;&nbsp; Vector2&amp; operator = (float change_num)<br>
-          &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x = change_num;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y = change_num;<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
-          &nbsp;&nbsp;&nbsp; }<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; // 一致演算子 x,y,zを全部一致するか 一つでも違えばfalse<br>
-          &nbsp;&nbsp;&nbsp; bool operator == (const Vector2&amp; v2_other)<br>
-          &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x != v2_other.x) return false;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y != v2_other.y) return false;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
-          &nbsp;&nbsp;&nbsp; }<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; // 不一致演算子 x,y,zを全部不一致か 一つでも同じならfalse<br>
-          &nbsp;&nbsp;&nbsp; bool operator != (const Vector2&amp; v2_other)<br>
-          &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x == v2_other.x) return false;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y == v2_other.y) return false;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
-          &nbsp;&nbsp;&nbsp; }</em><br>
-        <br>
-        };<br>
-        <br>
-        <br>
-        <em>// Vector2どうしの足し算 割り算 掛け算 割り算などの 基本演算の グローバル定義<br>
-          <br>
-          // Vector同士の足し算 x,y個別に足し合わせる<br>
-          inline Vector2 operator + (const Vector2&amp; left, const Vector2&amp; right)<br>
-          {<br>
-          &nbsp;&nbsp;&nbsp; Vector2 v2; //注意 vec1 = vec1 + vec2のとき vec1の数値が書き変わったら嫌だからv3を新たに用意<br>
-          &nbsp;&nbsp;&nbsp; v2.x = left.x + right.x; //[コレはダメ] left.x = left.x + right.x;<br>
-          &nbsp;&nbsp;&nbsp; v2.y = left.y + right.y;<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; return v2;<br>
-          }<br>
-          <br>
-          // Vector同士の引き算 x,y個別に足し合わせる<br>
-          inline Vector2 operator - (const Vector2&amp; left, const Vector2&amp; right)<br>
-          {<br>
-          &nbsp;&nbsp;&nbsp; Vector2 v2; //注意 vec1 = vec1 - vec2のとき vec1の数値が書き変わったら嫌だからv2を新たに用意<br>
-          &nbsp;&nbsp;&nbsp; v2.x = left.x - right.x; //[コレはダメ] left.x = left.x - right.x;<br>
-          &nbsp;&nbsp;&nbsp; v2.y = left.y - right.y;<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; return v2;<br>
-          }<br>
-          <br>
-          // Vectorと数値の掛け算 x,y個別に掛け合わせる<br>
-          inline Vector2 operator * (const Vector2&amp; left, float right)<br>
-          {<br>
-          &nbsp;&nbsp;&nbsp; Vector2 v2;<br>
-          &nbsp;&nbsp;&nbsp; v2.x = left.x * right;<br>
-          &nbsp;&nbsp;&nbsp; v2.y = left.y * right;<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; return v2;<br>
-          }<br>
-          <br>
-          <br>
-          // 数値とVectorの掛け算 x,y個別に掛け合わせる<br>
-          inline Vector2 operator * (float left, const Vector2&amp; right)<br>
-          {<br>
-          &nbsp;&nbsp;&nbsp; Vector2 v2;<br>
-          &nbsp;&nbsp;&nbsp; v2.x = left * right.x;<br>
-          &nbsp;&nbsp;&nbsp; v2.y = left * right.y;<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; return v2;<br>
-          }<br>
-          <br>
-          // Vectorと数値の割り算 x,y,z個別に割り合わせる<br>
-          // 0.fで割ると±無限大を返す<br>
-          inline Vector2 operator / (const Vector2&amp; left, float right)<br>
-          {<br>
-          &nbsp;&nbsp;&nbsp; if (right == 0.0f) // 0で割ったら±無限大を返す<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector2{ ((left.x &lt; 0) ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity(),<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ((left.y &lt; 0) ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity() };<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; Vector2 v2;<br>
-          &nbsp;&nbsp;&nbsp; v2.x = left.x / right;<br>
-          &nbsp;&nbsp;&nbsp; v2.y = left.y / right;<br>
-          <br>
-          &nbsp;&nbsp;&nbsp; return v2;<br>
-          }<br>
-          <br>
-          // 比較不等号 &lt; 演算子<br>
-          inline bool operator &lt; (const Vector2&amp; left, const Vector2&amp; right)<br>
-          {<br>
-          &nbsp;&nbsp;&nbsp; if (left.x != right.x) return left.x &lt; right.x;<br>
-          &nbsp;&nbsp;&nbsp; return left.y &lt; right.y;<br>
-          }<br>
-          <br>
-          // 比較不等号 &gt; 演算子<br>
-          inline bool operator &gt; (const Vector2&amp; left, const Vector2&amp; right)<br>
-          {<br>
-          &nbsp;&nbsp;&nbsp; if (left.x != right.x) return left.x &gt; right.x;<br>
-          &nbsp;&nbsp;&nbsp; return left.y &gt; right.y;<br>
-          }<br>
-          <br>
-          // 比較不等号 &lt;= 演算子<br>
-          inline bool operator &lt;= (const Vector2&amp; left, const Vector2&amp; right)<br>
-          {<br>
-          &nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(left &gt; right);<br>
-          }<br>
-          <br>
-          // 比較不等号 &gt;= 演算子<br>
-          inline bool operator &gt;= (const Vector2&amp; left, const Vector2&amp; right)<br>
-          {<br>
-          &nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(left &lt; right);<br>
-          }</em><br>
-        <br>
-        <br>
-        #endif</p>
-      <br>
-      <br>
-      <p><code>main.cpp</code>を変更してVector2どうしの足し算や引き算を使って線を描いてみます。 </p>
-      <p class="source">#include "DxLib.h"<br>
-        <br>
-        #include "Screen.h"<br>
-        #include "Vector2.h"<br>
-        <br>
-        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
-        {<br>
-        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
-        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
-        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
-        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
-        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
-        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
-        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
-        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
-        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 100,100 }; // (x,y) = (100,100)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 200,200 }; // (x,y) = (200,200)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 300,300 }; // (x,y) = (300,300)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 30; // 円の半径<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 v13 = p3 - p1; // 終点p3 から 始点p1を引くとp1からp3へ向かう方向ベクトルになる</em><br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>DxLib::DrawLine(p1.x, p1.y, p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); // 線分p1p3の<b>2倍</b>した線を描く</em><br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine(p1.x, p1.y, <em>p1.x + v13.x, p1.y + v13.y</em>, GetColor(255, 255, 255)); // 線分p1<em>p3</em>を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCircle(p3.x, p3.y, r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-        &nbsp;&nbsp;&nbsp; WaitKey();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
-        &nbsp;&nbsp;&nbsp; return 0;<br>
-        }</p>
-      いかがでしょうか？ベクトルを足したり、引いたり、掛け算したりするとどうなるか理解できましたか？<br>
-      ベクトルの 終点 - 始点 の計算をすると 始点→終点に向かう方向ベクトルとなり、<br>
-      ベクトルの始点 + 方向ベクトル すると 終点に到着することが理解できたらOKです。<br>
-      また、方向ベクトル×2 すると線の長さが2倍になっていることも直感的に理解できるとよいです。<br>
-      <br>
-      <br>
-    </a><a id="mozTocId0003" class="mozTocH1">
-      <h1>Unityの定義に習って、zeroベクトルupベクトルなどの定義を追加する</h1>
-      UnityのVector2の定義は以下のサイトでコードが見れたりしますので参考にしてzeroやupなどをC#ではなくC++として定義してましょう。<br>
-    </a><a href="https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs">https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs</a> <br>
-    <p><code>Vector2.h</code>に以下のzeroベクトルupベクトルなどの定義のコードを追加します。</p>
+    <h1>Vector2を使って簡単な直線などを描いてみる</h1>
+    まずは2Dで(x,y)座標の2つのfloat型を保持する構造体Vector2を作成しましょう。<br>
+    <p><code>Vector2.hの簡易版を新規作成</code>して以下のコードを実装します。</p>
     <p class="source">#ifndef VECTOR2_H_<br>
       #define VECTOR2_H_<br>
       <br>
-      #include &lt;array&gt; //基本配列と同じ(有限個数)。生配列より便利な機能がある.size()関数とかstd::vector系関数が使える<br>
+      #include &lt;array&gt;
+      //基本配列と同じ(有限個数)。生配列より便利な機能がある.size()関数とかstd::vector系関数が使える<br>
       <br>
       <br>
       //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
       <br>
-      //★【UnityのVector演算コード】https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
-      //★【UnityのMath演算コード】https://github.com/Unity-Technologies/UnityCsReference/blob/master/Runtime/Export/Math/Mathf.cs<br>
+      //★【UnityのVector演算コード】https://github.com/Unity-Technologies
+/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
+      //★【UnityのMath演算コード】https://github.com/Unity-Technologies
+      /UnityCsReference/blob/master/Runtime/Export/Math/Mathf.cs<br>
       <br>
       <br>
       // 2変数x,yを持つ構造体。2つの数字をまとめて扱うならXY座標以外にも使えるよ。x,y別々に足したり引いたり面倒でしょう。 <br>
       struct Vector2<br>
       {<br>
-      &nbsp;&nbsp; &nbsp;union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; struct { // [参考ビットサイズ] https://marycore.jp/prog/c-lang/data-type-ranges-and-bit-byte-sizes/<br>
+      &nbsp;&nbsp; &nbsp;union { // ★共用体unionテクニック
+      https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; struct { // [参考ビットサイズ]
+      https://marycore.jp/prog/c-lang/data-type-ranges-and-bit-byte-sizes/<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float x;<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float y;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }; //[匿名共用体とは] https://code.i-harness.com/ja-jp/q/4d437c<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 2&gt; xy; // float xy[2];と同じ意味 float 2個ぶんのデータサイズでx,y 2個ぶんと一致するので★unionで共用<br>
-      &nbsp;&nbsp; &nbsp;}; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y分けて記述するの面倒なとき配列xy[2]をfor文i=0～2で回せる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }; //[匿名共用体とは]
+      https://code.i-harness.com/ja-jp/q/4d437c<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 2&gt; xy; //
+      float xy[2];と同じ意味 float 2個ぶんのデータサイズでx,y 2個ぶんと一致するので★unionで共用<br>
+      &nbsp;&nbsp; &nbsp;}; //
+      unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y分けて記述するの面倒なとき配列xy[2]をfor文i=0～2で回せる<br>
       <br>
       &nbsp;&nbsp; &nbsp;// float型のポインタへ(float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
-      &nbsp;&nbsp; &nbsp;inline operator float* () const { return (float*)this; }<br>
-      &nbsp;&nbsp; &nbsp;// float型のポインタへ(const float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
-      &nbsp;&nbsp; &nbsp;inline operator const float* () const { return (const float*)this; }<br>
+      &nbsp;&nbsp; &nbsp;inline operator float* () const { return (float*)this;
+      }<br>
+      &nbsp;&nbsp; &nbsp;// float型のポインタへ(const
+      float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
+      &nbsp;&nbsp; &nbsp;inline operator const float* () const { return (const
+      float*)this; }<br>
       <br>
       &nbsp;&nbsp; &nbsp;// 初期化コンストラクタ<br>
       &nbsp;&nbsp; &nbsp;Vector2(float x = 0.0f, float y = 0.0f) //初期化<br>
       &nbsp;&nbsp; &nbsp;{<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; this-&gt;xy = { x,y }; // たった1行で書ける<br>
       &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;x = x;<br>
-      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;y = y; 2行が上のxyzの様にたった1行で書けるようになる<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;y = y;
+      2行が上のxyzの様にたった1行で書けるようになる<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <p><code>main.cppを作成</code>して以下のコードでVector2を使って直線や円を描いてみます。 </p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      #include "Screen.h"<br>
+      #include "Vector2.h"<br>
+      <br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
+      lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);//
+      ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); //
+      画面サイズ960×540のカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp;
+      SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+      &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+      &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+      &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); //
+      画面をまっさらにリセット<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 100,100 }; // (x,y)
+      = (100,100)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 200,200 }; // (x,y)
+      = (200,200)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 300,300 }; // (x,y)
+      = (300,300)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 30; // 円の半径<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine(p1.x, p1.y,
+      p2.x, p2.y, GetColor(255, 255, 255)); // 線分p1p2を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCircle(p3.x, p3.y,
+      r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //
+      裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    <br>
+    どうでしょうか？線と円が表示されましたか？ <br>
+    <br>
+    </a><a id="mozTocId0002" class="mozTocH1">
+    <h1>operator +などを定義して、Vector2どうしの足し算などができるようにする</h1>
+    こんどはVector2どうしの足し算などができるように足し算オペレーターoperator +などを定義してみましょう。<br>
+    <p><code>Vector2.h</code>に以下のoperator関連のコードを追加します。</p>
+    <p class="source">#ifndef VECTOR2_H_<br>
+      #define VECTOR2_H_<br>
+      <br>
+      #include &lt;array&gt;
+      //基本配列と同じ(有限個数)。生配列より便利な機能がある.size()関数とかstd::vector系関数が使える<br>
+      <br>
+      <br>
+      //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
+      <br>
+      //★【UnityのVector演算コード】https://github.com/Unity-Technologies
+/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
+      //★【UnityのMath演算コード】https://github.com/Unity-Technologies
+      /UnityCsReference/blob/master/Runtime/Export/Math/Mathf.cs<br>
+      <br>
+      <br>
+      // 2変数x,yを持つ構造体。2つの数字をまとめて扱うならXY座標以外にも使えるよ。x,y別々に足したり引いたり面倒でしょう。 <br>
+      struct Vector2<br>
+      {<br>
+      &nbsp;&nbsp; &nbsp;union { // ★共用体unionテクニック
+      https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; struct { // [参考ビットサイズ]
+      https://marycore.jp/prog/c-lang/data-type-ranges-and-bit-byte-sizes/<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float x;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float y;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }; //[匿名共用体とは]
+      https://code.i-harness.com/ja-jp/q/4d437c<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 2&gt; xy; //
+      float xy[2];と同じ意味 float 2個ぶんのデータサイズでx,y 2個ぶんと一致するので★unionで共用<br>
+      &nbsp;&nbsp; &nbsp;}; //
+      unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y分けて記述するの面倒なとき配列xy[2]をfor文i=0～2で回せる<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// float型のポインタへ(float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
+      &nbsp;&nbsp; &nbsp;inline operator float* () const { return (float*)this;
+      }<br>
+      &nbsp;&nbsp; &nbsp;// float型のポインタへ(const
+      float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
+      &nbsp;&nbsp; &nbsp;inline operator const float* () const { return (const
+      float*)this; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 初期化コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;Vector2(float x = 0.0f, float y = 0.0f) //初期化<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; this-&gt;xy = { x,y }; // たった1行で書ける<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;x = x;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;y = y;
+      2行が上のxyzの様にたった1行で書けるようになる<br>
       &nbsp;&nbsp; &nbsp;}<br>
       <br>
-      &nbsp;&nbsp;&nbsp; <em>// Unityのstatic変数を参考に https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>/*-----　演算子オーバーロード　-----*/<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 逆ベクトル<br>
+        &nbsp;&nbsp;&nbsp; inline Vector2 operator -() const<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector2{ -this-&gt;x,
+        -this-&gt;y };<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // Vectorをそのまま足し合わせる<br>
+        &nbsp;&nbsp;&nbsp; inline Vector2 operator + () const<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Vector2&amp; operator += (const Vector2 add_v2)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x += add_v2.x;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y += add_v2.y;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this; //*thisを返すことで v1 +
+        v2 + v3見たく数珠繋ぎできる<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Vector2&amp; operator -= (const Vector2 minus_v2)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x -= minus_v2.x;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y -= minus_v2.y;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Vector2&amp; operator *= (float multiply_num)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x *= multiply_num;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y *= multiply_num;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 0.fで割ったときは±無限大を返す<br>
+        &nbsp;&nbsp;&nbsp; inline Vector2&amp; operator /= (float divide_num)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (divide_num == 0.0f) //
+        0で割ったら±無限大を返す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *this =
+        Vector2{ ((this-&gt;x &lt; 0) ? 1 : -1) *
+        std::numeric_limits&lt;float&gt;::infinity(),<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp; &nbsp;((this-&gt;y &lt; 0) ? 1 : -1) *
+        std::numeric_limits&lt;float&gt;::infinity() };<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x /= divide_num;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y /= divide_num;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 代入演算子 x,y,zを全部 change_numに変える<br>
+        &nbsp;&nbsp;&nbsp; Vector2&amp; operator = (float change_num)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x = change_num;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y = change_num;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 一致演算子 x,y,zを全部一致するか 一つでも違えばfalse<br>
+        &nbsp;&nbsp;&nbsp; bool operator == (const Vector2&amp; v2_other)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x != v2_other.x)
+        return false;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y != v2_other.y)
+        return false;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 不一致演算子 x,y,zを全部不一致か 一つでも同じならfalse<br>
+        &nbsp;&nbsp;&nbsp; bool operator != (const Vector2&amp; v2_other)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x == v2_other.x)
+        return false;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y == v2_other.y)
+        return false;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
+        &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      };<br>
+      <br>
+      <br>
+      <em>// Vector2どうしの足し算 割り算 掛け算 割り算などの 基本演算の グローバル定義<br>
+        <br>
+        // Vector同士の足し算 x,y個別に足し合わせる<br>
+        inline Vector2 operator + (const Vector2&amp; left, const Vector2&amp;
+        right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Vector2 v2; //注意 vec1 = vec1 + vec2のとき
+        vec1の数値が書き変わったら嫌だからv3を新たに用意<br>
+        &nbsp;&nbsp;&nbsp; v2.x = left.x + right.x; //[コレはダメ] left.x = left.x +
+        right.x;<br>
+        &nbsp;&nbsp;&nbsp; v2.y = left.y + right.y;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return v2;<br>
+        }<br>
+        <br>
+        // Vector同士の引き算 x,y個別に足し合わせる<br>
+        inline Vector2 operator - (const Vector2&amp; left, const Vector2&amp;
+        right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Vector2 v2; //注意 vec1 = vec1 - vec2のとき
+        vec1の数値が書き変わったら嫌だからv2を新たに用意<br>
+        &nbsp;&nbsp;&nbsp; v2.x = left.x - right.x; //[コレはダメ] left.x = left.x -
+        right.x;<br>
+        &nbsp;&nbsp;&nbsp; v2.y = left.y - right.y;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return v2;<br>
+        }<br>
+        <br>
+        // Vectorと数値の掛け算 x,y個別に掛け合わせる<br>
+        inline Vector2 operator * (const Vector2&amp; left, float right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Vector2 v2;<br>
+        &nbsp;&nbsp;&nbsp; v2.x = left.x * right;<br>
+        &nbsp;&nbsp;&nbsp; v2.y = left.y * right;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return v2;<br>
+        }<br>
+        <br>
+        <br>
+        // 数値とVectorの掛け算 x,y個別に掛け合わせる<br>
+        inline Vector2 operator * (float left, const Vector2&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Vector2 v2;<br>
+        &nbsp;&nbsp;&nbsp; v2.x = left * right.x;<br>
+        &nbsp;&nbsp;&nbsp; v2.y = left * right.y;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return v2;<br>
+        }<br>
+        <br>
+        // Vectorと数値の割り算 x,y,z個別に割り合わせる<br>
+        // 0.fで割ると±無限大を返す<br>
+        inline Vector2 operator / (const Vector2&amp; left, float right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; if (right == 0.0f) // 0で割ったら±無限大を返す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector2{ ((left.x &lt; 0) ?
+        1 : -1) * std::numeric_limits&lt;float&gt;::infinity(),<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ((left.y &lt;
+        0) ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity() };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Vector2 v2;<br>
+        &nbsp;&nbsp;&nbsp; v2.x = left.x / right;<br>
+        &nbsp;&nbsp;&nbsp; v2.y = left.y / right;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return v2;<br>
+        }<br>
+        <br>
+        // 比較不等号 &lt; 演算子<br>
+        inline bool operator &lt; (const Vector2&amp; left, const Vector2&amp;
+        right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; if (left.x != right.x) return left.x &lt; right.x;<br>
+        &nbsp;&nbsp;&nbsp; return left.y &lt; right.y;<br>
+        }<br>
+        <br>
+        // 比較不等号 &gt; 演算子<br>
+        inline bool operator &gt; (const Vector2&amp; left, const Vector2&amp;
+        right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; if (left.x != right.x) return left.x &gt; right.x;<br>
+        &nbsp;&nbsp;&nbsp; return left.y &gt; right.y;<br>
+        }<br>
+        <br>
+        // 比較不等号 &lt;= 演算子<br>
+        inline bool operator &lt;= (const Vector2&amp; left, const Vector2&amp;
+        right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(left &gt; right);<br>
+        }<br>
+        <br>
+        // 比較不等号 &gt;= 演算子<br>
+        inline bool operator &gt;= (const Vector2&amp; left, const Vector2&amp;
+        right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(left &lt; right);<br>
+        }</em><br>
+      <br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <p><code>main.cpp</code>を変更してVector2どうしの足し算や引き算を使って線を描いてみます。 </p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      #include "Screen.h"<br>
+      #include "Vector2.h"<br>
+      <br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
+      lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);//
+      ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); //
+      画面サイズ960×540のカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp;
+      SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+      &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+      &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+      &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); //
+      画面をまっさらにリセット<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 100,100 }; // (x,y)
+      = (100,100)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 200,200 }; // (x,y)
+      = (200,200)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 300,300 }; // (x,y)
+      = (300,300)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 30; // 円の半径<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 v13 = p3 - p1; //
+        終点p3 から 始点p1を引くとp1からp3へ向かう方向ベクトルになる</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>DxLib::DrawLine(p1.x,
+        p1.y, p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); //
+        線分p1p3の<b>2倍</b>した線を描く</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine(p1.x, p1.y, <em>p1.x
+        + v13.x, p1.y + v13.y</em>, GetColor(255, 255, 255)); // 線分p1<em>p3</em>を
+      描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCircle(p3.x, p3.y,
+      r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //
+      裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    いかがでしょうか？ベクトルを足したり、引いたり、掛け算したりするとどうなるか理解できましたか？<br>
+    ベクトルの 終点 - 始点 の計算をすると 始点→終点に向かう方向ベクトルとなり、<br>
+    ベクトルの始点 + 方向ベクトル すると 終点に到着することが理解できたらOKです。<br>
+    また、方向ベクトル×2 すると線の長さが2倍になっていることも直感的に理解できるとよいです。<br>
+    <br>
+    <br>
+    </a><a id="mozTocId0003" class="mozTocH1">
+    <h1>Unityの定義に習って、zeroベクトルupベクトルなどの定義を追加する</h1>
+    UnityのVector2の定義は以下のサイトでコードが見れたりしますので参考にしてzeroやupなどをC#ではなくC++として定義してましょう。<br>
+    <a href="https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs">https://github.com/Unity-Technologies/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs</a>
+    <br>
+    <p><code>Vector2.h</code>に以下のzeroベクトルupベクトルなどの定義のコードを追加します。</p>
+    <p class="source">#ifndef VECTOR2_H_<br>
+      #define VECTOR2_H_<br>
+      <br>
+      #include &lt;array&gt;
+      //基本配列と同じ(有限個数)。生配列より便利な機能がある.size()関数とかstd::vector系関数が使える<br>
+      <br>
+      <br>
+      //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
+      <br>
+      //★【UnityのVector演算コード】https://github.com/Unity-Technologies
+/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+      //★【UnityのMath演算コード】https://github.com/Unity-Technologies/UnityCsReference
+      /blob/master/Runtime/Export/Math/Mathf.cs<br>
+      <br>
+      <br>
+      // 2変数x,yを持つ構造体。2つの数字をまとめて扱うならXY座標以外にも使えるよ。x,y別々に足したり引いたり面倒でしょう。 <br>
+      struct Vector2<br>
+      {<br>
+      &nbsp;&nbsp; &nbsp;union { // ★共用体unionテクニック
+      https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; struct { // [参考ビットサイズ]
+      https://marycore.jp/prog/c-lang/data-type-ranges-and-bit-byte-sizes/<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float x;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float y;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }; //[匿名共用体とは]
+      https://code.i-harness.com/ja-jp/q/4d437c<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 2&gt; xy; //
+      float xy[2];と同じ意味 float 2個ぶんのデータサイズでx,y 2個ぶんと一致するので★unionで共用<br>
+      &nbsp;&nbsp; &nbsp;}; //
+      unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y分けて記述するの面倒なとき配列xy[2]をfor文i=0～2で回せる<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// float型のポインタへ(float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
+      &nbsp;&nbsp; &nbsp;inline operator float* () const { return (float*)this;
+      }<br>
+      &nbsp;&nbsp; &nbsp;// float型のポインタへ(const
+      float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
+      &nbsp;&nbsp; &nbsp;inline operator const float* () const { return (const
+      float*)this; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 初期化コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;Vector2(float x = 0.0f, float y = 0.0f) //初期化<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; this-&gt;xy = { x,y }; // たった1行で書ける<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;x = x;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;y = y;
+      2行が上のxyzの様にたった1行で書けるようになる<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// Unityのstatic変数を参考に
+        https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
         &nbsp;&nbsp;&nbsp; static const Vector2 zero;// = { 0.f,&nbsp; 0.f };<br>
         &nbsp;&nbsp;&nbsp; static const Vector2 one; // = { 1.f,&nbsp; 1.f };<br>
-        &nbsp;&nbsp;&nbsp; static const Vector2 up;&nbsp; // = { 0.f,&nbsp; 1.f };<br>
+        &nbsp;&nbsp;&nbsp; static const Vector2 up;&nbsp; // = { 0.f,&nbsp; 1.f
+        };<br>
         &nbsp;&nbsp;&nbsp; static const Vector2 down;// = { 0.f, -1.f };<br>
         &nbsp;&nbsp;&nbsp; static const Vector2 left; // = { -1.f, 0.f };<br>
         &nbsp;&nbsp;&nbsp; static const Vector2 right;// = { 1.f, 0.f };<br>
-        &nbsp;&nbsp;&nbsp; //[負の値の最小値] https://stackoverflow.com/questions/20016600/negative-infinity<br>
-        &nbsp;&nbsp;&nbsp; static const Vector2 negativeInfinity;// = { -std::numeric_limits&lt;float&gt;::infinity(), .. };<br>
-        &nbsp;&nbsp;&nbsp; //[極大値]https://cpprefjp.github.io/reference/limits/numeric_limits/lowest.html<br>
-        &nbsp;&nbsp;&nbsp; static const Vector2 positiveInfinity;// = { std::numeric_limits&lt;float&gt;::infinity(), .. };</em><br>
+        &nbsp;&nbsp;&nbsp; //[負の値の最小値]
+        https://stackoverflow.com/questions/20016600/negative-infinity<br>
+        &nbsp;&nbsp;&nbsp; static const Vector2 negativeInfinity;// = {
+        -std::numeric_limits&lt;float&gt;::infinity(), .. };<br>
+        &nbsp;&nbsp;&nbsp;
+        //[極大値]https://cpprefjp.github.io/reference/limits/numeric_limits/lowest.html<br>
+        &nbsp;&nbsp;&nbsp; static const Vector2 positiveInfinity;// = {
+        std::numeric_limits&lt;float&gt;::infinity(), .. };</em><br>
       <br>
       <br>
       &nbsp;&nbsp;&nbsp; /*-----　演算子オーバーロード　-----*/<br>
@@ -462,7 +558,8 @@
       &nbsp;&nbsp;&nbsp; // 逆ベクトル<br>
       &nbsp;&nbsp;&nbsp; inline Vector2 operator -() const<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector2{ -this-&gt;x, -this-&gt;y };<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector2{ -this-&gt;x,
+      -this-&gt;y };<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // Vectorをそのまま足し合わせる<br>
@@ -476,7 +573,8 @@
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x += add_v2.x;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y += add_v2.y;<br>
       <br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this; //*thisを返すことで v1 + v2 + v3見たく数珠繋ぎできる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this; //*thisを返すことで v1 + v2
+      + v3見たく数珠繋ぎできる<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; Vector2&amp; operator -= (const Vector2 minus_v2)<br>
@@ -498,10 +596,16 @@
       &nbsp;&nbsp;&nbsp; // 0.fで割ったときは±無限大を返す<br>
       &nbsp;&nbsp;&nbsp; inline Vector2&amp; operator /= (float divide_num)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (divide_num == 0.0f) // 0で割ったら±無限大を返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (divide_num == 0.0f) //
+      0で割ったら±無限大を返す<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *this = Vector2{ ((this-&gt;x &lt; 0) ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity(),<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;((this-&gt;y &lt; 0) ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity() };<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *this = Vector2{
+      ((this-&gt;x &lt; 0) ? 1 : -1) *
+      std::numeric_limits&lt;float&gt;::infinity(),<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;((this-&gt;y &lt; 0) ? 1 : -1) *
+      std::numeric_limits&lt;float&gt;::infinity() };<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
       <br>
@@ -523,16 +627,20 @@
       &nbsp;&nbsp;&nbsp; // 一致演算子 x,y,zを全部一致するか 一つでも違えばfalse<br>
       &nbsp;&nbsp;&nbsp; bool operator == (const Vector2&amp; v2_other)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x != v2_other.x) return false;<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y != v2_other.y) return false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x != v2_other.x) return
+      false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y != v2_other.y) return
+      false;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 不一致演算子 x,y,zを全部不一致か 一つでも同じならfalse<br>
       &nbsp;&nbsp;&nbsp; bool operator != (const Vector2&amp; v2_other)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x == v2_other.x) return false;<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y == v2_other.y) return false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x == v2_other.x) return
+      false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y == v2_other.y) return
+      false;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
@@ -542,20 +650,26 @@
       // Vector2どうしの足し算 割り算 掛け算 割り算などの 基本演算の グローバル定義<br>
       <br>
       // Vector同士の足し算 x,y個別に足し合わせる<br>
-      inline Vector2 operator + (const Vector2&amp; left, const Vector2&amp; right)<br>
+      inline Vector2 operator + (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
       {<br>
-      &nbsp;&nbsp;&nbsp; Vector2 v2; //注意 vec1 = vec1 + vec2のとき vec1の数値が書き変わったら嫌だからv3を新たに用意<br>
-      &nbsp;&nbsp;&nbsp; v2.x = left.x + right.x; //[コレはダメ] left.x = left.x + right.x;<br>
+      &nbsp;&nbsp;&nbsp; Vector2 v2; //注意 vec1 = vec1 + vec2のとき
+      vec1の数値が書き変わったら嫌だからv3を新たに用意<br>
+      &nbsp;&nbsp;&nbsp; v2.x = left.x + right.x; //[コレはダメ] left.x = left.x +
+      right.x;<br>
       &nbsp;&nbsp;&nbsp; v2.y = left.y + right.y;<br>
       <br>
       &nbsp;&nbsp;&nbsp; return v2;<br>
       }<br>
       <br>
       // Vector同士の引き算 x,y個別に足し合わせる<br>
-      inline Vector2 operator - (const Vector2&amp; left, const Vector2&amp; right)<br>
+      inline Vector2 operator - (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
       {<br>
-      &nbsp;&nbsp;&nbsp; Vector2 v2; //注意 vec1 = vec1 - vec2のとき vec1の数値が書き変わったら嫌だからv2を新たに用意<br>
-      &nbsp;&nbsp;&nbsp; v2.x = left.x - right.x; //[コレはダメ] left.x = left.x - right.x;<br>
+      &nbsp;&nbsp;&nbsp; Vector2 v2; //注意 vec1 = vec1 - vec2のとき
+      vec1の数値が書き変わったら嫌だからv2を新たに用意<br>
+      &nbsp;&nbsp;&nbsp; v2.x = left.x - right.x; //[コレはダメ] left.x = left.x -
+      right.x;<br>
       &nbsp;&nbsp;&nbsp; v2.y = left.y - right.y;<br>
       <br>
       &nbsp;&nbsp;&nbsp; return v2;<br>
@@ -587,8 +701,11 @@
       inline Vector2 operator / (const Vector2&amp; left, float right)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; if (right == 0.0f) // 0で割ったら±無限大を返す<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector2{ ((left.x &lt; 0) ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity(),<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ((left.y &lt; 0) ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity() };<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector2{ ((left.x &lt; 0) ? 1
+      : -1) * std::numeric_limits&lt;float&gt;::infinity(),<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ((left.y &lt; 0)
+      ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity() };<br>
       <br>
       &nbsp;&nbsp;&nbsp; Vector2 v2;<br>
       &nbsp;&nbsp;&nbsp; v2.x = left.x / right;<br>
@@ -598,27 +715,31 @@
       }<br>
       <br>
       // 比較不等号 &lt; 演算子<br>
-      inline bool operator &lt; (const Vector2&amp; left, const Vector2&amp; right)<br>
+      inline bool operator &lt; (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; if (left.x != right.x) return left.x &lt; right.x;<br>
       &nbsp;&nbsp;&nbsp; return left.y &lt; right.y;<br>
       }<br>
       <br>
       // 比較不等号 &gt; 演算子<br>
-      inline bool operator &gt; (const Vector2&amp; left, const Vector2&amp; right)<br>
+      inline bool operator &gt; (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; if (left.x != right.x) return left.x &gt; right.x;<br>
       &nbsp;&nbsp;&nbsp; return left.y &gt; right.y;<br>
       }<br>
       <br>
       // 比較不等号 &lt;= 演算子<br>
-      inline bool operator &lt;= (const Vector2&amp; left, const Vector2&amp; right)<br>
+      inline bool operator &lt;= (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(left &gt; right);<br>
       }<br>
       <br>
       // 比較不等号 &gt;= 演算子<br>
-      inline bool operator &gt;= (const Vector2&amp; left, const Vector2&amp; right)<br>
+      inline bool operator &gt;= (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(left &lt; right);<br>
       }<br>
@@ -626,10 +747,12 @@
       <br>
       #endif</p>
     <br>
-    <p><code>Vector2.cppを新規作成して</code>以下のzeroベクトルやupベクトルなどの数値の初期化のコードを追加します(static定義した変数はcppでしか初期化できないので)。</p>
+    <p><code>Vector2.cppを新規作成して</code>以下のzeroベクトルやupベクトルなどの数値の初期化のコードを追加します
+      (static定義した変数はcppでしか初期化できないので)。</p>
     <p class="source">#include "Vector2.h"<br>
       <br>
-      // Unityのstatic変数を参考に https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
+      // Unityのstatic変数を参考に
+      https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
       Vector2 const Vector2::zero = Vector2(0.f, 0.f);<br>
       Vector2 const Vector2::one = Vector2(1.f, 1.f);<br>
       Vector2 const Vector2::up = Vector2(0.f, 1.f);<br>
@@ -637,9 +760,14 @@
       Vector2 const Vector2::left = Vector2(-1.f, 0.f);<br>
       Vector2 const Vector2::right = Vector2(1.f, 0.f);<br>
       //[負の値の最小値] https://stackoverflow.com/questions/20016600/negative-infinity<br>
-      Vector2 const Vector2::negativeInfinity = Vector2(-std::numeric_limits&lt;float&gt;::infinity(), -std::numeric_limits&lt;float&gt;::infinity());<br>
-      //[極大値]https://cpprefjp.github.io/reference/limits/numeric_limits/lowest.html<br>
-      Vector2 const Vector2::positiveInfinity = Vector2(std::numeric_limits&lt;float&gt;::infinity(), std::numeric_limits&lt;float&gt;::infinity());<br>
+      Vector2 const Vector2::negativeInfinity =
+      Vector2(-std::numeric_limits&lt;float&gt;::infinity(),
+      -std::numeric_limits&lt;float&gt;::infinity());<br>
+      //[極大値]https://cpprefjp.github.io/reference/limits/numeric_limits
+      /lowest.html<br>
+      Vector2 const Vector2::positiveInfinity =
+      Vector2(std::numeric_limits&lt;float&gt;::infinity(),
+      std::numeric_limits&lt;float&gt;::infinity());<br>
       <br>
     </p>
     <br>
@@ -650,12 +778,16 @@
       #include "Screen.h"<br>
       #include "Vector2.h"<br>
       <br>
-      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
+      lpCmdLine, int nCmdShow)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
-      &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-      &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
-      &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);//
+      ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); //
+      画面サイズ960×540のカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp;
+      SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
       &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
       &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
       <br>
@@ -677,24 +809,36 @@
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
       &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); //
+      画面をまっさらにリセット<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 100,100 }; // (x,y) = (100,100)の位置の点<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 200,200 }; // (x,y) = (200,200)の位置の点<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 300,300 }; // (x,y) = (300,300)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 100,100 }; // (x,y)
+      = (100,100)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 200,200 }; // (x,y)
+      = (200,200)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 300,300 }; // (x,y)
+      = (300,300)の位置の点<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 30; // 円の半径<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v13 = p3 - p1; // 終点p3 から 始点p1を引くとp1からp3へ向かう方向ベクトルになる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v13 = p3 - p1; // 終点p3
+      から 始点p1を引くとp1からp3へ向かう方向ベクトルになる<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>DxLib::DrawLine(p1.x, p1.y, p1.x + Vector2::up.x * 30, p1.y + Vector2::up.y * 30, GetColor(0, 255, 255)); // upベクトルを30倍した線を描く</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>DxLib::DrawLine(p1.x,
+        p1.y, p1.x + Vector2::up.x * 30, p1.y + Vector2::up.y * 30, GetColor(0,
+        255, 255)); // upベクトルを30倍した線を描く</em><br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine(p1.x, p1.y, p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); // 線分p1p3の2倍した線を描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine(p1.x, p1.y,
+      p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); //
+      線分p1p3の2倍した線を描く<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine(p1.x, p1.y, p1.x + v13.x, p1.y + v13.y, GetColor(255, 255, 255)); // 線分p1p3を描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine(p1.x, p1.y,
+      p1.x + v13.x, p1.y + v13.y, GetColor(255, 255, 255)); // 線分p1p3を描く<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCircle(p3.x, p3.y, r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCircle(p3.x, p3.y,
+      r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //
+      裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
@@ -707,410 +851,901 @@
       &nbsp;&nbsp;&nbsp; return 0;<br>
       }</p>
     いかがでしょうか？あれっ？上方向のupベクトルの描画したつもりが水色の線が下方向に出てしましました。<br>
-    実は2Dのスクリーンに図形を描画する関数は左上が(x,y)=(0,0)でyの下方向がプラス方向となっていますが、3D空間はy上方向がプラスで逆になっています。<br>
+    実は2Dのスクリーンに図形を描画する関数は左上が(x,y)=(0,0)でyの下方向がプラス方向となっていますが、3D空間はy上方向がプラスで逆になってい
+    ます。<br>
     数学の教科書とかも基本的にはyが上方向がプラスなので非常にわかりにくくなっていますよね。<br>
     都度、yを描くときに - マイナスをつけてやればよいですが、今は数学のベクトルを勉強しているのでもうちょっと直感的に描画したいですよね。<br>
-    次の項では数学っぽく画面の中心が原点(0,0)で、y上方向がプラスになるように描くクラスを実装して見やすくしてベクトルを数学的に考えやすく描画できるようにしてみましょう。<br>
+    次の項では数学っぽく画面の中心が原点(0,0)で、y上方向がプラスになるように描くクラスを実装して見やすくしてベクトルを数学的に考えやすく描画できるよう
+    にしてみましょう。<br>
     <br>
     <br>
-    <a id="mozTocId0004" class="mozTocH1">
-      <h1>数学グラフクラスを作成して数学っぽいマス目を引いたり、画面上y方向プラス、画面中心(0,0)、(x,y)が(3,9)のとき(30,90)など拡大した位置に描く</h1>
-      <code>MathGraph2D.hを新規作成して</code>数学っぽいマス目グリッドを描いたり、画面上方向がy方向プラスにしたり、<br>
-      (x,y)が(3,9)のときに(30,90)など拡大した位置に描いて見やすくできるようにグラフのスケールを設定できるようにするクラスのコードを追加します。
-      <p class="source">#ifndef MATHGRAPH_H_<br>
-        #define MATHGRAPH_H_<br>
-        <br>
-        #include "DxLib.h"<br>
-        #include "Vector2.h"<br>
-        #include "Screen.h"<br>
-        #include &lt;cmath&gt;<br>
-        <br>
-        // 数学のグラフを描く(DXで普通に描くと左上 0,0 で↓方向が+なので数学らしくないので)<br>
-        class MathGraph2D<br>
-        {<br>
-        public:<br>
-        &nbsp;&nbsp; &nbsp;Vector2 pos; // グラフを描く起点(100,100なら左上から→に100,↓に100の位置がグラフの原点)<br>
-        &nbsp;&nbsp; &nbsp;//Vector2 origin; // グラフ原点<br>
-        &nbsp;&nbsp; &nbsp;float scale; // グラフのスケール(1/10 なら10ドットで1目盛りぶん)<br>
-        &nbsp;&nbsp; &nbsp;Vector2 grid; // (10,10)なら10おきにグリッドを描く<br>
-        &nbsp;&nbsp; &nbsp;MathGraph2D(Vector2 position, float scale = 5.0f, Vector2 grid = { 5.0f,5.0f })<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; : pos{ Vector2((int)position.x,(int)position.y)}, scale{scale}, grid{ Vector2((int)grid.x,(int)grid.y) }<br>
-        &nbsp;&nbsp; &nbsp;{}<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;virtual ~MathGraph2D(){};<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;inline Vector2 graphPos(Vector2 mousePos) { return Vector2{ (mousePos.x - pos.x) / scale, (-mousePos.y + pos.y) / scale }; }<br>
-        &nbsp;&nbsp; &nbsp;inline Vector2 graphPosInt(Vector2 mousePos) { return Vector2{ (float)((int)((mousePos.x - pos.x) / scale)), (float)((int)((-mousePos.y + pos.y) / scale)) }; }<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;int DrawString(float x, float y, const TCHAR* String, unsigned int Color, unsigned int EdgeColor DEFAULTPARAM(= 0))<br>
-        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス - をつけて上方向↑がプラスになるようにして描く<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawString(pos.x + x * scale, pos.y - y * scale, String, Color, EdgeColor);<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;int DrawLine(float x1, float y1, float x2, float y2, unsigned int Color, int Thickness DEFAULTPARAM(= 1))<br>
-        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス - をつけて上方向↑がプラスになるようにして描く<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawLine(pos.x + x1 * scale, pos.y - y1 * scale, pos.x + x2 * scale, pos.y - y2 * scale, Color, Thickness);<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; int DrawTriangle(float x1, float y1, float x2, float y2, float x3, float y3, unsigned int Color, int FillFlag DEFAULTPARAM(= TRUE))<br>
-        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // y方向にはマイナス - をつけて上方向↑がプラスになるようにして描く<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return DxLib::DrawTriangle(pos.x + x1 * scale, pos.y - y1 * scale, <br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pos.x + x2 * scale, pos.y - y2 * scale, <br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pos.x + x3 * scale, pos.y - y3 * scale, Color, FillFlag);<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;// 矢印→を線のかわりに描く<br>
-        &nbsp;&nbsp; &nbsp;int DrawArrow(float x1, float y1, float w1, float h1, float x2, float y2, float w2, float h2, unsigned int Color, int Thickness DEFAULTPARAM(= 1))<br>
-        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス - をつけて上方向↑がプラスになるようにして描く<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //[矢印の描きかた] https://ameblo.jp/tomi-omiya/entry-12641374677.html<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; if (w1 != 0.0f &amp;&amp; h1 != 0.0f)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float theta1 = -std::atan2(y1 - y2, x1 - x2), cos1 = std::cosf(theta1), sin1 = std::sinf(theta1);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float angle = theta1 / DX_PI * 180;<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawTriangle(x1, y1, x1 - h1 * cos1 - w1 / 2 * sin1, y1 + h1 * sin1 - w1 / 2 * cos1,<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; x1 - h1 * cos1 + w1 / 2 * sin1, y1 + h1 * sin1 + w1 / 2 * cos1, Color, TRUE);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; if (w2 != 0.0f &amp;&amp; h2 != 0.0f)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float theta2 = -std::atan2(y2 - y1, x2 - x1), cos2 = std::cosf(theta2), sin2 = std::sinf(theta2);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawTriangle(x2, y2, x2 - h2 * cos2 - w2 / 2 * sin2, y2 + h2 * sin2 - w2 / 2 * cos2,<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x2 - h2 * cos2 + w2 / 2 * sin2, y2 + h2 * sin2 + w2 / 2 * cos2, Color, TRUE);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawLine(pos.x + x1 * scale, pos.y - y1 * scale, pos.x + x2 * scale, pos.y - y2 * scale, Color, Thickness);<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;int DrawLineBox(float x1, float y1, float x2, float y2, unsigned int Color)<br>
-        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス - をつけて上方向↑がプラスになるようにして描く<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawLineBox(pos.x + x1 * scale, pos.y - y1 * scale, pos.x + x2 * scale, pos.y - y2 * scale, Color);<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;int DrawFillBox(float x1, float y1, float x2, float y2, unsigned int Color)<br>
-        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス - をつけて上方向↑がプラスになるようにして描く<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawFillBox(pos.x + x1 * scale, pos.y - y1 * scale, pos.x + x2 * scale, pos.y - y2 * scale, Color);<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;int&nbsp;&nbsp; &nbsp;DrawCircle(float x, float y, int r, unsigned int Color, int FillFlag DEFAULTPARAM(= TRUE), int LineThickness DEFAULTPARAM(= 1))<br>
-        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス - をつけて上方向↑がプラスになるようにして描く<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawCircle(pos.x + x * scale, pos.y - y * scale, r * scale, Color, FillFlag, LineThickness);<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;int&nbsp;&nbsp; &nbsp;DrawPoint(float x, float y, int r, unsigned int Color, int FillFlag DEFAULTPARAM(= TRUE), int LineThickness DEFAULTPARAM(= 1))<br>
-        &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス - をつけて上方向↑がプラスになるようにして描く<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawCircle(pos.x + x * scale, pos.y - y * scale, r, Color, FillFlag, LineThickness);<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;// グラフの目盛りの縦横グリッドを描く<br>
-        &nbsp;&nbsp; &nbsp;void DrawGrid(unsigned int Color, int Thickness DEFAULTPARAM(= 1))<br>
-        &nbsp;&nbsp; &nbsp;{<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; float test = std::fmodf(pos.x, grid.x * scale);<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; for (int x = std::fmodf(pos.x, grid.x * scale); x &lt; Screen::Width; x += grid.x * scale)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine(x, 0, x, Screen::Height,<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (x == (int)pos.x) ? GetColor(255,0,0) : // グラフの原点を通る線は色を変える<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ((x-(int)pos.x) % (int)(grid.x * scale * 10) == 0) ? GetColor(255, 255, 255) : Color, // 10マスおきに色を変える<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Thickness);<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; for (int y = std::fmodf(pos.y, grid.y * scale); y &lt;= Screen::Height; y += grid.y * scale)<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine(0, y, Screen::Width, y,<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (y == (int)pos.y) ? GetColor(0, 0, 255) : // グラフの原点を通る線は色を変える<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ((y - (int)pos.y) % (int)(grid.y * scale * 10) == 0) ? GetColor(255, 255, 255) : Color, // 10マスおきに色を変える<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Thickness);<br>
-        &nbsp;&nbsp; &nbsp;}<br>
-        };<br>
-        <br>
-        #endif</p>
+    </a><a id="mozTocId0004" class="mozTocH1">
+    <h1>数学グラフクラスを作成して数学っぽいマス目を引いたり、画面上y方向プラス、画面中心(0,0)、(x,y)が(3,9)のとき(30,90)など
+      拡大した位置に描く</h1>
+    <code>MathGraph2D.hを新規作成して</code>数学っぽいマス目グリッドを描いたり、画面上方向がy方向プラスにしたり、<br>
+    (x,y)が(3,9)のときに(30,90)など拡大した位置に描いて見やすくできるようにグラフのスケールを設定できるようにするクラスのコードを追加し
+    ます。
+    <p class="source">#ifndef MATHGRAPH_H_<br>
+      #define MATHGRAPH_H_<br>
       <br>
+      #include "DxLib.h"<br>
+      #include "Vector2.h"<br>
+      #include "Screen.h"<br>
+      #include &lt;cmath&gt;<br>
       <br>
+      // 数学のグラフを描く(DXで普通に描くと左上 0,0 で↓方向が+なので数学らしくないので)<br>
+      class MathGraph2D<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;Vector2 pos; //
+      グラフを描く起点(100,100なら左上から→に100,↓に100の位置がグラフの原点)<br>
+      &nbsp;&nbsp; &nbsp;//Vector2 origin; // グラフ原点<br>
+      &nbsp;&nbsp; &nbsp;float scale; // グラフのスケール(1/10 なら10ドットで1目盛りぶん)<br>
+      &nbsp;&nbsp; &nbsp;Vector2 grid; // (10,10)なら10おきにグリッドを描く<br>
+      &nbsp;&nbsp; &nbsp;MathGraph2D(Vector2 position, float scale = 5.0f,
+      Vector2 grid = { 5.0f,5.0f })<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; : pos{
+      Vector2((int)position.x,(int)position.y)}, scale{scale}, grid{
+      Vector2((int)grid.x,(int)grid.y) }<br>
+      &nbsp;&nbsp; &nbsp;{}<br>
       <br>
-      <p><code>main.cpp</code>を変更して数学グラフクラスMathGraph2Dを通して円や線を描いてみます。 </p>
-      <p class="source">#include "DxLib.h"<br>
-        <br>
-        #include "Screen.h"<br>
-        #include "Vector2.h"<br>
-        <em>#include "MathGraph2D.h"</em><br>
-        <br>
-        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
-        {<br>
-        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
-        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
-        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
-        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
-        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
-        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
-        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
-        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; <em>// 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
-          &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };</em><br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
-        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
-        </em><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ <em>1,1</em> }; // (x,y) = <em>(1,1)</em>の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ <em>2,2</em> }; // (x,y) = <em>(2,2)</em>の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ <em>3,3</em> }; // (x,y) = <em>(3,3)</em>の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = <em>1</em>; // 円の半径<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v13 = p3 - p1; // 終点p3 から 始点p1を引くとp1からp3へ向かう方向ベクトルになる<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.</em>DrawLine(p1.x, p1.y, p1.x + Vector2::up.x * <em>3</em>, p1.y + Vector2::up.y * <em>3</em>, GetColor(0, 255, 255)); // upベクトルを<em>3倍</em>した線を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.</em>DrawLine(p1.x, p1.y, p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); // 線分p1p3の2倍した線を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.</em>DrawLine(p1.x, p1.y, p1.x + v13.x, p1.y + v13.y, GetColor(255, 255, 255)); // 線分p1p3を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.</em>DrawCircle(p3.x, p3.y, r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-        &nbsp;&nbsp;&nbsp; WaitKey();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
-        &nbsp;&nbsp;&nbsp; return 0;<br>
-        }</p>
-      いかがでしょうか？これで水色のup上方向ベクトルも上向きになり、ベクトルの数字も(1,1)など手で計算しやすいスケール感に収めることができ、算数しやすくなったと思います。<br>
+      &nbsp;&nbsp; &nbsp;virtual ~MathGraph2D(){};<br>
       <br>
+      &nbsp;&nbsp; &nbsp;inline Vector2 graphPos(Vector2 mousePos) { return
+      Vector2{ (mousePos.x - pos.x) / scale, (-mousePos.y + pos.y) / scale }; }<br>
+      &nbsp;&nbsp; &nbsp;inline Vector2 graphPosInt(Vector2 mousePos) { return
+      Vector2{ (float)((int)((mousePos.x - pos.x) / scale)),
+      (float)((int)((-mousePos.y + pos.y) / scale)) }; }<br>
       <br>
+      &nbsp;&nbsp; &nbsp;int DrawString(float x, float y, const TCHAR* String,
+      unsigned int Color, unsigned int EdgeColor DEFAULTPARAM(= 0))<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス -
+      をつけて上方向↑がプラスになるようにして描く<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawString(pos.x + x *
+      scale, pos.y - y * scale, String, Color, EdgeColor);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;int DrawLine(float x1, float y1, float x2, float y2,
+      unsigned int Color, int Thickness DEFAULTPARAM(= 1))<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス -
+      をつけて上方向↑がプラスになるようにして描く<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawLine(pos.x + x1 *
+      scale, pos.y - y1 * scale, pos.x + x2 * scale, pos.y - y2 * scale, Color,
+      Thickness);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; int DrawTriangle(float x1, float y1, float x2, float
+      y2, float x3, float y3, unsigned int Color, int FillFlag DEFAULTPARAM(=
+      TRUE))<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // y方向にはマイナス -
+      をつけて上方向↑がプラスになるようにして描く<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return DxLib::DrawTriangle(pos.x +
+      x1 * scale, pos.y - y1 * scale, <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      pos.x + x2 * scale, pos.y - y2 * scale, <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      pos.x + x3 * scale, pos.y - y3 * scale, Color, FillFlag);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 矢印→を線のかわりに描く<br>
+      &nbsp;&nbsp; &nbsp;int DrawArrow(float x1, float y1, float w1, float h1,
+      float x2, float y2, float w2, float h2, unsigned int Color, int Thickness
+      DEFAULTPARAM(= 1))<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス -
+      をつけて上方向↑がプラスになるようにして描く<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //[矢印の描きかた]
+      https://ameblo.jp/tomi-omiya/entry-12641374677.html<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; if (w1 != 0.0f &amp;&amp; h1 !=
+      0.0f)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float theta1 =
+      -std::atan2(y1 - y2, x1 - x2), cos1 = std::cosf(theta1), sin1 =
+      std::sinf(theta1);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float angle =
+      theta1 / DX_PI * 180;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawTriangle(x1,
+      y1, x1 - h1 * cos1 - w1 / 2 * sin1, y1 + h1 * sin1 - w1 / 2 * cos1,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; x1 - h1 * cos1 + w1 / 2 *
+      sin1, y1 + h1 * sin1 + w1 / 2 * cos1, Color, TRUE);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; if (w2 != 0.0f &amp;&amp; h2 !=
+      0.0f)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float theta2 =
+      -std::atan2(y2 - y1, x2 - x1), cos2 = std::cosf(theta2), sin2 =
+      std::sinf(theta2);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DrawTriangle(x2,
+      y2, x2 - h2 * cos2 - w2 / 2 * sin2, y2 + h2 * sin2 - w2 / 2 * cos2,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;x2 - h2 * cos2 + w2 / 2 *
+      sin2, y2 + h2 * sin2 + w2 / 2 * cos2, Color, TRUE);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawLine(pos.x + x1 *
+      scale, pos.y - y1 * scale, pos.x + x2 * scale, pos.y - y2 * scale, Color,
+      Thickness);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;int DrawLineBox(float x1, float y1, float x2, float y2,
+      unsigned int Color)<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス -
+      をつけて上方向↑がプラスになるようにして描く<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawLineBox(pos.x + x1
+      * scale, pos.y - y1 * scale, pos.x + x2 * scale, pos.y - y2 * scale,
+      Color);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;int DrawFillBox(float x1, float y1, float x2, float y2,
+      unsigned int Color)<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス -
+      をつけて上方向↑がプラスになるようにして描く<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawFillBox(pos.x + x1
+      * scale, pos.y - y1 * scale, pos.x + x2 * scale, pos.y - y2 * scale,
+      Color);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;int&nbsp;&nbsp; &nbsp;DrawCircle(float x, float y, int
+      r, unsigned int Color, int FillFlag DEFAULTPARAM(= TRUE), int
+      LineThickness DEFAULTPARAM(= 1))<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス -
+      をつけて上方向↑がプラスになるようにして描く<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawCircle(pos.x + x *
+      scale, pos.y - y * scale, r * scale, Color, FillFlag, LineThickness);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;int&nbsp;&nbsp; &nbsp;DrawPoint(float x, float y, int
+      r, unsigned int Color, int FillFlag DEFAULTPARAM(= TRUE), int
+      LineThickness DEFAULTPARAM(= 1))<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// y方向にはマイナス -
+      をつけて上方向↑がプラスになるようにして描く<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawCircle(pos.x + x *
+      scale, pos.y - y * scale, r, Color, FillFlag, LineThickness);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// グラフの目盛りの縦横グリッドを描く<br>
+      &nbsp;&nbsp; &nbsp;void DrawGrid(unsigned int Color, int Thickness
+      DEFAULTPARAM(= 1))<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; float test = std::fmodf(pos.x,
+      grid.x * scale);<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; for (int x = std::fmodf(pos.x,
+      grid.x * scale); x &lt; Screen::Width; x += grid.x * scale)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      DxLib::DrawLine(x, 0, x, Screen::Height,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; (x == (int)pos.x) ? GetColor(255,0,0) : //
+      グラフの原点を通る線は色を変える<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      ((x-(int)pos.x) % (int)(grid.x * scale * 10) == 0) ? GetColor(255, 255,
+      255) : Color, // 10マスおきに色を変える<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; Thickness);<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; for (int y = std::fmodf(pos.y,
+      grid.y * scale); y &lt;= Screen::Height; y += grid.y * scale)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      DxLib::DrawLine(0, y, Screen::Width, y,<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; (y == (int)pos.y) ? GetColor(0, 0, 255) : //
+      グラフの原点を通る線は色を変える<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; ((y - (int)pos.y) % (int)(grid.y * scale * 10) == 0) ?
+      GetColor(255, 255, 255) : Color, // 10マスおきに色を変える<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; Thickness);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <br>
+    <br>
+    <p><code>main.cpp</code>を変更して数学グラフクラスMathGraph2Dを通して円や線を描いてみます。 </p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      #include "Screen.h"<br>
+      #include "Vector2.h"<br>
+      <em>#include "MathGraph2D.h"</em><br>
+      <br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
+      lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);//
+      ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); //
+      画面サイズ960×540のカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp;
+      SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+      &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+      &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+      &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2
+        ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); //
+      画面をまっさらにリセット<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.DrawGrid(GetColor(100,
+        100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+      </em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ <em>1,1</em> }; //
+      (x,y) = <em>(1,1)</em>の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ <em>2,2</em> }; //
+      (x,y) = <em>(2,2)</em>の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ <em>3,3</em> }; //
+      (x,y) = <em>(3,3)</em>の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = <em>1</em>; // 円の半径<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v13 = p3 - p1; // 終点p3
+      から 始点p1を引くとp1からp3へ向かう方向ベクトルになる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.</em>DrawLine(p1.x,
+      p1.y, p1.x + Vector2::up.x * <em>3</em>, p1.y + Vector2::up.y * <em>3</em>,
+      GetColor(0, 255, 255)); // upベクトルを<em>3倍</em>した線を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.</em>DrawLine(p1.x,
+      p1.y, p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); //
+      線分p1p3の2倍した線を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.</em>DrawLine(p1.x,
+      p1.y, p1.x + v13.x, p1.y + v13.y, GetColor(255, 255, 255)); // 線分p1p3を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.</em>DrawCircle(p3.x,
+      p3.y, r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //
+      裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    いかがでしょうか？これで水色のup上方向ベクトルも上向きになり、ベクトルの数字も(1,1)など手で計算しやすいスケール感に収めることができ、算数しや
+    すくなったと思います。<br>
+    <br>
+    <br>
     </a><a id="mozTocId0005" class="mozTocH1">
-      <h1>数学クラスMyMathを作成して円と円の当たり判定をしてみる</h1>
-      <code>MyMath.hを新規作成して</code>πなどの定義や円と円の当たり判定の関数を定義します。<br>
-      <p class="source">#ifndef MYMATH_H_<br>
-        #define MYMATH_H_<br>
-        <br>
-        #include "Vector2.h" // 線との当たり判定にVector2を使う<br>
-        <br>
-        #include &lt;cmath&gt;<br>
-        <br>
-        // 数学関連クラス<br>
-        class MyMath<br>
-        {<br>
-        public:<br>
-        &nbsp;&nbsp; &nbsp;static const float Sqrt2; // = 1.41421356237f;　// √2<br>
-        <br>
-        &nbsp;&nbsp; &nbsp;static const float PI; // = 3.14159265359f; // 円周率<br>
-        &nbsp;&nbsp; &nbsp;static const float Deg2Rad; // = PI / 180f; // 度からラジアンに変換する定数<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; /// &lt;summary&gt;<br>
-        &nbsp;&nbsp;&nbsp; /// 円と円が重なっているかを調べる<br>
-        &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
-        &nbsp;&nbsp;&nbsp; /// &lt;param name="pc1"&gt;円1の中心pc1&lt;/param&gt;<br>
-        &nbsp;&nbsp;&nbsp; /// &lt;param name="radius1"&gt;円1の半径&lt;/param&gt;<br>
-        &nbsp;&nbsp;&nbsp; /// &lt;param name="pc2"&gt;円2の中心pc2&lt;/param&gt;<br>
-        &nbsp;&nbsp;&nbsp; /// &lt;param name="radius2"&gt;円2の半径&lt;/param&gt;<br>
-        &nbsp;&nbsp;&nbsp; /// &lt;returns&gt;重なっていればtrue、重なっていなければfalseを返却する&lt;/returns&gt;<br>
-        &nbsp;&nbsp;&nbsp; static bool CircleCircleIntersection(<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc1, float radius1,<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc2, float radius2)<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((pc1.x - pc2.x) * (pc1.x - pc2.x) + (pc1.y - pc2.y) * (pc1.y - pc2.y))<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt; ((radius1 + radius2) * (radius1 + radius2));<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        };<br>
-        <br>
-        #endif</p>
+    <h1>数学クラスMyMathを作成して円と円の当たり判定をしてみる</h1>
+    <code>MyMath.hを新規作成して</code>πなどの定義や円と円の当たり判定の関数を定義します。<br>
+    <p class="source">#ifndef MYMATH_H_<br>
+      #define MYMATH_H_<br>
       <br>
-      <code>MyMath.cppを新規作成して</code>πなどのstatic定義の初期値を設定します。<br>
-      <p class="source">#include "MyMath.h"<br>
-        <br>
-        const float MyMath::Sqrt2 = 1.41421356237f;//(floatは有効桁は実質7桁まで正確だがそれ以降は環境によって誤差出るよ)<br>
-        <br>
-        const float MyMath::PI = 3.14159265359f; // 円周率<br>
-        const float MyMath::Deg2Rad = PI / 180; // 度からラジアンに変換する定数<br>
-        <br>
-      </p>
+      #include "Vector2.h" // 線との当たり判定にVector2を使う<br>
       <br>
+      #include &lt;cmath&gt;<br>
       <br>
+      // 数学関連クラス<br>
+      class MyMath<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;static const float Sqrt2; // = 1.41421356237f;　// √2<br>
       <br>
-      <p><code>main.cpp</code>を変更して円と円の当たり判定を試してみます。 </p>
-      <p class="source">#include "DxLib.h"<br>
-        <br>
-        #include "Screen.h"<br>
-        #include "Vector2.h"<br>
-        #include "MathGraph2D.h"<br>
-        <em>#include "MyMath.h"</em><br>
-        <br>
-        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
-        {<br>
-        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
-        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
-        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
-        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
-        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
-        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
-        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
-        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
-        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
-        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 1,1 }; // (x,y) = (1,1)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 2,2 }; // (x,y) = (2,2)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 3,3 }; // (x,y) = (3,3)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 1; // 円の半径<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 pc1{ 6,5 }; // 円1の中心<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r1 = 2; // 円1の半径<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc2{ 10,9 }; // 円2の中心<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r2 = 3; // 円1の半径</em><br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v13 = p3 - p1; // 終点p3 から 始点p1を引くとp1からp3へ向かう方向ベクトルになる<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 円1と円2が当たっているかの判定<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision12 = MyMath::CircleCircleIntersection(pc1, r1, pc2, r2);<br>
-          <br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc1.x, pc1.y, r1, (isCollision12) ? GetColor(255, 0, 0): GetColor(255, 255, 255), FALSE); // 円1を描く<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc2.x, pc2.y, r2, (isCollision12) ? GetColor(255, 0, 0) : GetColor(255, 255, 255), FALSE); // 円2を描く</em><br>
-        <br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y, p1.x + Vector2::up.x * 3, p1.y + Vector2::up.y * 3, GetColor(0, 255, 255)); // upベクトルを3倍した線を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y, p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); // 線分p1p3の2倍した線を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y, p1.x + v13.x, p1.y + v13.y, GetColor(255, 255, 255)); // 線分p1p3を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(p3.x, p3.y, r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-        &nbsp;&nbsp;&nbsp; WaitKey();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
-        &nbsp;&nbsp;&nbsp; return 0;<br>
-        }</p>
-      さて、円1と円2は触れていないので白色GetColor(255,255,255)で描かれているはずです。<br>
-      こんどは円2の中心を{10,9}ではなく{8,9}に変えてみましょう。<br>
-      <p><code>main.cpp</code>を変更して円2<a id="mozTocId0005" class="mozTocH1">の中心を{10,9}ではなく{8,9}に変え</a>ます。 </p>
-      <p class="source">#include "DxLib.h"<br>
-        <br>
-        #include "Screen.h"<br>
-        #include "Vector2.h"<br>
-        #include "MathGraph2D.h"<br>
-        #include "MyMath.h"<br>
-        <br>
-        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
-        {<br>
-        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
-        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
-        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
-        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
-        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
-        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
-        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
-        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
-        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
-        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 1,1 }; // (x,y) = (1,1)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 2,2 }; // (x,y) = (2,2)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 3,3 }; // (x,y) = (3,3)の位置の点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 1; // 円の半径<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc1{ 6,5 }; // 円1の中心<br>
+      &nbsp;&nbsp; &nbsp;static const float PI; // = 3.14159265359f; // 円周率<br>
+      &nbsp;&nbsp; &nbsp;static const float Deg2Rad; // = PI / 180f; //
+      度からラジアンに変換する定数<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; /// &lt;summary&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// 円と円が重なっているかを調べる<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="pc1"&gt;円1の中心pc1&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="radius1"&gt;円1の半径&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="pc2"&gt;円2の中心pc2&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="radius2"&gt;円2の半径&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; ///
+      &lt;returns&gt;重なっていればtrue、重なっていなければfalseを返却する&lt;/returns&gt;<br>
+      &nbsp;&nbsp;&nbsp; static bool CircleCircleIntersection(<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc1, float radius1,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc2, float radius2)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ((pc1.x - pc2.x) *
+      (pc1.x - pc2.x) + (pc1.y - pc2.y) * (pc1.y - pc2.y))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;
+      ((radius1 + radius2) * (radius1 + radius2));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      #endif</p>
+    <br>
+    <code>MyMath.cppを新規作成して</code>πなどのstatic定義の初期値を設定します。<br>
+    <p class="source">#include "MyMath.h"<br>
+      <br>
+      const float MyMath::Sqrt2 =
+      1.41421356237f;//(floatは有効桁は実質7桁まで正確だがそれ以降は環境によって誤差出るよ)<br>
+      <br>
+      const float MyMath::PI = 3.14159265359f; // 円周率<br>
+      const float MyMath::Deg2Rad = PI / 180; // 度からラジアンに変換する定数<br>
+      <br>
+    </p>
+    <br>
+    <br>
+    <br>
+    <p><code>main.cpp</code>を変更して円と円の当たり判定を試してみます。 </p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      #include "Screen.h"<br>
+      #include "Vector2.h"<br>
+      #include "MathGraph2D.h"<br>
+      <em>#include "MyMath.h"</em><br>
+      <br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
+      lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);//
+      ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); //
+      画面サイズ960×540のカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp;
+      SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+      &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+      &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+      &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+      &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2
+      ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); //
+      画面をまっさらにリセット<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      mathGraph.DrawGrid(GetColor(100, 100, 100)); //
+      100,100,100のグレーのグリッドでマス目を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 1,1 }; // (x,y) =
+      (1,1)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 2,2 }; // (x,y) =
+      (2,2)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 3,3 }; // (x,y) =
+      (3,3)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 1; // 円の半径<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 pc1{ 6,5 }; //
+        円1の中心<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r1 = 2; // 円1の半径<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc2{ <em>8</em>,9 }; // 円2の中心<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r2 = 3; // 円1の半径<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v13 = p3 - p1; // 終点p3 から 始点p1を引くとp1からp3へ向かう方向ベクトルになる<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 円1と円2が当たっているかの判定<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision12 = MyMath::CircleCircleIntersection(pc1, r1, pc2, r2);<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc1.x, pc1.y, r1, (isCollision12) ? GetColor(255, 0, 0): GetColor(255, 255, 255), FALSE); // 円1を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc2.x, pc2.y, r2, (isCollision12) ? GetColor(255, 0, 0) : GetColor(255, 255, 255), FALSE); // 円2を描く<br>
-        <br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y, p1.x + Vector2::up.x * 3, p1.y + Vector2::up.y * 3, GetColor(0, 255, 255)); // upベクトルを3倍した線を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y, p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); // 線分p1p3の2倍した線を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y, p1.x + v13.x, p1.y + v13.y, GetColor(255, 255, 255)); // 線分p1p3を描く<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(p3.x, p3.y, r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-        &nbsp;&nbsp;&nbsp; WaitKey();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
-        &nbsp;&nbsp;&nbsp; return 0;<br>
-        }</p>
-      さて、こんどは円1と円2は触れいるので赤色GetColor(255,0,0)で描かれているはずです。<br>
-      円と円の当たり判定をMyMathクラスで正しくできたことが確認できました。<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc2{ 10,9 }; // 円2の中心<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r2 = 3; // 円1の半径</em><br>
       <br>
-    </a>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v13 = p3 - p1; // 終点p3
+      から 始点p1を引くとp1からp3へ向かう方向ベクトルになる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 円1と円2が当たっているかの判定<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision12 =
+        MyMath::CircleCircleIntersection(pc1, r1, pc2, r2);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc1.x,
+        pc1.y, r1, (isCollision12) ? GetColor(255, 0, 0): GetColor(255, 255,
+        255), FALSE); // 円1を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc2.x,
+        pc2.y, r2, (isCollision12) ? GetColor(255, 0, 0) : GetColor(255, 255,
+        255), FALSE); // 円2を描く</em><br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y,
+      p1.x + Vector2::up.x * 3, p1.y + Vector2::up.y * 3, GetColor(0, 255,
+      255)); // upベクトルを3倍した線を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y,
+      p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); //
+      線分p1p3の2倍した線を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y,
+      p1.x + v13.x, p1.y + v13.y, GetColor(255, 255, 255)); // 線分p1p3を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(p3.x,
+      p3.y, r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //
+      裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    さて、円1と円2は触れていないので白色GetColor(255,255,255)で描かれているはずです。<br>
+    こんどは円2の中心を{10,9}ではなく{8,9}に変えてみましょう。<br>
+    <p><code>main.cpp</code>を変更して円2の中心を{10,9}ではなく{8,9}に変えます。 </p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      #include "Screen.h"<br>
+      #include "Vector2.h"<br>
+      #include "MathGraph2D.h"<br>
+      #include "MyMath.h"<br>
+      <br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
+      lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);//
+      ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); //
+      画面サイズ960×540のカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp;
+      SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+      &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+      &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+      &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+      &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2
+      ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); //
+      画面をまっさらにリセット<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      mathGraph.DrawGrid(GetColor(100, 100, 100)); //
+      100,100,100のグレーのグリッドでマス目を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 1,1 }; // (x,y) =
+      (1,1)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 2,2 }; // (x,y) =
+      (2,2)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 3,3 }; // (x,y) =
+      (3,3)の位置の点<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 1; // 円の半径<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc1{ 6,5 }; // 円1の中心<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r1 = 2; // 円1の半径<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc2{ <em>8</em>,9 };
+      // 円2の中心<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r2 = 3; // 円1の半径<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v13 = p3 - p1; // 終点p3
+      から 始点p1を引くとp1からp3へ向かう方向ベクトルになる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 円1と円2が当たっているかの判定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision12 =
+      MyMath::CircleCircleIntersection(pc1, r1, pc2, r2);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc1.x,
+      pc1.y, r1, (isCollision12) ? GetColor(255, 0, 0): GetColor(255, 255, 255),
+      FALSE); // 円1を描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc2.x,
+      pc2.y, r2, (isCollision12) ? GetColor(255, 0, 0) : GetColor(255, 255,
+      255), FALSE); // 円2を描く<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y,
+      p1.x + Vector2::up.x * 3, p1.y + Vector2::up.y * 3, GetColor(0, 255,
+      255)); // upベクトルを3倍した線を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y,
+      p1.x + v13.x * 2, p1.y + v13.y * 2, GetColor(255, 0, 255)); //
+      線分p1p3の2倍した線を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y,
+      p1.x + v13.x, p1.y + v13.y, GetColor(255, 255, 255)); // 線分p1p3を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(p3.x,
+      p3.y, r, GetColor(0, 255, 0), FALSE); // 半径rの円(中心:p3)を描く(FALSEで塗りつぶし無し)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //
+      裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    さて、こんどは円1と円2は触れいるので赤色GetColor(255,0,0)で描かれているはずです。<br>
+    円と円の当たり判定をMyMathクラスで正しくできたことが確認できました。<br>
+    <br>
+    <br>
+    </a><a id="mozTocId0006" class="mozTocH1">
+    <h1>Vector2にベクトルの大きさを三平方の定理で計算するmagnitude関数を追加する</h1>
+    <code>Vector2.h</code>に関数を追加で定義します。<br>
+    <p class="source">#ifndef VECTOR2_H_<br>
+      #define VECTOR2_H_<br>
+      <br>
+      #include &lt;array&gt;
+      //基本配列と同じ(有限個数)。生配列より便利な機能がある.size()関数とかstd::vector系関数が使える<br>
+      <br>
+      <br>
+      //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
+      <br>
+      //★【UnityのVector演算コード】https://github.com/Unity-Technologies
+/UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+      //★【UnityのMath演算コード】https://github.com/Unity-Technologies/UnityCsReference
+      /blob/master/Runtime/Export/Math/Mathf.cs<br>
+      <br>
+      <br>
+      // 2変数x,yを持つ構造体。2つの数字をまとめて扱うならXY座標以外にも使えるよ。x,y別々に足したり引いたり面倒でしょう。 <br>
+      struct Vector2<br>
+      {<br>
+      &nbsp;&nbsp; &nbsp;union { // ★共用体unionテクニック
+      https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; struct { // [参考ビットサイズ]
+      https://marycore.jp/prog/c-lang/data-type-ranges-and-bit-byte-sizes/<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float x;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float y;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }; //[匿名共用体とは]
+      https://code.i-harness.com/ja-jp/q/4d437c<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 2&gt; xy; //
+      float xy[2];と同じ意味 float 2個ぶんのデータサイズでx,y 2個ぶんと一致するので★unionで共用<br>
+      &nbsp;&nbsp; &nbsp;}; //
+      unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y分けて記述するの面倒なとき配列xy[2]をfor文i=0～2で回せる<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// float型のポインタへ(float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
+      &nbsp;&nbsp; &nbsp;inline operator float* () const { return (float*)this;
+      }<br>
+      &nbsp;&nbsp; &nbsp;// float型のポインタへ(const
+      float*)キャストすればx,yデータの配列の先頭のアドレスを返す<br>
+      &nbsp;&nbsp; &nbsp;inline operator const float* () const { return (const
+      float*)this; }<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 初期化コンストラクタ<br>
+      &nbsp;&nbsp; &nbsp;Vector2(float x = 0.0f, float y = 0.0f) //初期化<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; this-&gt;xy = { x,y }; // たった1行で書ける<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;x = x;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //this-&gt;y = y;
+      2行が上のxyzの様にたった1行で書けるようになる<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // Unityのstatic変数を参考に
+      https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
+      &nbsp;&nbsp;&nbsp; static const Vector2 zero;// = { 0.f,&nbsp; 0.f };<br>
+      &nbsp;&nbsp;&nbsp; static const Vector2 one; // = { 1.f,&nbsp; 1.f };<br>
+      &nbsp;&nbsp;&nbsp; static const Vector2 up;&nbsp; // = { 0.f,&nbsp; 1.f };<br>
+      &nbsp;&nbsp;&nbsp; static const Vector2 down;// = { 0.f, -1.f };<br>
+      &nbsp;&nbsp;&nbsp; static const Vector2 left; // = { -1.f, 0.f };<br>
+      &nbsp;&nbsp;&nbsp; static const Vector2 right;// = { 1.f, 0.f };<br>
+      &nbsp;&nbsp;&nbsp; //[負の値の最小値]
+      https://stackoverflow.com/questions/20016600/negative-infinity<br>
+      &nbsp;&nbsp;&nbsp; static const Vector2 negativeInfinity;// = {
+      -std::numeric_limits&lt;float&gt;::infinity(), .. };<br>
+      &nbsp;&nbsp;&nbsp;
+      //[極大値]https://cpprefjp.github.io/reference/limits/numeric_limits/lowest.html<br>
+      &nbsp;&nbsp;&nbsp; static const Vector2 positiveInfinity;// = {
+      std::numeric_limits&lt;float&gt;::infinity(), .. };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// ベクトルの長さ(0から点(x,y,z)までの距離)<br>
+        &nbsp;&nbsp;&nbsp; inline float magnitude() const //[後ろにconstをつけないと..]
+        https://www7b.biglobe.ne.jp/~robe/cpphtml/html02/cpp02010.html<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return std::sqrt(x * x + y * y);
+        // √(x*x + y*y)<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ベクトルの 2 乗の長さを返します(平方根しないぶん計算速い)<br>
+        &nbsp;&nbsp;&nbsp; inline float sqrMagnitude() const
+        //[後ろにconstをつけないと..]
+        https://www7b.biglobe.ne.jp/~robe/cpphtml/html02/cpp02010.html<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return x * x + y * y; // x*x + y*y
+        <br>
+        &nbsp;&nbsp;&nbsp; };</em><br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; /*-----　演算子オーバーロード　-----*/<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 逆ベクトル<br>
+      &nbsp;&nbsp;&nbsp; inline Vector2 operator -() const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector2{ -this-&gt;x,
+      -this-&gt;y };<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // Vectorをそのまま足し合わせる<br>
+      &nbsp;&nbsp;&nbsp; inline Vector2 operator + () const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Vector2&amp; operator += (const Vector2 add_v2)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x += add_v2.x;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y += add_v2.y;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this; //*thisを返すことで v1 + v2
+      + v3見たく数珠繋ぎできる<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Vector2&amp; operator -= (const Vector2 minus_v2)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x -= minus_v2.x;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y -= minus_v2.y;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Vector2&amp; operator *= (float multiply_num)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x *= multiply_num;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y *= multiply_num;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 0.fで割ったときは±無限大を返す<br>
+      &nbsp;&nbsp;&nbsp; inline Vector2&amp; operator /= (float divide_num)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (divide_num == 0.0f) //
+      0で割ったら±無限大を返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *this = Vector2{
+      ((this-&gt;x &lt; 0) ? 1 : -1) *
+      std::numeric_limits&lt;float&gt;::infinity(),<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;((this-&gt;y &lt; 0) ? 1 : -1) *
+      std::numeric_limits&lt;float&gt;::infinity() };<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x /= divide_num;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y /= divide_num;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 代入演算子 x,y,zを全部 change_numに変える<br>
+      &nbsp;&nbsp;&nbsp; Vector2&amp; operator = (float change_num)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;x = change_num;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;y = change_num;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 一致演算子 x,y,zを全部一致するか 一つでも違えばfalse<br>
+      &nbsp;&nbsp;&nbsp; bool operator == (const Vector2&amp; v2_other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x != v2_other.x) return
+      false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y != v2_other.y) return
+      false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 不一致演算子 x,y,zを全部不一致か 一つでも同じならfalse<br>
+      &nbsp;&nbsp;&nbsp; bool operator != (const Vector2&amp; v2_other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x == v2_other.x) return
+      false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y == v2_other.y) return
+      false;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      <br>
+      // Vector2どうしの足し算 割り算 掛け算 割り算などの 基本演算の グローバル定義<br>
+      <br>
+      // Vector同士の足し算 x,y個別に足し合わせる<br>
+      inline Vector2 operator + (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; Vector2 v2; //注意 vec1 = vec1 + vec2のとき
+      vec1の数値が書き変わったら嫌だからv3を新たに用意<br>
+      &nbsp;&nbsp;&nbsp; v2.x = left.x + right.x; //[コレはダメ] left.x = left.x +
+      right.x;<br>
+      &nbsp;&nbsp;&nbsp; v2.y = left.y + right.y;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return v2;<br>
+      }<br>
+      <br>
+      // Vector同士の引き算 x,y個別に足し合わせる<br>
+      inline Vector2 operator - (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; Vector2 v2; //注意 vec1 = vec1 - vec2のとき
+      vec1の数値が書き変わったら嫌だからv2を新たに用意<br>
+      &nbsp;&nbsp;&nbsp; v2.x = left.x - right.x; //[コレはダメ] left.x = left.x -
+      right.x;<br>
+      &nbsp;&nbsp;&nbsp; v2.y = left.y - right.y;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return v2;<br>
+      }<br>
+      <br>
+      // Vectorと数値の掛け算 x,y個別に掛け合わせる<br>
+      inline Vector2 operator * (const Vector2&amp; left, float right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; Vector2 v2;<br>
+      &nbsp;&nbsp;&nbsp; v2.x = left.x * right;<br>
+      &nbsp;&nbsp;&nbsp; v2.y = left.y * right;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return v2;<br>
+      }<br>
+      <br>
+      <br>
+      // 数値とVectorの掛け算 x,y個別に掛け合わせる<br>
+      inline Vector2 operator * (float left, const Vector2&amp; right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; Vector2 v2;<br>
+      &nbsp;&nbsp;&nbsp; v2.x = left * right.x;<br>
+      &nbsp;&nbsp;&nbsp; v2.y = left * right.y;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return v2;<br>
+      }<br>
+      <br>
+      // Vectorと数値の割り算 x,y,z個別に割り合わせる<br>
+      // 0.fで割ると±無限大を返す<br>
+      inline Vector2 operator / (const Vector2&amp; left, float right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (right == 0.0f) // 0で割ったら±無限大を返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector2{ ((left.x &lt; 0) ? 1
+      : -1) * std::numeric_limits&lt;float&gt;::infinity(),<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ((left.y &lt; 0)
+      ? 1 : -1) * std::numeric_limits&lt;float&gt;::infinity() };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Vector2 v2;<br>
+      &nbsp;&nbsp;&nbsp; v2.x = left.x / right;<br>
+      &nbsp;&nbsp;&nbsp; v2.y = left.y / right;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return v2;<br>
+      }<br>
+      <br>
+      // 比較不等号 &lt; 演算子<br>
+      inline bool operator &lt; (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (left.x != right.x) return left.x &lt; right.x;<br>
+      &nbsp;&nbsp;&nbsp; return left.y &lt; right.y;<br>
+      }<br>
+      <br>
+      // 比較不等号 &gt; 演算子<br>
+      inline bool operator &gt; (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (left.x != right.x) return left.x &gt; right.x;<br>
+      &nbsp;&nbsp;&nbsp; return left.y &gt; right.y;<br>
+      }<br>
+      <br>
+      // 比較不等号 &lt;= 演算子<br>
+      inline bool operator &lt;= (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(left &gt; right);<br>
+      }<br>
+      <br>
+      // 比較不等号 &gt;= 演算子<br>
+      inline bool operator &gt;= (const Vector2&amp; left, const Vector2&amp;
+      right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(left &lt; right);<br>
+      }<br>
+      <br>
+      <em>// ベクトルの 2 乗の長さを返します(平方根しないぶん計算速い)<br>
+        inline float sqrMagnitude(const Vector2&amp; vec)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; return vec.x * vec.x + vec.y * vec.y; // x*x + y*y<br>
+        }<br>
+        <br>
+        // ベクトルの長さ(原点0から点(x,y)までの距離)<br>
+        inline float magnitude(const Vector2&amp; vec)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; return std::sqrt(sqrMagnitude(vec)); // √x*x + y*y<br>
+        }</em><br>
+      <br>
+      #endif</p>
+    <br>
+    <code>MyMath.h</code>を変更して円と円の距離をsqrMagnitude関数(円どうしの距離の2乗)を使った形に置き換えてみましょう。<br>
+    <p class="source">#ifndef MYMATH_H_<br>
+      #define MYMATH_H_<br>
+      <br>
+      #include "Vector2.h" // 線との当たり判定にVector2を使う<br>
+      <br>
+      #include &lt;cmath&gt;<br>
+      <br>
+      // 数学関連クラス<br>
+      class MyMath<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;static const float Sqrt2; // = 1.41421356237f;　// √2<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;static const float PI; // = 3.14159265359f; // 円周率<br>
+      &nbsp;&nbsp; &nbsp;static const float Deg2Rad; // = PI / 180f; //
+      度からラジアンに変換する定数<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; /// &lt;summary&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// 円と円が重なっているかを調べる<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="pc1"&gt;円1の中心pc1&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="radius1"&gt;円1の半径&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="pc2"&gt;円2の中心pc2&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; /// &lt;param name="radius2"&gt;円2の半径&lt;/param&gt;<br>
+      &nbsp;&nbsp;&nbsp; ///
+      &lt;returns&gt;重なっていればtrue、重なっていなければfalseを返却する&lt;/returns&gt;<br>
+      &nbsp;&nbsp;&nbsp; static bool CircleCircleIntersection(<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc1, float radius1,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc2, float radius2)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return <em>(pc1 -
+        pc2).sqrMagnitude()</em> &lt; ((radius1 + radius2) * (radius1 +
+      radius2));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      #endif </p>
+    さて、だいぶ式がすっきりしましたが、これでもちゃんと円どうしの当たり判定を計算できます。<br>
+    
+    magnitude系関数はつまり「三平方の定理」の距離を求める処理を関数という機能に置き換えた便利ツールと考えるとイメージしやすいかもしれません。<br>
+    </a><br>
   </body>
 </html>
