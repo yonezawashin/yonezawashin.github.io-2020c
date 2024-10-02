@@ -289,14 +289,10 @@
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
           &nbsp;&nbsp;&nbsp; }<br>
           <br>
-          &nbsp;&nbsp;&nbsp; // 不一致演算子 x,y,zを全部不一致か 一つでも同じならfalse<br>
+          &nbsp;&nbsp;&nbsp; // 不一致演算子 一致演算子の逆<br>
           &nbsp;&nbsp;&nbsp; bool operator != (const Vector2&amp; v2_other)<br>
           &nbsp;&nbsp;&nbsp; {<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x == v2_other.x)
-          return false;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y == v2_other.y)
-          return false;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return !(*this == v2_other);<br>
           &nbsp;&nbsp;&nbsp; }</em><br>
         <br>
         };<br>
@@ -638,14 +634,10 @@
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
-      &nbsp;&nbsp;&nbsp; // 不一致演算子 x,y,zを全部不一致か 一つでも同じならfalse<br>
+      &nbsp;&nbsp;&nbsp; // 不一致演算子 一致演算子の逆<br>
       &nbsp;&nbsp;&nbsp; bool operator != (const Vector2&amp; v2_other)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x == v2_other.x) return
-      false;<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y == v2_other.y) return
-      false;<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return !(*this == v2_other);<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       };<br>
@@ -1592,14 +1584,10 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
-        &nbsp;&nbsp;&nbsp; // 不一致演算子 x,y,zを全部不一致か 一つでも同じならfalse<br>
+        &nbsp;&nbsp;&nbsp; // 不一致演算子 一致演算子の逆<br>
         &nbsp;&nbsp;&nbsp; bool operator != (const Vector2&amp; v2_other)<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x == v2_other.x)
-        return false;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y == v2_other.y)
-        return false;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return !(*this == v2_other);<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         };<br>
@@ -1940,16 +1928,11 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
-        &nbsp;&nbsp;&nbsp; // 不一致演算子 x,y,zを全部不一致か 一つでも同じならfalse<br>
+        &nbsp;&nbsp;&nbsp; // 不一致演算子 一致演算子の逆<br>
         &nbsp;&nbsp;&nbsp; bool operator != (const Vector2&amp; v2_other)<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;x == v2_other.x)
-        return false;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;y == v2_other.y)
-        return false;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return !(*this == v2_other);<br>
         &nbsp;&nbsp;&nbsp; }<br>
-        <br>
         };<br>
         <br>
         <br>
@@ -2310,6 +2293,5 @@
       か?<br>
       <br>
     </a>
-    
   </body>
 </html>
