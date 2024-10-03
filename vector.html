@@ -41,7 +41,8 @@
         <br>
         //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
         <br>
-        //★【UnityのVector演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
+        //★【UnityのVector演算コード】https://github.com/Unity-Technologies
+        /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
         //★【UnityのMath演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/master/Runtime/Export/Math/Mathf.cs<br>
         <br>
         <br>
@@ -147,7 +148,8 @@
         <br>
         //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
         <br>
-        //★【UnityのVector演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
+        //★【UnityのVector演算コード】https://github.com/Unity-Technologies
+        /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
         //★【UnityのMath演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/master/Runtime/Export/Math/Mathf.cs<br>
         <br>
         <br>
@@ -425,7 +427,8 @@
       <br>
       //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
       <br>
-      //★【UnityのVector演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+      //★【UnityのVector演算コード】https://github.com/Unity-Technologies
+      /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
       //★【UnityのMath演算コード】https://github.com/Unity-Technologies/UnityCsReference /blob/master/Runtime/Export/Math/Mathf.cs<br>
       <br>
       <br>
@@ -1133,7 +1136,8 @@
         <br>
         //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
         <br>
-        //★【UnityのVector演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+        //★【UnityのVector演算コード】https://github.com/Unity-Technologies
+        /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
         //★【UnityのMath演算コード】https://github.com/Unity-Technologies /UnityCsReference /blob/master/Runtime/Export/Math/Mathf.cs<br>
         <br>
         <br>
@@ -1415,7 +1419,8 @@
         <br>
         //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
         <br>
-        //★【UnityのVector演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+        //★【UnityのVector演算コード】https://github.com/Unity-Technologies
+        /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
         //★【UnityのMath演算コード】https://github.com/Unity-Technologies /UnityCsReference /blob/master/Runtime/Export/Math/Mathf.cs<br>
         <br>
         <br>
@@ -2748,11 +2753,11 @@
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v0 = line0end - line0start; // line0の始点startから終点endへのベクトル<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v1 = line1end - line1start; // line1の始点startから終点endへのベクトル<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v01 = line1start - line0start; // line0の始点からline1の始点へのベクトル 0start→1start<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t0 = cross(v01, v0) / cross(v0, v1);<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t1 = cross(v01, v1) / cross(v0, v1);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t1 = cross(v01, v0) / cross(v0, v1);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t0 = cross(v01, v1) / cross(v0, v1);<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line0と線分line1が【交差しているか判定】<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt; t0 &amp;&amp; t0 &lt; 1 &amp;&amp; 0 &lt; t1 &amp;&amp; t1 &lt; 1) return true; //【交差している】<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt; t1 &amp;&amp; t1 &lt; 1 &amp;&amp; 0 &lt; t0 &amp;&amp; t0 &lt; 1) return true; //【交差している】<br>
           <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // 線分line0と線分line1は【交差していない】<br>
           &nbsp;&nbsp;&nbsp; }</em><br>
@@ -2760,8 +2765,8 @@
         };<br>
         <br>
         #endif </p>
-      下図で上記コードの式との対応関係を確認してみてください。<br>
-      <p> <img src="image/circle_line_collision3.png" alt=""></p>
+      下図で上記コードの式との対応関係を確認してみてください。(ベクトルaをv0に ベクトルbをv1に ベクトルcをv01に 置き換えてみよう[ピンクの部分])<br>
+      <p> <img src="image/circle_line_collision4.png" alt=""></p>
       <br>
       <br>
       <p><code>main.cpp</code>がちらかってきたので一旦、今まで書いてきたVector関連のコードを消してから今回のコードを入れま しょう。 </p>
@@ -2856,7 +2861,7 @@
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
       <br>
-      <p><code>main.cpp</code>を変更してMyMath::LineIntersectionで線分line0と線分line1が交差するかの判定を追加してみます。 </p>
+      <p><code>main.cpp</code>を変更してMyMath::LineIntersectionで線分line0と線分line1が交差する かの判定を追加してみます。 </p>
       <p class="source">#include "DxLib.h"<br>
         <br>
         #include "Screen.h"<br>
@@ -2944,7 +2949,7 @@
       念のため、交差しない場合も試しておきましょう。<br>
       <br>
       <br>
-      <p><code>main.cpp</code>の点p1の位置を変更して線分line0と線分line1が交差しない場合(t1 &lt; 0)の判定を試してみます。 </p>
+      <p><code>main.cpp</code>の点p1の位置を変更して線分line0と線分line1が交差しない場合(t0 &lt; 0)の判定を試してみます。 </p>
       <p class="source">#include "DxLib.h"<br>
         <br>
         #include "Screen.h"<br>
@@ -3028,11 +3033,11 @@
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
       <br>
-      いかがですか？線line0と線line1が交差していていない(t1 &lt; 0)ので線が白色で表示されましたか?<br>
-      念のため、別の交差しない場合(1 &lt; t1のとき)も試しておきましょう。<br>
+      いかがですか？線line0と線line1が交差していていない(t0 &lt; 0)ので線が白色で表示されましたか?<br>
+      念のため、別の交差しない場合(1 &lt; t0のとき)も試しておきましょう。<br>
       <br>
       <br>
-      <p><code>main.cpp</code>の点p1の位置を変更して線分line0と線分line1が交差しない場合(1 &lt; t1)の判定を試してみます。 </p>
+      <p><code>main.cpp</code>の点p1の位置を変更して線分line0と線分line1が交差しない場合(1 &lt; t0)の判定を試してみます。 </p>
       <p class="source">#include "DxLib.h"<br>
         <br>
         #include "Screen.h"<br>
@@ -3115,11 +3120,11 @@
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
-      いかがですか？線line0と線line1が交差していていない(1 &lt; t1)ので線が白色で表示されましたか?<br>
-      念のため、別の交差しない場合(t0 &lt; 0のとき)も試しておきましょう。<br>
+      いかがですか？線line0と線line1が交差していていない(1 &lt; t0)ので線が白色で表示されましたか?<br>
+      念のため、別の交差しない場合(t1 &lt; 0のとき)も試しておきましょう。<br>
       <br>
       <br>
-      <p><code>main.cpp</code>の点p1の位置を変更して線分line0と線分line1が交差しない場合(t0 &lt; 0)の判定を試してみます。 </p>
+      <p><code>main.cpp</code>の点p1の位置を変更して線分line0と線分line1が交差しない場合(t1 &lt; 0)の判定を試してみます。 </p>
       <p class="source">#include "DxLib.h"<br>
         <br>
         #include "Screen.h"<br>
@@ -3202,11 +3207,11 @@
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
-      いかがですか？線line0と線line1が交差していていない(t0 &lt; 0)ので線が白色で表示されましたか?<br>
-      念のため、別の交差しない場合(1 &lt; t0のとき)も試しておきましょう。<br>
+      いかがですか？線line0と線line1が交差していていない(t1 &lt; 0)ので線が白色で表示されましたか?<br>
+      念のため、別の交差しない場合(1 &lt; t1のとき)も試しておきましょう。<br>
       <br>
       <br>
-      <p><code>main.cpp</code>の点p1の位置を変更して線分line0と線分line1が交差しない場合(1 &lt; t0)の判定を試してみます。 </p>
+      <p><code>main.cpp</code>の点p1の位置を変更して線分line0と線分line1が交差しない場合(1 &lt; t1)の判定を試してみます。 </p>
       <p class="source">#include "DxLib.h"<br>
         <br>
         #include "Screen.h"<br>
@@ -3289,16 +3294,16 @@
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
-      いかがですか？線line0と線line1が交差していていない(1 &lt; t0)ので線が白色で表示されましたか?<br>
+      いかがですか？線line0と線line1が交差していていない(1 &lt; t1)ので線が白色で表示されましたか?<br>
       これで、t1 &lt; 0、1 &lt; t1、t0 &lt; 0、1 &lt; t0 の4種類の交差しないパターンを試すことができました。<br>
       線と線の交差判定は、2Dゲームのレイ(光線)と壁や地面の直線との交差判定に使えますね。<br>
       ただし、その場合はレイ(光線)は有限の直線ではなくて片方に無限の直線なので、点p0をレイ(光線)の始点とするなら、<br>
-      上記の<b>「t1 &lt; 1 の判定をあえてせずに」</b>t1 が 1以上でもレイ(光線)があたっている、と判定する必要があります。<br>
-      ではMyMathのLineIntersection関数を「t1 &lt; 1 の判定をあえてしないように」改造してレイ(光線)の当たり判定を実現してみましょう。<br>
+      上記の<b>「t0 &lt; 1 の判定をあえてせずに」</b>t0 が 1以上でもレイ(光線)があたっている、と判定する必要があります。<br>
+      ではMyMathのLineIntersection関数を「t0 &lt; 1 の判定をあえてしないように」改造してレイ(光線)の当たり判定を実現してみましょう。<br>
       <br>
     </a> <a id="mozTocId0011" class="mozTocH1">
       <h1>MyMathクラスでレイ(光線)と線分(壁や床など)が交差するか判定する</h1>
-      <code>MyMath.h</code>を変更して光線ray0と線分line1が交差するかを求める関数isRayLineCollision(判定のみ ver.)を追加してみましょう。<br>
+      <code>MyMath.h</code>を変更して光線ray0と線分line1が交差するかを求める関数isRayLineCollision(判定の み ver.)を追加してみましょう。<br>
       <p class="source">#ifndef MYMATH_H_<br>
         #define MYMATH_H_<br>
         <br>
@@ -3330,11 +3335,11 @@
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v0 = ray0dir; // 光線ray0のベクトル<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v1 = line1end - line1start; // line1の始点startから終点endへのベクトル<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v01 = line1start - ray0start; // line0の始点からline1の始点へのベクトル 0start→1start<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t0 = cross(v01, v0) / cross(v0, v1);<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t1 = cross(v01, v1) / cross(v0, v1);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t1 = cross(v01, v0) / cross(v0, v1);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t0 = cross(v01, v1) / cross(v0, v1);<br>
           <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光線ray0と線分line1が【交差しているか判定】<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt; t0 &amp;&amp; t0 &lt; 1 &amp;&amp; 0 &lt; t1) return true; //【交差している】<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt; t1 &amp;&amp; t1 &lt; 1 &amp;&amp; 0 &lt; t0) return true; //【交差している】<br>
           <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // 光線ray0と線分line1は【交差していない】<br>
           &nbsp;&nbsp;&nbsp; }</em><br>
@@ -3342,6 +3347,9 @@
         };<br>
         <br>
         #endif </p>
+      <br>
+      下図で上記コードの式との対応関係を確認してみてください。(v0をray0startに v1の代わりにray0dirに置き換えてみよう[オレンジの部分])<br>
+      <p> <img src="image/circle_line_collision4.png" alt=""></p>
       <br>
       <br>
       <p><code>main.cpp</code>の点p0をray0posに、点p1の代わりにレイ光線の方向ray0dirに変更して、線分line1と交差するかの判定を試してみます。 </p>
@@ -3430,7 +3438,7 @@
       いかがでしょう？レイの方向に有限の線分(壁や床)があるときに、線が赤色で表示されたでしょうか？<br>
       念のため、こんどはレイの方向を変えて、(-1,1) x方向に-1、y方向に+1の方向、<br>
       つまり、90°+45°=135°の方向のレイに変えた場合に光線と線分(壁や床)との当たり判定もためしてみましょう。<br>
-      <p><code>main.cpp</code>のレイ光線の方向ray0dirを(-1,1)=135°の方向に変更して、線分line1と交差するかの判定を試してみます。 </p>
+      <p><code>main.cpp</code>のレイ光線の方向ray0dirを(-1,1)=135°の方向に変更して、線分line1と交差するかの 判定を試してみます。 </p>
       <p class="source">#include "DxLib.h"<br>
         <br>
         #include "Screen.h"<br>
@@ -3512,11 +3520,11 @@
         }</p>
       いかがでしょう？こんどはレイ光線の方向に線分(壁や床)がないので線が白色で表示されましたでしょうか？<br>
       <br>
-      このように、数学の式の理解をすると、数式を少しだけ変えて(1 &lt; t1)&nbsp; t1 の1以上の判定 をしないだけで、<br>
+      このように、数学の式の理解をすると、数式を少しだけ変えて(1 &lt; t0)&nbsp; t0 の1以上の判定 をしないだけで、<br>
       ゲームに実際に使えるようなレイの判定をできることが実感できたでしょうか?<br>
       <br>
-      Unityに最初から用意されている機能に頼ってしまうと、このようなゲームを支える数学の基礎を学ぶ機会のないまま、就職活動をすることになってしまいます。<br>
-      すると、「Unityだけ」でゲームを作っている人は「ベクトルとか当たり判定の基礎の知識が薄い」のではないかとベテランのプログラマからは見られているわけです。<br>
+      Unityに最初から用意されている機能に頼ってしまうと、このようなゲームを支える数学の基礎を学ぶ機会のないまま、就職活動をすることになってしまいま す。<br>
+      すると、「Unityだけ」でゲームを作っている人は「ベクトルとか当たり判定の基礎の知識が薄い」のではないかとベテランのプログラマからは見られているわ けです。<br>
       2010年代以降の「Unity以降」世代と2010年以前の「自力勉強世代」との間の「ゲーム数学の勉強する機会格差」が生じてしまっています。<br>
       結果として、「自作ゲームは作れる」のに「ゲームプログラマ」としては就職に苦労する「世代ギャップ」が生じています。<br>
       「Unity」などのゲームエンジンの便利さにより、ゲームプログラマの「基礎的な数学力」の足腰とモチベーションをぐらつかせているという意味で、<br>
