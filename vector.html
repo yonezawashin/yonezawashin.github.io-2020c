@@ -41,8 +41,7 @@
         <br>
         //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
         <br>
-        //★【UnityのVector演算コード】https://github.com/Unity-Technologies
-        /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
+        //★【UnityのVector演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
         //★【UnityのMath演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/master/Runtime/Export/Math/Mathf.cs<br>
         <br>
         <br>
@@ -148,8 +147,7 @@
         <br>
         //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
         <br>
-        //★【UnityのVector演算コード】https://github.com/Unity-Technologies
-        /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
+        //★【UnityのVector演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector2.cs<br>
         //★【UnityのMath演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/master/Runtime/Export/Math/Mathf.cs<br>
         <br>
         <br>
@@ -427,8 +425,7 @@
       <br>
       //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
       <br>
-      //★【UnityのVector演算コード】https://github.com/Unity-Technologies
-      /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+      //★【UnityのVector演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
       //★【UnityのMath演算コード】https://github.com/Unity-Technologies/UnityCsReference /blob/master/Runtime/Export/Math/Mathf.cs<br>
       <br>
       <br>
@@ -1136,8 +1133,7 @@
         <br>
         //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
         <br>
-        //★【UnityのVector演算コード】https://github.com/Unity-Technologies
-        /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+        //★【UnityのVector演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
         //★【UnityのMath演算コード】https://github.com/Unity-Technologies /UnityCsReference /blob/master/Runtime/Export/Math/Mathf.cs<br>
         <br>
         <br>
@@ -1419,8 +1415,7 @@
         <br>
         //【注意】std::vectorとは全く違う。数学で習う【ベクトル】です。ごっちゃにしないで。<br>
         <br>
-        //★【UnityのVector演算コード】https://github.com/Unity-Technologies
-        /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
+        //★【UnityのVector演算コード】https://github.com/Unity-Technologies /UnityCsReference/blob/02d565cf3dd0f6b15069ba976064c75dc2705b08/Runtime/Export/Math/Vector3.cs<br>
         //★【UnityのMath演算コード】https://github.com/Unity-Technologies /UnityCsReference /blob/master/Runtime/Export/Math/Mathf.cs<br>
         <br>
         <br>
@@ -3303,7 +3298,7 @@
       <br>
     </a> <a id="mozTocId0011" class="mozTocH1">
       <h1>MyMathクラスでレイ(光線)と線分(壁や床など)が交差するか判定する</h1>
-      <code>MyMath.h</code>を変更して光線ray0と線分line1が交差するかを求める関数isRayLineCollision(判定の み ver.)を追加してみましょう。<br>
+      <code>MyMath.h</code>を変更して光線ray0と線分line1が交差するかを求める関数RayLineCollision(判定のみ ver.)を追加してみましょう。<br>
       <p class="source">#ifndef MYMATH_H_<br>
         #define MYMATH_H_<br>
         <br>
@@ -3531,6 +3526,322 @@
       Unityの教育の手軽さに対する「反作用」がでてきているともいえます。<br>
       (最近だと、デザイナー系や美大の学科なんかも自力でUnity勉強して、かっこいいゲーム作ってきちゃうので、差別化が大変なのです)<br>
       デザイナー系や美大の学科が、絶対に勉強してこない(勉強したくない)ような分野の代表が「ベクトルや当たり判定」なのです。<br>
+      <br>
+      <br>
+    </a> <a id="mozTocId0012" class="mozTocH1">
+      <h1>MyMathクラスでレイ(光線)と線分(壁や床など)の交点を求める</h1>
+      <code>MyMath.h</code>を変更して光線ray0と線分line1の交点を求める関数RayLineCollision(交点も求める ver.)を変更してみましょう。<br>
+      <p class="source">#ifndef MYMATH_H_<br>
+        #define MYMATH_H_<br>
+        <br>
+        #include "Vector2.h" // 線との当たり判定にVector2を使う<br>
+        <br>
+        #include &lt;cmath&gt;<br>
+        <br>
+        // 数学関連クラス<br>
+        class MyMath<br>
+        {<br>
+        public:<br>
+        &nbsp;&nbsp; &nbsp;static const float Sqrt2; // = 1.41421356237f;　// √2<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;static const float PI; // = 3.14159265359f; // 円周率<br>
+        &nbsp;&nbsp; &nbsp;static const float Deg2Rad; // = PI / 180f; // 度からラジアンに変換する定数<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;(中略).....<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; /// &lt;summary&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// 光線ray0と線line1が重なっているかを調べる<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
+        &nbsp;&nbsp;&nbsp; <em>/// &lt;param name="result"光線ray0と線line1の交点を求めてresultで返す&lt;/param&gt;</em><br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="ray0start"&gt;光線ray0の始点&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="ray0dir"&gt;光線ray0の方向ベクトル&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="line1start"&gt;線line1の始点&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;param name="line1end"&gt;線line1の終点&lt;/param&gt;<br>
+        &nbsp;&nbsp;&nbsp; /// &lt;returns&gt;光線ray0と線line1が交差しているならtrue,してないならfalse&lt;/returns&gt;<br>
+        &nbsp;&nbsp;&nbsp; static bool RayLineCollision(<em>Vector2&amp; result, </em>Vector2 ray0start, Vector2 ray0dir, Vector2 line1start, Vector2 line1end)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v0 = ray0dir; // 光線ray0のベクトル<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v1 = line1end - line1start; // line1の始点startから終点endへのベクトル<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 v01 = line1start - ray0start; // line0の始点からline1の始点へのベクトル 0start→1start<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t1 = cross(v01, v0) / cross(v0, v1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t0 = cross(v01, v1) / cross(v0, v1);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>result = ray0start + v0 * t0; //交点resultを求めて【&amp;result参照で返却】</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光線ray0と線分line1が【交差しているか判定】<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt; t1 &amp;&amp; t1 &lt; 1 &amp;&amp; 0 &lt; t0) return true; //【交差している】<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // 光線ray0と線分line1は【交差していない】<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        };<br>
+        <br>
+        #endif </p>
+      <br>
+      下図で上記コードの式との対応関係を確認してみてください。<br>
+      <p> <img src="image/circle_line_collision4.png" alt=""></p>
+      <br>
+      <p><code>main.cpp</code>に交点Qを追加して関数の引数に渡して、線分line1と光線ray0の交点を求めて表示してみましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ray0光線レイ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0pos{ 5,5 }; // レイ光線の始点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ -1,1 }; // レイ光線の方向<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 Q; // 光線ray0とline1の交点</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(<em>Q, </em>ray0pos, ray0dir, p2, p1);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 光線ray0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, GetColor(255, 0, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.DrawPoint(Q.x, Q.y, 3, GetColor(255, 165, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q_String = "Q=(" + std::to_string(Q.x) + "," + std::to_string(Q.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q.x, Q.y - 10, Q_String.c_str(), GetColor(255, 165, 0));</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう？なるほど、レイ光線の方向に線分(壁や床)がないときは、線分line0の延長線上に交点Qが求まるのですね。<br>
+      では、光線の方向が壁と逆方向(-1,-1)の場合はどうなるか実験してみましょう。 <br>
+      <br>
+      <p><code>main.cpp</code>の交点Qが光線ray0と逆方向(-1,-1)の場合の交点を表示してみましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ray0光線レイ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0pos{ 5,5 }; // レイ光線の始点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ -1,<em>-1</em> }; // レイ光線の方向<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // 光線ray0とline1の交点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(Q, ray0pos, ray0dir, p2, p1);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 光線ray0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, GetColor(255, 0, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q.x, Q.y, 3, GetColor(255, 165, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q_String = "Q=(" + std::to_string(Q.x) + "," + std::to_string(Q.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q.x, Q.y - 10, Q_String.c_str(), GetColor(255, 165, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう？なるほど、逆方向の場合はレイ光線の後ろ側に交点が数学的に求まって、表示されるのですね。<br>
+      では、今度こそレイ光線が壁(線分)にヒットするときの実験をしてみましょう。<br>
+      <br>
+      <p><code>main.cpp</code>を変更して、光線ray0の方向が(1,1)で壁(線)とぶつかる場合にその交点Qを表示してみましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ray0光線レイ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0pos{ 5,5 }; // レイ光線の始点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ <em>1,1</em> }; // レイ光線の方向<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // 光線ray0とline1の交点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(Q, ray0pos, ray0dir, p2, p1);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 光線ray0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, GetColor(255, 0, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q.x, Q.y, 3, GetColor(255, 165, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q_String = "Q=(" + std::to_string(Q.x) + "," + std::to_string(Q.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q.x, Q.y - 10, Q_String.c_str(), GetColor(255, 165, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう？つまり、この設計した関数を使う場合は、isCollision01でMyMath::RayLineCollisionの結果をbool型で受けて、<br>
+      レイ光線がぶつかったかどうかと、セットで交点Qを使う必要があるのですね。<br>
+      逆に言えば、isCollision01を無視すれば、壁や床が無限の長さのときの交点を求めるのにも、この関数は応用できるということですね。<br>
       <br>
     </a>
   </body>
