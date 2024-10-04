@@ -2904,15 +2904,15 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 線分line0<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 5,5 };<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,11 };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,11 };<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
           <br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineIntersection(p0, p3, p2, p1);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineIntersection(p0, p1, p2, p3);<br>
           <br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
           <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 0, 0), TRUE);<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
@@ -2992,15 +2992,15 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ <em>11,9</em> };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,11 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,11 };<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineIntersection(p0, p3, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineIntersection(p0, p1, p2, p3);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 0, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
@@ -3080,15 +3080,15 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ <em>5,5</em> };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ <em>9,7</em> };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ <em>9,7</em> };<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineIntersection(p0, p3, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineIntersection(p0, p1, p2, p3);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 0, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
@@ -3167,15 +3167,15 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 5,5 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ <em>15,11</em> };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ <em>15,11</em> };<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ <em>12,8</em> };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineIntersection(p0, p3, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineIntersection(p0, p1, p2, p3);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 0, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
@@ -3254,15 +3254,15 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 5,5 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,11 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,11 };<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ <em>5,10</em> };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ <em>9,9</em> };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ <em>9,9</em> };<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineIntersection(p0, p3, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineIntersection(p0, p1, p2, p3);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 0, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
@@ -3398,28 +3398,28 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 <em>ray0dir</em>{ <em>1,1</em> }; <em>// レイ光線の方向</em><br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ <em>15,6</em> };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ <em>15,6</em> };<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::<em>RayLineCollision</em>(<em>ray0pos, ray0dir</em>, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::<em>RayLineCollision</em>(<em>ray0pos, ray0dir</em>, p2, p3);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(<em>ray0pos</em>.x, <em>ray0pos</em>.y, 0, 0, <em>ray0pos.x + ray0dir.x</em>, <em>ray0pos.y + ray0dir.y</em>, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // <em>光線ray0</em><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(<em>ray0pos</em>.x, <em>ray0pos</em>.y, 3, GetColor(255, 0, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "<em>ray0</em>=(" + std::to_string((int)<em>ray0pos</em>.x) + "," + std::to_string((int)<em>ray0pos</em>.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(<em>ray0pos</em>.x, <em>ray0pos</em>.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));</u><br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>mathGraph.DrawPoint(p3.x, p3.y, 3, GetColor(0, 255, 255), TRUE);<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p3_String = "p3=(" + std::to_string((int)p3.x) + "," + std::to_string((int)p3.y) + ")";<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p3.x, p3.y, p3_String.c_str(), GetColor(0, 255, 255));</u><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p3.x, p3.y, 3, GetColor(0, 255, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p3_String = "p3=(" + std::to_string((int)p3.x) + "," + std::to_string((int)p3.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p3.x, p3.y, p3_String.c_str(), GetColor(0, 255, 255));<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
@@ -3484,24 +3484,28 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ <em>-1</em>,1 }; // レイ光線の方向<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(ray0pos, ray0dir, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(ray0pos, ray0dir, p2, p3);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 光線ray0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, GetColor(255, 0, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
-        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p3.x, p3.y, 3, GetColor(0, 255, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p3_String = "p3=(" + std::to_string((int)p3.x) + "," + std::to_string((int)p3.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p3.x, p3.y, p3_String.c_str(), GetColor(0, 255, 255));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
@@ -3632,25 +3636,25 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ -1,1 }; // レイ光線の方向<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 Q; // 光線ray0とline1の交点</em><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(<em>Q, </em>ray0pos, ray0dir, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(<em>Q, </em>ray0pos, ray0dir, p2, p3);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 光線ray0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, GetColor(255, 0, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
-        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p3.x, p3.y, 3, GetColor(0, 255, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p3_String = "p3=(" + std::to_string((int)p3.x) + "," + std::to_string((int)p3.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p3.x, p3.y, p3_String.c_str(), GetColor(0, 255, 255));<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.DrawPoint(Q.x, Q.y, 3, GetColor(255, 165, 0), TRUE);<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q_String = "Q=(" + std::to_string(Q.x) + "," + std::to_string(Q.y) + ")";<br>
@@ -3719,25 +3723,25 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ -1,<em>-1</em> }; // レイ光線の方向<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // 光線ray0とline1の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(Q, ray0pos, ray0dir, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(Q, ray0pos, ray0dir, p2, p3);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 光線ray0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, GetColor(255, 0, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
-        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p3.x, p3.y, 3, GetColor(0, 255, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p3_String = "p3=(" + std::to_string((int)p3.x) + "," + std::to_string((int)p3.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p3.x, p3.y, p3_String.c_str(), GetColor(0, 255, 255));<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q.x, Q.y, 3, GetColor(255, 165, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q_String = "Q=(" + std::to_string(Q.x) + "," + std::to_string(Q.y) + ")";<br>
@@ -3806,25 +3810,25 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ <em>1,1</em> }; // レイ光線の方向<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // 光線ray0とline1の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(Q, ray0pos, ray0dir, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayLineCollision(Q, ray0pos, ray0dir, p2, p3);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 光線ray0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, GetColor(255, 0, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
-        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p3.x, p3.y, 3, GetColor(0, 255, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p3_String = "p3=(" + std::to_string((int)p3.x) + "," + std::to_string((int)p3.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p3.x, p3.y, p3_String.c_str(), GetColor(0, 255, 255));<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q.x, Q.y, 3, GetColor(255, 165, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q_String = "Q=(" + std::to_string(Q.x) + "," + std::to_string(Q.y) + ")";<br>
@@ -3944,33 +3948,33 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 <em>p0</em>{ 5,5 }; // <em>line0の始点</em><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 <em>p3</em>{ <em>15,11</em> }; // <em>line0の終点</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 <em>p1</em>{ <em>15,11</em> }; // <em>line0の終点</em><br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // <em>line0</em>とline1の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::<em>LineIntersection</em>(Q, <em>p0</em>, <em>p3</em>, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::<em>LineIntersection</em>(Q, <em>p0</em>, <em>p1</em>, p2, p3);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(<em>p0</em>.x, <em>p0</em>.y, 0, 0, <em>p3.x</em>, <em>p3.y</em>, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // <em>線分line0</em><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(<em>p0</em>.x, <em>p0</em>.y, 0, 0, <em>p1.x</em>, <em>p1.y</em>, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // <em>線分line0</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(<em>p0</em>.x, <em>p0</em>.y, 3, GetColor(255, 0, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "<em>p</em>0=(" + std::to_string((int)<em>p0</em>.x) + "," + std::to_string((int)<em>p0</em>.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(<em>p0</em>.x, <em>p0</em>.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));</em><br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
         <em><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p3.x, p3.y, 3, GetColor(0, 255, 255), TRUE);<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p3_String = "p3=(" + std::to_string((int)p3.x) + "," + std::to_string((int)p3.y) + ")";<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p3.x, p3.y, p3_String.c_str(), GetColor(0, 255, 255));<br>
-        </em><br>
+        </em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p3.x, p3.y, 3, GetColor(0, 255, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p3_String = "p3=(" + std::to_string((int)p3.x) + "," + std::to_string((int)p3.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p3.x, p3.y, p3_String.c_str(), GetColor(0, 255, 255));<br>
+        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q.x, Q.y, 3, GetColor(255, 165, 0), TRUE);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q_String = "Q=(" + std::to_string(Q.x) + "," + std::to_string(Q.y) + ")";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q.x, Q.y - 10, Q_String.c_str(), GetColor(255, 165, 0));<br>
@@ -4054,7 +4058,7 @@
       下図で上記コードの式との対応関係を確認してみてください。<br>
       <p> <img src="image/circle_line_collision5.png" alt=""></p>
       <br>
-      <p><code>main.cpp</code>を変更して、壁(線)line0 に対する 線分line1の交点Q と line1の終点p1の反射点R を求めて表示してみましょう。 </p>
+      <p><code>main.cpp</code>を変更して、壁(線)line0 に対する 線分line1の交点Q と line1の終点p3の反射点R を求めて表示してみましょう。 </p>
       <p class="source">#include "DxLib.h"<br>
         <br>
         #include "Screen.h"<br>
@@ -4098,17 +4102,17 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 5,5 }; // line0の始点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,11 }; // line0の終点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,11 }; // line0の終点<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // line0とline1の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 R; // line0を壁wall0とした場合のline1の終点p1の壁line0に対する反射点Rと交点Qを求める</em><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::<em>LineReflection(R, Q, p0, p3, p2, p1);</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 R; // line0を壁wall0とした場合のline1の終点p3の壁line0に対する反射点Rと交点Qを求める</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::<em>LineReflection(R, Q, p0, p1, p2, p3);</em><br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 反射ベクトル(交点Q→反射点R)を描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
@@ -4150,7 +4154,7 @@
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
-      いかがでしょう？壁(線)line0(wall0) に対する 線分line1の終点p1 の 反射点R と 交点Q が表示されましたか?<br>
+      いかがでしょう？壁(線)line0(wall0) に対する 線分line1の終点p3 の 反射点R と 交点Q が表示されましたか?<br>
       交点Qは先に作っておいた線と線の交点を求める関数LineIntersectionが再利用されています。<br>
       念のため、壁と線が交差しないときはどうなるかも実験しておきましょう。 <br>
       <br>
@@ -4198,17 +4202,17 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ <em>11,9</em> }; // line0の始点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,11 }; // line0の終点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,11 }; // line0の終点<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // line0とline1の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p1の壁line0に対する反射点Rと交点Qを求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p3, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p3の壁line0に対する反射点Rと交点Qを求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p1, p2, p3);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 反射ベクトル(交点Q→反射点R)を描く<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
@@ -4298,17 +4302,17 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ <em>5,5</em> }; // line0の始点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ <em>9,7</em> }; // line0の終点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ <em>9,7</em> }; // line0の終点<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // line0とline1の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p1の壁line0に対する反射点Rと交点Qを求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p3, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p3の壁line0に対する反射点Rと交点Qを求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p1, p2, p3);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 反射ベクトル(交点Q→反射点R)を描く<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
@@ -4350,7 +4354,7 @@
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
-      いかがでしょう？はい、なるほど予感通り、壁(線)line0(wall0)が「終点end側(点p3)で」途切れている場合でも「その延長線上に交点Qは求まり」 反射点R は「その交点Qに対する反射」として計算されました。<br>
+      いかがでしょう？はい、なるほど予感通り、壁(線)line0(wall0)が「終点end側(点p1)で」途切れている場合でも「その延長線上に交点Qは求まり」 反射点R は「その交点Qに対する反射」として計算されました。<br>
       ということは、壁の長さがwall0endから先の方向に無限な場合は、(1 &lt; t0)のときの当たり判定を許して、反射点を調べれば求められそうですね。<br>
       では、こんどは(t1 &lt; 0)の場合も実験してみましょう。<br>
       <br>
@@ -4398,17 +4402,17 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 5,5 }; // line0の始点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ <em>15,11</em> }; // line0の終点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ <em>15,11</em> }; // line0の終点<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ <em>12,8</em> };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,6 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // line0とline1の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p1の壁line0に対する反射点Rと交点Qを求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p3, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p3の壁line0に対する反射点Rと交点Qを求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p1, p2, p3);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 反射ベクトル(交点Q→反射点R)を描く<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
@@ -4498,17 +4502,17 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 5,5 }; // line0の始点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,11 }; // line0の終点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,11 }; // line0の終点<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ <em>5,10</em> };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ <em>9,9</em> };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ <em>9,9</em> };<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // line0とline1の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p1の壁line0に対する反射点Rと交点Qを求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p3, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p3の壁line0に対する反射点Rと交点Qを求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p1, p2, p3);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 反射ベクトル(交点Q→反射点R)を描く<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
@@ -4668,22 +4672,22 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // line0<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 5,5 }; // line0の始点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,11 }; // line0の終点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,11 }; // line0の終点<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ <em>15,6</em> };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ <em>15,6</em> };<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>float r = 1.0f; // 円の半径r 始点p2が円(青ボール)の場合を想定</em><br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // line0とline1の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p1の壁line0に対する反射点Rと交点Qを求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p3, p2, p1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p3の壁line0に対する反射点Rと交点Qを求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p1, p2, p3);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.DrawCircle(p2.x, p2.y, r, GetColor(0, 0, 255), FALSE); // 円p2(始点)を描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(Q.x, Q.y, r, GetColor(255, 165, 0), FALSE); // 円Q(衝突位置)を描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(R.x, R.y, r, GetColor(255, 255, 0), FALSE); // 円R(反射位置)を描く</em><br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 反射ベクトル(交点Q→反射点R)を描く<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
@@ -4726,8 +4730,8 @@
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
       いかがでしょう？青ボール(始点p2)が壁(線)line0(wall0) に反射(衝突点Q:だいだい色ボール)して 反射点R(黄色ボール)に飛んでいく様子 が表示されましたか?<br>
-      厳密には、isCollision01は線と線の交点を求める関数LineIntersectionが再利用されているため、壁始点p0 と 壁終点p3 付近で判定がバグります。<br>
-      壁始点p0と壁終点p3の判定は別途考える必要があります。 <br>
+      厳密には、isCollision01は線と線の交点を求める関数LineIntersectionが再利用されているため、壁始点p0 と 壁終点p1 付近で判定がバグります。<br>
+      壁始点p0と壁終点p1の判定は別途考える必要があります。 <br>
       <br>
       <br>
     </a>
