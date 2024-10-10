@@ -4680,7 +4680,7 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // line0とline1の交点<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p3の壁line0に対する反射点Rと交点Qを求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p1, p2, p3);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p1, p2, p3<em>, r</em>);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>mathGraph.DrawCircle(p2.x, p2.y, r, GetColor(0, 0, 255), FALSE); // 円p2(始点)を描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(Q.x, Q.y, r, GetColor(255, 165, 0), FALSE); // 円Q(衝突位置)を描く<br>
