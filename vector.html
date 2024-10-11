@@ -32,6 +32,8 @@
       <li><a href="#mozTocId0014">MyMathクラスで壁(線)に対する点の反射(線の終点の反射位置と交点)を求める</a></li>
       <li><a href="#mozTocId0015">MyMathクラスで壁(線)に対する円(半径r)の反射(円の中心点の反射位置と円の反射する瞬間の中心点)を求める</a></li>
       <li><a href="#mozTocId0016">MyMathクラスでレイ光線と円(半径r)の当たり判定と交点を求める</a></li>
+      <li><a href="#mozTocId0017">Matrix3x3で点を行列で平行移動(translate)させる</a></li>
+      <li><a href="#mozTocId0018">Matrix3x3で点を行列でスケール(拡大縮小)させる</a></li>
     </ol>
     <a id="mozTocId0001" class="mozTocH1">
       <h1>Vector2を使って簡単な直線などを描いてみる</h1>
@@ -5188,9 +5190,1786 @@
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
-    いかがでしょう？これで、円の内側に光線ray0の始点がある場合でも、正しくレイと円の当たり判定ができるようになりました。<br>
-    ゲームで使う分には、基本は 交点Q1(result1) を使うようにしていれば、円とレイの当たり判定としては十分かもしれません。<br>
-    (交点Q2をあえて使うとしたら、銃で撃たれて、貫通したときのような表現のときに使うようなケースがあるかもしれません)<br>
+      いかがでしょう？これで、円の内側に光線ray0の始点がある場合でも、正しくレイと円の当たり判定ができるようになりました。<br>
+      ゲームで使う分には、基本は 交点Q1(result1) を使うようにしていれば、円とレイの当たり判定としては十分かもしれません。<br>
+      (交点Q2をあえて使うとしたら、銃で撃たれて、貫通したときのような表現のときに使うようなケースがあるかもしれません)<br>
+      <br>
+      <br>
+      <br>
+    </a> <a id="mozTocId0017" class="mozTocH1">
+      <h1>Matrix3x3で点を行列で平行移動(translate)させる</h1>
+      <code>Matrix3x3.hを新規作成</code>して3×3の配列[3][3]を内部に持つ行列を定義しましょう。<br>
+      <p class="source">#ifndef MATRIX3X3_H_<br>
+        #define MATRIX3X3_H_<br>
+        <br>
+        #include "Vector2.h" // 2Dのベクトル<br>
+        <br>
+        #include &lt;ostream&gt;<br>
+        #include &lt;cmath&gt;<br>
+        <br>
+        // 行列(3×3)　2Dにも3Dにも使う<br>
+        struct Matrix3x3<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 行列[行][列]の順 (行優先) https://qiita.com/suzuryo3893/items/9e543cdf8bc64dc7002a<br>
+        &nbsp;&nbsp;&nbsp; union<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m[3][3]{}; // 3×3の配列<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;std::array&lt;float, 3&gt;, 3&gt; mArr; // std::array型ベースなら少し便利<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // float型のポインタへ(float*)キャストすればデータ配列 m の先頭のアドレスを返す<br>
+        &nbsp;&nbsp;&nbsp; inline operator float* () const { return (float*)m; }<br>
+        &nbsp;&nbsp;&nbsp; // float型のポインタへ(const float*)キャストすればデータ配列 m の先頭のアドレスを返す<br>
+        &nbsp;&nbsp;&nbsp; inline operator const float* () const { return (const float*)m; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3() = default;<br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3(float m11, float m12, float m13,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m21, float m22, float m23,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m31, float m32, float m33)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : m{ {m11, m12, m13}, {m21, m22, m23}, { m31, m32, m33} } {};<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ (std::arrayで初期化版)<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3(std::array&lt;std::array&lt;float, 3&gt;, 3&gt;&amp; matArr)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m[i][j] = matArr[i][j];<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        };<br>
+        <br>
+        <br>
+        // 行列の出力<br>
+        inline std::ostream&amp; operator &lt;&lt; (std::ostream&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; right.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (j &lt; 3 - 1) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; " ";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; std::endl;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; return left;<br>
+        };<br>
+        <br>
+        <br>
+        #endif<br>
+      </p>
+      基本は<b>float m[3][3]{}; // 3×3の配列</b> のように[3][3]の配列をベースにした構造体です。<br>
+      これに足し算や引き算や掛け算や割り算などの基本計算をoperatorで定義して行列の計算ができるように改造していきます。<br>
+      <br>
+      <br>
+      <code>Matrix3x3.h</code>を変更し、operatorをオーバーロードして行列の足し算や引き算や掛け算や割り算などの基本計算を定義しましょう。<br>
+      <p class="source">#ifndef MATRIX3X3_H_<br>
+        #define MATRIX3X3_H_<br>
+        <br>
+        #include "Vector2.h" // 2Dのベクトル<br>
+        <br>
+        #include &lt;ostream&gt;<br>
+        #include &lt;cmath&gt;<br>
+        <br>
+        // 行列(3×3)　2Dにも3Dにも使う<br>
+        struct Matrix3x3<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 行列[行][列]の順 (行優先) https://qiita.com/suzuryo3893/items/9e543cdf8bc64dc7002a<br>
+        &nbsp;&nbsp;&nbsp; union<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m[3][3]{}; // 3×3の配列<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;std::array&lt;float, 3&gt;, 3&gt; mArr; // std::array型ベースなら少し便利<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // float型のポインタへ(float*)キャストすればデータ配列 m の先頭のアドレスを返す<br>
+        &nbsp;&nbsp;&nbsp; inline operator float* () const { return (float*)m; }<br>
+        &nbsp;&nbsp;&nbsp; // float型のポインタへ(const float*)キャストすればデータ配列 m の先頭のアドレスを返す<br>
+        &nbsp;&nbsp;&nbsp; inline operator const float* () const { return (const float*)m; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3() = default;<br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3(float m11, float m12, float m13,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m21, float m22, float m23,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m31, float m32, float m33)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : m{ {m11, m12, m13}, {m21, m22, m23}, { m31, m32, m33} } {};<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ (std::arrayで初期化版)<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3(std::array&lt;std::array&lt;float, 3&gt;, 3&gt;&amp; matArr)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m[i][j] = matArr[i][j];<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; <em>/*-----　演算子オーバーロード　-----*/<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; inline Matrix3x3 operator + () const { return *this; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; // マイナスの符号を単体の行列につけたとき<br>
+          &nbsp;&nbsp;&nbsp; inline Matrix3x3 operator -() const<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = -this-&gt;m[i][j];<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return result;<br>
+          &nbsp;&nbsp;&nbsp; };<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator += (const Matrix3x3&amp; add)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] + add.m[i][j];<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+          &nbsp;&nbsp;&nbsp; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator -= (const Matrix3x3&amp; sub)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] - sub.m[i][j];<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+          &nbsp;&nbsp;&nbsp; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator *= (const Matrix3x3&amp; mul)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 tmp; // 値を一時保管<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmp.m[i][j] = this-&gt;m[i][j];<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = 0;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int k = 0; k &lt; 3; ++k)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] += tmp.m[i][k] * mul.m[k][j];<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+          &nbsp;&nbsp;&nbsp; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator *= (float multiply_num)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] * multiply_num;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+          &nbsp;&nbsp;&nbsp; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator /= (float divide_num)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] / divide_num;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+          &nbsp;&nbsp;&nbsp; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; // 一致演算子 行列の中身が全部一致するか 一つでも違えばfalse<br>
+          &nbsp;&nbsp;&nbsp; inline bool operator == (const Matrix3x3&amp; other)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;m[i][j] != other.m[i][j]) return false;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; true;<br>
+          &nbsp;&nbsp;&nbsp; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; // 不一致演算子<br>
+          &nbsp;&nbsp;&nbsp; inline bool operator != (const Matrix3x3&amp; other)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(*this == other);<br>
+          &nbsp;&nbsp;&nbsp; }</em><br>
+        <br>
+        };<br>
+        <br>
+        <em>// 行列の加算<br>
+          inline Matrix3x3 operator + (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+          {<br>
+          &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+          &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] + right.m[i][j];<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; return result;<br>
+          };<br>
+          <br>
+          // 行列の減算<br>
+          inline Matrix3x3 operator - (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+          {<br>
+          &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+          &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] - right.m[i][j];<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; return result;<br>
+          };<br>
+          <br>
+          // 行列のスカラー倍 (スカラー×行列）<br>
+          inline Matrix3x3 operator * (float left, const Matrix3x3&amp; right)<br>
+          {<br>
+          &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+          &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left * right.m[i][j];<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; return result;<br>
+          };<br>
+          <br>
+          // 行列のスカラー倍 (行列×スカラー）<br>
+          inline Matrix3x3 operator * (const Matrix3x3&amp; left, float right)<br>
+          {<br>
+          &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+          &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] * right;<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; return result;<br>
+          };<br>
+          <br>
+          // 行列の積<br>
+          inline Matrix3x3 operator * (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+          {<br>
+          &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+          &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = 0;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int k = 0; k &lt; 3; ++k)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] += left.m[i][k] * right.m[k][j];<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; return result;<br>
+          };<br>
+          <br>
+          //[2D]ベクトルと行列の積<br>
+          inline Vector2 operator * (const Vector2&amp; left, const Matrix3x3&amp; right)<br>
+          {<br>
+          &nbsp;&nbsp;&nbsp; float x = left.x * right.m[0][0] + left.y * right.m[1][0] + right.m[2][0];<br>
+          &nbsp;&nbsp;&nbsp; float y = left.x * right.m[0][1] + left.y * right.m[1][1] + right.m[2][1];<br>
+          &nbsp;&nbsp;&nbsp; return Vector2{ x, y };<br>
+          };<br>
+          <br>
+          inline const Matrix3x3 operator / (const Matrix3x3&amp; left, const float right)<br>
+          {<br>
+          &nbsp;&nbsp;&nbsp; return left * (1.0f / right);<br>
+          }</em><br>
+        <br>
+        // 行列の出力<br>
+        inline std::ostream&amp; operator &lt;&lt; (std::ostream&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; right.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (j &lt; 3 - 1) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; " ";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; std::endl;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; return left;<br>
+        };<br>
+        <br>
+        <br>
+        #endif<br>
+      </p>
+      これで行列の足し算や引き算や掛け算や割り算などの基本計算はできるようになりました。<br>
+      さらに、<b>数字における 0 や 1 などの行列版</b>として、<b>ゼロ行列(zero) や 単位行列E(identity:アイデンティティ)</b>も追加しておきましょう。<br>
+      <br>
+      <code>Matrix3x3.h</code>を変更し、operatorをオーバーロードして行列の足し算や引き算や掛け算や割り算などの基本計算を定義しましょう。<br>
+      <p class="source">#ifndef MATRIX3X3_H_<br>
+        #define MATRIX3X3_H_<br>
+        <br>
+        #include "Vector2.h" // 2Dのベクトル<br>
+        <br>
+        #include &lt;ostream&gt;<br>
+        #include &lt;cmath&gt;<br>
+        <br>
+        // 行列(3×3)　2Dにも3Dにも使う<br>
+        struct Matrix3x3<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 行列[行][列]の順 (行優先) https://qiita.com/suzuryo3893/items/9e543cdf8bc64dc7002a<br>
+        &nbsp;&nbsp;&nbsp; union<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m[3][3]{}; // 3×3の配列<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;std::array&lt;float, 3&gt;, 3&gt; mArr; // std::array型ベースなら少し便利<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // float型のポインタへ(float*)キャストすればデータ配列 m の先頭のアドレスを返す<br>
+        &nbsp;&nbsp;&nbsp; inline operator float* () const { return (float*)m; }<br>
+        &nbsp;&nbsp;&nbsp; // float型のポインタへ(const float*)キャストすればデータ配列 m の先頭のアドレスを返す<br>
+        &nbsp;&nbsp;&nbsp; inline operator const float* () const { return (const float*)m; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3() = default;<br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3(float m11, float m12, float m13,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m21, float m22, float m23,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m31, float m32, float m33)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : m{ {m11, m12, m13}, {m21, m22, m23}, { m31, m32, m33} } {};<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ (std::arrayで初期化版)<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3(std::array&lt;std::array&lt;float, 3&gt;, 3&gt;&amp; matArr)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m[i][j] = matArr[i][j];<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; <em>// ゼロ行列を返す<br>
+          &nbsp;&nbsp;&nbsp; static Matrix3x3 zero()<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Matrix3x3{ 0.0f, 0.0f, 0.0f,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 0.0f, 0.0f,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 0.0f, 0.0f };<br>
+          &nbsp;&nbsp;&nbsp; };<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; // 単位行列を返す<br>
+          &nbsp;&nbsp;&nbsp; static Matrix3x3 identity()<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Matrix3x3{ 1.0f, 0.0f, 0.0f,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 1.0f, 0.0f,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 0.0f, 1.0f };<br>
+          &nbsp;&nbsp;&nbsp; };</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp; /*-----　演算子オーバーロード　-----*/<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3 operator + () const { return *this; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // マイナスの符号を単体の行列につけたとき<br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3 operator -() const<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = -this-&gt;m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return result;<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator += (const Matrix3x3&amp; add)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] + add.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator -= (const Matrix3x3&amp; sub)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] - sub.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator *= (const Matrix3x3&amp; mul)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 tmp; // 値を一時保管<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmp.m[i][j] = this-&gt;m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = 0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int k = 0; k &lt; 3; ++k)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] += tmp.m[i][k] * mul.m[k][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator *= (float multiply_num)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] * multiply_num;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator /= (float divide_num)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] / divide_num;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 一致演算子 行列の中身が全部一致するか 一つでも違えばfalse<br>
+        &nbsp;&nbsp;&nbsp; inline bool operator == (const Matrix3x3&amp; other)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;m[i][j] != other.m[i][j]) return false;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; true;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 不一致演算子<br>
+        &nbsp;&nbsp;&nbsp; inline bool operator != (const Matrix3x3&amp; other)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(*this == other);<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        };<br>
+        <br>
+        // 行列の加算<br>
+        inline Matrix3x3 operator + (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] + right.m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列の減算<br>
+        inline Matrix3x3 operator - (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] - right.m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列のスカラー倍 (スカラー×行列）<br>
+        inline Matrix3x3 operator * (float left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left * right.m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列のスカラー倍 (行列×スカラー）<br>
+        inline Matrix3x3 operator * (const Matrix3x3&amp; left, float right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] * right;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列の積<br>
+        inline Matrix3x3 operator * (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = 0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int k = 0; k &lt; 3; ++k)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] += left.m[i][k] * right.m[k][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        //[2D]ベクトルと行列の積<br>
+        inline Vector2 operator * (const Vector2&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; float x = left.x * right.m[0][0] + left.y * right.m[1][0] + right.m[2][0];<br>
+        &nbsp;&nbsp;&nbsp; float y = left.x * right.m[0][1] + left.y * right.m[1][1] + right.m[2][1];<br>
+        &nbsp;&nbsp;&nbsp; return Vector2{ x, y };<br>
+        };<br>
+        <br>
+        inline const Matrix3x3 operator / (const Matrix3x3&amp; left, const float right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; return left * (1.0f / right);<br>
+        }<br>
+        <br>
+        // 行列の出力<br>
+        inline std::ostream&amp; operator &lt;&lt; (std::ostream&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; right.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (j &lt; 3 - 1) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; " ";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; std::endl;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; return left;<br>
+        };<br>
+        <br>
+        <br>
+        #endif<br>
+      </p>
+      これで行列の基本計算は万全になりました。<br>
+      それではためしに、<b>点(位置ベクトル) に 平行移動行列 を 掛け算</b>して、<b>点の位置を行列の計算を通して平行移動</b>させてみましょう。<br>
+      <br>
+      <p><code>main.cpp</code>を一旦、きれいにまっさらにリセットしましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>// ray0光線レイ<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0pos{ 1,2 }; // レイ光線の始点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ 2,1 }; // レイ光線の方向<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 円<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc{ 5,5 };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 2.0f; // 円の半径r<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isInsideCircle = false; // レイの始点が円の内側のときはtrueになる<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q1, Q2; // 光線ray0と円の交点(Q1が最初に円とぶつかる点、Q2が後ろ側でぶつかる点)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayCircleCollision(Q1, Q2, isInsideCircle, ray0pos, ray0dir, pc, r);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc.x, pc.y, r, GetColor(0, 0, 255), FALSE); // 円(中心点:pc)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光線ray0を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // レイ光線の始点(円の外側だったらオレンジ、円の内側だったら水色になる)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, (isInsideCircle)? GetColor(0, 255, 255) : GetColor(255, 165, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string ray0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, ray0_String.c_str(), (isInsideCircle) ? GetColor(0, 255, 255) : GetColor(255, 165, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 交点Q1を描く(最初に交わる点)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q1.x, Q1.y, 3, GetColor(255, 165, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q1_String = "Q1=(" + std::to_string(Q1.x) + "," + std::to_string(Q1.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q1.x, Q1.y-5, Q1_String.c_str(), GetColor(255, 165, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 交点Q2を描く(後ろ側で交わる点)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Q2 != Q1 &amp;&amp; isInsideCircle == false) // (Q2 が Q1と違う点で光線の始点が円の内側にはないとき)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q2.x, Q2.y, 3, GetColor(255, 255, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q2_String = "Q2=(" + std::to_string(Q2.x) + "," + std::to_string(Q2.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q2.x, Q2.y-10, Q2_String.c_str(), GetColor(255, 255, 0));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</u><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      <br>
+      <p><code>main.cpp</code>を変更して、点p0{1,1} を <b>平行移動行列(translate:トランスレート)</b> で x方向に+2 y方向に+3 平行移動してみましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        <em>#include "Matrix3x3.h"</em><br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 p0{ 1,1 }; // 点p0<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 translate{ 1,0,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,1,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>2,3</b>,1 }; // 平行移動行列<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1 = p0 * translate; // 点p0×translate (平行移動行列を右から掛け算)すると平行移動する<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 矢印p0→p1を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, GetColor(255, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p0を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 255, 255), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p0.x, p0.y, p0_String.c_str(), GetColor(255, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(255, 0, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(255, 0, 0));</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう？<b>行列の左下の方の 2,3 の数字</b>が効いて、<b>点p0{1,1} が {+2,+3} 移動して { 1+2, 1+3 } = { 3,4 }に移動</b>したでしょうか？<br>
+      では、今度はこの数字を{ +4, +5 }に変えて実験してみましょう。<br>
+      <br>
+      <p><code>main.cpp</code>を変更して、点p0{1,1} を 平行移動行列(translate:トランスレート) で <b>x方向に+4 y方向に+5 平行移動</b>してみましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "Matrix3x3.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 1,1 }; // 点p0<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 translate{ 1,0,0,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,1,0,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>4,5</em>,1 }; // 平行移動行列<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1 = p0 * translate; // 点p0×translate (平行移動行列を右から掛け算)すると平行移動する<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 矢印p0→p1を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, GetColor(255, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p0を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 255, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p0.x, p0.y, p0_String.c_str(), GetColor(255, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(255, 0, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(255, 0, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう？<b>こんどは行列の左下の方の 4,5 の数字</b>が効いて、<b>点p0{1,1} が {+4,+5} 移動して { 1+4, 1+5 } = { 5,6 }に移動</b>したでしょうか？<br>
+      このように3×3の行列の<b>左下の2か所は「平行移動成分」</b>となっていますので、この[2][0]、[2][1]すなわち2行目0列、2行目1列の数字を取り出したり書き換えたりすれば、<br>
+      平行移動する移動先を操作することができるのです。このように行列の各箇所にはゲームを描画する際に、<b>点がどのように移動するかなどの数値情報の「成分」</b>が入っているわけです。<br>
+      ただし、要注意なのは、<b>DXライブラリは「DirectX」をベースにした3D行列</b>での描画を採用しています(UnityもDirectX系)が、<br>
+      ネット上には3D描画行列の例として<b>「OpenGL系」をベースにした3D行列</b>でゲームを作成している例も沢山載っています。<br>
+      この<b>「OpenGL系」をベースにした3D行列の場合は「行と列が逆になります！！」</b>ので以下のような行列が平行移動の行列となってしまいます。<br>
+      <p class="source"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 translate{ 1,0,<b>3</b>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,1,<b>4</b>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,0,1 }; // 平行移動行列{+3,+4}(OpenGL系)<br>
+      </p>
+      はい、位置が<b>斜め方向 1,1,1 を境にして逆</b>ですね。<br>
+      このように、<b>「DirectX」をベースにした3D行列</b>を<b>「OpenGL系」をベースにした3D行列</b>に使うためには<b>数字の位置の「転置(tranpose:トランポーズ)」</b>が必要になります。<br>
+      つまり、計算の過程で数値の位置を斜め方向に鏡のように逆にする「転置」の処理が必要になることがあります。<br>
+      このために、Matrix3x3.hに<b>「転置」処理としてtranspose関数も準備</b>しておきましょう。<br>
+      <br>
+      <code>Matrix3x3.h</code>を変更し、<b>転置処理をするtranspose関数を定義</b>しましょう。<br>
+      ついでに毎回、手打ちで平行移動行列を定義しなくて済むように<b>平行移動行列を返すtranslate関数(DirectX系対応ver.)も定義</b>して便利にしておきましょう。<br>
+      <p class="source">#ifndef MATRIX3X3_H_<br>
+        #define MATRIX3X3_H_<br>
+        <br>
+        #include "Vector2.h" // 2Dのベクトル<br>
+        <br>
+        #include &lt;ostream&gt;<br>
+        #include &lt;cmath&gt;<br>
+        <br>
+        // 行列(3×3)　2Dにも3Dにも使う<br>
+        struct Matrix3x3<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 行列[行][列]の順 (行優先) https://qiita.com/suzuryo3893/items/9e543cdf8bc64dc7002a<br>
+        &nbsp;&nbsp;&nbsp; union<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m[3][3]{}; // 3×3の配列<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;std::array&lt;float, 3&gt;, 3&gt; mArr; // std::array型ベースなら少し便利<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // float型のポインタへ(float*)キャストすればデータ配列 m の先頭のアドレスを返す<br>
+        &nbsp;&nbsp;&nbsp; inline operator float* () const { return (float*)m; }<br>
+        &nbsp;&nbsp;&nbsp; // float型のポインタへ(const float*)キャストすればデータ配列 m の先頭のアドレスを返す<br>
+        &nbsp;&nbsp;&nbsp; inline operator const float* () const { return (const float*)m; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3() = default;<br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3(float m11, float m12, float m13,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m21, float m22, float m23,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m31, float m32, float m33)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : m{ {m11, m12, m13}, {m21, m22, m23}, { m31, m32, m33} } {};<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ (std::arrayで初期化版)<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3(std::array&lt;std::array&lt;float, 3&gt;, 3&gt;&amp; matArr)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m[i][j] = matArr[i][j];<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ゼロ行列を返す<br>
+        &nbsp;&nbsp;&nbsp; static Matrix3x3 zero()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Matrix3x3{ 0.0f, 0.0f, 0.0f,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 0.0f, 0.0f,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 0.0f, 0.0f };<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 単位行列を返す<br>
+        &nbsp;&nbsp;&nbsp; static Matrix3x3 identity()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Matrix3x3{ 1.0f, 0.0f, 0.0f,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 1.0f, 0.0f,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 0.0f, 1.0f };<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; <em>//[2D]平行移動行列を返す(2D向け) (DirectX系)<br>
+          &nbsp;&nbsp;&nbsp; static Matrix3x3 translate(const Vector2&amp; t)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Matrix3x3{ 1.0, 0.0f, 0.0f,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0, 1.0f, 0.0f,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t.x,&nbsp; t.y, 1.0f };<br>
+          &nbsp;&nbsp;&nbsp; };</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp; <em>// 転置行列を返す(メンバ関数版)<br>
+          &nbsp;&nbsp;&nbsp; inline Matrix3x3 transpose()<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = this-&gt;m[j][i]; // 行i と 列j を 行j と 列i に交換<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return result;<br>
+          &nbsp;&nbsp;&nbsp; };</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp; /*-----　演算子オーバーロード　-----*/<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3 operator + () const { return *this; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // マイナスの符号を単体の行列につけたとき<br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3 operator -() const<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = -this-&gt;m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return result;<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator += (const Matrix3x3&amp; add)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] + add.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator -= (const Matrix3x3&amp; sub)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] - sub.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator *= (const Matrix3x3&amp; mul)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 tmp; // 値を一時保管<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmp.m[i][j] = this-&gt;m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = 0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int k = 0; k &lt; 3; ++k)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] += tmp.m[i][k] * mul.m[k][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator *= (float multiply_num)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] * multiply_num;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator /= (float divide_num)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] / divide_num;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 一致演算子 行列の中身が全部一致するか 一つでも違えばfalse<br>
+        &nbsp;&nbsp;&nbsp; inline bool operator == (const Matrix3x3&amp; other)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;m[i][j] != other.m[i][j]) return false;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; true;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 不一致演算子<br>
+        &nbsp;&nbsp;&nbsp; inline bool operator != (const Matrix3x3&amp; other)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(*this == other);<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        };<br>
+        <br>
+        // 行列の加算<br>
+        inline Matrix3x3 operator + (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] + right.m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列の減算<br>
+        inline Matrix3x3 operator - (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] - right.m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列のスカラー倍 (スカラー×行列）<br>
+        inline Matrix3x3 operator * (float left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left * right.m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列のスカラー倍 (行列×スカラー）<br>
+        inline Matrix3x3 operator * (const Matrix3x3&amp; left, float right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] * right;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列の積<br>
+        inline Matrix3x3 operator * (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = 0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int k = 0; k &lt; 3; ++k)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] += left.m[i][k] * right.m[k][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        //[2D]ベクトルと行列の積<br>
+        inline Vector2 operator * (const Vector2&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; float x = left.x * right.m[0][0] + left.y * right.m[1][0] + right.m[2][0];<br>
+        &nbsp;&nbsp;&nbsp; float y = left.x * right.m[0][1] + left.y * right.m[1][1] + right.m[2][1];<br>
+        &nbsp;&nbsp;&nbsp; return Vector2{ x, y };<br>
+        };<br>
+        <br>
+        inline const Matrix3x3 operator / (const Matrix3x3&amp; left, const float right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; return left * (1.0f / right);<br>
+        }<br>
+        <br>
+        <em>// 転置行列を返す<br>
+          inline Matrix3x3 transpose(const Matrix3x3&amp; mat)<br>
+          {<br>
+          &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+          &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = mat.m[j][i]; // 行i と 列j を 行j と 列i に交換<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; return result;<br>
+          };</em><br>
+        <br>
+        // 行列の出力<br>
+        inline std::ostream&amp; operator &lt;&lt; (std::ostream&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; right.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (j &lt; 3 - 1) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; " ";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; std::endl;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; return left;<br>
+        };<br>
+        <br>
+        <br>
+        #endif<br>
+      </p>
+      では、平行移動行列を返すtranslate関数(DirectX系対応ver.)を利用して、main.cppで点を手軽に平行移動してみましょう。<br>
+      <br>
+      <p><code>main.cpp</code>を変更して、点p0{1,1} を 平行移動行列を<b>translate関数を使って初期化</b>して <b>x方向に+4 y方向に+5 平行移動</b>してみましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "Matrix3x3.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 1,1 }; // 点p0<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>Matrix3x3 translate{ 1,0,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,1,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4,5,1 }; // 平行移動行列</u><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Matrix3x3 translate = Matrix3x3::translate(Vector2{ 4,5 }); // 平行移動行列</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1 = p0 * translate; // 点p0×translate (平行移動行列を右から掛け算)すると平行移動する<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 矢印p0→p1を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, GetColor(255, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p0を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 255, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p0.x, p0.y, p0_String.c_str(), GetColor(255, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(255, 0, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(255, 0, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう？translate関数を使えば、手打ちで行列を3行ぶん書くよりは手軽に平行移動の行列をゲットすることができますね。<br>
+      ただし、勉強のためには、ちゃんと1回は自分で行列を「手で打つ」練習をしておかないと、行列って何??というのがわからないままになっちゃいます。<br>
+      行列をイメージできないまま使うのではなく、実際の3x3の行列をイメージして、数値データをイメージして使うことが勉強としては大事です。<br>
+      そうでなければ、例えば、DirectX系の環境なのに、OpenGL系のネット上のプログラムサンプルを使ってしまったときに、<br>
+      行列の中身の数字を見て「数値の要素がひっくり返っている」ことになかなか気づけない状況になったりすることがあるかもしれません。<br>
+      便利なものを「基礎知識」があるうえで使いこなすのと「もやもやを抱えたまま、よく知らないままただ使う」のとは全然違うということです。<br>
+      <br>
+    </a> <a id="mozTocId0018" class="mozTocH1">
+      <h1>Matrix3x3で点を行列でスケール(拡大縮小)させる</h1>
+      <p><code>main.cpp</code>を変更して、点p0{1,1} を <b>スケール行列{×3倍,×4倍}を使って、x方向に×3倍 y方向に×4倍 スケーリング</b>してみましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "Matrix3x3.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 1,1 }; // 点p0<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Matrix3x3 scale{ 2,0,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,3,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,0,1 }; // スケール(拡大縮小)行列</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>Matrix3x3 translate = Matrix3x3::translate(Vector2{ 4,5 }); // 平行移動行列</u><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1 = p0 * <em>scale</em>; // 点p0×<em>scale</em> (<em>スケール</em>行列を右から掛け算)すると<em>拡大縮小</em>する<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 矢印p0→p1を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, GetColor(255, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p0を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 255, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p0.x, p0.y, p0_String.c_str(), GetColor(255, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(255, 0, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(255, 0, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう？今回は、<b>行列の斜め方向成分の 1,1,1 を 2,3,1 にすることで点の位置をx方向に2倍、y方向に3倍することができる</b>ことが実感できたでしょうか?<br>
+      1点だけだとあまり、スケールアップした実感がわかないかもしれませんので、こんどは3点をまとめてスケールアップして三角形をスケールアップしてみましょう。<br>
+      <br>
+      <p><code>main.cpp</code>を一旦、きれいにまっさらにリセットしましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "Matrix3x3.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>Vector2 p0{ 1,1 }; // 点p0<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 scale{ 2,0,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,3,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,0,1 }; // スケール(拡大縮小)行列<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1 = p0 * scale; // 点p0×scale (スケール行列を右から掛け算)すると拡大縮小する<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 矢印p0→p1を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, GetColor(255, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p0を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 255, 255), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p0.x, p0.y, p0_String.c_str(), GetColor(255, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(255, 0, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(255, 0, 0));</u><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      <br>
+      <p><code>main.cpp</code>を変更して、3点p0{1,1} 点p1{3,4} 点p2{5,2} を <b>スケール行列{×2倍,×5倍}を使って、x方向に×2倍 y方向に×5倍 スケーリング</b>してみましょう。</p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "Matrix3x3.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Vector2 p0{ 1,1 }; // 点p0<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 3,4 }; // 点p1<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,2 }; // 点p2<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 scale{ 2,0,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,5,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,0,1 }; // スケール(拡大縮小)行列<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点s0,s1,s2<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 s0 = p0 * scale; // 点p0×scale (スケール行列を右から掛け算)すると拡大縮小する<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 s1 = p1 * scale; // 点p1×scale (スケール行列を右から掛け算)すると拡大縮小する<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 s2 = p2 * scale; // 点p2×scale (スケール行列を右から掛け算)すると拡大縮小する<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角形p0,p1,p2を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p0.x, p0.y, p1.x, p1.y, GetColor(255, 255, 255));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y, p2.x, p2.y, GetColor(255, 255, 255));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p2.x, p2.y, p0.x, p0.y, GetColor(255, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スケール後の三角形s0,s1,s2を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(s0.x, s0.y, s1.x, s1.y, GetColor(255, 255, 255));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(s1.x, s1.y, s2.x, s2.y, GetColor(255, 255, 255));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(s2.x, s2.y, s0.x, s0.y, GetColor(255, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スケール前の3点を描く<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p0を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 0, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p0.x, p0.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p2を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スケールしたあとの3点を描く<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点s0を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(s0.x, s0.y, 3, GetColor(255, 0, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string s0_String = "s0=(" + std::to_string((int)s0.x) + "," + std::to_string((int)s0.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(s0.x, s0.y, s0_String.c_str(), GetColor(255, 0, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点s1を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(s1.x, s1.y, 3, GetColor(0, 255, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string s1_String = "s1=(" + std::to_string((int)s1.x) + "," + std::to_string((int)s1.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(s1.x, s1.y, s1_String.c_str(), GetColor(0, 255, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点s2を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(s2.x, s2.y, 3, GetColor(0, 0, 255), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string s2_String = "s2=(" + std::to_string((int)s2.x) + "," + std::to_string((int)s2.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(s2.x, s2.y, s2_String.c_str(), GetColor(0, 0, 255));</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう？三角形をスケーリングすることで拡大していることが実感できたでしょうか?<br>
+      <b>xとyの拡大率が違う</b>ので、もとの三角形と比べて、縦方向にぐいーんと<b>ゆがんでスケーリング</b>されていることにも着目しておいてください。<br>
+      <br>
+      では、今回も今後を手軽にするために、Matrix3x3.hにスケール行列を得る関数を追加して行列の数字を全部は手打ちせずにスケーリング行列をゲットできるようにしておきましょう。<br>
+      <br>
+      <code>Matrix3x3.h</code>を変更してスケール行列をゲットするためのscale関数を定義しましょう。<br>
+      <p class="source">#ifndef MATRIX3X3_H_<br>
+        #define MATRIX3X3_H_<br>
+        <br>
+        #include "Vector2.h" // 2Dのベクトル<br>
+        <br>
+        #include &lt;ostream&gt;<br>
+        #include &lt;cmath&gt;<br>
+        <br>
+        // 行列(3×3)　2Dにも3Dにも使う<br>
+        struct Matrix3x3<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 行列[行][列]の順 (行優先) https://qiita.com/suzuryo3893/items/9e543cdf8bc64dc7002a<br>
+        &nbsp;&nbsp;&nbsp; union<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m[3][3]{}; // 3×3の配列<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;std::array&lt;float, 3&gt;, 3&gt; mArr; // std::array型ベースなら少し便利<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // float型のポインタへ(float*)キャストすればデータ配列 m の先頭のアドレスを返す<br>
+        &nbsp;&nbsp;&nbsp; inline operator float* () const { return (float*)m; }<br>
+        &nbsp;&nbsp;&nbsp; // float型のポインタへ(const float*)キャストすればデータ配列 m の先頭のアドレスを返す<br>
+        &nbsp;&nbsp;&nbsp; inline operator const float* () const { return (const float*)m; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3() = default;<br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3(float m11, float m12, float m13,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m21, float m22, float m23,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float m31, float m32, float m33)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : m{ {m11, m12, m13}, {m21, m22, m23}, { m31, m32, m33} } {};<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンストラクタ (std::arrayで初期化版)<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3(std::array&lt;std::array&lt;float, 3&gt;, 3&gt;&amp; matArr)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m[i][j] = matArr[i][j];<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ゼロ行列を返す<br>
+        &nbsp;&nbsp;&nbsp; static Matrix3x3 zero()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Matrix3x3{ 0.0f, 0.0f, 0.0f,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 0.0f, 0.0f,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 0.0f, 0.0f };<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 単位行列を返す<br>
+        &nbsp;&nbsp;&nbsp; static Matrix3x3 identity()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Matrix3x3{ 1.0f, 0.0f, 0.0f,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 1.0f, 0.0f,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 0.0f, 1.0f };<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; <em>//[2D]拡大縮小行列を返す(2D向け)<br>
+          &nbsp;&nbsp;&nbsp; static Matrix3x3 scale(const Vector2&amp; s)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Matrix3x3{ s.x,&nbsp; 0.0f, 0.0f,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f,&nbsp; s.y, 0.0f,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0f, 0.0f, 1.0f };<br>
+          &nbsp;&nbsp;&nbsp; };</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp; //[2D]平行移動行列を返す(2D向け) (DirectX系)<br>
+        &nbsp;&nbsp;&nbsp; static Matrix3x3 translate(const Vector2&amp; t)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Matrix3x3{ 1.0, 0.0f, 0.0f,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0, 1.0f, 0.0f,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t.x,&nbsp; t.y, 1.0f };<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 転置行列を返す(メンバ関数版)<br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3 transpose()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = this-&gt;m[j][i]; // 行i と 列j を 行j と 列i に交換<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return result;<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; /*-----　演算子オーバーロード　-----*/<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3 operator + () const { return *this; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // マイナスの符号を単体の行列につけたとき<br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3 operator -() const<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = -this-&gt;m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return result;<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator += (const Matrix3x3&amp; add)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] + add.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator -= (const Matrix3x3&amp; sub)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] - sub.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator *= (const Matrix3x3&amp; mul)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Matrix3x3 tmp; // 値を一時保管<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmp.m[i][j] = this-&gt;m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = 0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int k = 0; k &lt; 3; ++k)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] += tmp.m[i][k] * mul.m[k][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator *= (float multiply_num)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] * multiply_num;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; inline Matrix3x3&amp; operator /= (float divide_num)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;m[i][j] = this-&gt;m[i][j] / divide_num;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; *this;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 一致演算子 行列の中身が全部一致するか 一つでも違えばfalse<br>
+        &nbsp;&nbsp;&nbsp; inline bool operator == (const Matrix3x3&amp; other)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;m[i][j] != other.m[i][j]) return false;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; true;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 不一致演算子<br>
+        &nbsp;&nbsp;&nbsp; inline bool operator != (const Matrix3x3&amp; other)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; !(*this == other);<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        };<br>
+        <br>
+        // 行列の加算<br>
+        inline Matrix3x3 operator + (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] + right.m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列の減算<br>
+        inline Matrix3x3 operator - (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] - right.m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列のスカラー倍 (スカラー×行列）<br>
+        inline Matrix3x3 operator * (float left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left * right.m[i][j];<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列のスカラー倍 (行列×スカラー）<br>
+        inline Matrix3x3 operator * (const Matrix3x3&amp; left, float right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = left.m[i][j] * right;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列の積<br>
+        inline Matrix3x3 operator * (const Matrix3x3&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = 0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int k = 0; k &lt; 3; ++k)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] += left.m[i][k] * right.m[k][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        //[2D]ベクトルと行列の積<br>
+        inline Vector2 operator * (const Vector2&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; float x = left.x * right.m[0][0] + left.y * right.m[1][0] + right.m[2][0];<br>
+        &nbsp;&nbsp;&nbsp; float y = left.x * right.m[0][1] + left.y * right.m[1][1] + right.m[2][1];<br>
+        &nbsp;&nbsp;&nbsp; return Vector2{ x, y };<br>
+        };<br>
+        <br>
+        inline const Matrix3x3 operator / (const Matrix3x3&amp; left, const float right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; return left * (1.0f / right);<br>
+        }<br>
+        <br>
+        // 転置行列を返す<br>
+        inline Matrix3x3 transpose(const Matrix3x3&amp; mat)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Matrix3x3 result;<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result.m[i][j] = mat.m[j][i]; // 行i と 列j を 行j と 列i に交換<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return result;<br>
+        };<br>
+        <br>
+        // 行列の出力<br>
+        inline std::ostream&amp; operator &lt;&lt; (std::ostream&amp; left, const Matrix3x3&amp; right)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; 3; ++j) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; right.m[i][j];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (j &lt; 3 - 1) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; " ";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt;&lt; std::endl;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; return left;<br>
+        };<br>
+        <br>
+        <br>
+        #endif<br>
+      </p>
+      <br>
+      <p><code>main.cpp</code>を変更して、3点p0{1,1} 点p1{3,4} 点p2{5,2} を <b>scale関数でゲットしたスケール行列</b>{×2倍,×5倍}を使って、x方向に×2倍 y方向に×5倍 スケーリングしてみましょう。</p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "Matrix3x3.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 1,1 }; // 点p0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 3,4 }; // 点p1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,2 }; // 点p2<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>Matrix3x3 scale{ 2,0,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,5,0,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,0,1 }; // スケール(拡大縮小)行列</u><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Matrix3x3 scale = Matrix3x3::scale(Vector2{ 2,5 }); // スケール(拡大縮小)行列</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点s0,s1,s2<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 s0 = p0 * scale; // 点p0×scale (スケール行列を右から掛け算)すると拡大縮小する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 s1 = p1 * scale; // 点p1×scale (スケール行列を右から掛け算)すると拡大縮小する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 s2 = p2 * scale; // 点p2×scale (スケール行列を右から掛け算)すると拡大縮小する<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角形p0,p1,p2を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p0.x, p0.y, p1.x, p1.y, GetColor(255, 255, 255));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p1.x, p1.y, p2.x, p2.y, GetColor(255, 255, 255));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(p2.x, p2.y, p0.x, p0.y, GetColor(255, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スケール後の三角形s0,s1,s2を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(s0.x, s0.y, s1.x, s1.y, GetColor(255, 255, 255));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(s1.x, s1.y, s2.x, s2.y, GetColor(255, 255, 255));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawLine(s2.x, s2.y, s0.x, s0.y, GetColor(255, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スケール前の3点を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p0を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 0, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p0.x, p0.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p1を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点p2を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スケールしたあとの3点を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点s0を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(s0.x, s0.y, 3, GetColor(255, 0, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string s0_String = "s0=(" + std::to_string((int)s0.x) + "," + std::to_string((int)s0.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(s0.x, s0.y, s0_String.c_str(), GetColor(255, 0, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点s1を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(s1.x, s1.y, 3, GetColor(0, 255, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string s1_String = "s1=(" + std::to_string((int)s1.x) + "," + std::to_string((int)s1.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(s1.x, s1.y, s1_String.c_str(), GetColor(0, 255, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点s2を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(s2.x, s2.y, 3, GetColor(0, 0, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string s2_String = "s2=(" + std::to_string((int)s2.x) + "," + std::to_string((int)s2.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(s2.x, s2.y, s2_String.c_str(), GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+    いかがでしょう？これで手軽にスケーリング行列を得ることができるようになりました。<br>
+    次は回転行列にトライしてみましょう。<br>
+      <br>
+      <br>
     </a>
+    
   </body>
 </html>
