@@ -31,6 +31,7 @@
       <li><a href="#mozTocId0013">MyMathクラスで線と線の交点を求める</a></li>
       <li><a href="#mozTocId0014">MyMathクラスで壁(線)に対する点の反射(線の終点の反射位置と交点)を求める</a></li>
       <li><a href="#mozTocId0015">MyMathクラスで壁(線)に対する円(半径r)の反射(円の中心点の反射位置と円の反射する瞬間の中心点)を求める</a></li>
+      <li><a href="#mozTocId0016">MyMathクラスでレイ光線と円(半径r)の当たり判定と交点を求める</a></li>
     </ol>
     <a id="mozTocId0001" class="mozTocH1">
       <h1>Vector2を使って簡単な直線などを描いてみる</h1>
@@ -4555,7 +4556,7 @@
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
       いかがでしょう？うーん、なるほど、line1の「始点p2の青のボールが壁に当たらない場合も交点Qは求まり」 反射点R は「壁を鏡にした移動後のボール(緑)の鏡に映った位置(黄)」でしょうか。<br>
-      うーむ鏡に映った線分line0の鏡像が、(1 &lt; t1)のときの当たり判定を許して、反射点を調べれば求められるようなイメージでしょうか。<br>
+      うーむ鏡に映った線分line0の鏡像が、(1 &lt; t1)のときの当たり判定を許して、反射点を調べれば求められるようなイメージでしょうか(うーん使いどころがあるかは謎)。<br>
       t0、t1について実験をすると、反射点はなかなか奥が深いですね。<br>
       実際に反射を求めるときには、衝突するかのisCollision01とセットで使うのが必須ですね。そうしないと反射していないときに壁の向こう側にボールがめり込んじゃいますからね。<br>
       <br>
@@ -4734,6 +4735,462 @@
       壁始点p0と壁終点p1の判定は別途考える必要があります。 <br>
       <br>
       <br>
+    </a> <a id="mozTocId0016" class="mozTocH1">
+      <h1>MyMathクラスでレイ光線と円(半径r)の当たり判定と交点を求める</h1>
+      <code>MyMath.h</code>を変更してレイ光線ray0と円(中心点:pc 半径:r)の当たり判定と交点を関数RayCircleCollisionで求められるようにしてみましょう。<br>
+      <p class="source">#ifndef MYMATH_H_<br>
+        #define MYMATH_H_<br>
+        <br>
+        #include "Vector2.h" // 線との当たり判定にVector2を使う<br>
+        <br>
+        #include &lt;cmath&gt;<br>
+        <br>
+        // 数学関連クラス<br>
+        class MyMath<br>
+        {<br>
+        public:<br>
+        &nbsp;&nbsp; &nbsp;static const float Sqrt2; // = 1.41421356237f;　// √2<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;static const float PI; // = 3.14159265359f; // 円周率<br>
+        &nbsp;&nbsp; &nbsp;static const float Deg2Rad; // = PI / 180f; // 度からラジアンに変換する定数<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;(中略).....<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; <em>/// &lt;summary&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// 光線ray0と円(中心:pc 半径:r)が重なっているかを調べる<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;/summary&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="result1"&gt;光線ray0と円の交点1(最初に交わる点)&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="result2"&gt;光線ray0と円の交点2(後ろ側で交わる点)&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="result_isInsideCircle"&gt;レイの始点が円の内側にあるかの結果がtrueかfalseで求まる&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="ray0start"&gt;光線ray0の始点&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="ray0dir"&gt;光線ray0の方向ベクトル&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="pc"&gt;円の中心点の位置ベクトル&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;param name="r"&gt;円の半径&lt;/param&gt;<br>
+          &nbsp;&nbsp;&nbsp; /// &lt;returns&gt;光線ray0と円が交差しているならtrue,してないならfalse&lt;/returns&gt;<br>
+          &nbsp;&nbsp;&nbsp; static bool RayCircleCollision(Vector2&amp; result1, Vector2&amp; result2, bool&amp; result_isInsideCircle,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0start, Vector2 ray0dir, Vector2 pc, float r)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 vc0 = ray0start - pc; // 円の中心pc→レイの始点ray0startへ向かうベクトル<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 e0 = ray0dir.normalized(); // 光線ray0方向dirの単位ベクトル<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float vc0_dot_e0 = dot(vc0, e0);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float vc0_sqrMag = vc0.sqrMagnitude(); //|vc0|の2乗<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float dif_vc0_vc0_r_r = vc0_sqrMag - r * r; //↓|vc0|の2乗 - rの2乗<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float D = vc0_dot_e0 * vc0_dot_e0 - dif_vc0_vc0_r_r;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (dif_vc0_vc0_r_r &lt; 0) // |vc0|の2乗 - rの2乗 &lt; 0のときは円の内側に交点ray0の始点がある<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result_isInsideCircle = true; // レイの始点が円の内側なのでtrue判定を返す<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result_isInsideCircle = false; // レイの始点が円の外側なのでfalse判定を返す<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (D &lt; 0) return false; // D &lt; 0なら光線ray0は円とぶつからない<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float sqrD = std::sqrtf(D); // √D<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t1 = -vc0_dot_e0 - sqrD;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t2 = -vc0_dot_e0 + sqrD;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (dif_vc0_vc0_r_r &lt; 0) // |vc0|の2乗 - rの2乗 &lt; 0のときは円の内側に交点ray0の始点があるので<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 円の内側のときは t1 と t2 の±をひっくり返す<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t1 = -vc0_dot_e0 + sqrD; // t1とt2の＋と－をひっくり返す(とresult1が最初に交わる点扱いになる)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t2 = -vc0_dot_e0 - sqrD;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result1 = ray0start + t1 * e0; // D == 0 のときは1,2両方同じになり交点は一つ<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result2 = ray0start + t2 * e0;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true; // 光線ray0は円と交わる(D &gt; 0なら2点交わり、D == 0なら1点交わる)<br>
+          &nbsp;&nbsp;&nbsp; }</em><br>
+        <br>
+        };<br>
+        <br>
+        #endif </p>
+      下図で上記コードの式との対応関係を確認してみてください。<b>dif_vc0_vc0_r_r &lt; 0</b> つまり<b>|vc0|の2乗が半径rの2乗より小さい(円の内側)</b>ときは <b>t1 と t2 の√の±をひっくり返しています</b>。<br>
+      <b>t1 の－√D と +√D の－のほうが最初に円と交わる点</b>なのですが、<b>円の内側の場合</b>は<b>+√Dのほうが最初に交わる点</b>に変わっちゃうので、そのために±をひっくり返しています。<br>
+      <p> <img src="image/circle_line_collision7.png" alt=""></p>
+      <br>
+      <p><code>main.cpp</code>を一旦、まっさらにリセットしましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>// line0<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p0{ 5,5 }; // line0の始点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p1{ 15,11 }; // line0の終点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line1<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p2{ 5,10 };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 p3{ 15,6 };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 1.0f; // 円の半径r 始点p2が円(青ボール)の場合を想定<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q; // line0とline1の交点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 R; // line0を壁wall0とした場合のline1の終点p3の壁line0に対する反射点Rと交点Qを求める<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::LineReflection(R, Q, p0, p1, p2, p3, r);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(p2.x, p2.y, r, GetColor(0, 0, 255), FALSE); // 円p2(始点)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(Q.x, Q.y, r, GetColor(255, 165, 0), FALSE); // 円Q(衝突位置)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(R.x, R.y, r, GetColor(255, 255, 0), FALSE); // 円R(反射位置)を描く<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p0.x, p0.y, 0, 0, p1.x, p1.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line0<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(p2.x, p2.y, 0, 0, p3.x, p3.y, 0.8f, 1.0f, (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255)); // 線分line1<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 反射ベクトル(交点Q→反射点R)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(Q.x, Q.y, 0, 0, R.x, R.y, 0.8f, 1.0f, GetColor(255, 255, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p0.x, p0.y, 3, GetColor(255, 0, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p0_String = "p0=(" + std::to_string((int)p0.x) + "," + std::to_string((int)p0.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p0.x, p0.y, p0_String.c_str(), GetColor(255, 0, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p1.x, p1.y, 3, GetColor(0, 255, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p1_String = "p1=(" + std::to_string((int)p1.x) + "," + std::to_string((int)p1.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p1.x, p1.y, p1_String.c_str(), GetColor(0, 255, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p2.x, p2.y, 3, GetColor(0, 0, 255), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p2_String = "p2=(" + std::to_string((int)p2.x) + "," + std::to_string((int)p2.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p2.x, p2.y, p2_String.c_str(), GetColor(0, 0, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(p3.x, p3.y, 3, GetColor(0, 255, 255), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string p3_String = "p3=(" + std::to_string((int)p3.x) + "," + std::to_string((int)p3.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(p3.x, p3.y, p3_String.c_str(), GetColor(0, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q.x, Q.y, 3, GetColor(255, 165, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q_String = "Q=(" + std::to_string(Q.x) + "," + std::to_string(Q.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q.x, Q.y - 10, Q_String.c_str(), GetColor(255, 165, 0));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(R.x, R.y, 3, GetColor(255, 255, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string R_String = "R=(" + std::to_string(R.x) + "," + std::to_string(R.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(R.x, R.y - 10, R_String.c_str(), GetColor(255, 255, 0));</u><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      <br>
+      <br>
+      <p><code>main.cpp</code>を変更して、光線ray0 と 円(中心点:pc 半径:r)の当たり判定 と衝突した 交点Q1,Q2 を求めて表示してみましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// ray0光線レイ<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0pos{ 1,2 }; // レイ光線の始点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ 2,1 }; // レイ光線の方向<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 円<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc{ 5,5 };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 2.0f; // 円の半径r<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isInsideCircle = false; // レイの始点が円の内側のときはtrueになる<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q1, Q2; // 光線ray0と円の交点(Q1が最初に円とぶつかる点、Q2が後ろ側でぶつかる点)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayCircleCollision(Q1, Q2, isInsideCircle, ray0pos, ray0dir, pc, r);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc.x, pc.y, r, GetColor(0, 0, 255), FALSE); // 円(中心点:pc)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光線ray0を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // レイ光線の始点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, GetColor(255, 165, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string ray0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, ray0_String.c_str(), GetColor(255, 165, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 交点Q1を描く(最初に交わる点)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q1.x, Q1.y, 3, GetColor(255, 165, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q1_String = "Q1=(" + std::to_string(Q1.x) + "," + std::to_string(Q1.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q1.x, Q1.y-5, Q1_String.c_str(), GetColor(255, 165, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 交点Q2を描く(後ろ側で交わる点)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Q2 != Q1) // (Q2 が Q1と違う点ならば)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q2.x, Q2.y, 3, GetColor(255, 255, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q2_String = "Q2=(" + std::to_string(Q2.x) + "," + std::to_string(Q2.y) + ")";<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q2.x, Q2.y-10, Q2_String.c_str(), GetColor(255, 255, 0));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう？光線ray0の方向に円があったときに、矢印が赤色に表示されて、最初に交わる交点Q1がオレンジ色に、後ろ側で交わる交点Q2が黄色に 表示されましたか?<br>
+      つぎに、円の内側にray0の始点があるときの実験もしておきましょう。 <br>
+      <br>
+      <br>
+      <br>
+      <p><code>main.cpp</code>の光線ray0の始点を変更して、光線ray0の始点 が 円の内側にあるときに 光線の始点が水色で表示されるか、実験表示してみましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ray0光線レイ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0pos{ <em>1,2</em> }; // レイ光線の始点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ 2,1 }; // レイ光線の方向<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 円<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc{ 5,5 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 2.0f; // 円の半径r<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isInsideCircle = false; // レイの始点が円の内側のときはtrueになる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q1, Q2; // 光線ray0と円の交点(Q1が最初に円とぶつかる点、Q2が後ろ側でぶつかる点)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayCircleCollision(Q1, Q2, isInsideCircle, ray0pos, ray0dir, pc, r);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc.x, pc.y, r, GetColor(0, 0, 255), FALSE); // 円(中心点:pc)を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光線ray0を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // レイ光線の始点<em>(円の外側だったらオレンジ、円の内側だったら水色になる)</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, <em>(isInsideCircle)? GetColor(0, 255, 255) : </em>GetColor(255, 165, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string ray0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, ray0_String.c_str(), <em>(isInsideCircle) ? GetColor(0, 255, 255) : </em>GetColor(255, 165, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 交点Q1を描く(最初に交わる点)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q1.x, Q1.y, 3, GetColor(255, 165, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q1_String = "Q1=(" + std::to_string(Q1.x) + "," + std::to_string(Q1.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q1.x, Q1.y-5, Q1_String.c_str(), GetColor(255, 165, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 交点Q2を描く(後ろ側で交わる点)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Q2 != Q1) // (Q2 が Q1と違う点ならば)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q2.x, Q2.y, 3, GetColor(255, 255, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q2_String = "Q2=(" + std::to_string(Q2.x) + "," + std::to_string(Q2.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q2.x, Q2.y-10, Q2_String.c_str(), GetColor(255, 255, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう？光線ray0の始点が円の内側にあるときに、始点が水色で表示され、光線ray0の方向に円があったときに、最初に交わる交点Q1がオレンジ色に 表示されましたか?<br>
+      厳密には、円の内側にray0の始点があるときには、光線は黄色の点Q2とは当たっていない(始点より後ろ側にある)ので、交点Q2は isInsideCircle == false かどうかで表示させないようにしたほうがよいでしょう。<br>
+      <br>
+      <p><code>main.cpp</code>を変更して、光線ray0の始点 が 円の内側にあるときには 交点Q2は表示しないようにしてみましょう。 </p>
+      <p class="source">#include "DxLib.h"<br>
+        <br>
+        #include "Screen.h"<br>
+        #include "Vector2.h"<br>
+        #include "MathGraph2D.h"<br>
+        #include "MyMath.h"<br>
+        <br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("数学のベクトルの練習");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エラーが発生したら直ちに終了<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; SetUseTransColor(FALSE); // 画像の指定色を透過する機能を無効化<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 数学っぽくわかりやすくマス目を描いて、原点を画面の中心にして、10倍のスケールでみやすく描く<br>
+        &nbsp;&nbsp;&nbsp; MathGraph2D mathGraph{ {Screen::Width / 2 ,Screen::Height / 2 },10.0f,{1.0f,1.0f} };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen(); // 画面をまっさらにリセット<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawGrid(GetColor(100, 100, 100)); // 100,100,100のグレーのグリッドでマス目を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ray0光線レイ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0pos{ 1,2 }; // レイ光線の始点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 ray0dir{ 2,1 }; // レイ光線の方向<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 円<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 pc{ 5,5 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float r = 2.0f; // 円の半径r<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isInsideCircle = false; // レイの始点が円の内側のときはtrueになる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 Q1, Q2; // 光線ray0と円の交点(Q1が最初に円とぶつかる点、Q2が後ろ側でぶつかる点)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision01 = MyMath::RayCircleCollision(Q1, Q2, isInsideCircle, ray0pos, ray0dir, pc, r);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawCircle(pc.x, pc.y, r, GetColor(0, 0, 255), FALSE); // 円(中心点:pc)を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光線ray0を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawArrow(ray0pos.x, ray0pos.y, 0, 0, ray0pos.x + ray0dir.x, ray0pos.y + ray0dir.y, 0.8f, 1.0f, <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isCollision01) ? GetColor(255, 0, 0) : GetColor(255, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // レイ光線の始点(円の外側だったらオレンジ、円の内側だったら水色になる)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(ray0pos.x, ray0pos.y, 3, (isInsideCircle)? GetColor(0, 255, 255) : GetColor(255, 165, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string ray0_String = "ray0=(" + std::to_string((int)ray0pos.x) + "," + std::to_string((int)ray0pos.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(ray0pos.x, ray0pos.y, ray0_String.c_str(), (isInsideCircle) ? GetColor(0, 255, 255) : GetColor(255, 165, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision01)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 交点Q1を描く(最初に交わる点)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q1.x, Q1.y, 3, GetColor(255, 165, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q1_String = "Q1=(" + std::to_string(Q1.x) + "," + std::to_string(Q1.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q1.x, Q1.y-5, Q1_String.c_str(), GetColor(255, 165, 0));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 交点Q2を描く(後ろ側で交わる点)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Q2 != Q1<em> &amp;&amp; isInsideCircle == false</em>) // (Q2 が Q1と違う点<em>で光線の始点が円の内側にはないとき</em>)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawPoint(Q2.x, Q2.y, 3, GetColor(255, 255, 0), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string Q2_String = "Q2=(" + std::to_string(Q2.x) + "," + std::to_string(Q2.y) + ")";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mathGraph.DrawString(Q2.x, Q2.y-10, Q2_String.c_str(), GetColor(255, 255, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたスクリーンを表画面にフリップ入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+    いかがでしょう？これで、円の内側に光線ray0の始点がある場合でも、正しくレイと円の当たり判定ができるようになりました。<br>
+    ゲームで使う分には、基本は 交点Q1(result1) を使うようにしていれば、円とレイの当たり判定としては十分かもしれません。<br>
+    (交点Q2をあえて使うとしたら、銃で撃たれて、貫通したときのような表現のときに使うようなケースがあるかもしれません)<br>
     </a>
   </body>
 </html>
