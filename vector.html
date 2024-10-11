@@ -2,14 +2,14 @@
 <html>
   <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type">
-    <title>[C++]ベクトルと行列の練習</title>
+    <title>[C++]ベクトルの練習</title>
     <link rel="stylesheet" href="style.css">
     <style>
       
     </style>
   </head>
   <body>
-    <p class="title">[C++]ベクトルと行列の練習</p>
+    <p class="title">[C++]ベクトルの練習</p>
     <br>
     <p>先にシューティングのページを参考にプロジェクトの初期設定↓とScreen.hの導入まではやっておいた前提で進めます <br>
       <a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/">https://yonezawashin.github.io/yonezawashin.github.io-2020c/</a><br>
@@ -6902,7 +6902,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>Matrix3x3 scale{ 2,0,0,<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,5,0,<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,0,1 }; // スケール(拡大縮小)行列</u><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Matrix3x3 scale = Matrix3x3::scale(Vector2{ 2,5 }); // スケール(拡大縮小)行列</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Matrix3x3 scale = Matrix3x3::scale(Vector2{ -2,5 }); // スケール(拡大縮小)行列</em><br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 点s0,s1,s2<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector2 s0 = p0 * scale; // 点p0×scale (スケール行列を右から掛け算)すると拡大縮小する<br>
@@ -6965,11 +6965,16 @@
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
-    いかがでしょう？これで手軽にスケーリング行列を得ることができるようになりました。<br>
-    次は回転行列にトライしてみましょう。<br>
+      いかがでしょう？これで手軽にスケーリング行列を得ることができるようになりました。<br>
+      もう1点の注目ポイントとして、今回は{ ×2倍,×5倍 }ではなく、<b>{ ×-2倍,×5倍 }という形でx軸方向をマイナス倍</b>にしてみました。<br>
+      <b>x方向をマイナス倍すると、Y軸(縦軸)を鏡にして、左右が反転</b>します。<br>
+      <b>y方向をマイナス倍すると、X軸(横軸)を鏡にして、上下が反転</b>します。<br>
+      <b>x方向とy方向の両方をマイナス倍すると、原点(0,0)を境にして、上下左右が反転</b>します。<br>
+      このマイナス倍の関係性は自分で数値を変えてみて実験しておいてください。<br>
+      <br>
+      次は回転行列にトライしてみましょう。<br>
       <br>
       <br>
     </a>
-    
   </body>
 </html>
