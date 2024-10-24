@@ -5573,6 +5573,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp; {<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float x = 0.f, y = 0.0f, z =
 -10.0f; // カメラはz軸マイナス位置からz軸プラス向きに原点を見る形で初期化される<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; inline Camera&amp; operator +=(VECTOR move) { x += move.x; y += move.y; z += move.z; return *this; } // VECTOR型を足したときはカメラを移動させる<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float VRotate = 0.0f, HRotate =
 0.0f, TRotate = 0.0f; // X軸 V,Y軸 H,Z軸 T まわりのカメラのオイラー回転の角度<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float wheelSpeed = 1.0f; //
@@ -6392,6 +6393,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp; {<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float x = 0.f, y = 0.0f, z =
 -10.0f; // カメラはz軸マイナス位置からz軸プラス向きに原点を見る形で初期化される<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; inline Camera&amp; operator +=(VECTOR move) { x += move.x; y += move.y; z += move.z; return *this; } // VECTOR型を足したときはカメラを移動させる<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float VRotate = 0.0f, HRotate =
 0.0f, TRotate = 0.0f; // X軸 V,Y軸 H,Z軸 T まわりのカメラのオイラー回転の角度<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float wheelSpeed = 1.0f; //
@@ -6716,6 +6718,7 @@ public:<br>
 &nbsp;&nbsp;&nbsp; {<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float x = 0.f, y = 0.0f, z =
 -10.0f; // カメラはz軸マイナス位置からz軸プラス向きに原点を見る形で初期化される<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; inline Camera&amp; operator +=(VECTOR move) { x += move.x; y += move.y; z += move.z; return *this; } // VECTOR型を足したときはカメラを移動させる<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float VRotate = 0.0f, HRotate =
 0.0f, TRotate = 0.0f; // X軸 V,Y軸 H,Z軸 T まわりのカメラのオイラー回転の角度<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float wheelSpeed = 1.0f; //
