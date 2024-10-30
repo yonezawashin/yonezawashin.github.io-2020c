@@ -6670,11 +6670,9 @@
         &nbsp;&nbsp;&nbsp; return isCollisionSphere_Ray(center, Radius, lineStart, lineVec.normalized(), result); // 球体とレイ(光線)の当たり判定<br>
         }<br>
         <br>
-        <br>
-        <br>
         // 線分line0 と 線分line1 の当たり判定 isInfinite:無限の長さの線かどうか epsilon:判定の精度 result0:line0上の最も近い点 result1:line1上の最も近い点 <br>
         inline bool isCollisionLine_Line(const Vector3&amp; line0Start, const Vector3&amp; line0End, const Vector3&amp; line1Start, const Vector3&amp; line1End,<br>
-        &nbsp;&nbsp;&nbsp; bool isInfinite = false, float epsilon = 0.001f, Vector3* result0 = nullptr, Vector3* result1 = nullptr)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isInfinite = false, float epsilon = 0.001f, Vector3* result0 = nullptr, Vector3* result1 = nullptr)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; float t0, t1;<br>
         &nbsp;&nbsp;&nbsp; Vector3 answer0, answer1; // answer0:line0上の最も近い点 answer1:line1上の最も近い点<br>
@@ -6726,7 +6724,10 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (absDif01 &lt; FLT_EPSILON) // 線が交差しないとき(最小誤差ε以内のとき)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 交差しない線どうしの最も近い点を求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nearestPointOfParallelLine(line0Start, line0End, line1Start, line1End, isInfinite, result0, result1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nearestPointOfParallelLine(line0Start, line0End, line1Start, line1End, isInfinite, &amp;answer0, &amp;answer1);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (result0 != nullptr) *result0 = answer0; // resultがnullptrじゃなければ答えを代入して関数の外に返す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (result1 != nullptr) *result1 = answer1;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // 線が交差するとき(最小誤差εを超えるとき)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
@@ -6742,8 +6743,7 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 有限の線の場合で、線を超えた位置(0～1.0の範囲外)に最も近い点が見つかった場合<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if ((isInfinite == false) &amp;&amp; (t0 &lt; 0.0f || 1.0f &lt; t0 || t1 &lt; 0.0f || 1.0f &lt; t1))<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線分line0 と 線分line1 の【有限の線上範囲内】での一番近い点を求めなおす(0～1の範囲内に収まるもっとも近い点を求めなおす) <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 線分line0 と 線分line1 の【有限の線上範囲内】での一番近い点を求めなおす(0～1の範囲内に収まるもっとも近い点を求めなおす) <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nearestPointsOnFiniteLines(line0Start, line0End, line1Start, line1End, t0, t1, answer0, answer1);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
         <br>
