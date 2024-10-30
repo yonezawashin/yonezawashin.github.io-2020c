@@ -6360,6 +6360,8 @@
       <br>
       つぎにVector3を使って、平面を表現するPlane4.hを準備します。<br>
       実は平面(無限)は、驚くことにデータ的には、 <b>原点からの距離:dist と 平面に垂直な法線ベクトル:n のたった2つだけの要素で確定</b>できてしまいます。<br>
+      <p><img src="image/plane_polygon_collision.png" alt="" style=""><br>
+      </p>
       <p><code>Plane4.hを新規作成</code>して原点からの距離:dist と 平面に垂直な法線ベクトル:n である無限の平面を数学的に表現する準備をします。</p>
       <p class="source">#ifndef PLANE_H_<br>
         #define PLANE_H_<br>
@@ -6506,7 +6508,7 @@
         #endif<br>
       </p>
       <br>
-      そして、次はこのVector3.hを駆使して、3D空間での当たり判定をする関数を定義するCollision3D.hを準備します。<br>
+      そして、次はこのVector3.hとPlane4.hを駆使して、3D空間での当たり判定をする関数を定義するCollision3D.hを準備します。<br>
       <br>
       <p><code>Collision3D.hを新規作成</code>して球、円柱、カプセル、線、三角ポリゴン、平面などや光線(レイ)との当たり判定をするためのisCollision系関数群を準備します。</p>
       <p class="source">#ifndef COLLISION3D_H_<br>
@@ -7152,5 +7154,6 @@
       <br>
       <br>
     </a>
+    
   </body>
 </html>
