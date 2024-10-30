@@ -6196,8 +6196,8 @@
         #undef PI_2<br>
         #undef RAD_NORMALIZE<br>
         <br>
-        // 三角形ポリゴン p123 の 点 p0 の重心を求める<br>
-        inline Vector3 polyCenter(const Vector3&amp; p0, const Vector3&amp; p1, const Vector3&amp; p2, const Vector3&amp; p3)<br>
+        // 重心座標を求める 点 p0:重心座標を求めたい位置 三角形の点: p1 p2 p3 https://zellij.hatenablog.com/entry/20131207/p1<br>
+        inline Vector3 barycentric(const Vector3&amp; p0, const Vector3&amp; p1, const Vector3&amp; p2, const Vector3&amp; p3)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; Vector3 v2 = p2 - p1;<br>
         &nbsp;&nbsp;&nbsp; Vector3 v3 = p3 - p1;<br>
