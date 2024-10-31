@@ -6380,7 +6380,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; struct { float nx, ny, nz; }; // 面法線x,y,z成分<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3&nbsp;&nbsp;&nbsp; n{0.0f,0.0f,0.0f};&nbsp;&nbsp;&nbsp; // 面から出る法線ベクトル<br>
         &nbsp;&nbsp;&nbsp; };<br>
-        &nbsp;&nbsp;&nbsp; float dist = 0.0f; // 原点からの距離<br>
+        &nbsp;&nbsp;&nbsp; float dist = 0.0f;&nbsp; // 原点[まで]の距離 [参考] https://nyama41.hatenablog.com/entry/unity_plane_distance<br>
         <br>
         &nbsp;&nbsp;&nbsp; // float型のポインタへ(float*)キャストすればnx,ny,nz,distデータの配列の先頭のアドレスを返す<br>
         &nbsp;&nbsp;&nbsp; inline operator float* () const { return (float*)this; }<br>
@@ -6860,7 +6860,7 @@
         <br>
         &nbsp;&nbsp;&nbsp; if (result != nullptr)<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t = plane.distance(rayPos) / dot_Plane_RayNorm;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t = -plane.distance(rayPos) / dot_Plane_RayNorm;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result = rayDirNorm * t + rayPos; // t倍にレイの方向を延長して 平面との交点を求める<br>
         &nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp; return true;<br>
