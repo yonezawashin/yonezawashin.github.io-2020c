@@ -6768,9 +6768,25 @@
         &nbsp;&nbsp;&nbsp; Vector3 nearest0;<br>
         &nbsp;&nbsp;&nbsp; Vector3 nearest1;<br>
         &nbsp;&nbsp;&nbsp; // カプセルどうしの当たり判定は、実質、線(有限)どうしの当たり判定(線の 距離epsilon が カプセル0半径 + カプセル1半径↓)<br>
-        &nbsp;&nbsp;&nbsp; bool isCollision = isCollisionLine_Line(capsule0Start, capsule0End, capsule1Start, capsule1End, false, capsule0Radius + capsule1Radius, &amp;nearest0, &amp;nearest1);<br>
-        &nbsp;&nbsp;&nbsp; if (result0 != nullptr) *result0 = nearest0;<br>
-        &nbsp;&nbsp;&nbsp; if (result1 != nullptr) *result1 = nearest1;<br>
+        &nbsp;&nbsp;&nbsp; bool isCollision = isCollisionLine_Line(capsule0Start, capsule0End, capsule1Start, capsule1End, false, capsule0Radius + capsule1Radius, &amp;nearest0, &amp;nearest1);&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // カプセル軸上の最短距離をむすぶ 法線ベクトル:norm と 距離:mag を求める<br>
+        &nbsp;&nbsp;&nbsp; Vector3 v01 = nearest1 - nearest0; // 最短距離の2点 nearest0 から nearest1 へ向かうベクトル<br>
+        &nbsp;&nbsp;&nbsp; float mag01 = v01.magnitude(); // nearest0とnearest1の距離<br>
+        &nbsp;&nbsp;&nbsp; Vector3 norm01 = v01.normalized(); // 正規化normalizeする<br>
+        &nbsp;&nbsp;&nbsp; if (mag01 == 0.0f) // カプセルの軸が交差しているときはnearest0とnearest1が同じ点になっちゃう<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 center0 = (capsule0Start + capsule0End) / 2.0f; // カプセル0の中心点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 center1 = (capsule1Start + capsule1End) / 2.0f; // カプセル1の中心点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; norm01 = (center1 - center0).normalized(); // 中心同士の差ベクトルを法線に<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (center0 == center1) // 中心位置が完全一致するときは<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; norm01 = Vector3{ 1.0f,0.0f,0.0f }; // 仕方ないからx軸方向に引き離す(2DでもつじつまあうようにX軸で)<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer0 = nearest0 + norm01 * capsule0Radius; // nearest0からnearest1の方向へ、カプセル半径0の半径 進んだ位置が衝突点<br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer1 = nearest1 - norm01 * capsule1Radius; // nearest1からnearest0の方向へ、カプセル半径1の半径 進んだ位置が衝突点<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (result0 != nullptr) *result0 = answer0;<br>
+        &nbsp;&nbsp;&nbsp; if (result1 != nullptr) *result1 = answer1;<br>
         &nbsp;&nbsp;&nbsp; return isCollision;<br>
         }<br>
         <br>
@@ -7154,6 +7170,5 @@
       <br>
       <br>
     </a>
-    
   </body>
 </html>
