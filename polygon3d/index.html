@@ -6860,7 +6860,7 @@
         <br>
         &nbsp;&nbsp;&nbsp; if (result != nullptr)<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t = -plane.distance(rayPos) / dot_Plane_RayNorm;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t = -plane.distance(rayPos) / dot_Plane_RayNorm; //[tの式] https://knzw.tech/raytracing/?page_id=78<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result = rayDirNorm * t + rayPos; // t倍にレイの方向を延長して 平面との交点を求める<br>
         &nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp; return true;<br>
