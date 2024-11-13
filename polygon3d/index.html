@@ -5711,6 +5711,7 @@
         #include &lt;cmath&gt;<br>
         #include &lt;limits&gt; // 無限大などをstd::numeric_limits&lt;float&gt;::infinity()で取得<br>
         #include &lt;float.h&gt; // FLT_EPSILONでfloat型のとりうる最小の極小値を得る<br>
+        #include &lt;memory&gt; // 共有ポインタを使う<br>
         <br>
         #ifndef GET_CLAMP // GET_CLAMPマクロの定義がなかったら定義して使う<br>
         // a と b 小さい方の値を求める<br>
@@ -5743,6 +5744,9 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }; //[匿名共用体とは] https://zenn.dev/block/articles/beda29f11f05afc147ef<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float r, g, b; }; // 赤緑青のRGB成分としてつかいたいとき<br>
+        #ifdef DX_LIB_H // DXlibを#includeしていればDX_LIB_Hも定義済みなので下記も定義される VECTORの定義はDXライブラリ版のVector3<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR dxVec;<br>
+        #endif<br>
         &nbsp;&nbsp;&nbsp; }; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる<br>
         <br>
         &nbsp;&nbsp;&nbsp; // float型のポインタへ(float*)キャストすればx,y,zデータの配列の先頭のアドレスを返す<br>
@@ -5757,6 +5761,12 @@
         &nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp; //仮想デストラクタ<br>
         &nbsp;&nbsp;&nbsp; virtual ~Vector3() {}<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 継承overrideして親や子などを持たせれば親の変更を子に伝搬させる設計も可能<br>
+        &nbsp;&nbsp;&nbsp; virtual void Update() {}<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 継承overrideして所有オーナーなどを持たせれば半径などの変更をオーナーに伝搬させる設計も可能<br>
+        &nbsp;&nbsp;&nbsp; virtual void UpdateOwner() {}<br>
         <br>
         &nbsp;&nbsp;&nbsp; // Unityのstatic変数を参考に https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
         &nbsp;&nbsp;&nbsp; static const Vector3 zero;// = { 0.f, 0.f, 0.f };<br>
@@ -5932,6 +5942,42 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;x = other.x;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;y = other.y;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;z = other.z;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // screenXY:スクリーン上のXY位置 が ドラッグ点から幅:centerWidthの範囲内ならドラッグ当たり判定がtrue<br>
+        &nbsp;&nbsp;&nbsp; virtual bool isCollisionOnScreenXY(Vector3&amp; resultCenter, const VECTOR&amp; screenXY, const float centerWidth = 6.0f)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR pos2D = DxLib::ConvWorldPosToScreenPos(*this);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pos2D.z &lt; 0.0f || 1.0f &lt; pos2D.z) return false; // カメラ視野の奥行クリップ値(近:0.0f～1.0f:遠)の範囲外ならfalse<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pos2D.x - centerWidth / 2 &lt;= screenXY.x &amp;&amp; screenXY.x &lt;= pos2D.x + centerWidth / 2<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;&amp; pos2D.y - centerWidth / 2 &lt;= screenXY.y &amp;&amp; screenXY.y &lt;= pos2D.y + centerWidth / 2)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; resultCenter = *this; // ドラッグ点の中心点の3D位置を返す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // override継承してscreenXYの位置にあるコントロール点を返す(なかったら空のweak_ptrがreturnされる)<br>
+        &nbsp;&nbsp;&nbsp; virtual bool GetControlPointOnScreenXY(std::weak_ptr&lt;Vector3&gt;&amp; pResult, const VECTOR&amp; screenXY, const float centerWidth = 6.0f)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pResult = std::weak_ptr&lt;Vector3&gt;(); // 観測対象のない空のweak_ptrを返す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // rayPosの位置からrayDirの方向にレイを飛ばして衝突判定 resultCollision:衝突した点の衝突位置 resultCenter:衝突点の中心位置<br>
+        &nbsp;&nbsp;&nbsp; virtual bool isCollision(const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3&amp; resultCollision, Vector3&amp; resultCenter)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // overrideで継承して球やカプセルなどの当たり判定を実装する<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 点をドラッグできる点として中心位置をスクリーン上に四角形で描く<br>
+        &nbsp;&nbsp;&nbsp; virtual void Draw(const float centerWidth = 6.0f, unsigned int rectColor= GetColor(255, 255, 255), int FillFlag = TRUE)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR screenXY = DxLib::ConvWorldPosToScreenPos(*this);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt;= screenXY.z &amp;&amp; screenXY.z &lt;= 1.0f) // zは奥行クリップ値(near:0～1.0:far)⇒範囲外ならカメラ視野外 <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawBox(screenXY.x - centerWidth / 2, screenXY.y - centerWidth / 2,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; screenXY.x + centerWidth / 2, screenXY.y + centerWidth / 2, rectColor, FillFlag);<br>
         &nbsp;&nbsp;&nbsp; }<br>
         #endif<br>
         <br>
@@ -6140,7 +6186,7 @@
         <br>
         // 三角ポリゴンの面法線を求める p0,p1,p2:三角ポリゴンの3点の位置ベクトル<br>
         inline Vector3 polygonNorm(const Vector3&amp; p0, const Vector3&amp; p1, const Vector3&amp; p2)<br>
-        {<br>
+        {&nbsp;&nbsp; //[DirectX:左手系(時計回りの親指が上)]<br>
         &nbsp;&nbsp;&nbsp; // 直線p1p0 と 直線p2p1 の外積を求めて、それを単位ベクトルNorm化する<br>
         &nbsp;&nbsp;&nbsp; return cross(p0 - p1, p1 - p2).normalized();<br>
         }<br>
@@ -6323,8 +6369,9 @@
         &nbsp;&nbsp;&nbsp; }<br>
         }<br>
         <br>
-        // 点:point と box:AABB(軸並行境界ボックス：Axis-Aligned Bounding Box)の最短距離 http://marupeke296.com/COL_3D_No11_AABBvsPoint.html<br>
-        inline float nearestLengthPoint_AABB(const Vector3&amp; point, const Vector3&amp; boxMin, const Vector3&amp; boxMax)<br>
+        <br>
+        // 点:point と box:AABB(軸並行境界ボックス：Axis-Aligned Bounding Box)の最短距離の2乗 http://marupeke296.com/COL_3D_No11_AABBvsPoint.html<br>
+        inline float sqrNearestLengthPoint_AABB(const Vector3&amp; point, const Vector3&amp; boxMin, const Vector3&amp; boxMax)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; float sqLength = 0.0f; // 長さのべき乗の値を足していく<br>
         &nbsp;&nbsp;&nbsp; for (auto i = 0; i &lt; 3; ++i)<br>
@@ -6334,7 +6381,61 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (point.xyz[i] &gt; boxMax.xyz[i])<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sqLength += (point.xyz[i] - boxMax.xyz[i]) * (point.xyz[i] - boxMax.xyz[i]); // 距離の2乗<br>
         &nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp; return std::sqrtf(sqLength); //&nbsp; // 距離の2乗を足していった合計の√を取る<br>
+        &nbsp;&nbsp;&nbsp; return sqLength; //&nbsp; // 距離の2乗を足していった合計を返す<br>
+        }<br>
+        <br>
+        // 点:point と box:AABB(軸並行境界ボックス：Axis-Aligned Bounding Box)の最短距離 http://marupeke296.com/COL_3D_No11_AABBvsPoint.html<br>
+        inline float nearestLengthPoint_AABB(const Vector3&amp; point, const Vector3&amp; boxMin, const Vector3&amp; boxMax)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; return std::sqrtf(sqrNearestLengthPoint_AABB(point, boxMin, boxMax)); // 距離の2乗を足していった合計の√を取る<br>
+        }<br>
+        <br>
+        // 点:point0 と box1:OBB(有向境界ボックス：Oriented Bounding Box)の各軸の超過ベクトル result:OBB上の一番近い点を返す<br>
+        inline Vector3 overLengthPoint_OBB(const Vector3&amp; point0,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; centerOBB1, const Vector3&amp; sizeOBB1, const std::array&lt;Vector3, 3&gt;&amp; axisOBB1,<br>
+        &nbsp;&nbsp;&nbsp; Vector3* result = nullptr)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Vector3 v10 = point0 - centerOBB1; // OBBの中心→pointのベクトル<br>
+        &nbsp;&nbsp;&nbsp; Vector3 overLength{ 0.0f, 0.0f, 0.0f }; // 最終的な長さを求めるベクトル<br>
+        &nbsp;&nbsp;&nbsp; float dist;<br>
+        &nbsp;&nbsp;&nbsp; // 各軸についてはみ出た部分のベクトルを算出 http://marupeke296.com/COL_3D_No12_OBBvsPoint.html<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float L = sizeOBB1.xyz[i] / 2; // 軸の中心からはしっこまでの距離<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dist = dot(v10, axisOBB1[i]); // OBBの中心→pointのベクトルとOBBの軸の内積<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (L &gt; 0) // L=0は計算できない<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float s = dist / L; // distをLで割る<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // sの値から、はみ出した部分があればそのベクトルを加算<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float abs_s = (s &lt; 0) ? -s : s; // sの絶対値を求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (abs_s &gt; 1) // sの絶対値が1を超えた部分がはみ出したベクトル<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; overLength += (1 - abs_s) * L * axisOBB1[i]; // はみ出した部分のベクトル算出<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (result != nullptr) // resultがnullptrじゃなければOBB上の一番近い点も求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // OBB上の一番近い点の算出 http://distancevector.web.fc2.com/collision.html#OBBPoint<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (dist &gt; L) dist = L; // distがLの長さを超えても L の長さに制限する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (dist &lt; -L) dist = -L;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result += dist * axisOBB1[i]; // OBB上の一番近い点に i の軸方向の距離を反映<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; return overLength; // 超過ベクトルを返す<br>
+        }<br>
+        <br>
+        // 点:point と box:OBB(有向境界ボックス：Oriented Bounding Box)の最短距離 result:OBB上の一番近い点を返す<br>
+        inline float nearestLengthPoint_OBB(const Vector3&amp; point, <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const Vector3&amp; centerOBB, const Vector3&amp; sizeOBB, const std::array&lt;Vector3,3&gt;&amp; axisOBB,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3* result = nullptr)<br>
+        {&nbsp;&nbsp; // 各軸の超過距離のベクトルの大きさを出力 http://marupeke296.com/COL_3D_No12_OBBvsPoint.html<br>
+        &nbsp;&nbsp;&nbsp; return overLengthPoint_OBB(point, centerOBB, sizeOBB, axisOBB, result).magnitude();<br>
+        }<br>
+        <br>
+        // 点:point と box:OBB(有向境界ボックス：Oriented Bounding Box)の最短距離の2乗 result:OBB上の一番近い点を返す<br>
+        inline float sqrNearestLengthPoint_OBB(const Vector3&amp; point,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const Vector3&amp; centerOBB, const Vector3&amp; sizeOBB, const std::array&lt;Vector3, 3&gt;&amp; axisOBB,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3* result = nullptr)<br>
+        {&nbsp;&nbsp; // 各軸の超過距離のベクトルの大きさの2乗を出力 http://marupeke296.com/COL_3D_No12_OBBvsPoint.html<br>
+        &nbsp;&nbsp;&nbsp; return overLengthPoint_OBB(point, centerOBB, sizeOBB, axisOBB, result).sqrMagnitude();<br>
         }<br>
         <br>
         #endif<br>
@@ -6377,7 +6478,7 @@
         {<br>
         &nbsp;&nbsp;&nbsp; union // 共用体unionで法線struct{nx, ny, nz} と 法線nを同じメモリ上の位置にする つまり nx = n.x, ny = n.y, nz = n.zになる<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; struct { float nx, ny, nz; }; // 面法線x,y,z成分<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //struct { float nx, ny, nz; }; // 面法線x,y,z成分<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3&nbsp;&nbsp;&nbsp; n{0.0f,0.0f,0.0f};&nbsp;&nbsp;&nbsp; // 面から出る法線ベクトル<br>
         &nbsp;&nbsp;&nbsp; };<br>
         &nbsp;&nbsp;&nbsp; float dist = 0.0f;&nbsp; // 原点[まで]の距離 [参考] https://nyama41.hatenablog.com/entry/unity_plane_distance<br>
@@ -6389,7 +6490,7 @@
         <br>
         &nbsp;&nbsp;&nbsp; Plane4(const Plane4&amp; other) : n{ other.n }, dist{ other.dist } {} // コピーコンストラクタ return *thisを使うため<br>
         <br>
-        &nbsp;&nbsp;&nbsp; Plane4(float normX = 0.0f, float normY = 0.0f, float normZ = 0.0f, float distance = 0.0f) : nx{ normX }, ny{ normY }, nz{ normZ }, dist{ distance } {}<br>
+        &nbsp;&nbsp;&nbsp; Plane4(float normX = 0.0f, float normY = 0.0f, float normZ = 0.0f, float distance = 0.0f) : n{ Vector3{normX, normY, normZ } }, dist{ distance } {}<br>
         &nbsp;&nbsp;&nbsp; Plane4(const Vector3&amp; norm, float distance) : n{ norm }, dist{ distance } {}<br>
         &nbsp;&nbsp;&nbsp; // 平面上の点point と 平面の法線ペクトルnorm から 平面方程式パラメータdist(原点からの距離)をdotで計算して 平面を生成する <br>
         &nbsp;&nbsp;&nbsp; Plane4(const Vector3&amp; point, const Vector3&amp; norm) : n{ norm }, dist{ -dot(norm, point) } {}<br>
@@ -6464,6 +6565,40 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Side::Behind; // 平面の背面の側に 球 がある<br>
         &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 法線から一番近い点(AABBの正の頂点)を求める https://edom18.hateblo.jp/entry/2017/10/29/112908<br>
+        &nbsp;&nbsp;&nbsp; inline Vector3 positivePoint_AABB(const Vector3&amp; boxMin, const Vector3&amp; boxMax) const<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 result = boxMin;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 boxSize = boxMax - boxMin;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (n.x &gt; 0) result.x += boxSize.x;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (n.y &gt; 0) result.y += boxSize.y;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (n.z &gt; 0) result.z += boxSize.z;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return result;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 法線から一番近い点(AABBの正の頂点)から平面までの距離を返す https://edom18.hateblo.jp/entry/2017/10/29/112908<br>
+        &nbsp;&nbsp;&nbsp; inline float positiveDistance_AABB(const Vector3&amp; boxMin, const Vector3&amp; boxMax) const<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return distance(positivePoint_AABB(boxMin, boxMax));<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 法線から一番遠い点(AABBの負の頂点)を求める https://edom18.hateblo.jp/entry/2017/10/29/112908<br>
+        &nbsp;&nbsp;&nbsp; inline Vector3 negativePoint_AABB(const Vector3&amp; boxMin, const Vector3&amp; boxMax) const<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 result = boxMin;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 boxSize = boxMax - boxMin;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (n.x &lt; 0) result.x += boxSize.x;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (n.y &lt; 0) result.y += boxSize.y;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (n.z &lt; 0) result.z += boxSize.z;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return result;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 法線から一番遠い点(AABBの正の頂点)から平面までの距離を返す https://edom18.hateblo.jp/entry/2017/10/29/112908<br>
+        &nbsp;&nbsp;&nbsp; inline float negativeDistance_AABB(const Vector3&amp; boxMin, const Vector3&amp; boxMax) const<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return distance(negativePoint_AABB(boxMin, boxMax));<br>
+        &nbsp;&nbsp;&nbsp; }<br>
         };<br>
         <br>
         <br>
@@ -6519,10 +6654,109 @@
         <br>
         //-------------- 球、円柱、線分(レイ)、カプセル、ポリゴンのエッジなどの当たり判定---------------------------<br>
         <br>
+        // 軸並行境界ボックス同士 AABB 0 と AABB 1 の当たり判定 https://developer.mozilla.org/ja/docs/Games/Techniques/3D_collision_detection<br>
+        inline bool isCollisionAABB_AABB(const Vector3&amp; boxMin0, const Vector3&amp; boxMax0, const Vector3&amp; boxMin1, const Vector3&amp; boxMax1)<br>
+        {&nbsp;&nbsp; // min と maxを比べればよい<br>
+        &nbsp;&nbsp;&nbsp; return boxMin0.x &lt;= boxMax1.x &amp;&amp; boxMax0.x &gt;= boxMin1.x &amp;&amp;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxMin0.y &lt;= boxMax0.y &amp;&amp; boxMax0.y &gt;= boxMin1.y &amp;&amp;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxMin0.z &lt;= boxMax1.z &amp;&amp; boxMax0.z &gt;= boxMin1.z;<br>
+        }<br>
+        <br>
         // 点:point と box:AABB(軸並行境界ボックス：Axis-Aligned Bounding Box)の当たり判定 http://marupeke296.com/COL_3D_No11_AABBvsPoint.html<br>
         inline bool isCollisionPoint_AABB(const Vector3&amp; point, const Vector3&amp; leftTop, const Vector3&amp; rightBottom)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; return nearestLengthPoint_AABB(point, leftTop, rightBottom) &gt; 0; // 最短距離が0以上なら当たっている<br>
+        }<br>
+        <br>
+        // 点:point と box:OBB(有向境界ボックス：Oriented Bounding Box)の当たり判定 result:OBB上の一番近い点を返す<br>
+        inline bool isCollisionPoint_OBB(const Vector3&amp; point, <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const Vector3&amp; centerOBB, const Vector3&amp; sizeOBB, const std::array&lt;Vector3, 3&gt;&amp; axisOBB,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3* result = nullptr)<br>
+        {&nbsp;&nbsp; //[OBBと点の衝突判定] http://marupeke296.com/COL_3D_No12_OBBvsPoint.html<br>
+        &nbsp;&nbsp;&nbsp; return sqrNearestLengthPoint_OBB(point, centerOBB, sizeOBB, axisOBB, result) &gt; 0; // 最短距離が0じゃなければ当たっている<br>
+        }<br>
+        <br>
+        // 球体 と OBB(有向境界ボックス)の衝突判定<br>
+        inline bool isCollisionSphere_OBB(const Vector3&amp; center0, float Radius0, <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const Vector3&amp; centerOBB, const Vector3&amp; sizeOBB, const std::array&lt;Vector3, 3&gt;&amp; axisOBB)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Vector3 nearestOnOBB; // OBB上の一番近い点<br>
+        &nbsp;&nbsp;&nbsp; overLengthPoint_OBB(center0, centerOBB, sizeOBB, axisOBB, &amp;nearestOnOBB);<br>
+        &nbsp;&nbsp;&nbsp; // OBB上の一番近い点 と 半径の2乗を比べる http://distancevector.web.fc2.com/collision.html#OBBSphere<br>
+        &nbsp;&nbsp;&nbsp; Vector3 dist = nearestOnOBB - center0;<br>
+        &nbsp;&nbsp;&nbsp; return dot(dist, dist) &lt;= Radius0 * Radius0;<br>
+        }<br>
+        <br>
+        // 光線:ray と box:AABB(軸並行境界ボックス：Axis-Aligned Bounding Box)の当たり判定 http://marupeke296.com/COL_3D_No18_LineAndAABB.html<br>
+        inline bool isCollisionAABB_Ray(const Vector3&amp; boxMin, const Vector3&amp; boxMax,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3* result = nullptr, float* result_t = nullptr)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; float _t; // 変数tの一時参照先<br>
+        &nbsp;&nbsp;&nbsp; // result_tがnullptrじゃなければ&nbsp;&nbsp; ↓参照先&nbsp; : ↓nullptrなら<br>
+        &nbsp;&nbsp;&nbsp; float&amp; t = (result_t != nullptr) ? *result_t : _t;<br>
+        &nbsp;&nbsp;&nbsp; t = -FLT_MAX; // 初期値はfloat型の最小値からはじめる<br>
+        &nbsp;&nbsp;&nbsp; float t_max = FLT_MAX; // 初期値はfloat型の最大値<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 交差判定<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // レイの方向ベクトルの絶対値がほぼ0のときは割り算の分母にできないので要チェック<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float absRayDir = (rayDir.xyz[i] &lt; 0) ? -rayDir.xyz[i] : rayDir.xyz[i];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (absRayDir &lt; FLT_EPSILON) // レイ方向の大きさがほぼ0なら<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // レイの始点がボックスの範囲外なら交差しない(レイ方向がほぼ0なので到達不可能)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (rayPos.xyz[i] &lt; boxMin.xyz[i] || rayPos.xyz[i] &gt; boxMax.xyz[i])<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // 交差していない<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // スラブとの距離を算出<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // t1が近スラブ、t2が遠スラブとの距離<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t1 = (boxMin.xyz[i] - rayPos.xyz[i]) / rayDir.xyz[i];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t2 = (boxMax.xyz[i] - rayPos.xyz[i]) / rayDir.xyz[i];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (t1 &gt; t2) // t1のほうが大きければ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // t1とt2を入れ替えてから判定<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float tmp = t1; t1 = t2; t2 = tmp;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (t1 &gt; t) t = t1; // t1が現在のtより大きければtを更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (t2 &lt; t_max) t_max = t2; // t2が現在のt_maxより小さければt_maxを更新<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (t &gt;= t_max) // スラブ交差チェック (t のほうが t_max より大きいか)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // 交差していない<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (result != nullptr) // resultがnullptrじゃなければ結果を代入して返す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result = rayPos + t * rayDir;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return (t &gt;= 0); // t &gt;=0 で rayDirのプラス方向に交差点があればtrue<br>
+        }<br>
+        <br>
+        // 線分(有限):line0→1 と box:OBB(有向境界ボックス：Oriented Bounding Box)の当たり判定 http://distancevector.web.fc2.com/collision.html#OBBSphere<br>
+        inline bool isCollisionOBB_Line(const Vector3&amp; centerOBB, const Vector3&amp; sizeOBB, const std::array&lt;Vector3, 3&gt;&amp; axisOBB,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; line0start, const Vector3&amp; line1End, Vector3* result = nullptr, float* result_t = nullptr)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; Vector3 mid = (line0start + line1End) * 0.5f; // 線分line0→1の中間点01<br>
+        &nbsp;&nbsp;&nbsp; Vector3 end = line1End - mid; // 中間点01→line1Endのベクトル<br>
+        &nbsp;&nbsp;&nbsp; mid = mid - centerOBB; // OBBの中心→中間点01<br>
+        &nbsp;&nbsp;&nbsp; // OBBの3軸とのdotを取る<br>
+        &nbsp;&nbsp;&nbsp; mid = Vector3{ dot(axisOBB[0], mid), dot(axisOBB[1], mid), dot(axisOBB[2], mid) };<br>
+        &nbsp;&nbsp;&nbsp; end = Vector3{ dot(axisOBB[0], end), dot(axisOBB[1], end), dot(axisOBB[2], end) };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Vector3 abs_end; // endの絶対値abs<br>
+        &nbsp;&nbsp;&nbsp; abs_end.x = std::abs(end.x);<br>
+        &nbsp;&nbsp;&nbsp; if (std::abs(mid.x) &gt; sizeOBB.x / 2 + abs_end.x) return false;<br>
+        &nbsp;&nbsp;&nbsp; abs_end.y = std::abs(end.y);<br>
+        &nbsp;&nbsp;&nbsp; if (std::abs(mid.y) &gt; sizeOBB.y / 2 + abs_end.y) return false;<br>
+        &nbsp;&nbsp;&nbsp; abs_end.z = std::abs(end.z);<br>
+        &nbsp;&nbsp;&nbsp; if (std::abs(mid.z) &gt; sizeOBB.z / 2 + abs_end.z) return false;<br>
+        &nbsp;&nbsp;&nbsp; abs_end.x += FLT_EPSILON;<br>
+        &nbsp;&nbsp;&nbsp; abs_end.y += FLT_EPSILON;<br>
+        &nbsp;&nbsp;&nbsp; abs_end.z += FLT_EPSILON;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (std::abs(mid.y * end.z - mid.z * end.y) &gt; sizeOBB.y * abs_end.z + sizeOBB.z * abs_end.y) return false;<br>
+        &nbsp;&nbsp;&nbsp; if (std::abs(mid.z * end.x - mid.x * end.z) &gt; sizeOBB.x * abs_end.z + sizeOBB.z * abs_end.x) return false;<br>
+        &nbsp;&nbsp;&nbsp; if (std::abs(mid.x * end.y - mid.y * end.x) &gt; sizeOBB.x * abs_end.y + sizeOBB.y * abs_end.x) return false;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return true;<br>
         }<br>
         <br>
         <br>
@@ -6531,6 +6765,7 @@
         {<br>
         &nbsp;&nbsp;&nbsp; return (center1 - center0).sqrMagnitude() &lt;= (Radius0 + Radius1) * (Radius0 + Radius1);<br>
         }<br>
+        <br>
         <br>
         // 球体とレイ(光線)の当たり判定 rayPos:レイの起点 rayDir:レイの方向 result0:球体とレイの衝突開始点 result1:球体とレイの衝突終了点 <br>
         inline bool isCollisionSphere_Ray(const Vector3&amp; center, float Radius, const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3* result0 = nullptr, Vector3* result1 = nullptr)<br>
@@ -6543,21 +6778,22 @@
         &nbsp;&nbsp;&nbsp; float dif = rayDirDot * rayDirDot - rayDistSq * rayToSphereSq;<br>
         &nbsp;&nbsp;&nbsp; if (dif &lt; 0.0f) return false;<br>
         <br>
-        &nbsp;&nbsp;&nbsp; if (result0 != nullptr || result1 != nullptr) // resultがnullptrじゃないときには球体とレイの交点も求める<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float sqrt_dif = std::sqrt(dif);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (result0 != nullptr)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t0 = (-rayDirDot - sqrt_dif) / rayDistSq; // 交点までt0倍のばせば球体とレイの衝突開始点になる<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result0 = rayDir * t0 + rayPos; // レイの方向をt0倍のばして球体との交点の位置を求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (result1 != nullptr)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t1 = (-rayDirDot + sqrt_dif) / rayDistSq; // 交点までt1倍のばせば球体とレイの衝突終了点になる<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result1 = rayDir * t1 + rayPos; // レイの方向をt1倍のばして球体との交点の位置を求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; float sqrt_dif = std::sqrt(dif);<br>
+        &nbsp;&nbsp;&nbsp; float t0 = (-rayDirDot - sqrt_dif) / rayDistSq; // 交点までt0倍のばせば球体とレイの衝突開始点になる<br>
+        &nbsp;&nbsp;&nbsp; float t1 = (-rayDirDot + sqrt_dif) / rayDistSq; // 交点までt1倍のばせば球体とレイの衝突終了点になる<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // t0の位置のほうがレイの起点から近くなり、rayDirのプラス方向の点がt0になるようにt0とt1を入れ替え<br>
+        &nbsp;&nbsp;&nbsp; if (t0 &gt;= 0 &amp;&amp; t1 &gt;= 0 &amp;&amp; t1 &lt; t0 || t0 &lt; 0 &amp;&amp; t1 &gt;= 0 || t0 &lt; 0 &amp;&amp; t1 &lt; 0 &amp;&amp; t0 &lt; t1)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // tmpに一時的にt1を保管して t0 と t1を入れ替え<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float tmp = t1; t1 = t0; t0 = tmp;<br>
         &nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp; return true;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (result0 != nullptr) // resultがnullptrじゃないときには球体とレイの交点も求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result0 = rayDir * t0 + rayPos; // レイの方向をt0倍のばして球体との交点の位置を求める<br>
+        &nbsp;&nbsp;&nbsp; if (result1 != nullptr) // resultがnullptrじゃないときには球体とレイの交点も求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result1 = rayDir * t1 + rayPos; // レイの方向をt1倍のばして球体との交点の位置を求める<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return (t0 &gt;= 0) || (t1 &gt;= 0); // rayDirのプラス方向に衝突点があるならtrue<br>
         }<br>
         <br>
         // 無限円柱(シリンダー)がレイ(起点:rayPos 方向ベクトル:rayDir)と衝突するか? result0:円柱とレイが衝突した貫通開始点&nbsp; result1:円柱とレイが衝突した貫通終了点 <br>
@@ -6588,15 +6824,21 @@
         &nbsp;&nbsp;&nbsp; if (d &lt; 0.0f) return false; // レイが円柱と衝突していない<br>
         &nbsp;&nbsp;&nbsp; d = std::sqrtf(d);<br>
         <br>
-        &nbsp;&nbsp;&nbsp; float a1 = (B - d) / A;<br>
-        &nbsp;&nbsp;&nbsp; float a2 = (B + d) / A;<br>
+        &nbsp;&nbsp;&nbsp; float t0 = (B - d) / A;<br>
+        &nbsp;&nbsp;&nbsp; float t1 = (B + d) / A;<br>
         <br>
-        &nbsp;&nbsp;&nbsp; if (result0 != nullptr)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result0 = rayPos + a1 * rayDir;<br>
-        &nbsp;&nbsp;&nbsp; if (result1 != nullptr)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result1 = rayPos + a2 * rayDir;<br>
+        &nbsp;&nbsp;&nbsp; // t0の位置のほうがレイの起点から近くなり、rayDirのプラス方向の点がt0になるようにt0とt1を入れ替え<br>
+        &nbsp;&nbsp;&nbsp; if (t0 &gt;= 0 &amp;&amp; t1 &gt;= 0 &amp;&amp; t1 &lt; t0 || t0 &lt; 0 &amp;&amp; t1 &gt;= 0 || t0 &lt; 0 &amp;&amp; t1 &lt; 0 &amp;&amp; t0 &lt; t1)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // tmpに一時的にt1を保管して t0 と t1を入れ替え<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float tmp = t1; t1 = t0; t0 = tmp;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
         <br>
-        &nbsp;&nbsp;&nbsp; return true;<br>
+        &nbsp;&nbsp;&nbsp; if (result0 != nullptr) // resultがnullptrじゃないときにはシリンダとレイの交点も求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result0 = rayDir * t0 + rayPos; // レイの方向をt0倍のばしてシリンダとの交点の位置を求める<br>
+        &nbsp;&nbsp;&nbsp; if (result1 != nullptr) // resultがnullptrじゃないときには球体とシリンダの交点も求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result1 = rayDir * t1 + rayPos; // レイの方向をt1倍のばしてシリンダとの交点の位置を求める<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return (t0 &gt;= 0) || (t1 &gt;= 0); // rayDirのプラス方向に衝突点があるならtrue<br>
         }<br>
         <br>
         // カプセルがレイ(起点:rayPos 方向ベクトル:rayDir)と衝突するか? result0:カプセルとレイが衝突した貫通開始点&nbsp; result1:カプセルとレイが衝突した貫通終了点 <br>
@@ -6660,7 +6902,8 @@
         <br>
         <br>
         // 球体と有限の線分との当たり判定 lineStart:線の起点 lineEnd:線の終点 result:球体と線分の交点<br>
-        inline bool isCollisionSphere_Line(const Vector3&amp; center, float Radius, const Vector3&amp; lineStart, const Vector3&amp; lineEnd, Vector3* result = nullptr)<br>
+        inline bool isCollisionSphere_Line(const Vector3&amp; center, float Radius, <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const Vector3&amp; lineStart, const Vector3&amp; lineEnd, Vector3* result0 = nullptr, Vector3* result1 = nullptr)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; Vector3&nbsp;&nbsp;&nbsp; lineVec = lineEnd - lineStart; // endからstartを引いて有限の線分のベクトルを求める<br>
         &nbsp;&nbsp;&nbsp; Vector3&nbsp;&nbsp;&nbsp; nearestPoint = nearestPointOnLine(center, lineStart, lineVec, false); // 点center から一番近い直線lineVec上の点を求める<br>
@@ -6669,7 +6912,7 @@
         <br>
         &nbsp;&nbsp;&nbsp; if (distSq &gt; Radius * Radius) return false; // 距離の2乗が球体の半径の2乗よりも長い場合は球と線は衝突していない<br>
         &nbsp;&nbsp;&nbsp; // ↑有限の線なので半径との距離を比べてしまえばあとは 球体とレイ(無限の線)の判定と変わらない<br>
-        &nbsp;&nbsp;&nbsp; return isCollisionSphere_Ray(center, Radius, lineStart, lineVec.normalized(), result); // 球体とレイ(光線)の当たり判定<br>
+        &nbsp;&nbsp;&nbsp; return isCollisionSphere_Ray(center, Radius, lineStart, lineVec.normalized(), result0, result1); // 球体とレイ(光線)の当たり判定<br>
         }<br>
         <br>
         // 線分line0 と 線分line1 の当たり判定 isInfinite:無限の長さの線かどうか epsilon:判定の精度 result0:line0上の最も近い点 result1:line1上の最も近い点 <br>
@@ -6850,21 +7093,84 @@
         <br>
         //-------------- 平面に関する当たり判定---------------------------<br>
         <br>
+        // 平面plane と 球(中心:center 半径:Radius)が衝突するか result:平面から球を押し戻した距離<br>
+        inline bool isCollisionPlane_Sphere(const Plane4&amp; plane, <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const Vector3&amp; center, float Radius, float* resultDist = nullptr)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; float dist = plane.distance(center); // 平面と球の中心の距離<br>
+        &nbsp;&nbsp;&nbsp; float abs_dist = (dist &lt; 0) ? -dist : dist; // 平面との距離の絶対値<br>
+        &nbsp;&nbsp;&nbsp; if (resultDist != nullptr) *resultDist = Radius - dist; // 半径 - 平面との距離をresultDistで返す<br>
+        &nbsp;&nbsp;&nbsp; return (abs_dist &lt;= Radius); // 平面との距離が 半径以下なら当たっている:true<br>
+        }<br>
+        <br>
+        // 平面plane が AABB(軸並行境界ボックス) と 衝突するか result:平面からAABBを押し戻した距離<br>
+        inline bool isCollisionPlane_AABB(const Plane4&amp; plane,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; boxMin, const Vector3&amp; boxMax, float* resultDist = nullptr)<br>
+        {&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; //[平面とAABBの当たり判定] https://edom18.hateblo.jp/entry/2017/10/29/112908<br>
+        &nbsp;&nbsp;&nbsp; float positiveDistance = plane.positiveDistance_AABB(boxMin, boxMax);<br>
+        &nbsp;&nbsp;&nbsp; if (positiveDistance &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (resultDist != nullptr) *resultDist = -positiveDistance; // 平面までの距離の大きさを返す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // 平面の外側<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; float negativeDistance = plane.negativeDistance_AABB(boxMin, boxMax);<br>
+        &nbsp;&nbsp;&nbsp; if (negativeDistance &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // negativeDistanceは0以下なのでマイナスをつけて+の大きさにして返す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (resultDist != nullptr) *resultDist = -negativeDistance; // めり込んだ距離の大きさを返す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true; // 平面を横切る<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (resultDist != nullptr) *resultDist = negativeDistance; // めり込んだ距離の大きさを返す<br>
+        &nbsp;&nbsp;&nbsp; return false;<br>
+        }<br>
+        <br>
+        // 平面plane が OBB(有向境界ボックス) と 衝突するか result:平面からOBBを押し戻した距離<br>
+        inline bool isCollisionPlane_OBB(const Vector3&amp; planePos, const Plane4&amp; plane,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const Vector3&amp; centerOBB, const Vector3&amp; sizeOBB, const std::array&lt;Vector3, 3&gt;&amp; axisOBB,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float* result = nullptr)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 平面の法線に対するOBBの射影線の長さを算出 http://marupeke296.com/COL_3D_No14_OBBvsPlane.html<br>
+        &nbsp;&nbsp;&nbsp; float r = 0.0f; // 近接距離<br>
+        &nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; 3; ++i)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; r += std::abs(dot(axisOBB[i] * sizeOBB.xyz[i]/2, plane.n));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 平面とOBBの距離を算出<br>
+        &nbsp;&nbsp;&nbsp; float s = dot(centerOBB - planePos, plane.n);<br>
+        &nbsp;&nbsp;&nbsp; float abs_s = (s &lt; 0) ? -s : s; // sの絶対値<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; if (result != nullptr)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 平面からの押し戻し距離を算出<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (s &gt; 0)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result = r - abs_s;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result = r + abs_s;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 衝突判定<br>
+        &nbsp;&nbsp;&nbsp; if (abs_s - r &lt; 0.0f) return true; // 衝突している<br>
+        &nbsp;&nbsp;&nbsp; return false; // 衝突していない<br>
+        }<br>
+        <br>
         <br>
         // 平面plane が レイ(起点:rayPos 方向ベクトル:rayDir) と 衝突するか result:平面とレイが衝突した場合の交点<br>
         inline bool isCollisionPlane_Ray(const Plane4&amp; plane, const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3* result = nullptr)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; Vector3 rayDirNorm = rayDir.normalized();<br>
-        &nbsp;&nbsp;&nbsp; float dot_Plane_RayNorm = dot(plane, rayDirNorm);<br>
-        &nbsp;&nbsp;&nbsp; if (dot_Plane_RayNorm == 0.0f) return false;<br>
+        &nbsp;&nbsp;&nbsp; Vector3 planeRay = rayPos - (-plane.n * plane.dist); // planeの起点からレイの始点へのベクトル<br>
+        &nbsp;&nbsp;&nbsp; float dot_Plane_RayNorm = dot(rayDirNorm, plane.n);<br>
+        &nbsp;&nbsp;&nbsp; if (dot_Plane_RayNorm == 0.0f) return false; // dot が 0の場合は平面と直線が平行になるのでレイと平面は交差しない<br>
         <br>
         &nbsp;&nbsp;&nbsp; if (result != nullptr)<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t = -plane.distance(rayPos) / dot_Plane_RayNorm; //[tの式] https://knzw.tech/raytracing/?page_id=78<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result = rayDirNorm * t + rayPos; // t倍にレイの方向を延長して 平面との交点を求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float t = -dot(planeRay, plane.n) / dot_Plane_RayNorm; //[tの式] https://knzw.tech/raytracing/?page_id=78<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 answer = rayDirNorm * t + rayPos; // t倍にレイの方向を延長して 平面との交点を求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *result = answer;<br>
         &nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp; return true;<br>
         }<br>
+        <br>
         <br>
         // 平面 plane と 線(始点lineStart と 終点lineEnd を結ぶ線) が 接触するか<br>
         inline bool isCollisionPlane_Line(const Plane4&amp; plane, const Vector3&amp; lineStart, const Vector3&amp; lineEnd, Vector3* result = nullptr)<br>
@@ -6880,6 +7186,32 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面plane が レイ(起点:lineStart 方向ベクトル:lineEnd - lineStart) と 衝突するか<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return isCollisionPlane_Ray(plane, lineStart, lineEnd - lineStart, result); // resultに交点が求まる<br>
         &nbsp;&nbsp;&nbsp; }<br>
+        }<br>
+        <br>
+        // 平面plane とカプセルの当たり判定 resultDist:押し戻し距離を返す<br>
+        inline bool isCollisionPlane_Capsule(const Plane4&amp; plane,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; capsuleStart, const Vector3&amp; capsuleEnd, float capsuleRadius, float* resultDist = nullptr)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; float distStart = plane.distance(capsuleStart);<br>
+        &nbsp;&nbsp;&nbsp; float absDistStart = (distStart &lt; 0) ? -distStart : distStart;<br>
+        &nbsp;&nbsp;&nbsp; float distEnd = plane.distance(capsuleEnd);<br>
+        &nbsp;&nbsp;&nbsp; float absDistEnd = (distEnd &lt; 0) ? -distEnd : distEnd;<br>
+        &nbsp;&nbsp;&nbsp; // 線の始点から平面までの距離 と 線の終点から平面までの距離 の符号が 両方+ なら<br>
+        &nbsp;&nbsp;&nbsp; if (distStart &gt; 0 &amp;&amp; distEnd &gt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 始点も終点も平面から見て法線の方向のサイドにあるので 線 と 平面はクロス しない<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (resultDist != nullptr)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *resultDist = (distStart &lt; distEnd) ? capsuleRadius - distStart<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : capsuleRadius - distEnd; // 半径 - 平面との距離をresultDistで返す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // startとendのうち平面との距離が近いほうが 半径以下なら当たっている<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (distStart &lt; distEnd)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (distStart &lt;= capsuleRadius);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else return (distEnd &lt;= capsuleRadius);<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; if (resultDist != nullptr) // startとendでめり込みの距離が大きいほうの距離を押し戻す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *resultDist = (distStart &gt; 0) ? capsuleRadius - distEnd<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (distEnd &gt; 0) ? capsuleRadius - distStart<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (distStart &lt; distEnd) ? capsuleRadius - distStart : capsuleRadius - distEnd;<br>
+        &nbsp;&nbsp;&nbsp; return true;<br>
         }<br>
         <br>
         // 三角ポリゴン pPoly(頂点数:numVertices 平面:plane上に存在) が 線分(始点:lineStart 終点:lineEnd) と 交わるか result:ポリゴンと線分の交点<br>
@@ -6901,6 +7233,8 @@
         // 三角ポリゴン pPoly(頂点数:numVertices 平面:plane上に存在) が レイ(始点:rayPos 方向:rayDir) と 交わるか result:ポリゴンとレイの交点<br>
         inline bool isCollisionPoly_Ray(const Vector3* pPoly, unsigned int numVertices, const Plane4&amp; plane, const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3* result = nullptr)<br>
         {<br>
+        &nbsp;&nbsp;&nbsp; //[この他にも色んなレイとポリゴンの交差判定法はある] https://pheema.hatenablog.jp/entry/ray-triangle-intersection<br>
+        &nbsp;&nbsp;&nbsp; <br>
         &nbsp;&nbsp;&nbsp; Vector3&nbsp;&nbsp;&nbsp; answer; // 面と線分の交点<br>
         &nbsp;&nbsp;&nbsp; // 面とレイの交点をまず求める<br>
         &nbsp;&nbsp;&nbsp; if (isCollisionPlane_Ray(plane, rayPos, rayDir, &amp;answer) == false) return false;<br>
