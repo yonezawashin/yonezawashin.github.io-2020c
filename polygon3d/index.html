@@ -6178,7 +6178,7 @@
         <br>
         // 平面に垂直な法線ベクトルにより定義される平面上にベクトルを射影<br>
         inline Vector3 projectOnPlane(const Vector3&amp; vector, const Vector3&amp; planeNormal)<br>
-        {<br>
+        {&nbsp;&nbsp;&nbsp; //[Unityで斜面に沿ったベクトルを作る] https://nnana-gamedev.hatenablog.com/entry/2017/12/19/223948<br>
         &nbsp;&nbsp;&nbsp; return vector - project(vector, planeNormal);<br>
         }<br>
         <br>
@@ -8676,8 +8676,8 @@
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionRay2 = isCollisionPoly_Line(polygon, 3, plane_poly2, rayStart, rayEnd - rayStart, &amp;collisionRay2);<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラの始点から飛ばしたレイと三角ポリゴン2の交点に目印の球を描画<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionRay2) DxLib::DrawSphere3D(collisionRay2, 0.01, 16, GetColor(255, 165, 0), GetColor(255, 255, 255), FALSE);<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴン2の存在する平面を描く<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴン2の存在する平面を描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawPlane(plane_poly2, *poly2_Pos[0], 8,GetColor(0,255,255));<br>
           <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面とボックス4(軸並行ボックスAABB)の当たり判定とその押し戻しを描く<br>
@@ -8728,12 +8728,12 @@
       いかがでしょう？<b>白い四角形のドラッグ点をクリックでドラッグ</b>してカプセルや球体を動かして、ポリゴン平面との当たり判定を確かめてみてください。<br>
       表示された通り、3点ポリゴンと線が交わるかは、<b>ある点がポリゴン内部にあったら、3点との角度の合計が360度に限りなく近づくというのが判定方法</b>です。<br>
       また、Collider3D.hの中身の関数を見て、カプセルやボックスや球体 と 平面 との当たり判定と押し戻し距離の計算についても勉強してみましょう。<br>
-    <br>
-    基本的には、3Dベクトルの内積のdotの計算を駆使して点と面の垂線(最短距離)が半径と比べてどうか？などのif文の応用によって当たり判定が実現できます。<br>
-    <b>平面はそれに垂直な法線ベクトルがあるので、その法線×距離 = 押し戻し位置 という考え方で、床に沿わせる</b>ことができます。<br>
-    <br>
-    ただし、<b>坂道などで足元が浮かずに自然に登らせる場合は、単純な面に垂直な法線の押し戻しじゃないほうが見た目が自然</b>になるので、<br>
-    実は画一的な押し戻し方法ではなく、自分で押し戻し計算をカスタマイズできるような人それぞれのベクトルの計算センスが実は必要です。<br>
+      <br>
+      基本的には、3Dベクトルの内積のdotの計算を駆使して点と面の垂線(最短距離)が半径と比べてどうか？などのif文の応用によって当たり判定が実現できます。<br>
+      <b>平面はそれに垂直な法線ベクトルがあるので、その法線×距離 = 押し戻し位置 という考え方で、床に沿わせる</b>ことができます。<br>
+      <br>
+      ただし、<b>坂道などで足元が浮かずに自然に登らせる場合は、単純な面に垂直な法線の押し戻しじゃないほうが見た目が自然</b>になるので、<br>
+      実は画一的な押し戻し方法ではなく、自分で押し戻し計算をカスタマイズできるような人それぞれのベクトルの計算センスが実は必要です。<br>
       <br>
       <br>
       <br>
