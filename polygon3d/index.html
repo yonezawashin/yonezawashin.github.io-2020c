@@ -8631,48 +8631,87 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (animTime &gt; (*pDevilData)[animPathName].endTime)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime = 0.0f; // 0秒目へとアニメをループさせる<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 再生時間をセットする<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1SetAttachAnimTime((int)*pDevilData, (*pDevilData)[animPathName].index, animTime);<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2を含む平面<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Plane4 plane_poly2{ *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] }; // 3点を含む平面を求める<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collision2; // ポリゴン2と線(lineStart0→lineEnd1)の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 polygon[3] = { *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2 と 線(lineStart0→lineEnd1) の当たり判定 をして 交点collision2 も求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision2 = isCollisionPoly_Line(polygon, 3, plane_poly2, *lineStart0, *lineEnd1, &amp;collision2);<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawTriangle3D(*poly2_Pos[0], *poly2_Pos[1], *poly2_Pos[2], GetColor(255, 255, 255), FALSE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // lineStart0から平面の中心へ向かう線 を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, -plane_poly2.n * plane_poly2.dist, GetColor(255, 165, 165));<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 から 交点collision2 へ向かう(水色) を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(-plane_poly2.n * plane_poly2.dist, collision2, GetColor(0, 255, 255));<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 に水色の球を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(-plane_poly2.n * plane_poly2.dist, 0.05, 16, GetColor(0, 255, 255), GetColor(255, 255, 255), TRUE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 から 原点 に向かう線(水色)を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(-plane_poly2.n * plane_poly2.dist, Vector3{0,0,0}, GetColor(0, 255, 255));<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴンを横切る線lineStart0→lineEnd1を結ぶ線(オレンジ)を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, *lineEnd1, GetColor(255, 165, 0));<br>
-        &nbsp;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collisionRay2; // ポリゴン2とマウスカーソルの光線(rayPos)の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionRay2 = isCollisionPoly_Line(polygon, 3, plane_poly2, rayStart, rayEnd - rayStart, &amp;collisionRay2);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラの始点から飛ばしたレイと三角ポリゴン2の交点に目印の球を描画<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionRay2) DxLib::DrawSphere3D(collisionRay2, 0.01, 16, GetColor(255, 165, 0), GetColor(255, 255, 255), FALSE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 再生時間をセットする<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1SetAttachAnimTime((int)*pDevilData, (*pDevilData)[animPathName].index, animTime);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2を含む平面<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Plane4 plane_poly2{ *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] }; // 3点を含む平面を求める<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collision2; // ポリゴン2と線(lineStart0→lineEnd1)の交点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 polygon[3] = { *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2 と 線(lineStart0→lineEnd1) の当たり判定 をして 交点collision2 も求める<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision2 = isCollisionPoly_Line(polygon, 3, plane_poly2, *lineStart0, *lineEnd1, &amp;collision2);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2を含む平面<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Plane4 plane_poly2{ *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] }; // 3点を含む平面を求める<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collision2; // ポリゴン2と線(lineStart0→lineEnd1)の交点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 polygon[3] = { *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2 と 線(lineStart0→lineEnd1) の当たり判定 をして 交点collision2 も求める<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision2 = isCollisionPoly_Line(polygon, 3, plane_poly2, *lineStart0, *lineEnd1, &amp;collision2);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision2)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // レイと当たった部分に橙の球を表示<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(collision2, 0.05, 16, GetColor(255, 165, 0), GetColor(255, 255, 255), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 球の中心とポリゴンの3点を結ぶ線の角度の合計がほぼ360度(2π)になるかがポリゴン内部かの判定条件となる<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(collision2, *poly2_Pos[0], GetColor(255, 165, 165));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(collision2, *poly2_Pos[1], GetColor(255, 165, 165));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(collision2, *poly2_Pos[2], GetColor(255, 165, 165));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawTriangle3D(*poly2_Pos[0], *poly2_Pos[1], *poly2_Pos[2], GetColor(255, 255, 255), FALSE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // lineStart0から平面の中心へ向かう線 を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, -plane_poly2.n * plane_poly2.dist, GetColor(255, 165, 165));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 から 交点collision2 へ向かう(水色) を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(-plane_poly2.n * plane_poly2.dist, collision2, GetColor(0, 255, 255));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 に水色の球を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(-plane_poly2.n * plane_poly2.dist, 0.05, 16, GetColor(0, 255, 255), GetColor(255, 255, 255), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 から 原点 に向かう線(水色)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(-plane_poly2.n * plane_poly2.dist, Vector3{0,0,0}, GetColor(0, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴンを横切る線lineStart0→lineEnd1を結ぶ線(オレンジ)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, *lineEnd1, GetColor(255, 165, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collisionRay2; // ポリゴン2とマウスカーソルの光線(rayPos)の交点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionRay2 = isCollisionPoly_Line(polygon, 3, plane_poly2, rayStart, rayEnd - rayStart, &amp;collisionRay2);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラの始点から飛ばしたレイと三角ポリゴン2の交点に目印の球を描画<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionRay2) DxLib::DrawSphere3D(collisionRay2, 0.01, 16, GetColor(255, 165, 0), GetColor(255, 255, 255), FALSE);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴン2の存在する平面を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawPlane(plane_poly2, *poly2_Pos[0], 8,GetColor(0,255,255));<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面と軸並行ボックスAABBの当たり判定とその押し戻しを描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 boxMin, boxMax, boxCenter;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxPoint4-&gt;GetParams(boxCenter, boxMin, boxMax);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distAABB; // 押し戻し距離(当たってないときは平面までの距離)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneAABB = isCollisionPlane_AABB(plane_poly2, boxMin, boxMax, &amp;distAABB);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneAABB) // 平面とボックスが衝突したら↓法線×押し戻し距離 ぶんずらして描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(boxMin + plane_poly2.n * distAABB,<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxMax + plane_poly2.n * distAABB, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawPlane(plane_poly2, *poly2_Pos[0], 8,GetColor(0,255,255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面とボックス4(軸並行ボックスAABB)の当たり判定とその押し戻しを描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 boxMin, boxMax, boxCenter;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxPoint4-&gt;GetParams(boxCenter, boxMin, boxMax);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distAABB; // 押し戻し距離(当たってないときは平面までの距離)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneAABB = isCollisionPlane_AABB(plane_poly2, boxMin, boxMax, &amp;distAABB);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneAABB) // 平面とボックスが衝突したら↓法線×押し戻し距離 ぶんずらして白色のゴーストを描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(boxMin + plane_poly2.n * distAABB,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxMax + plane_poly2.n * distAABB, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カプセル点0の平面に対する押し戻しを描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 centerCapsule, startCapsule, endCapsule;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float radiusCapsule;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lineStart0-&gt;GetParams(centerCapsule, startCapsule, endCapsule, radiusCapsule); // カプセル点0のパラメータを得る<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distCapsule; // カプセル点0の平面に対する押し戻し距離<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneCapsule = isCollisionPlane_Capsule(plane_poly2, startCapsule, endCapsule, radiusCapsule, &amp;distCapsule);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneCapsule) // カプセル点0が平面にめり込んでいたら、押し戻し位置に白色の押し戻しゴーストを描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCapsule3D(startCapsule + plane_poly2.n * distCapsule,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; endCapsule + plane_poly2.n * distCapsule, radiusCapsule, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 球体の点1の平面に対する押し戻しを描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float sphereRadius;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 sphereCenter;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lineEnd1-&gt;GetParams(sphereCenter, sphereRadius); // 球体の点1のパラメータを得る<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distSphere; // 球体の点1の平面に対する押し戻し距離<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneSphere = isCollisionPlane_Sphere(plane_poly2, sphereCenter, sphereRadius, &amp;distSphere);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneSphere) // 球体の点1が平面にめり込んでいたら、押し戻し位置に白色の押し戻しゴーストを描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(*lineEnd1 + plane_poly2.n * distSphere, sphereRadius, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+          <br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ドラッグ点とその当たり判定のオブジェクト(ボックスや球やカプセルなど)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto dragPoint : dragPoints)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dragPoint.lock()-&gt;Draw();</em><br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.Draw(); // エディタのDraw処理<br>
         <br>
@@ -8686,6 +8725,15 @@
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
+      いかがでしょう？<b>白い四角形のドラッグ点をクリックでドラッグ</b>してカプセルや球体を動かして、ポリゴン平面との当たり判定を確かめてみてください。<br>
+      表示された通り、3点ポリゴンと線が交わるかは、<b>ある点がポリゴン内部にあったら、3点との角度の合計が360度に限りなく近づくというのが判定方法</b>です。<br>
+      また、Collider3D.hの中身の関数を見て、カプセルやボックスや球体 と 平面 との当たり判定と押し戻し距離の計算についても勉強してみましょう。<br>
+    <br>
+    基本的には、3Dベクトルの内積のdotの計算を駆使して点と面の垂線(最短距離)が半径と比べてどうか？などのif文の応用によって当たり判定が実現できます。<br>
+    <b>平面はそれに垂直な法線ベクトルがあるので、その法線×距離 = 押し戻し位置 という考え方で、床に沿わせる</b>ことができます。<br>
+    <br>
+    ただし、<b>坂道などで足元が浮かずに自然に登らせる場合は、単純な面に垂直な法線の押し戻しじゃないほうが見た目が自然</b>になるので、<br>
+    実は画一的な押し戻し方法ではなく、自分で押し戻し計算をカスタマイズできるような人それぞれのベクトルの計算センスが実は必要です。<br>
       <br>
       <br>
       <br>
