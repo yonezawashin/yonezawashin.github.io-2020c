@@ -4656,6 +4656,10 @@
         <br>
         #endif<br>
       </p>
+      <p><code>Resource.cppを新規作成</code>してResourceクラスのstd::unordered_mapのfiles辞書の宣言をする。</p>
+      <p class="source">#include "Resource.h"<br>
+        <br>
+        std::unordered_map&lt;std::string, std::shared_ptr&lt;Resource&gt;&gt; Resource::files;</p>
       <br>
       <p><code>DataMV1.hを新規作成</code>してResourceクラスを継承して3Dモデルのロードやアニメをアタッチして管理する機能を追加する。</p>
       <p class="source">#ifndef DATAMV1_H_<br>
@@ -5131,7 +5135,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToWorld(&amp;matWorldDefault); // デフォルトのワールド行列に戻しておく<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1DrawModel(devil3DModel); // 3Dモデル(.mv1形式)を描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1DrawModel(<em>(int)*DevilData</em>); // 3Dモデル(.mv1形式)を描く<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0<em></em><em></em>, 100, GetColor(255, 255, 0), "x:%f y:%f Angle:%f %f %f", position.x, position.y, keyControlAngle.x, keyControlAngle.y, keyControlAngle.z);<br>
       <br>
@@ -8149,6 +8153,70 @@
         #endif<br>
       </p>
       <br>
+      <p><code>MyDraw.hを新規作成</code>して、平面を描く機能を準備します。</p>
+      <p class="source">#ifndef MYDRAW_H_<br>
+        #define MYDRAW_H_<br>
+        <br>
+        #include "DxLib.h"<br>
+        #include "Vector3.h"<br>
+        #include "Plane4.h"<br>
+        <br>
+        class MyDraw<br>
+        {<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; // 3Dの矢印の先っぽのタイプ None:無し Cone:三角錐 Cube:立方体 Sphere:球体<br>
+        &nbsp;&nbsp;&nbsp; enum class ArrowType { None, Cone, Cube, Sphere };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 3Dの矢印(位置:start→end)を描く arrowWidth:矢印の先端の円錐などの幅(球の半径) arrowHeight:矢印の先端の円錐などの高さ(球の時は使わない)<br>
+        &nbsp;&nbsp;&nbsp; static int DrawArrow3D(const Vector3&amp; start, const Vector3&amp; end, ArrowType startType = ArrowType::None, ArrowType endType = ArrowType::Cone, float arrowWidth = 1.0f, float arrowHeight = 2.0f, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; unsigned int difColor = color; // 拡散反射の色<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; unsigned int spcColor = GetColor(0, 0, 0); // 鏡面反射の色(0,0,0)で鏡面反射は黒(反射無し)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int DivNum = 8; // ポリゴン分割数(三角錐や球体などを例.8分割したポリゴンで表示する)<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (startType != ArrowType::Cone) // start側の矢印のタイプが三角錐のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCone3D(start, start + (end - start).normalized() * arrowHeight, arrowWidth / 2.0f, DivNum, difColor, spcColor, TRUE);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (endType != ArrowType::Cone) // end側の矢印のタイプが三角錐のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCone3D(end, end + (start - end).normalized() * arrowHeight, arrowWidth / 2.0f, DivNum, difColor, spcColor, TRUE);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (startType != ArrowType::Cube) // start側の矢印のタイプがキューブ(立方体)のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(start, start + (end - start).normalized() * arrowHeight, difColor, spcColor, TRUE);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (endType != ArrowType::Cube) // end側の矢印のタイプがキューブ(立方体)のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(end, end + (start - end).normalized() * arrowHeight, difColor, spcColor, TRUE);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (startType != ArrowType::Sphere) // start側の矢印のタイプが球体のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(start, arrowWidth / 2.0f, DivNum, difColor, spcColor, TRUE);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (endType != ArrowType::Sphere) // end側の矢印のタイプが球体のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(end, arrowWidth / 2.0f, DivNum, difColor, spcColor, TRUE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return DxLib::DrawLine3D(start, end, color);<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 平面のグリッドを描く(平面;plane を end の位置まで Divnum分割して描く)<br>
+        &nbsp;&nbsp;&nbsp; static int DrawPlane(const Plane4&amp; plane, const Vector3&amp; end, unsigned int DivNum, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (DivNum == 0) return -1;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 planePos = -plane.dist * plane.n;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 vPlaneEnd = end - planePos;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 vPlaneEndNorm = vPlaneEnd.normalized();<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float mag = vPlaneEnd.magnitude();<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float divMag = mag / DivNum;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 crossPlaneEndNorm = cross(vPlaneEnd, plane.n).normalized();<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (unsigned int i = 1; i &lt;= DivNum; ++i)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for(unsigned int j = 1; j &lt;= DivNum; ++j)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(planePos - divMag * i * vPlaneEndNorm - divMag * i * crossPlaneEndNorm,<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; planePos + divMag * i * vPlaneEndNorm - divMag * i * crossPlaneEndNorm, color);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(planePos - divMag * i * vPlaneEndNorm + divMag * i * crossPlaneEndNorm,<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; planePos + divMag * i * vPlaneEndNorm + divMag * i * crossPlaneEndNorm, color);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(planePos - divMag * i * crossPlaneEndNorm - divMag * i * vPlaneEndNorm,<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; planePos + divMag * i * crossPlaneEndNorm - divMag * i * vPlaneEndNorm, color);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(planePos - divMag * i * crossPlaneEndNorm + divMag * i * vPlaneEndNorm,<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; planePos + divMag * i * crossPlaneEndNorm + divMag * i * vPlaneEndNorm, color);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        };<br>
+        <br>
+        #endif<br>
+      </p>
       <br>
       <p><code>main.cpp</code>のコードを一旦、ちらかった部分を削除して整理します。</p>
       <p class="source">#include "DxLib.h"<br>
@@ -8373,7 +8441,251 @@
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
-      いかがでしょう? レイと球の当たり判定が表示されたでしょうか? <br>
+      <br>
+      <br>
+      <p><code>main.cpp</code>のコードにドラッグできるコントロール点をもつカプセルや球体やボックスやポリゴン平面を追加します。</p>
+      <p class="source">#include "DxLib.h"<br>
+        #include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
+        #include "Input.h"<br>
+        #include "Screen.h"<br>
+        #include "Ply.h"<br>
+        #include "DataMV1.h"<br>
+        #include "DataPly.h"<br>
+        #include "Collision3D.h"<br>
+        <em>#include "MyDraw.h" // 自作の描画処理</em><br>
+        <br>
+        #include "Editor.h"<br>
+        <br>
+        // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMain からプログラムが開始する<br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // ゲームのwhileループを開始する前の初期化処理<br>
+        &nbsp;&nbsp;&nbsp; float animTime = 0.0f; // アニメの現在時刻<br>
+        &nbsp;&nbsp;&nbsp; float animSpeed = 2.0f; // MV1のアニメの再生速度設定 2.0fなら2倍速<br>
+        &nbsp;&nbsp;&nbsp; float animStepTime = 1.0f; // MV1のアニメの毎時間の進む時間の設定<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataMV1&gt; pDevilData = Resource::MakeShared&lt;DataMV1&gt;("Image/devil@kick.mv1");<br>
+        &nbsp;&nbsp;&nbsp; pDevilData-&gt;Load(); // 3Dモデルをmv1形式で読込み<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataMV1&gt; pDevilAttackAnimData = Resource::MakeShared&lt;DataMV1&gt;("Image/devil@jump.mv1");<br>
+        &nbsp;&nbsp;&nbsp; pDevilAttackAnimData-&gt;Load(); // 3Dの追加アニメデータをmv1形式で読込み<br>
+        &nbsp;&nbsp;&nbsp; pDevilData-&gt;AttachAnim(*pDevilAttackAnimData); // アニメを追加でflyのほうをベースとしたモデルにアタッチ<br>
+        &nbsp;&nbsp;&nbsp; int animeButton = 0; // ボタンでアニメを切り替えられるようにする<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; pTexImage = Resource::MakeShared&lt;Texture&gt;("Image/dice.png");<br>
+        &nbsp;&nbsp;&nbsp; pTexImage-&gt;Load(); // MakeSharedとLoadを分けた(フォルダだけ設定しておいて、あとからロードもできるように)<br>
+        &nbsp;&nbsp;&nbsp; assert((int)*pTexImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataPly&gt; pPlyData = Resource::MakeShared&lt;DataPly&gt;("Image/dice.ply");<br>
+        &nbsp;&nbsp;&nbsp; pPlyData-&gt;Load(); // MakeSharedとLoadを分けた(フォルダだけ設定しておいて、あとからロードもできるように)<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        <br>
+        <br>
+        &nbsp;&nbsp;&nbsp; VECTOR keyControlXYZ; // 上下左右キーでxy位置を動かせるように<br>
+        &nbsp;&nbsp;&nbsp; keyControlXYZ.x = 0.0f; keyControlXYZ.y = 0.0f; keyControlXYZ.z = 0;<br>
+        &nbsp;&nbsp;&nbsp; VECTOR keyControlAngle = VGet(0.0f,0.0f,0.0f); // 回転<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen1 = SubScreen::Create()-&gt;Set(600, 450, 600, 100, 255, 0, "サブスクリーン1")-&gt;SetIsBarFrameShow(true,true);<br>
+        &nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen2 = SubScreen::Create()-&gt;Set(200, 100, 150, 100, 255, 1, "サブスクリーン2\nバーを30で太めに")-&gt;SetFrame(1,GetColor(255,255,255),true,30);<br>
+        &nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する 透明度を128にして半透明にしてみる<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen3 = SubScreen::Create()-&gt;Set(150, 450, 300, 100, 128, 1, "サブスクリーン3")-&gt;SetIsBarFrameShow(true)-&gt;SetBarColor(GetColor(0, 0, 255));<br>
+        &nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen4 = SubScreen::Create()-&gt;Set(300, 100, 600, 100, 255, 1, "サブスクリーン4");<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // バックカリングするか?(裏面になっているポリゴンを書かない処理)<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetUseBackCulling(TRUE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Editor&amp; editor = Editor::GetInstance(); // エディタのシングルトン参照を得る<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; <em>float radius_lineStart0 = 0.2f, radius_lineEnd1 = 0.2f; // カプセルと球体の半径の初期設定<br>
+          &nbsp;&nbsp;&nbsp; // カプセル点0<br>
+          &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DragCapsule&gt; lineStart0 = std::make_shared&lt;DragCapsule&gt;(-3, 0, -4, radius_lineStart0, 1.0f, Axis3D::Y, GetColor(255, 165, 165));<br>
+          &nbsp;&nbsp;&nbsp; // 球体の点1<br>
+          &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DragSphere&gt; lineEnd1 = std::make_shared&lt;DragSphere&gt;(-2, -3, -3.5f, radius_lineEnd1 * 2, GetColor(255, 165, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; // 三角ポリゴン2<br>
+          &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Vector3&gt;&gt; poly2_Pos = { std::make_shared&lt;Vector3&gt;(-3.0f,-2.0f,-4.0f),<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::make_shared&lt;Vector3&gt;(-2.0f,-2.0f,-3.0f),<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::make_shared&lt;Vector3&gt;(-2.0f,-2.0f,-4.0f) }; // ポリゴンの3点<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; // 四角ボックスの点4<br>
+          &nbsp;&nbsp;&nbsp; Vector3 boxSize{ 1.0f,2.0f,3.0f };<br>
+          &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DragBox&gt; boxPoint4 = std::make_shared&lt;DragBox&gt;(7, -3, 4, boxSize, GetColor(255, 255, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; std::list&lt;std::weak_ptr&lt;Vector3&gt;&gt; dragPoints; // ドラッグ対象の点の共有ポインタのリスト<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; dragPoints.emplace_back(lineStart0); // リストにカプセル点0を追加<br>
+          &nbsp;&nbsp;&nbsp; dragPoints.emplace_back(lineEnd1); // リストに球体の点1を追加<br>
+          &nbsp;&nbsp;&nbsp; dragPoints.emplace_back(boxPoint4); // リストに四角ボックスの点4を追加<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; dragPoints.emplace_back(poly2_Pos[0]); // リストにポリゴン2の3点を追加<br>
+          &nbsp;&nbsp;&nbsp; dragPoints.emplace_back(poly2_Pos[1]);<br>
+          &nbsp;&nbsp;&nbsp; dragPoints.emplace_back(poly2_Pos[2]);</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp; //奥行0.1～5000までをカメラの描画範囲とする<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetCameraNearFar(0.1f, 5000.0f);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Input::Update(); // マウスのドラッグなどを更新<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateKeyInput(); // エディタのキーのインプットを更新<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>editor.UpdateDragPoints(&amp;dragPoints); // ドラッグ点のリストを更新</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if (!editor.isDraggingPoints)　</em>editor.UpdateMouseInput(); // エディタのマウスのインプットを更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateCamera(); // エディタのカメラを更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // キーボードの 0 1 キーで3Dアニメを切り替えられるようにする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_0))<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animeButton = 0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_1))<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animeButton = 1;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int PadInput = GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int speed = 5;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 上下左右キーでポリゴンを描く起点(x,y)を移動<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_LEFT)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyControlXYZ.x -= speed;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (PadInput &amp; PAD_INPUT_RIGHT) keyControlXYZ.x += speed;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_UP)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyControlXYZ.y += speed;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (PadInput &amp; PAD_INPUT_DOWN) keyControlXYZ.y -= speed;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR position = VGet(keyControlXYZ.x, keyControlXYZ.y, keyControlXYZ.z); // 3Dモデルの位置<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float width =&nbsp; pTexImage-&gt;m_XSize; float height =&nbsp; pTexImage-&gt;m_YSize; // テクスチャ画像のサイズ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR scale = VGet(1.0f, 1.0f, 1.0f); // 拡大縮小スケール<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // キーボードのzキー(A)とxキー(B)とcキー(C)でx,y,z軸まわりに画像を回転<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_A) keyControlAngle.x += speed;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_B) keyControlAngle.y += speed;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_C) keyControlAngle.z += speed;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float Deg2Rad = DX_PI_F / 180.0f; // 角度(単位:°度)からラジアン(単位:rad)へ変換する係数<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float xRotate = keyControlAngle.x * Deg2Rad;&nbsp; const float yRotate = keyControlAngle.y * Deg2Rad; const float zRotate = keyControlAngle.z * Deg2Rad;<br>
+        <br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX&nbsp; matWorldDefault; // デフォルトのワールド行列<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetTransformToWorldMatrix(&amp;matWorldDefault); // デフォルトのワールド行列を記憶しておく<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[ワールド行列] https://ny-program.hatenablog.com/entry/2019/09/15/114245<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX mat; // モデルのスケール×回転×移動を行列計算で設定する<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[スケール]拡大縮小のスケール行列を得る<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat = MGetScale(scale); // まずは拡大縮小のスケール行列からはじめる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [勉強]↓スケール行列は 斜めに x , y , zのスケールの倍率がならんでいる行列<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[0][0] = scale.x;&nbsp; mat.m[0][1] = 0.0f;&nbsp;&nbsp;&nbsp; mat.m[0][2] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[0][3] = 0.0f;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[1][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[1][1] = scale.y; mat.m[1][2] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[1][3] = 0.0f;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[2][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[2][1] = 0.0f;&nbsp;&nbsp;&nbsp; mat.m[2][2] = scale.z;&nbsp; mat.m[2][3] = 0.0f;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[3][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[3][1] = 0.0f;&nbsp;&nbsp;&nbsp; mat.m[3][2] = 0.0f;&nbsp;&nbsp; &nbsp; mat.m[3][3] = 1.0f;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[回転]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX matRot;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::CreateIdentityMatrix(&amp;matRot);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★MMultは行列の乗算【乗算した順にz軸回転→x軸回転→y軸回転→平行移動】<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; matRot = MMult(matRot, MGetRotZ(zRotate));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; matRot = MMult(matRot, MGetRotX(xRotate));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; matRot = MMult(matRot, MGetRotY(yRotate));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat = MMult(mat, matRot); //スケール × 回転<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[移動]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX matTrans = MGetTranslate(VGet(position.x, position.y, position.z)); // 位置positionをここで設定<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat = MMult(mat, matTrans); //スケール×回転×移動<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToWorld(&amp;mat); // [ワールド行列を指定] https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4341<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawPolygon32bitIndexed3D(pPlyData-&gt;Vertex.data(), pPlyData-&gt;Vertex.size(), pPlyData-&gt;Index.data(), pPlyData-&gt;numIndex / 3, (int)*pTexImage, FALSE); // 三角形ポリゴンをたくさん描画<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToWorld(&amp;matWorldDefault); // デフォルトのワールド行列に戻しておく<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1DrawModel(devil3DModel); // 3Dモデル(.mv1形式)を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 100, GetColor(255, 255, 0), "x:%f y:%f Angle:%f %f %f", position.x, position.y, keyControlAngle.x, keyControlAngle.y, keyControlAngle.z);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ファイルのパス + ":" + アニメ名でアクセス<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string animPathName = (animeButton == 0) ? "Image/devil@kick.mv1:mixamo.com" : "Image/devil@jump.mv1:mixamo.com";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(pDevilData-&gt;count(animPathName) &gt; 0 &amp;&amp; "指定されたアニメ名のアニメはMV1に付属していませんでした");<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime += animStepTime * animSpeed; // 1.0×2倍 なら2倍速でアニメ時刻が進む<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (animTime &gt; (*pDevilData)[animPathName].endTime)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime = 0.0f; // 0秒目へとアニメをループさせる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 再生時間をセットする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1SetAttachAnimTime((int)*pDevilData, (*pDevilData)[animPathName].index, animTime);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2を含む平面<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Plane4 plane_poly2{ *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] }; // 3点を含む平面を求める<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collision2; // ポリゴン2と線(lineStart0→lineEnd1)の交点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 polygon[3] = { *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2 と 線(lineStart0→lineEnd1) の当たり判定 をして 交点collision2 も求める<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision2 = isCollisionPoly_Line(polygon, 3, plane_poly2, *lineStart0, *lineEnd1, &amp;collision2);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawTriangle3D(*poly2_Pos[0], *poly2_Pos[1], *poly2_Pos[2], GetColor(255, 255, 255), FALSE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // lineStart0から平面の中心へ向かう線 を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, -plane_poly2.n * plane_poly2.dist, GetColor(255, 165, 165));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 から 交点collision2 へ向かう(水色) を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(-plane_poly2.n * plane_poly2.dist, collision2, GetColor(0, 255, 255));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 に水色の球を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(-plane_poly2.n * plane_poly2.dist, 0.05, 16, GetColor(0, 255, 255), GetColor(255, 255, 255), TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 から 原点 に向かう線(水色)を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(-plane_poly2.n * plane_poly2.dist, Vector3{0,0,0}, GetColor(0, 255, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴンを横切る線lineStart0→lineEnd1を結ぶ線(オレンジ)を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, *lineEnd1, GetColor(255, 165, 0));<br>
+        &nbsp;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collisionRay2; // ポリゴン2とマウスカーソルの光線(rayPos)の交点<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionRay2 = isCollisionPoly_Line(polygon, 3, plane_poly2, rayStart, rayEnd - rayStart, &amp;collisionRay2);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラの始点から飛ばしたレイと三角ポリゴン2の交点に目印の球を描画<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionRay2) DxLib::DrawSphere3D(collisionRay2, 0.01, 16, GetColor(255, 165, 0), GetColor(255, 255, 255), FALSE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴン2の存在する平面を描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawPlane(plane_poly2, *poly2_Pos[0], 8,GetColor(0,255,255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面と軸並行ボックスAABBの当たり判定とその押し戻しを描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 boxMin, boxMax, boxCenter;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxPoint4-&gt;GetParams(boxCenter, boxMin, boxMax);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distAABB; // 押し戻し距離(当たってないときは平面までの距離)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneAABB = isCollisionPlane_AABB(plane_poly2, boxMin, boxMax, &amp;distAABB);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneAABB) // 平面とボックスが衝突したら↓法線×押し戻し距離 ぶんずらして描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(boxMin + plane_poly2.n * distAABB,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxMax + plane_poly2.n * distAABB, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.Draw(); // エディタのDraw処理<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
       <br>
       <br>
       <br>
