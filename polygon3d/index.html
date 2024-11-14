@@ -25,6 +25,7 @@
       <li><a href="#mozTocId0011">複数の3DモデルやアニメをResourceクラスで2重ロードしないよう読み込んで複数アニメを切替えする</a></li>
       <li><a href="#mozTocId0012">.ply形式の3DモデルデータをResourceクラスを継承したDataPly構造体で読み込む</a></li>
       <li><a href="#mozTocId0013">Vector3に色々な関数を用意して3D空間の当たり判定をする</a></li>
+      <li><a href="#mozTocId0014">ドラッグできるオブジェクトのコントロール点を用意して当たり判定の球やカプセルなどの幅や高さを調整できるようにする</a></li>
     </ol>
     <br>
     <a id="mozTocId0001" class="mozTocH1">
@@ -7501,6 +7502,879 @@
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
       いかがでしょう? レイと球の当たり判定が表示されたでしょうか? <br>
+      <br>
+      <br>
+    </a><a id="mozTocId0014" class="mozTocH1">
+      <h1>ドラッグできるオブジェクトのコントロール点を用意して当たり判定の球やカプセルなどの幅や高さを調整できるようにする</h1>
+      <p><code>DragObject.hを新規作成</code>してVector3を継承して、ドラッグできる機能を追加しましょう。</p>
+      <p class="source">#ifndef DRAG_OBJECT_H_<br>
+        #define DRAG_OBJECT_H_<br>
+        <br>
+        #include "DxLib.h"<br>
+        #include "Vector3.h"<br>
+        #include "Collision3D.h"<br>
+        <br>
+        #include &lt;memory&gt;<br>
+        <br>
+        // Vector3の点を継承してドラッグできるカプセルや球体などのオブジェクトの基底オブジェクトを定義する<br>
+        struct DragObject : public Vector3<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; unsigned int m_color; // オブジェクトを描画する色<br>
+        &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Vector3&gt;&gt; m_controlPoints; // 半径などを変えるためのコントロール点<br>
+        &nbsp;&nbsp;&nbsp; DragObject(float x = 0.0f, float y = 0.0f, float z = 0.0f, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : Vector3(x, y, z), m_color{ color } {}<br>
+        &nbsp;&nbsp;&nbsp; DragObject(const Vector3&amp; other, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : Vector3(other.x, other.y, other.z), m_color{ color } {}<br>
+        &nbsp;&nbsp;&nbsp; DragObject(VECTOR other, unsigned int color = GetColor(255, 255, 255)) : Vector3(other), m_color{ color } {}<br>
+        &nbsp;&nbsp;&nbsp; virtual ~DragObject() {};<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; virtual void Update() override // 配下のコントロール点をすべて更新<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto itr = m_controlPoints.begin(); itr != m_controlPoints.end(); )<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pControlPoint = *itr; // コントロール点への共有ポインタ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pControlPoint-&gt;Update(); // 配下のコントロール点をすべて更新<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ++itr; // for文のイテレータを次の点へすすめる<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // screenXYの位置にあるコントロール点を返す なかったら空のweak_ptrがreturnされる<br>
+        &nbsp;&nbsp;&nbsp; virtual bool GetControlPointOnScreenXY(std::weak_ptr&lt;Vector3&gt;&amp; pResult, const VECTOR&amp; screenXY, const float centerWidth = 6.0f) override<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto itr = m_controlPoints.begin(); itr != m_controlPoints.end(); )<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pControlPoint = *itr; // コントロール点への共有ポインタ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ++itr; // for文のイテレータを次の点へすすめる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 collisionCenter; // 衝突点を探す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pControlPoint-&gt;isCollisionOnScreenXY(collisionCenter, screenXY, centerWidth)) // スクリーン上の四角のドラッグ点<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pResult = pControlPoint;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pResult = std::weak_ptr&lt;Vector3&gt;(); // 見つからなかったら観測対象のない空のweak_ptrを返す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        };<br>
+        <br>
+        <br>
+        // 球体の当たり判定をもつドラッグ中心点<br>
+        struct DragSphere : public DragObject<br>
+        {<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; float m_height; // ドラッグ球の当たり判定の大きさ(球の高さ)<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 球の高さ(=半径の1/2)をコントロールする点<br>
+        &nbsp;&nbsp;&nbsp; struct ControlPoint : public DragObject<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DragSphere&amp; m_owner; // コントロール点のオーナー所有者<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ControlPoint(DragSphere&amp; owner, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : m_owner{ owner }, DragObject(owner.x + owner.m_height / 2, owner.y, owner.z, color) {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual ~ControlPoint() {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void Update() override { this-&gt;xyz = (m_owner + Vector3{ m_owner.m_height / 2, 0.0f, 0.0f }).xyz; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void UpdateOwner() override<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.m_height = (*this - m_owner).magnitude() * 2; // コントロール点との距離の2倍=高さ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.xyz = (*this + (m_owner - *this).normalized() * m_owner.m_height / 2).xyz;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.Update(); // オーナーの配下のコントロール点すべてに更新を伝搬<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; DragSphere(float x = 0.0f, float y = 0.0f, float z = 0.0f, float height = 1.0f, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : DragObject(x, y, z, color), m_height{ height }<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_controlPoints.emplace_back(std::make_shared&lt;ControlPoint&gt;(*this, color));<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; virtual ~DragSphere() {}<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 描画などに必要なパラメータを得る<br>
+        &nbsp;&nbsp;&nbsp; inline void GetParams(Vector3&amp; center, float&amp; radius)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; center = *this; // x,y,zのデータを読み出し<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; radius = m_height / 2; // 半径は高さの 1/2<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // rayPosの位置からrayDirの方向にレイを飛ばして球との衝突判定 resultCollision:衝突した点の衝突位置 resultCenter:衝突点の中心位置<br>
+        &nbsp;&nbsp;&nbsp; virtual bool isCollision(const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3&amp; resultCollision, Vector3&amp; resultCenter) override<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isCollisionSphere_Ray(*this, m_height / 2, rayPos, rayDir, &amp;resultCollision))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; resultCenter = *this; // 衝突した点の中心位置をresultで返す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; // ドラッグ点とスクリーンのマウスカーソルから飛ばしたレイが衝突した<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // ドラッグ点とスクリーンのマウスカーソルから飛ばしたレイが衝突しなかった<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ドラッグ点の中心位置と球体を描く<br>
+        &nbsp;&nbsp;&nbsp; virtual void Draw(const float centerWidth = 6.0f, unsigned int rectColor = GetColor(255, 255, 255), int FillFlag = TRUE) override<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 center = *this; // 中心位置のxyzのデータを読み出し<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int DivNum = 8; // 球面ポリゴンの分割数<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 球体を描く<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(center, m_height / 2, DivNum, m_color, GetColor(255, 255, 255), FALSE);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // x軸(R:赤) y軸(G:緑) z軸(B:青)をライン表示する<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(center, center + Vector3{ m_height / 2, 0.0f, 0.0f }, GetColor(255, 0, 0));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(center, center + Vector3{ 0.0f, m_height / 2, 0.0f }, GetColor(0, 255, 0));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(center, center + Vector3{ 0.0f, 0.0f, m_height / 2 }, GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto controlPoint : m_controlPoints) // 配下のコントロール点を描く<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; controlPoint-&gt;Draw(centerWidth, rectColor);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3::Draw(centerWidth, rectColor, FillFlag); // スクリーン上のドラッグ中心点を描く<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        };<br>
+        <br>
+        // カプセルの当たり判定をもつドラッグ中心点<br>
+        struct DragCapsule : public DragObject<br>
+        {<br>
+        protected:<br>
+        &nbsp;&nbsp;&nbsp; float m_height{ 0.0f }; // カプセルの高さ<br>
+        &nbsp;&nbsp;&nbsp; Axis3D m_direction{ Axis3D::Y }; // カプセルの軸の方向<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; // カプセルの半径<br>
+        &nbsp;&nbsp;&nbsp; float m_radius{ 1.0f };<br>
+        &nbsp;&nbsp;&nbsp; // カプセルの高さ<br>
+        &nbsp;&nbsp;&nbsp; inline Vector3 height() const { return m_height; }<br>
+        &nbsp;&nbsp;&nbsp; // カプセルの向く方向軸(height高さの方向軸)<br>
+        &nbsp;&nbsp;&nbsp; inline Axis3D direction() const { return m_direction; }<br>
+        &nbsp;&nbsp;&nbsp; // カプセルの軸の長さ(高さ)の半分(ハーフ)の位置<br>
+        &nbsp;&nbsp;&nbsp; inline Vector3 axisHalf() const {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector3{ (m_direction == Axis3D::X) ? m_height / 2.0f : 0.0f,<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (m_direction == Axis3D::Y) ? m_height / 2.0f : 0.0f,<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (m_direction == Axis3D::Z) ? m_height / 2.0f : 0.0f };<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; // カプセルの軸の始点<br>
+        &nbsp;&nbsp;&nbsp; inline Vector3 start() const { return *this - axisHalf(); }<br>
+        &nbsp;&nbsp;&nbsp; // カプセルの軸の終点<br>
+        &nbsp;&nbsp;&nbsp; inline Vector3 end() const { return *this + axisHalf(); }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // カプセルの半径をコントロールする点<br>
+        &nbsp;&nbsp;&nbsp; struct ControlPointRadius : public DragObject<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DragCapsule&amp; m_owner; // コントロール点のオーナー所有者<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ControlPointRadius(DragCapsule&amp; owner, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : m_owner{ owner }, DragObject(owner.x + owner.m_radius, owner.y, owner.z, color) {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual ~ControlPointRadius() {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void Update() override { this-&gt;xyz = (m_owner + Vector3{ m_owner.m_radius, 0.0f, 0.0f }).xyz; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void UpdateOwner() override<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.m_radius = (*this - m_owner).magnitude(); // オーナーの中心点との距離が半径<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.xyz = (*this + (m_owner - *this).normalized() * m_owner.m_radius).xyz;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.Update(); // オーナーの配下のコントロール点すべてに更新を伝搬<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // カプセルの高さをコントロールする点<br>
+        &nbsp;&nbsp;&nbsp; struct ControlPointHeight : public DragObject<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DragCapsule&amp; m_owner; // コントロール点のオーナー所有者<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ControlPointHeight(DragCapsule&amp; owner, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : m_owner{ owner }, DragObject(owner.end(), color) {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual ~ControlPointHeight() {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void Update() override { this-&gt;xyz = m_owner.end().xyz; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void UpdateOwner() override<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.m_height = (*this - m_owner).magnitude() * 2; // コントロール点との距離の2倍=高さ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.xyz = (*this + (m_owner - *this).normalized() * m_owner.m_height / 2).xyz;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.Update(); // オーナーの配下のコントロール点すべてに更新を伝搬<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; DragCapsule(float x = 0.0f, float y = 0.0f, float z = 0.0f, float radius = 1.0f, float height = 0.0f, Axis3D direction = Axis3D::Y, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : DragObject(x, y, z, color), m_radius{ radius }, m_height{ height }, m_direction{ direction }<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_controlPoints.emplace_back(std::make_shared&lt;ControlPointRadius&gt;(*this, color));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_controlPoints.emplace_back(std::make_shared&lt;ControlPointHeight&gt;(*this, color));<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; virtual ~DragCapsule() {}<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 描画などに必要なパラメータを得る<br>
+        &nbsp;&nbsp;&nbsp; inline void GetParams(Vector3&amp; center, Vector3&amp; start, Vector3&amp; end, float&amp; radius)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; center = *this; // x,y,zのデータを読み出し<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 axis_half = axisHalf(); // カプセルの軸の長さ(高さ)の半分(ハーフ)の位置<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; start = center - axis_half; // カプセルの軸の始点(-なので下側)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; end = center + axis_half; // カプセルの軸の始点(+なので上側)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; radius = m_radius;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // rayPosの位置からrayDirの方向にレイを飛ばしてカプセルとの衝突判定 resultCollision:衝突した点の衝突位置 resultCenter:衝突点の中心位置<br>
+        &nbsp;&nbsp;&nbsp; virtual bool isCollision(const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3&amp; resultCollision, Vector3&amp; resultCenter) override<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float radius;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 center,axisStart, axisEnd;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; GetParams(center, axisStart, axisEnd, radius); // 必要なパラメータを得る<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カプセルとレイの当たり判定<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isCollisionCapsule_Ray(axisStart, axisEnd, m_radius, rayPos, rayDir, &amp;resultCollision))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; resultCenter = center; // 衝突した点の中心位置をresultで返す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; // ドラッグ点を中心とするカプセルと飛ばしたレイが衝突した<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // ドラッグ点を中心とするカプセルと飛ばしたレイが衝突しなかった<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ドラッグ点の中心位置とカプセルを描く<br>
+        &nbsp;&nbsp;&nbsp; virtual void Draw(const float centerWidth = 6.0f, unsigned int rectColor = GetColor(255, 255, 255), int FillFlag = TRUE) override<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float radius;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 center, axisStart, axisEnd;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; GetParams(center, axisStart, axisEnd, radius); // 必要なパラメータを得る<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int DivNum = 8; // カプセル表面ポリゴンの分割数<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カプセルを描く<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCapsule3D(axisStart, axisEnd, m_radius, DivNum, m_color, GetColor(255, 255, 255), FALSE);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // x軸(R:赤) y軸(G:緑) z軸(B:青)をライン表示する<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float axisX = (m_direction == Axis3D::X) ? m_height / 2.0f : m_radius;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float axisY = (m_direction == Axis3D::Y) ? m_height / 2.0f : m_radius;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float axisZ = (m_direction == Axis3D::Z) ? m_height / 2.0f : m_radius;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(center, center + Vector3{ axisX, 0.0f, 0.0f }, GetColor(255, 0, 0));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(center, center + Vector3{ 0.0f, axisY, 0.0f }, GetColor(0, 255, 0));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(center, center + Vector3{ 0.0f, 0.0f, axisZ }, GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto controlPoint : m_controlPoints)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; controlPoint-&gt;Draw(centerWidth, rectColor);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3::Draw(centerWidth, rectColor, FillFlag); // スクリーン上のドラッグ中心点を描く<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        };<br>
+        <br>
+        // ボックスの当たり判定をもつドラッグ中心点<br>
+        struct DragBox : public DragObject<br>
+        {<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; Vector3 m_Size{ 1.0f,1.0f,1.0f }; // ボックスのサイズ<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ボックスの幅をコントロールする点<br>
+        &nbsp;&nbsp;&nbsp; struct ControlPointWidth : public DragObject<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DragBox&amp; m_owner; // コントロール点のオーナー所有者<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ControlPointWidth(DragBox&amp; owner, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : m_owner{ owner }, DragObject(owner.x + owner.m_Size.x / 2, owner.y, owner.z, color) {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual ~ControlPointWidth() {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void Update() override { this-&gt;xyz = Vector3{ m_owner.x + m_owner.m_Size.x / 2,m_owner.y,m_owner.z }.xyz; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void UpdateOwner() override<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.m_Size.x = (*this - m_owner).magnitude() * 2; // コントロール点との距離の2倍=高さ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.xyz = (*this + (m_owner - *this).normalized() * m_owner.m_Size.x / 2).xyz;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.Update(); // オーナーの配下のコントロール点すべてに更新を伝搬<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ボックスの高さをコントロールする点<br>
+        &nbsp;&nbsp;&nbsp; struct ControlPointHeight : public DragObject<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DragBox&amp; m_owner; // コントロール点のオーナー所有者<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ControlPointHeight(DragBox&amp; owner, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : m_owner{ owner }, DragObject(owner.x, owner.y + owner.m_Size.y / 2, owner.z, color) {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual ~ControlPointHeight() {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void Update() override { this-&gt;xyz = Vector3{ m_owner.x, m_owner.y + m_owner.m_Size.y / 2, m_owner.z }.xyz; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void UpdateOwner() override<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.m_Size.y = (*this - m_owner).magnitude() * 2; // コントロール点との距離の2倍=高さ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.xyz = (*this + (m_owner - *this).normalized() * m_owner.m_Size.y / 2).xyz;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.Update(); // オーナーの配下のコントロール点すべてに更新を伝搬<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ボックスの奥行zをコントロールする点<br>
+        &nbsp;&nbsp;&nbsp; struct ControlPointDepth : public DragObject<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DragBox&amp; m_owner; // コントロール点のオーナー所有者<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ControlPointDepth(DragBox&amp; owner, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : m_owner{ owner }, DragObject(owner.x, owner.y, owner.z + owner.m_Size.z / 2, color) {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual ~ControlPointDepth() {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void Update() override { this-&gt;xyz = Vector3{ m_owner.x, m_owner.y, m_owner.z + m_owner.m_Size.z / 2 }.xyz; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual void UpdateOwner() override<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.m_Size.z = (*this - m_owner).magnitude() * 2; // コントロール点との距離の2倍=高さ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.xyz = (*this + (m_owner - *this).normalized() * m_owner.m_Size.z / 2).xyz;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_owner.Update(); // オーナーの配下のコントロール点すべてに更新を伝搬<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; DragBox(float x = 0.0f, float y = 0.0f, float z = 0.0f, Vector3 size = Vector3{ 1.0f, 1.0f, 1.0f }, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : DragObject(x, y, z, color), m_Size{ size }<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_controlPoints.emplace_back(std::make_shared&lt;ControlPointWidth&gt;(*this, color));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_controlPoints.emplace_back(std::make_shared&lt;ControlPointHeight&gt;(*this, color));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_controlPoints.emplace_back(std::make_shared&lt;ControlPointDepth&gt;(*this, color));<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; virtual ~DragBox() {}<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // サイズのx,y,zのどれかがマイナスならプラスに直す<br>
+        &nbsp;&nbsp;&nbsp; inline Vector3 sizeMinMax()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector3{ (m_Size.x &lt; 0) ? -m_Size.x : m_Size.x,<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;(m_Size.y &lt; 0) ? -m_Size.y : m_Size.y,<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;(m_Size.z &lt; 0) ? -m_Size.z : m_Size.z };<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 描画などに必要なパラメータを得る<br>
+        &nbsp;&nbsp;&nbsp; inline void GetParams(Vector3&amp; center, Vector3&amp; boxMin, Vector3&amp; boxMax)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; center = *this; // x,y,zのデータを読み出し<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 boxHalfSize = sizeMinMax() / 2;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; boxMin = center - boxHalfSize;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; boxMax = center + boxHalfSize;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // rayPosの位置からrayDirの方向にレイを飛ばしてカプセルとの衝突判定 resultCollision:衝突した点の衝突位置 resultCenter:衝突点の中心位置<br>
+        &nbsp;&nbsp;&nbsp; virtual bool isCollision(const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3&amp; resultCollision, Vector3&amp; resultCenter) override<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 center, boxMin, boxMax;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; GetParams(center, boxMin, boxMax); // 必要なパラメータを得る<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ボックスとレイの当たり判定<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isCollisionAABB_Ray(boxMin, boxMax, rayPos, rayDir, &amp;resultCollision))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; resultCenter = center; // 衝突した点の中心位置をresultで返す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true; // ドラッグ点を中心とするカプセルと飛ばしたレイが衝突した<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // ドラッグ点を中心とするボックスと飛ばしたレイが衝突しなかった<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ドラッグ点の中心位置とボックスを描く<br>
+        &nbsp;&nbsp;&nbsp; virtual void Draw(const float centerWidth = 6.0f, unsigned int rectColor = GetColor(255, 255, 255), int FillFlag = TRUE) override<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 center, boxMin, boxMax;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; GetParams(center, boxMin, boxMax); // 必要なパラメータを得る<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ボックスを描く<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(boxMin, boxMax, m_color, GetColor(255, 255, 255), FALSE);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // x軸(R:赤) y軸(G:緑) z軸(B:青)をライン表示する<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(center, center + Vector3{ m_Size.x / 2, 0.0f, 0.0f }, GetColor(255, 0, 0));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(center, center + Vector3{ 0.0f, m_Size.y / 2, 0.0f }, GetColor(0, 255, 0));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(center, center + Vector3{ 0.0f, 0.0f, m_Size.z / 2 }, GetColor(0, 0, 255));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto controlPoint : m_controlPoints) // 配下のコントロール点を描く<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; controlPoint-&gt;Draw(centerWidth, rectColor);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3::Draw(centerWidth, rectColor, FillFlag); // スクリーン上のドラッグ中心点を描く<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        };<br>
+        <br>
+        #endif</p>
+      <br>
+      <p><code>Editor.h</code>を変更してドラッグ点のリストを移動できるようにします。</p>
+      <p class="source">#ifndef EDITOR_H_<br>
+        #define EDITOR_H_<br>
+        <br>
+        #include "DxLib.h"<br>
+        #include "Input.h"<br>
+        #include "Screen.h"<br>
+        <em>#include "Vector3.h"<br>
+          #include "DragPoint.h"</em><br>
+        <br>
+        #include "Singleton.h"<br>
+        <br>
+        <em>#include &lt;list&gt; // 連結リストstd::listを使う<br>
+          #include &lt;memory&gt;<br>
+          #include &lt;cmath&gt;</em><br>
+        <br>
+        class Editor : public Singleton&lt;Editor&gt;<br>
+        {<br>
+        public:<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; struct Camera<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float x = 0.f, y = 0.0f, z = -10.0f; // カメラはz軸マイナス位置からz軸プラス向きに原点を見る形で初期化される<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>inline operator VECTOR() { return VGet(x, y, z); }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; inline operator Vector3() const { return Vector3{ x, y, z }; }</em><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; inline Camera&amp; operator +=(VECTOR move) { x += move.x; y += move.y; z += move.z; return *this; } // VECTOR型を足したときはカメラを移動させる<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float VRotate = 0.0f, HRotate = 0.0f, TRotate = 0.0f; // X軸 V,Y軸 H,Z軸 T まわりのカメラのオイラー回転の角度<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float wheelSpeed = 1.0f; // マウスのホイールと連動した際のカメラのスピード<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // スクリーンの位置からカメラ画面の視界(ワールド座標)の奥への方向の単位ベクトル(ノルム)を求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR GetCameraWorldDirByScreenXY(float screenX = (float)Input::MouseX, float screenY = (float)Input::MouseY)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // スクリーン(X,Y)からマウスの指すワールド座標(X,Y,Z)を求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR currentPos = DxLib::ConvScreenPosToWorldPos(VGet(screenX, screenY, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カメラからマウスの指す位置への方向の単位ベクトル(ノルム)を求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return DxLib::VNorm(DxLib::VGet(currentPos.x - x, currentPos.y - y, currentPos.z - z));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // スクリーンの2Dの start位置XY から end位置XY の方向 が ワールド座標3D においてどんなベクトルになるかを求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR GetWorldDirByCameraScreenXYDir(float screenStartX = (float)Input::MouseX, float screenStartY = (float)Input::MouseY,<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float screenEndX = (float)(Input::MouseX + 1), float screenEndY = (float)(Input::MouseY + 1))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // スクリーン(X,Y)からマウスの指すワールド座標(X,Y,Z)を求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR startPos = DxLib::ConvScreenPosToWorldPos(VGet(screenStartX, screenStartY, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR endPos = DxLib::ConvScreenPosToWorldPos(VGet(screenEndX, screenEndY, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ワールド座標におけるstartからendへ向かう方向のベクトルを求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return DxLib::VGet(endPos.x - startPos.x, endPos.y - startPos.y, endPos.z - startPos.z);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        &nbsp;&nbsp;&nbsp; Camera camera;<br>
+        <br>
+        <em>&nbsp;&nbsp;&nbsp; bool isDraggingPoints = false; // 点をドラッグ中かどうか<br>
+          &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;Vector3&gt; pDraggingPoint; // ドラッグ中の点への弱共有ポインタ<br>
+          &nbsp;&nbsp;&nbsp; int startDragX = -1, startDragY = -1; // ドラッグを開始したスクリーン上の点のXY位置<br>
+          &nbsp;&nbsp;&nbsp; Vector3 startDrag2D; // ドラッグを開始したスクリーン位置(zはクリップ面位置near:0.0f～1.0f:far)<br>
+          &nbsp;&nbsp;&nbsp; Vector3 startDrag3D; // ドラッグを開始した3D位置</em><br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; int prevDragX = -1, prevDragY = -1; // 前フレームでのスクリーン上でのドラッグXY位置<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; bool isInitFinished = false; // 一回でもInitされたかのフラグ<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; void Init()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (isInitFinished) return; // 最初の一回だけInit処理をするためのフラグ<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isInitFinished = true;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; void UpdateKeyInput()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Init();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float camXYZSpeed = 1.0f;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // スクリーンの位置からカメラ画面の視界(ワールド座標)の奥への方向のの単位ベクトル(ノルム)を求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR camNorm = camera.GetCameraWorldDirByScreenXY((float)Input::MouseX, (float)Input::MouseY);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // キーボードのWSキーでカメラ視点を手前や奥に移動できるようにする<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_W))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera += VGet(camNorm.x * camXYZSpeed, camNorm.y * camXYZSpeed, camNorm.z * camXYZSpeed);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_S))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera += VGet(-camNorm.x * camXYZSpeed, -camNorm.y * camXYZSpeed, -camNorm.z * camXYZSpeed);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // スクリーンの 2D上のX方向 が ワールド座標 3D ではどんな方向ベクトルになるかを求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR xCamDir = VNorm(camera.GetWorldDirByCameraScreenXYDir((float)Input::MouseX, (float)Input::MouseY, (float)(Input::MouseX + 10), (float)Input::MouseY));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_D))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera += VGet(xCamDir.x * camXYZSpeed, xCamDir.y * camXYZSpeed, xCamDir.z * camXYZSpeed);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_A))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera += VGet(-xCamDir.x * camXYZSpeed, -xCamDir.y * camXYZSpeed, -xCamDir.z * camXYZSpeed);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // スクリーンの 2D上のY方向 が ワールド座標 3D ではどんな方向ベクトルになるかを求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR yCamDir = VNorm(camera.GetWorldDirByCameraScreenXYDir((float)Input::MouseX, (float)Input::MouseY, (float)Input::MouseX, (float)(Input::MouseY + 10)));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_Q))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera += VGet(yCamDir.x * camXYZSpeed, yCamDir.y * camXYZSpeed, yCamDir.z * camXYZSpeed);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_E))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera += VGet(-yCamDir.x * camXYZSpeed, -yCamDir.y * camXYZSpeed, -yCamDir.z * camXYZSpeed);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_V))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.VRotate -= 1.0f;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_B))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.VRotate += 1.0f;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_H))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.HRotate -= 1.0f;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_J))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.HRotate += 1.0f;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_T))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.TRotate -= 1.0f;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_Y))<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.TRotate += 1.0f;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        <em>&nbsp;&nbsp;&nbsp; void UpdateDragPoints(std::list&lt;std::weak_ptr&lt;Vector3&gt;&gt;* pDragPoints = nullptr)<br>
+          &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bool isMouseDragging = (Input::Click[Mouse::DragL] || Input::Click[Mouse::DragR]) &amp;&amp; Screen::IsInsideWindow();<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isDraggingPoints &amp;&amp; SubScreen::isMouseOvered) { isDraggingPoints = false; return; }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR nearestCollision; // 一番近い衝突点を探す<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float nearestDistSq = DxLib::GetCameraFar() * DxLib::GetCameraFar(); // カメラ視野のクリップ設定のFar(最遠)の2乗<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float nearestDist = DxLib::GetCameraFar(); // 一番近い点までの距離を探す<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isDraggingPoints)<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto itr = pDragPoints-&gt;begin(); itr != pDragPoints-&gt;end(); )<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pDragPoint = itr-&gt;lock(); // ドラッグ点への共有ポインタ<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!pDragPoint) // 弱リンク先の点本体がすでに削除済の点だったら<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //[for文でたどっている途中の削除] https://piy.hatenadiary.org/entry/20090616/1245173713<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; itr = pDragPoints-&gt;erase(itr); // ドラッグ点リンクをリストから削除して<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; continue; // ループで次の点へ進む<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ++itr; // for文のイテレータを次の点へすすめる<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR screenXY = VGet(Input::MouseX, Input::MouseY, 0.0f); // スクリーン上のマウス位置<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // マウスポインタの位置から画面奥へのレイ<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR rayPos = DxLib::ConvScreenPosToWorldPos(screenXY);<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR rayDir = camera.GetCameraWorldDirByScreenXY(Input::MouseX, Input::MouseY);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;Vector3&gt; pControlPoint; // コントロール点への弱共有ポインタ<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 collisionPoint, collisionCenter; // 衝突点を探す<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pDragPoint-&gt;isCollisionOnScreenXY(collisionCenter, screenXY, 6.0f)) // スクリーン上の四角のドラッグ点<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pDraggingPoint = pDragPoint;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; startDrag3D = collisionCenter;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; startDrag2D = DxLib::ConvWorldPosToScreenPos(collisionCenter);<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; startDragX = Input::MouseX, startDragY = Input::MouseY;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isDraggingPoints = true;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; break;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pDragPoint-&gt;GetControlPointOnScreenXY(pControlPoint, screenXY, 6.0f))<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pDraggingPoint = pControlPoint;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; startDrag3D = *pControlPoint.lock();<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; startDrag2D = DxLib::ConvWorldPosToScreenPos(startDrag3D);<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; startDragX = Input::MouseX, startDragY = Input::MouseY;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isDraggingPoints = true;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; break;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pDragPoint-&gt;isCollision(rayPos, rayDir, collisionPoint, collisionCenter))<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float distSq = (collisionPoint - camera).sqrMagnitude(); // カメラと衝突位置の2乗<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (distSq &lt; nearestDistSq) // 現在の最短距離の2乗(nearestDistSq)以下か?<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; nearestDistSq = distSq; // 一番近い距離の2乗を更新<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //nearestDist = (collisionCenter - camera).magnitude(); // 一番近い距離を更新<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; nearestCollision = collisionPoint; // 一番近い衝突点を更新して一番手前を探す<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pDraggingPoint = pDragPoint;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; startDrag2D = DxLib::ConvWorldPosToScreenPos(collisionCenter);<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; startDragX = Input::MouseX, startDragY = Input::MouseY;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isDraggingPoints = true;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pDraggingPos = pDraggingPoint.lock(); // ドラッグ中の点をlock<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isMouseDragging || !pDraggingPos)<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; startDragX = startDragY = -1;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pDraggingPoint = std::weak_ptr&lt;Vector3&gt;(); // pDraggingPointの観測先を空へとリセットする<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isDraggingPoints = false;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pDraggingPos)<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR nowDrag3D = DxLib::ConvScreenPosToWorldPos(startDrag2D + VGet(Input::MouseX - startDragX, Input::MouseY - startDragY, 0));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (startDragX != -1 &amp;&amp; startDragY != -1)<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ドラッグ開始位置startDragと現在の位置に移動があれば、その差ぶん移動した位置の3D位置を設定してドラッグ移動を実現<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::Click[Mouse::DragL]) // マウス左クリック<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //DxLib::DrawSphere3D(nowDrag3D, 0.05, 8, GetColor(255, 0, 255), GetColor(255, 255, 255), FALSE);<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *pDraggingPos = nowDrag3D;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pDraggingPos-&gt;UpdateOwner(); // オーナーの半径などを連動して更新<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pDraggingPos-&gt;Update();<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isDraggingPoints = true;<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp; }</em><br>
+        <br>
+        &nbsp;&nbsp;&nbsp; void UpdateMouseInput()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Init();<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!SubScreen::isMouseOvered) // マウスオーバーしているSubscreenがないとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::MouseWheel != 0.0f) // マウスのホイールをグリグリしたとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // スクリーンの位置からカメラ画面の視界の奥への方向の単位ベクトル(ノルム)を求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR camNorm = camera.GetCameraWorldDirByScreenXY((float)Input::MouseX, (float)Input::MouseY);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float camSpeed = camera.wheelSpeed;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.wheelSpeed *= (camera.wheelSpeed &lt; 100.0f) ? 1.5f : 1.0f; // カメラのズーム速度を加速する<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 求めた単位ベクトル×カメラのスピードぶんカメラの位置を移動<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.x += camNorm.x * Input::MouseWheel * camSpeed;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.y += camNorm.y * Input::MouseWheel * camSpeed;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.z += camNorm.z * Input::MouseWheel * camSpeed;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (camera.wheelSpeed &gt; 0.1f) camera.wheelSpeed *= 0.9f; // カメラのズーム速度を減衰する<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else camera.wheelSpeed = 0.1f; // カメラのズーム速度を減衰して最小0.1にすることで繊細なズーム調整もできるようにする<br>
+        <br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if ((Input::Click[Mouse::DragL] || Input::Click[Mouse::DragR]) &amp;&amp; Screen::IsInsideWindow())<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (prevDragX != -1 &amp;&amp; prevDragY != -1)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 前の位置prevと現在の位置に移動があれば、その差ぶんだけ+=することでドラッグ移動を実現<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::Click[Mouse::DragL]) // マウス左クリック<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (prevDragX != Input::Click[Mouse::DragLX] || prevDragY != Input::Click[Mouse::DragLY])<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // マウスポインタがある画面上の座標に該当する３Ｄ空間上の座標を取得 https://dxlib.xsrv.jp/function/dxfunc_3d_camera.html#R12N11<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float positionRatio = 0.9f;// 奥行の位置 Near 面 0.0f ～ 1.0f Far 面<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR start = DxLib::ConvScreenPosToWorldPos(VGet((float)prevDragX, (float)prevDragY, positionRatio));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR end = DxLib::ConvScreenPosToWorldPos(VGet((float)Input::Click[Mouse::DragLX], (float)Input::Click[Mouse::DragLY], positionRatio));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float camSpeed = 400; // ドラッグに対するカメラの移動速度<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.x -= (end.x - start.x) * camSpeed;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.y -= (end.y - start.y) * camSpeed;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.z -= (end.z - start.z) * camSpeed;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::Click[Mouse::DragR]) // マウス右クリック<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // カメラの角度を変更<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (prevDragX != Input::Click[Mouse::DragRX])<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.HRotate += (float)(Input::Click[Mouse::DragRX] - prevDragX);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (prevDragY != Input::Click[Mouse::DragRY])<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.VRotate += (float)(Input::Click[Mouse::DragRY] - prevDragY);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ±360度を超えたら割り算の余りを設定して 例.365度 → 5度に戻してやる<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (camera.HRotate &gt; 360.0f || camera.HRotate &lt; -360.0f) camera.HRotate = std::fmodf(camera.HRotate, 360.0f);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (camera.VRotate &gt; 360.0f || camera.VRotate &lt; -360.0f) camera.VRotate = std::fmodf(camera.VRotate, 360.0f);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevDragX = (Input::Click[Mouse::DragL]) ? Input::Click[Mouse::DragLX] : Input::Click[Mouse::DragRX];<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevDragY = (Input::Click[Mouse::DragL]) ? Input::Click[Mouse::DragLY] : Input::Click[Mouse::DragRY];<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prevDragX = -1; prevDragY = -1; // マウスのドラッグがないときはリセット<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; void UpdateCamera()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Init();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カメラの位置と回転値をセット、カメラの位置は原点<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::SetCameraPositionAndAngle(<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::VGet(camera.x, camera.y, camera.z),<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.VRotate * DX_PI_F / 180.0f, camera.HRotate * DX_PI_F / 180.0f, camera.TRotate * DX_PI_F / 180.0f);<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // まとめてUpdateしたいときはUpdateを使い、個別にUIやKeyやMouseを別々にタイミングを取りながらUpdateしたいときは Updateは呼ばない<br>
+        &nbsp;&nbsp;&nbsp; void Update()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Init();<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; UpdateKeyInput();<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; UpdateMouseInput();<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; UpdateCamera();<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; void Draw()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 原点からx軸(R:赤) y軸(G:緑) z軸(B:青)をライン表示する<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(VGet(0, 0, 0), VGet(1.0f * 5.0f, 0.0f * 5.0f, 0.0f * 5.0f), GetColor(255, 0, 0));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(VGet(0, 0, 0), VGet(0.0f * 5.0f, 1.0f * 5.0f, 0.0f * 5.0f), GetColor(0, 255, 0));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(VGet(0, 0, 0), VGet(0.0f * 5.0f, 0.0f * 5.0f, 1.0f * 5.0f), GetColor(0, 0, 255));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 画面に回転量を描画<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 0, DxLib::GetColor(255, 255, 255), "Cam(x:%f y:%f z:%f)", camera.x, camera.y, camera.z);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 20, DxLib::GetColor(255, 255, 255), "Rot(V:%f H:%f T:%f)", camera.VRotate, camera.HRotate, camera.TRotate);<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        };<br>
+        <br>
+        #endif<br>
+      </p>
+      <br>
+      <br>
+      <p><code>main.cpp</code>のコードを一旦、ちらかった部分を削除して整理します。</p>
+      <p class="source">#include "DxLib.h"<br>
+        #include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
+        #include "Input.h"<br>
+        #include "Screen.h"<br>
+        #include "Ply.h"<br>
+        #include "DataMV1.h"<br>
+        #include "DataPly.h"<br>
+        #include "Collision3D.h"<br>
+        <br>
+        #include "Editor.h"<br>
+        <br>
+        // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMain からプログラムが開始する<br>
+        int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+        &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // ゲームのwhileループを開始する前の初期化処理<br>
+        &nbsp;&nbsp;&nbsp; float animTime = 0.0f; // アニメの現在時刻<br>
+        &nbsp;&nbsp;&nbsp; float animSpeed = 2.0f; // MV1のアニメの再生速度設定 2.0fなら2倍速<br>
+        &nbsp;&nbsp;&nbsp; float animStepTime = 1.0f; // MV1のアニメの毎時間の進む時間の設定<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataMV1&gt; pDevilData = Resource::MakeShared&lt;DataMV1&gt;("Image/devil@kick.mv1");<br>
+        &nbsp;&nbsp;&nbsp; pDevilData-&gt;Load(); // 3Dモデルをmv1形式で読込み<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataMV1&gt; pDevilAttackAnimData = Resource::MakeShared&lt;DataMV1&gt;("Image/devil@jump.mv1");<br>
+        &nbsp;&nbsp;&nbsp; pDevilAttackAnimData-&gt;Load(); // 3Dの追加アニメデータをmv1形式で読込み<br>
+        &nbsp;&nbsp;&nbsp; pDevilData-&gt;AttachAnim(*pDevilAttackAnimData); // アニメを追加でflyのほうをベースとしたモデルにアタッチ<br>
+        &nbsp;&nbsp;&nbsp; int animeButton = 0; // ボタンでアニメを切り替えられるようにする<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; pTexImage = Resource::MakeShared&lt;Texture&gt;("Image/dice.png");<br>
+        &nbsp;&nbsp;&nbsp; pTexImage-&gt;Load(); // MakeSharedとLoadを分けた(フォルダだけ設定しておいて、あとからロードもできるように)<br>
+        &nbsp;&nbsp;&nbsp; assert((int)*pTexImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataPly&gt; pPlyData = Resource::MakeShared&lt;DataPly&gt;("Image/dice.ply");<br>
+        &nbsp;&nbsp;&nbsp; pPlyData-&gt;Load(); // MakeSharedとLoadを分けた(フォルダだけ設定しておいて、あとからロードもできるように)<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        <br>
+        <br>
+        &nbsp;&nbsp;&nbsp; VECTOR keyControlXYZ; // 上下左右キーでxy位置を動かせるように<br>
+        &nbsp;&nbsp;&nbsp; keyControlXYZ.x = 0.0f; keyControlXYZ.y = 0.0f; keyControlXYZ.z = 0;<br>
+        &nbsp;&nbsp;&nbsp; VECTOR keyControlAngle = VGet(0.0f,0.0f,0.0f); // 回転<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen1 = SubScreen::Create()-&gt;Set(600, 450, 600, 100, 255, 0, "サブスクリーン1")-&gt;SetIsBarFrameShow(true,true);<br>
+        &nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen2 = SubScreen::Create()-&gt;Set(200, 100, 150, 100, 255, 1, "サブスクリーン2\nバーを30で太めに")-&gt;SetFrame(1,GetColor(255,255,255),true,30);<br>
+        &nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する 透明度を128にして半透明にしてみる<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen3 = SubScreen::Create()-&gt;Set(150, 450, 300, 100, 128, 1, "サブスクリーン3")-&gt;SetIsBarFrameShow(true)-&gt;SetBarColor(GetColor(0, 0, 255));<br>
+        &nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen4 = SubScreen::Create()-&gt;Set(300, 100, 600, 100, 255, 1, "サブスクリーン4");<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // バックカリングするか?(裏面になっているポリゴンを書かない処理)<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetUseBackCulling(TRUE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Editor&amp; editor = Editor::GetInstance(); // エディタのシングルトン参照を得る<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; //奥行0.1～5000までをカメラの描画範囲とする<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetCameraNearFar(0.1f, 5000.0f);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Input::Update(); // マウスのドラッグなどを更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>SubScreen::UpdateScreens(); // スクリーンの位置やドラッグによる移動を更新する</u><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateKeyInput(); // エディタのキーのインプットを更新<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateMouseInput(); // エディタのマウスのインプットを更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateCamera(); // エディタのカメラを更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // キーボードの 0 1 キーで3Dアニメを切り替えられるようにする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_0))<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animeButton = 0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_1))<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animeButton = 1;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int PadInput = GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int speed = 5;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 上下左右キーでポリゴンを描く起点(x,y)を移動<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_LEFT)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyControlXYZ.x -= speed;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (PadInput &amp; PAD_INPUT_RIGHT) keyControlXYZ.x += speed;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_UP)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyControlXYZ.y += speed;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (PadInput &amp; PAD_INPUT_DOWN) keyControlXYZ.y -= speed;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR position = VGet(keyControlXYZ.x, keyControlXYZ.y, keyControlXYZ.z); // 3Dモデルの位置<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float width =&nbsp; pTexImage-&gt;m_XSize; float height =&nbsp; pTexImage-&gt;m_YSize; // テクスチャ画像のサイズ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR scale = VGet(1.0f, 1.0f, 1.0f); // 拡大縮小スケール<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // キーボードのzキー(A)とxキー(B)とcキー(C)でx,y,z軸まわりに画像を回転<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_A) keyControlAngle.x += speed;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_B) keyControlAngle.y += speed;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_C) keyControlAngle.z += speed;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float Deg2Rad = DX_PI_F / 180.0f; // 角度(単位:°度)からラジアン(単位:rad)へ変換する係数<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float xRotate = keyControlAngle.x * Deg2Rad;&nbsp; const float yRotate = keyControlAngle.y * Deg2Rad; const float zRotate = keyControlAngle.z * Deg2Rad;<br>
+        <br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX&nbsp; matWorldDefault; // デフォルトのワールド行列<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetTransformToWorldMatrix(&amp;matWorldDefault); // デフォルトのワールド行列を記憶しておく<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[ワールド行列] https://ny-program.hatenablog.com/entry/2019/09/15/114245<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX mat; // モデルのスケール×回転×移動を行列計算で設定する<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[スケール]拡大縮小のスケール行列を得る<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat = MGetScale(scale); // まずは拡大縮小のスケール行列からはじめる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [勉強]↓スケール行列は 斜めに x , y , zのスケールの倍率がならんでいる行列<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[0][0] = scale.x;&nbsp; mat.m[0][1] = 0.0f;&nbsp;&nbsp;&nbsp; mat.m[0][2] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[0][3] = 0.0f;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[1][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[1][1] = scale.y; mat.m[1][2] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[1][3] = 0.0f;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[2][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[2][1] = 0.0f;&nbsp;&nbsp;&nbsp; mat.m[2][2] = scale.z;&nbsp; mat.m[2][3] = 0.0f;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[3][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[3][1] = 0.0f;&nbsp;&nbsp;&nbsp; mat.m[3][2] = 0.0f;&nbsp;&nbsp; &nbsp; mat.m[3][3] = 1.0f;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[回転]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX matRot;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::CreateIdentityMatrix(&amp;matRot);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★MMultは行列の乗算【乗算した順にz軸回転→x軸回転→y軸回転→平行移動】<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; matRot = MMult(matRot, MGetRotZ(zRotate));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; matRot = MMult(matRot, MGetRotX(xRotate));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; matRot = MMult(matRot, MGetRotY(yRotate));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat = MMult(mat, matRot); //スケール × 回転<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[移動]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX matTrans = MGetTranslate(VGet(position.x, position.y, position.z)); // 位置positionをここで設定<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat = MMult(mat, matTrans); //スケール×回転×移動<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToWorld(&amp;mat); // [ワールド行列を指定] https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4341<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawPolygon32bitIndexed3D(pPlyData-&gt;Vertex.data(), pPlyData-&gt;Vertex.size(), pPlyData-&gt;Index.data(), pPlyData-&gt;numIndex / 3, (int)*pTexImage, FALSE); // 三角形ポリゴンをたくさん描画<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToWorld(&amp;matWorldDefault); // デフォルトのワールド行列に戻しておく<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1DrawModel(devil3DModel); // 3Dモデル(.mv1形式)を描く<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 100, GetColor(255, 255, 0), "x:%f y:%f Angle:%f %f %f", position.x, position.y, keyControlAngle.x, keyControlAngle.y, keyControlAngle.z);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ファイルのパス + ":" + アニメ名でアクセス<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string animPathName = (animeButton == 0) ? "Image/devil@kick.mv1:mixamo.com" : "Image/devil@jump.mv1:mixamo.com";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(pDevilData-&gt;count(animPathName) &gt; 0 &amp;&amp; "指定されたアニメ名のアニメはMV1に付属していませんでした");<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime += animStepTime * animSpeed; // 1.0×2倍 なら2倍速でアニメ時刻が進む<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (animTime &gt; (*pDevilData)[animPathName].endTime)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime = 0.0f; // 0秒目へとアニメをループさせる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>// 画面奥へ向かう光線レイを求める<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 rayStart = DxLib::ConvScreenPosToWorldPos(VGet(Input::MouseX, Input::MouseY, 0.0f));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 rayEnd = DxLib::ConvScreenPosToWorldPos(VGet(Input::MouseX, Input::MouseY, 1.0f));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(rayStart, rayEnd, GetColor(255, 255, 0));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 球0<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 sphere0Center{ 10,10,10 };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float sphere0Radius = 10;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collision0;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision0 = isCollisionSphere_Line(sphere0Center, sphere0Radius, rayStart, rayEnd, &amp;collision0); // 球と光線(レイ)の当たり判定<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(sphere0Center, sphere0Radius, 16, (isCollision0) ? GetColor(255, 0, 0) : GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision0) DxLib::DrawSphere3D(collision0, 0.5, 16, GetColor(255, 0, 0), GetColor(255, 255, 255), TRUE); // レイと当たった部分に赤い球を表示<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 球1<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 sphere1Center{ 10,-10,10 };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float sphere1Radius = 10;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collision1;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision1 = isCollisionSphere_Ray(sphere1Center, sphere1Radius, rayStart, rayEnd - rayStart, &amp;collision1); // 球と光線(レイ)の当たり判定<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(sphere1Center, sphere1Radius, 16, (isCollision1) ? GetColor(0, 255, 0) : GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision1) DxLib::DrawSphere3D(collision1, 0.5, 16, GetColor(0, 255, 0), GetColor(255, 255, 255), TRUE); // レイと当たった部分に緑の球を表示</u><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 再生時間をセットする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1SetAttachAnimTime((int)*pDevilData, (*pDevilData)[animPathName].index, animTime);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>subscreen1-&gt;ClearDrawScreen(); // 描く前に一旦キャンバスをきれいにまっさらに<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen1-&gt;DrawStart(); // このDrawStartとDrawEndのあいだにDraw～されたらサブのスクリーンに描かれるようになる<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // サブの別のスクリーンの(0,0)位置を起点に文字列を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "サブのスクリーンを使ってWindowsみたいな自作ウインドウを描画してみる", GetColor(255, 255, 255));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen1-&gt;DrawEnd();<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen3-&gt;ClearDrawScreen(); // 描く前に一旦キャンバスをきれいにまっさらに<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen3-&gt;DrawStart(); // このDrawStartとDrawEndのあいだにDraw～されたらサブのスクリーンに描かれるようになる<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 半透明のスクリーンも描ける<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawBox(0, 0, subscreen3-&gt;Width, subscreen3-&gt;Height, GetColor(0, 255, 0), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "アルファを設定すれば\n半透明スクリーンも可能", GetColor(255, 255, 255));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen3-&gt;DrawEnd();<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen4-&gt;ClearDrawScreen(); // 描く前に一旦キャンバスをきれいにまっさらに<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen4-&gt;DrawStart(); // このDrawStartとDrawEndのあいだにDraw～されたらサブのスクリーンに描かれるようになる<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // サブの別のスクリーンの(0,0)位置を起点に文字列を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "枠の無いスクリーンを使えば2Pの分割画面などにも応用できる", GetColor(255, 255, 255));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen4-&gt;DrawEnd();<br>
+          <br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubScreen::DrawScreens(); // サブのスクリーンを全部描く</u><br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.Draw(); // エディタのDraw処理<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+        &nbsp;&nbsp;&nbsp; return 0;<br>
+        }</p>
+      いかがでしょう? レイと球の当たり判定が表示されたでしょうか? <br>
+      <br>
       <br>
       <br>
     </a>
