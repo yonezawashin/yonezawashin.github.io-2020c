@@ -6777,6 +6777,117 @@
         &nbsp;&nbsp;&nbsp; return (center1 - center0).sqrMagnitude() &lt;= (Radius0 + Radius1) * (Radius0 + Radius1);<br>
         }<br>
         <br>
+        // 2つの球0(速度:v0)と球1(速度:v1)の衝突までの時間と位置を取得(双方の球は指定のベクトル方向に等速で進む場合)<br>
+        // stepTime : 球0,球1が進む時間<br>
+        // resultTime : 衝突時刻&nbsp; resultPos : 衝突位置（接点）<br>
+        // resultCenter0,1 : 衝突時の球0,球1の中心座標<br>
+        inline bool isCollisionSphere_Sphere_At(float stepTime,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; center0, const float radius0, const Vector3&amp; v0,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; center1, const float radius1, const Vector3&amp; v1,<br>
+        &nbsp;&nbsp;&nbsp; float&amp; resultTime, Vector3&amp; resultPos,<br>
+        &nbsp;&nbsp;&nbsp; Vector3* resultCenter0 = nullptr, Vector3* resultCenter1 = nullptr)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // http://marupeke296.com/COL_3D_No9_GetSphereColliTimeAndPos.html<br>
+        &nbsp;&nbsp;&nbsp; // 前位置及び到達位置におけるパーティクル間のベクトルを算出<br>
+        &nbsp;&nbsp;&nbsp; Vector3 prev01 = center1 - center0;<br>
+        &nbsp;&nbsp;&nbsp; Vector3 next01 = center1 + v1 * stepTime - center0 + v0 * stepTime;<br>
+        &nbsp;&nbsp;&nbsp; Vector3 dif01 = next01 - prev01;<br>
+        &nbsp;&nbsp;&nbsp; float radius01 = radius0 + radius1;<br>
+        &nbsp;&nbsp;&nbsp; float radius01Sq = radius01 * radius01;<br>
+        &nbsp;&nbsp;&nbsp; float dif01sqm = dif01.sqrMagnitude();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (dif01sqm == 0) // 衝突判定に衝突検知の解の公式を使えない場合<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 初期段階 t = 0ですでに衝突しているか？<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if ((center1 - center0).sqrMagnitude() &gt; radius01Sq)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; resultTime = 0.0f;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // resultCenterがnullptrじゃなければ、center0と1を答えとしてreturnする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (resultCenter0 != nullptr) *resultCenter0 = center0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (resultCenter1 != nullptr) *resultCenter1 = center1;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (center1 == center0) // 中心位置が一緒の場合は<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; resultPos = center0; // 中心点を衝突点として返す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else&nbsp; // 球center0→center1のベクトル方向に長さradius0の所を衝突点とする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; resultPos = center0 + (radius0 / radius01) * prev01;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true; // 同じ方向に移動<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; // else 衝突検知可能<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 最初から衝突しているか？<br>
+        &nbsp;&nbsp;&nbsp; if ((center1 - center0).sqrMagnitude() &lt;= radius01Sq)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; resultTime = 0.0f;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; resultPos = center0 + radius0 / radius01 * prev01;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // resultCenterがnullptrじゃなければ、center0と1を答えとしてreturnする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (resultCenter0 != nullptr) *resultCenter0 = center0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (resultCenter1 != nullptr) *resultCenter1 = center1;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; float Q = dot(prev01, dif01);<br>
+        &nbsp;&nbsp;&nbsp; float prev01sqm = prev01.sqrMagnitude();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 衝突判定式<br>
+        &nbsp;&nbsp;&nbsp; float judge = Q * Q - dif01sqm * (prev01sqm - radius01 * radius01);<br>
+        &nbsp;&nbsp;&nbsp; if (judge &lt; 0) return false; // 衝突していない<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 衝突時間の算出<br>
+        &nbsp;&nbsp;&nbsp; float judge_sqrt = std::sqrtf(judge);<br>
+        &nbsp;&nbsp;&nbsp; float t_plus = (-Q + judge_sqrt) / dif01sqm;<br>
+        &nbsp;&nbsp;&nbsp; float t_minus = (-Q - judge_sqrt) / dif01sqm;<br>
+        &nbsp;&nbsp;&nbsp; if (t_minus &gt; t_plus)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // t_minusを小さい方に入れ替え<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float tmp = t_minus;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t_minus = t_plus;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t_plus = tmp;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 時間外衝突か？<br>
+        &nbsp;&nbsp;&nbsp; if (t_minus &lt; 0.0f || t_minus &gt; 1.0f) return false;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 衝突位置の決定<br>
+        &nbsp;&nbsp;&nbsp; resultTime = t_minus * stepTime;<br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer0 = center0 + v0 * stepTime * t_minus;<br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer1 = center1 + v1 * stepTime * t_minus;<br>
+        &nbsp;&nbsp;&nbsp; resultPos = answer0 + radius0 / radius01 * (answer1 - answer0);<br>
+        &nbsp;&nbsp;&nbsp; // resultCenterがnullptrじゃなければ、answer0と1を答えとしてreturnする<br>
+        &nbsp;&nbsp;&nbsp; if (resultCenter0 != nullptr) *resultCenter0 = answer0;<br>
+        &nbsp;&nbsp;&nbsp; if (resultCenter1 != nullptr) *resultCenter1 = answer1;<br>
+        &nbsp;&nbsp;&nbsp; return true; // 衝突した<br>
+        }<br>
+        <br>
+        // 衝突してtime時刻経過後の 球0,1(衝突時速度:v0,1 質量:weight0,1 反発係数:refRate0,1)の<br>
+        // 反発後の位置result_center と 速度result_v を求める<br>
+        inline bool getCollisionPosVecSphere_Sphere_After(float time,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; center0, const Vector3&amp; v0, float weight0, float refRate0,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; center1, const Vector3&amp; v1, float weight1, float refRate1,<br>
+        &nbsp;&nbsp;&nbsp; Vector3* result_center0 = nullptr, Vector3* result_v0 = nullptr,<br>
+        &nbsp;&nbsp;&nbsp; Vector3* result_center1 = nullptr, Vector3* result_v1 = nullptr)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // http://marupeke296.com/COL_MV_No1_HowToCalcVelocity.html<br>
+        &nbsp;&nbsp;&nbsp; float totalWeight = weight0 + weight1; // 質量の合計<br>
+        &nbsp;&nbsp;&nbsp; float refRate = (1 + refRate0 * refRate1); // 反発率<br>
+        &nbsp;&nbsp;&nbsp; Vector3 c01 = center1 - center0; // 衝突軸ベクトル<br>
+        &nbsp;&nbsp;&nbsp; c01 = c01.normalized();<br>
+        &nbsp;&nbsp;&nbsp; float dot_v10_c01 = dot((v0 - v1), c01); // 内積算出<br>
+        &nbsp;&nbsp;&nbsp; const Vector3 ConstVec = refRate * dot_v10_c01 / totalWeight * c01; // 反発定数ベクトル<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 衝突後速度ベクトルの算出<br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer_v0 = -weight1 * ConstVec + v0;<br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer_v1 =&nbsp; weight0 * ConstVec + v1;<br>
+        &nbsp;&nbsp;&nbsp; if (result_v0 != nullptr) *result_v0 = answer_v0;<br>
+        &nbsp;&nbsp;&nbsp; if (result_v1 != nullptr) *result_v1 = answer_v1;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 衝突後位置の算出<br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer_center0 = center0 + time * answer_v0;<br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer_center1 = center1 + time * answer_v1;<br>
+        &nbsp;&nbsp;&nbsp; if (result_center0 != nullptr) *result_center0 = answer_center0;<br>
+        &nbsp;&nbsp;&nbsp; if (result_center1 != nullptr) *result_center1 = answer_center1;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return true;<br>
+        }<br>
         <br>
         // 球体とレイ(光線)の当たり判定 rayPos:レイの起点 rayDir:レイの方向 result0:球体とレイの衝突開始点 result1:球体とレイの衝突終了点 <br>
         inline bool isCollisionSphere_Ray(const Vector3&amp; center, float Radius, const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3* result0 = nullptr, Vector3* result1 = nullptr)<br>
@@ -7112,6 +7223,66 @@
         &nbsp;&nbsp;&nbsp; float abs_dist = (dist &lt; 0) ? -dist : dist; // 平面との距離の絶対値<br>
         &nbsp;&nbsp;&nbsp; if (resultDist != nullptr) *resultDist = Radius - dist; // 半径 - 平面との距離をresultDistで返す<br>
         &nbsp;&nbsp;&nbsp; return (abs_dist &lt;= Radius); // 平面との距離が 半径以下なら当たっている:true<br>
+        }<br>
+        <br>
+        // 球(移動prev0→next1)が平面と衝突する時刻result_timeと位置result_posを求める<br>
+        inline bool isCollisionPlane_Sphere_At(const Plane4&amp; plane, //const Vector3&amp; posOnPlane,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; prevCenter0, const Vector3&amp; nextCenter1, float radius,<br>
+        &nbsp;&nbsp;&nbsp; float* result_time = nullptr, Vector3* result_pos = nullptr)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // http://marupeke296.com/COL_MV_No2_SpherePlaneColliTimePos.html<br>
+        &nbsp;&nbsp;&nbsp; //Vector3 C0 = prevCenter0 - posOnPlane; // 平面上の一点から現在位置へのベクトル<br>
+        &nbsp;&nbsp;&nbsp; Vector3 v01 = nextCenter1 - prevCenter0; // 現在位置から予定位置までのベクトル<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 平面と中心点の距離を算出<br>
+        &nbsp;&nbsp;&nbsp; //float Dot_C0 = dot(C0, plane.n);<br>
+        &nbsp;&nbsp;&nbsp; float dist0 = plane.distance(prevCenter0);<br>
+        &nbsp;&nbsp;&nbsp; float abs_dist0 = std::fabs(dist0);<br>
+        &nbsp;&nbsp;&nbsp; // 進行方向v01と法線nの関係をチェックするためdotを取る<br>
+        &nbsp;&nbsp;&nbsp; float dot_v01_n = dot(v01, plane.n);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 平面と平行に移動しながらめり込んでいる特殊なケース<br>
+        &nbsp;&nbsp;&nbsp; if ((0.00001f - std::fabs(dot_v01_n) &gt; 0.0f) &amp;&amp; (abs_dist0 &lt; radius))<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 永遠にめり込みから抜け出せないので最大時刻を返す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (result_time != nullptr) *result_time = FLT_MAX;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 衝突位置は仕方ないので今の位置をresultとしてreturnする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (result_pos != nullptr) *result_pos = prevCenter0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 交差時間の算出<br>
+        &nbsp;&nbsp;&nbsp; float answer_time = (radius - dist0) / dot_v01_n;<br>
+        &nbsp;&nbsp;&nbsp; if (result_time != nullptr) *result_time = answer_time;<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // 衝突位置の算出<br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer_pos = prevCenter0 + answer_time * v01;<br>
+        &nbsp;&nbsp;&nbsp; if (result_pos != nullptr) *result_pos = answer_pos;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // めり込んでいたら衝突として処理終了(距離が半径以下)<br>
+        &nbsp;&nbsp;&nbsp; if (abs_dist0 &lt; radius) return true;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 平面の原点に向かう法線nに対して移動が逆向き(dotが0以上→cosθ&gt;=0)なら衝突しない<br>
+        &nbsp;&nbsp;&nbsp; if (dot_v01_n &gt;= 0) return false;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 時間が0～1の間にあれば衝突<br>
+        &nbsp;&nbsp;&nbsp; if (0 &lt;= answer_time &amp;&amp; answer_time &lt;= 1) return true;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; return false;<br>
+        }<br>
+        <br>
+        // 平面plane(動いていない)に対する球0(反射率:refRate0)の反射後time時刻経過後の位置result_center0と速度result_v0を求める<br>
+        inline bool getCollisionPosVecPlane_Sphere_After(float time, const Plane4&amp; plane,<br>
+        &nbsp;&nbsp;&nbsp; const Vector3&amp; center0, const Vector3&amp; v0, float refRate0,<br>
+        &nbsp;&nbsp;&nbsp; Vector3* result_center0, Vector3* result_v0)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; // 反射後速度を算出<br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer_v0 = v0 - (1 + refRate0) * dot(plane.n, v0) * plane.n;<br>
+        &nbsp;&nbsp;&nbsp; if (result_v0 != nullptr) *result_v0 = answer_v0;<br>
+        &nbsp;&nbsp;&nbsp; // 移動位置を計算<br>
+        &nbsp;&nbsp;&nbsp; Vector3 answer_center0 = center0 + answer_v0 * time;<br>
+        &nbsp;&nbsp;&nbsp; if (result_center0 != nullptr) *result_center0 = answer_center0;<br>
+        &nbsp;&nbsp;&nbsp; return true;<br>
         }<br>
         <br>
         // 平面plane が AABB(軸並行境界ボックス) と 衝突するか result:平面からAABBを押し戻した距離<br>
