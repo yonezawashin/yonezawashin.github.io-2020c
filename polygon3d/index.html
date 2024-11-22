@@ -8851,36 +8851,36 @@
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン(2)の存在する平面を描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawPlane(plane_poly2, *poly2_Pos[0], 8,GetColor(0,255,255));<br>
           <br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面と軸並行ボックスAABBの当たり判定とその押し戻しを描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面と軸並行ボックス(4)AABBの当たり判定とその押し戻しゴーストを描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 boxMin, boxMax, boxCenter;<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxPoint4-&gt;GetParams(boxCenter, boxMin, boxMax);<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distAABB; // 押し戻し距離(当たってないときは平面までの距離)<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneAABB = isCollisionPlane_AABB(plane_poly2, boxMin, boxMax, &amp;distAABB);<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneAABB) // 平面とボックスが衝突したら↓法線×押し戻し距離 ぶんずらして描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneAABB) // 平面とボックスが衝突したら↓法線×押し戻し距離 ぶんずらしてゴーストを描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(boxMin + plane_poly2.n * distAABB,<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxMax + plane_poly2.n * distAABB, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
           &nbsp;&nbsp; &nbsp;&nbsp; <br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線の始点lineStart0にカプセル(0)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面とカプセル(0)の当たり判定とその押し戻しゴーストを描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 centerCapsule, startCapsule, endCapsule;<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float radiusCapsule;<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lineStart0-&gt;GetParams(centerCapsule, startCapsule, endCapsule, radiusCapsule);<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distCapsule;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lineStart0-&gt;GetParams(centerCapsule, startCapsule, endCapsule, radiusCapsule); // 線の始点lineStart0からカプセル(0)のパラメータを得る<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distCapsule; // 平面からカプセルをどれだけ押しもどせば当たらなくなるかの距離<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneCapsule = isCollisionPlane_Capsule(plane_poly2, startCapsule, endCapsule, radiusCapsule, &amp;distCapsule);<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneCapsule) // 平面とカプセルが衝突していたら、平面の法線n方向に押し戻したゴーストを描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCapsule3D(startCapsule + plane_poly2.n * distCapsule,<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; endCapsule + plane_poly2.n * distCapsule, radiusCapsule, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
           <br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線の終点lineEnd1に球体(1)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面と球体(1)の当たり判定とその押し戻しゴーストを描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float sphereRadius;<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 sphereCenter;<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lineEnd1-&gt;GetParams(sphereCenter, sphereRadius);<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distSphere; <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lineEnd1-&gt;GetParams(sphereCenter, sphereRadius); // 線の終点lineEnd1から球体(1)のパラメータを得る<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distSphere; // 平面から球をどれだけ押し戻せば当たらなくなるかの距離 <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneSphere = isCollisionPlane_Sphere(plane_poly2, sphereCenter, sphereRadius, &amp;distSphere);<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneSphere) // 平面と球が衝突していたら、平面の法線n方向に押し戻したゴーストを描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(*lineEnd1 + plane_poly2.n * distSphere, sphereRadius, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
           <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision2)<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 三角ポリゴンと線(lineStart0→lineEnd1)の交わった交点に橙の球を表示<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 三角ポリゴン(2)と線(lineStart0→lineEnd1)の交わった交点に橙の球を表示<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(collision2, 0.05, 16, GetColor(255, 165, 0), GetColor(255, 255, 255), TRUE);<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 球の中心とポリゴンの3点を結ぶ線の角度の合計がほぼ360度(2π)になるかがポリゴン内部かの判定条件となる<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(collision2, *poly2_Pos[0], GetColor(255, 165, 165));<br>
@@ -8890,7 +8890,7 @@
           <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ドラッグ点とその当たり判定のオブジェクト(ボックスや球やカプセルなど)を描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto dragPoint : dragPoints)<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dragPoint.lock()-&gt;Draw();</em><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dragPoint.lock()-&gt;Draw(); //ドラッグ点とそのまわりに広がる当たり判定範囲のカプセルやボックスなどをまとめて描く</em><br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.Draw(); // エディタのDraw処理<br>
         <br>
