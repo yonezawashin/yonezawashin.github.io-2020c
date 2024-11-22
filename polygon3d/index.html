@@ -5760,18 +5760,12 @@
         &nbsp;&nbsp;&nbsp; inline operator const float* () const { return (const float*)this; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // コンストラクタ 初期化 z = 0.fでzのデフォルト値があるので2Dとしても使える<br>
-        &nbsp;&nbsp;&nbsp; Vector3(float x = 0.0f, float y = 0.0f, float z = 0.0f)<br>
+        &nbsp;&nbsp;&nbsp; inline Vector3(float x = 0.0f, float y = 0.0f, float z = 0.0f)<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;xyz = { x,y,z };// たった1行で書ける<br>
         &nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp; //仮想デストラクタ<br>
-        &nbsp;&nbsp;&nbsp; virtual ~Vector3() {}<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // 継承overrideして親や子などを持たせれば親の変更を子に伝搬させる設計も可能<br>
-        &nbsp;&nbsp;&nbsp; virtual void Update() {}<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // 継承overrideして所有オーナーなどを持たせれば半径などの変更をオーナーに伝搬させる設計も可能<br>
-        &nbsp;&nbsp;&nbsp; virtual void UpdateOwner() {}<br>
+        &nbsp;&nbsp;&nbsp; // デストラクタ<br>
+        &nbsp;&nbsp;&nbsp; ~Vector3() {}<br>
         <br>
         &nbsp;&nbsp;&nbsp; // Unityのstatic変数を参考に https://docs.unity3d.com/ja/current/ScriptReference/Vector3.html<br>
         &nbsp;&nbsp;&nbsp; static const Vector3 zero;// = { 0.f, 0.f, 0.f };<br>
@@ -5949,41 +5943,6 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;z = other.z;<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
-        &nbsp;&nbsp;&nbsp; // screenXY:スクリーン上のXY位置 が ドラッグ点から幅:centerWidthの範囲内ならドラッグ当たり判定がtrue<br>
-        &nbsp;&nbsp;&nbsp; virtual bool isCollisionOnScreenXY(Vector3&amp; resultCenter, const VECTOR&amp; screenXY, const float centerWidth = 6.0f)<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR pos2D = DxLib::ConvWorldPosToScreenPos(*this);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pos2D.z &lt; 0.0f || 1.0f &lt; pos2D.z) return false; // カメラ視野の奥行クリップ値(近:0.0f～1.0f:遠)の範囲外ならfalse<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pos2D.x - centerWidth / 2 &lt;= screenXY.x &amp;&amp; screenXY.x &lt;= pos2D.x + centerWidth / 2<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;&amp; pos2D.y - centerWidth / 2 &lt;= screenXY.y &amp;&amp; screenXY.y &lt;= pos2D.y + centerWidth / 2)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; resultCenter = *this; // ドラッグ点の中心点の3D位置を返す<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false;<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // override継承してscreenXYの位置にあるコントロール点を返す(なかったら空のweak_ptrがreturnされる)<br>
-        &nbsp;&nbsp;&nbsp; virtual bool GetControlPointOnScreenXY(std::weak_ptr&lt;Vector3&gt;&amp; pResult, const VECTOR&amp; screenXY, const float centerWidth = 6.0f)<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pResult = std::weak_ptr&lt;Vector3&gt;(); // 観測対象のない空のweak_ptrを返す<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false;<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // rayPosの位置からrayDirの方向にレイを飛ばして衝突判定 resultCollision:衝突した点の衝突位置 resultCenter:衝突点の中心位置<br>
-        &nbsp;&nbsp;&nbsp; virtual bool isCollision(const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3&amp; resultCollision, Vector3&amp; resultCenter)<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // overrideで継承して球やカプセルなどの当たり判定を実装する<br>
-        &nbsp;&nbsp;&nbsp; }<br>
-        <br>
-        &nbsp;&nbsp;&nbsp; // 点をドラッグできる点として中心位置をスクリーン上に四角形で描く<br>
-        &nbsp;&nbsp;&nbsp; virtual void Draw(const float centerWidth = 6.0f, unsigned int rectColor= GetColor(255, 255, 255), int FillFlag = TRUE)<br>
-        &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR screenXY = DxLib::ConvWorldPosToScreenPos(*this);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt;= screenXY.z &amp;&amp; screenXY.z &lt;= 1.0f) // zは奥行クリップ値(near:0～1.0:far)⇒範囲外ならカメラ視野外 <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawBox(screenXY.x - centerWidth / 2, screenXY.y - centerWidth / 2,<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; screenXY.x + centerWidth / 2, screenXY.y + centerWidth / 2, rectColor, FillFlag);<br>
-        &nbsp;&nbsp;&nbsp; }<br>
         #endif<br>
         <br>
         };<br>
@@ -6508,7 +6467,7 @@
         &nbsp;&nbsp;&nbsp; // 三角ポリゴン 3点p0,p1,p2 から平面を確定させて生成 dist(原点からの距離) は 法線normal と 点p0 から計算<br>
         &nbsp;&nbsp;&nbsp; Plane4(const Vector3&amp; p0, const Vector3&amp; p1, const Vector3&amp; p2) : n{ polygonNorm(p0, p1, p2) }, dist{ -dot(n, p0) } {}<br>
         <br>
-        &nbsp;&nbsp;&nbsp; virtual ~Plane4() {}<br>
+        &nbsp;&nbsp;&nbsp; ~Plane4() {}<br>
         <br>
         &nbsp;&nbsp;&nbsp; // 平面を正規化する (平面の法線を単位ベクトル化する)<br>
         &nbsp;&nbsp;&nbsp; inline Plane4 normalized() const<br>
@@ -7697,16 +7656,67 @@
         <br>
         #include &lt;memory&gt;<br>
         <br>
-        // Vector3の点を継承してドラッグできるカプセルや球体などのオブジェクトの基底オブジェクトを定義する<br>
-        struct DragObject : public Vector3<br>
+        // ドラッグできるVector3の点の基底クラス、Vector3との違いはvirtual仮想関数群を持ちUpdateなどの関数をoverrideできる設計になっていること<br>
+        struct DragPoint : public Vector3<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; DragPoint(float x = 0.0f, float y = 0.0f, float z = 0.0f) : Vector3(x, y, z) {}<br>
+        &nbsp;&nbsp;&nbsp; DragPoint(const Vector3&amp; other) : Vector3(other.x, other.y, other.z) {}<br>
+        &nbsp;&nbsp;&nbsp; DragPoint(VECTOR other) : Vector3(other) {}<br>
+        &nbsp;&nbsp;&nbsp; virtual ~DragPoint() {};<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 継承overrideして親や子などを持たせれば親の変更を子に伝搬させる設計も可能<br>
+        &nbsp;&nbsp;&nbsp; virtual void Update() {}<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 継承overrideして所有オーナーなどを持たせれば半径などの変更をオーナーに伝搬させる設計も可能<br>
+        &nbsp;&nbsp;&nbsp; virtual void UpdateOwner() {}<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // screenXY:スクリーン上のXY位置 が ドラッグ点から幅:centerWidthの範囲内ならドラッグ当たり判定がtrue<br>
+        &nbsp;&nbsp;&nbsp; virtual bool isCollisionOnScreenXY(Vector3&amp; resultCenter, const VECTOR&amp; screenXY, const float centerWidth = 6.0f)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR pos2D = DxLib::ConvWorldPosToScreenPos(*this);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pos2D.z &lt; 0.0f || 1.0f &lt; pos2D.z) return false; // カメラ視野の奥行クリップ値(近:0.0f～1.0f:遠)の範囲外ならfalse<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pos2D.x - centerWidth / 2 &lt;= screenXY.x &amp;&amp; screenXY.x &lt;= pos2D.x + centerWidth / 2<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &amp;&amp; pos2D.y - centerWidth / 2 &lt;= screenXY.y &amp;&amp; screenXY.y &lt;= pos2D.y + centerWidth / 2)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; resultCenter = *this; // ドラッグ点の中心点の3D位置を返す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // override継承してscreenXYの位置にあるコントロール点を返す(なかったら空のweak_ptrがreturnされる)<br>
+        &nbsp;&nbsp;&nbsp; virtual bool GetControlPointOnScreenXY(std::weak_ptr&lt;DragPoint&gt;&amp; pResult, const VECTOR&amp; screenXY, const float centerWidth = 6.0f)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pResult = std::weak_ptr&lt;DragPoint&gt;(); // 観測対象のない空のweak_ptrを返す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // rayPosの位置からrayDirの方向にレイを飛ばして衝突判定 resultCollision:衝突した点の衝突位置 resultCenter:衝突点の中心位置<br>
+        &nbsp;&nbsp;&nbsp; virtual bool isCollision(const Vector3&amp; rayPos, const Vector3&amp; rayDir, Vector3&amp; resultCollision, Vector3&amp; resultCenter)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // overrideで継承して球やカプセルなどの当たり判定を実装する<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 点をドラッグできる点として中心位置をスクリーン上に四角形で描く<br>
+        &nbsp;&nbsp;&nbsp; virtual void Draw(const float centerWidth = 6.0f, unsigned int rectColor = GetColor(255, 255, 255), int FillFlag = TRUE)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR screenXY = DxLib::ConvWorldPosToScreenPos(*this);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (0 &lt;= screenXY.z &amp;&amp; screenXY.z &lt;= 1.0f) // zは奥行クリップ値(near:0～1.0:far)⇒範囲外ならカメラ視野外 <br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawBox(screenXY.x - centerWidth / 2, screenXY.y - centerWidth / 2,<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; screenXY.x + centerWidth / 2, screenXY.y + centerWidth / 2, rectColor, FillFlag);<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        };<br>
+        <br>
+        // DrogPointの点を継承してドラッグできるカプセルや球体などのオブジェクトの基底オブジェクトを定義する<br>
+        struct DragObject : public DragPoint<br>
         {<br>
         &nbsp;&nbsp;&nbsp; unsigned int m_color; // オブジェクトを描画する色<br>
-        &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Vector3&gt;&gt; m_controlPoints; // 半径などを変えるためのコントロール点<br>
+        &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;DragPoint&gt;&gt; m_controlPoints; // 半径などを変えるためのコントロール点<br>
         &nbsp;&nbsp;&nbsp; DragObject(float x = 0.0f, float y = 0.0f, float z = 0.0f, unsigned int color = GetColor(255, 255, 255))<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : Vector3(x, y, z), m_color{ color } {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : DragPoint(x, y, z), m_color{ color } {}<br>
         &nbsp;&nbsp;&nbsp; DragObject(const Vector3&amp; other, unsigned int color = GetColor(255, 255, 255))<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : Vector3(other.x, other.y, other.z), m_color{ color } {}<br>
-        &nbsp;&nbsp;&nbsp; DragObject(VECTOR other, unsigned int color = GetColor(255, 255, 255)) : Vector3(other), m_color{ color } {}<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : DragPoint(other.x, other.y, other.z), m_color{ color } {}<br>
+        &nbsp;&nbsp;&nbsp; DragObject(VECTOR other, unsigned int color = GetColor(255, 255, 255)) : DragPoint(other), m_color{ color } {}<br>
         &nbsp;&nbsp;&nbsp; virtual ~DragObject() {};<br>
         <br>
         &nbsp;&nbsp;&nbsp; virtual void Update() override // 配下のコントロール点をすべて更新<br>
@@ -7720,7 +7730,7 @@
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // screenXYの位置にあるコントロール点を返す なかったら空のweak_ptrがreturnされる<br>
-        &nbsp;&nbsp;&nbsp; virtual bool GetControlPointOnScreenXY(std::weak_ptr&lt;Vector3&gt;&amp; pResult, const VECTOR&amp; screenXY, const float centerWidth = 6.0f) override<br>
+        &nbsp;&nbsp;&nbsp; virtual bool GetControlPointOnScreenXY(std::weak_ptr&lt;DragPoint&gt;&amp; pResult, const VECTOR&amp; screenXY, const float centerWidth = 6.0f) override<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto itr = m_controlPoints.begin(); itr != m_controlPoints.end(); )<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
@@ -7734,7 +7744,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return true;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pResult = std::weak_ptr&lt;Vector3&gt;(); // 見つからなかったら観測対象のない空のweak_ptrを返す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pResult = std::weak_ptr&lt;DragPoint&gt;(); // 見つからなかったら観測対象のない空のweak_ptrを返す<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false;<br>
         &nbsp;&nbsp;&nbsp; }<br>
         };<br>
@@ -7802,7 +7812,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto controlPoint : m_controlPoints) // 配下のコントロール点を描く<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; controlPoint-&gt;Draw(centerWidth, rectColor);<br>
         <br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3::Draw(centerWidth, rectColor, FillFlag); // スクリーン上のドラッグ中心点を描く<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DragPoint::Draw(centerWidth, rectColor, FillFlag); // スクリーン上のドラッグ中心点を描く<br>
         &nbsp;&nbsp;&nbsp; }<br>
         };<br>
         <br>
@@ -7915,7 +7925,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto controlPoint : m_controlPoints)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; controlPoint-&gt;Draw(centerWidth, rectColor);<br>
         <br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3::Draw(centerWidth, rectColor, FillFlag); // スクリーン上のドラッグ中心点を描く<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DragPoint::Draw(centerWidth, rectColor, FillFlag); // スクリーン上のドラッグ中心点を描く<br>
         &nbsp;&nbsp;&nbsp; }<br>
         };<br>
         <br>
@@ -8028,7 +8038,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto controlPoint : m_controlPoints) // 配下のコントロール点を描く<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; controlPoint-&gt;Draw(centerWidth, rectColor);<br>
         <br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3::Draw(centerWidth, rectColor, FillFlag); // スクリーン上のドラッグ中心点を描く<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DragPoint::Draw(centerWidth, rectColor, FillFlag); // スクリーン上のドラッグ中心点を描く<br>
         &nbsp;&nbsp;&nbsp; }<br>
         };<br>
         <br>
@@ -8042,7 +8052,7 @@
         #include "Input.h"<br>
         #include "Screen.h"<br>
         <em>#include "Vector3.h"<br>
-          #include "DragPoint.h"</em><br>
+          #include "DragObject.h"</em><br>
         <br>
         #include "Singleton.h"<br>
         <br>
@@ -8084,7 +8094,7 @@
         &nbsp;&nbsp;&nbsp; Camera camera;<br>
         <br>
         <em>&nbsp;&nbsp;&nbsp; bool isDraggingPoints = false; // 点をドラッグ中かどうか<br>
-          &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;Vector3&gt; pDraggingPoint; // ドラッグ中の点への弱共有ポインタ<br>
+          &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;DragPoint&gt; pDraggingPoint; // ドラッグ中の点への弱共有ポインタ<br>
           &nbsp;&nbsp;&nbsp; int startDragX = -1, startDragY = -1; // ドラッグを開始したスクリーン上の点のXY位置<br>
           &nbsp;&nbsp;&nbsp; Vector3 startDrag2D; // ドラッグを開始したスクリーン位置(zはクリップ面位置near:0.0f～1.0f:far)<br>
           &nbsp;&nbsp;&nbsp; Vector3 startDrag3D; // ドラッグを開始した3D位置</em><br>
@@ -8145,7 +8155,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.TRotate += 1.0f;<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
-        <em>&nbsp;&nbsp;&nbsp; void UpdateDragPoints(std::list&lt;std::weak_ptr&lt;Vector3&gt;&gt;* pDragPoints = nullptr)<br>
+        <em>&nbsp;&nbsp;&nbsp; void UpdateDragPoints(std::list&lt;std::weak_ptr&lt;DragPoint&gt;&gt;* pDragPoints = nullptr)<br>
           &nbsp;&nbsp;&nbsp; {<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; bool isMouseDragging = (Input::Click[Mouse::DragL] || Input::Click[Mouse::DragR]) &amp;&amp; Screen::IsInsideWindow();<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isDraggingPoints &amp;&amp; SubScreen::isMouseOvered) { isDraggingPoints = false; return; }<br>
@@ -8171,7 +8181,7 @@
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR rayPos = DxLib::ConvScreenPosToWorldPos(screenXY);<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR rayDir = camera.GetCameraWorldDirByScreenXY(Input::MouseX, Input::MouseY);<br>
           <br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;Vector3&gt; pControlPoint; // コントロール点への弱共有ポインタ<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;DragPoint&gt; pControlPoint; // コントロール点への弱共有ポインタ<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 collisionPoint, collisionCenter; // 衝突点を探す<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pDragPoint-&gt;isCollisionOnScreenXY(collisionCenter, screenXY, 6.0f)) // スクリーン上の四角のドラッグ点<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
@@ -8212,7 +8222,7 @@
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isMouseDragging || !pDraggingPos)<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; startDragX = startDragY = -1;<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pDraggingPoint = std::weak_ptr&lt;Vector3&gt;(); // pDraggingPointの観測先を空へとリセットする<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pDraggingPoint = std::weak_ptr&lt;DragPoint&gt;(); // pDraggingPointの観測先を空へとリセットする<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isDraggingPoints = false;<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (pDraggingPos)<br>
@@ -8693,21 +8703,21 @@
         &nbsp;&nbsp;&nbsp; Editor&amp; editor = Editor::GetInstance(); // エディタのシングルトン参照を得る<br>
         <br>
         &nbsp;&nbsp;&nbsp; <em>float radius_lineStart0 = 0.2f, radius_lineEnd1 = 0.2f; // カプセルと球体の半径の初期設定<br>
-          &nbsp;&nbsp;&nbsp; // カプセル点0<br>
+          &nbsp;&nbsp;&nbsp; // カプセル点(0)<br>
           &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DragCapsule&gt; lineStart0 = std::make_shared&lt;DragCapsule&gt;(-3, 0, -4, radius_lineStart0, 1.0f, Axis3D::Y, GetColor(255, 165, 165));<br>
-          &nbsp;&nbsp;&nbsp; // 球体の点1<br>
+          &nbsp;&nbsp;&nbsp; // 球体の点(1)<br>
           &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DragSphere&gt; lineEnd1 = std::make_shared&lt;DragSphere&gt;(-2, -3, -3.5f, radius_lineEnd1 * 2, GetColor(255, 165, 0));<br>
           <br>
-          &nbsp;&nbsp;&nbsp; // 三角ポリゴン2<br>
-          &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Vector3&gt;&gt; poly2_Pos = { std::make_shared&lt;Vector3&gt;(-3.0f,-2.0f,-4.0f),<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::make_shared&lt;Vector3&gt;(-2.0f,-2.0f,-3.0f),<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::make_shared&lt;Vector3&gt;(-2.0f,-2.0f,-4.0f) }; // ポリゴンの3点<br>
+          &nbsp;&nbsp;&nbsp; // 三角ポリゴン(2)<br>
+          &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;DragPoint&gt;&gt; poly2_Pos = { std::make_shared&lt;DragPoint&gt;(-3.0f,-2.0f,-4.0f),<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::make_shared&lt;DragPoint&gt;(-2.0f,-2.0f,-3.0f),<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::make_shared&lt;DragPoint&gt;(-2.0f,-2.0f,-4.0f) }; // ポリゴンの3点<br>
           <br>
-          &nbsp;&nbsp;&nbsp; // 四角ボックスの点4<br>
+          &nbsp;&nbsp;&nbsp; // 四角ボックスの点(4)<br>
           &nbsp;&nbsp;&nbsp; Vector3 boxSize{ 1.0f,2.0f,3.0f };<br>
           &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DragBox&gt; boxPoint4 = std::make_shared&lt;DragBox&gt;(7, -3, 4, boxSize, GetColor(255, 255, 0));<br>
           <br>
-          &nbsp;&nbsp;&nbsp; std::list&lt;std::weak_ptr&lt;Vector3&gt;&gt; dragPoints; // ドラッグ対象の点の共有ポインタのリスト<br>
+          &nbsp;&nbsp;&nbsp; std::list&lt;std::weak_ptr&lt;DragPoint&gt;&gt; dragPoints; // ドラッグ対象の点の共有ポインタのリスト<br>
           <br>
           &nbsp;&nbsp;&nbsp; dragPoints.emplace_back(lineStart0); // リストにカプセル点0を追加<br>
           &nbsp;&nbsp;&nbsp; dragPoints.emplace_back(lineEnd1); // リストに球体の点1を追加<br>
@@ -8811,45 +8821,76 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 再生時間をセットする<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1SetAttachAnimTime((int)*pDevilData, (*pDevilData)[animPathName].index, animTime);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2を含む平面<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Plane4 plane_poly2{ *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] }; // 3点を含む平面を求める<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collision2; // ポリゴン2と線(lineStart0→lineEnd1)の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 polygon[3] = { *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] };<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2 と 線(lineStart0→lineEnd1) の当たり判定 をして 交点collision2 も求める<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision2 = isCollisionPoly_Line(polygon, 3, plane_poly2, *lineStart0, *lineEnd1, &amp;collision2);<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン2を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawTriangle3D(*poly2_Pos[0], *poly2_Pos[1], *poly2_Pos[2], GetColor(255, 255, 255), FALSE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // lineStart0から平面の中心へ向かう線 を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, -plane_poly2.n * plane_poly2.dist, GetColor(255, 165, 165));<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 から 交点collision2 へ向かう(水色) を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(-plane_poly2.n * plane_poly2.dist, collision2, GetColor(0, 255, 255));<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 に水色の球を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(-plane_poly2.n * plane_poly2.dist, 0.05, 16, GetColor(0, 255, 255), GetColor(255, 255, 255), TRUE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 から 原点 に向かう線(水色)を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(-plane_poly2.n * plane_poly2.dist, Vector3{0,0,0}, GetColor(0, 255, 255));<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴンを横切る線lineStart0→lineEnd1を結ぶ線(オレンジ)を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, *lineEnd1, GetColor(255, 165, 0));<br>
-        &nbsp;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collisionRay2; // ポリゴン2とマウスカーソルの光線(rayPos)の交点<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionRay2 = isCollisionPoly_Line(polygon, 3, plane_poly2, rayStart, rayEnd - rayStart, &amp;collisionRay2);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラの始点から飛ばしたレイと三角ポリゴン2の交点に目印の球を描画<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionRay2) DxLib::DrawSphere3D(collisionRay2, 0.01, 16, GetColor(255, 165, 0), GetColor(255, 255, 255), FALSE);<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴン2の存在する平面を描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawPlane(plane_poly2, *poly2_Pos[0], 8,GetColor(0,255,255));<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面と軸並行ボックスAABBの当たり判定とその押し戻しを描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 boxMin, boxMax, boxCenter;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxPoint4-&gt;GetParams(boxCenter, boxMin, boxMax);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distAABB; // 押し戻し距離(当たってないときは平面までの距離)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneAABB = isCollisionPlane_AABB(plane_poly2, boxMin, boxMax, &amp;distAABB);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneAABB) // 平面とボックスが衝突したら↓法線×押し戻し距離 ぶんずらして描く<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(boxMin + plane_poly2.n * distAABB,<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxMax + plane_poly2.n * distAABB, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 三角ポリゴン(2)を含む平面<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Plane4 plane_poly2{ *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] }; // 3点を含む平面を求める<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collision2; // ポリゴン2と線(lineStart0→lineEnd1)の交点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 polygon[3] = { *poly2_Pos[0],*poly2_Pos[1],*poly2_Pos[2] };<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン(2) と 線(lineStart0→lineEnd1) の当たり判定 をして 交点collision2 も求める<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollision2 = isCollisionPoly_Line(polygon, 3, plane_poly2, *lineStart0, *lineEnd1, &amp;collision2);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン(2)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawTriangle3D(*poly2_Pos[0], *poly2_Pos[1], *poly2_Pos[2], GetColor(255, 255, 255), FALSE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // lineStart0から平面の中心へ向かう線 を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, -plane_poly2.n * plane_poly2.dist, GetColor(255, 165, 165));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 から 交点collision2 へ向かう(水色) を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(-plane_poly2.n * plane_poly2.dist, collision2, GetColor(0, 255, 255));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 に水色の球を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(-plane_poly2.n * plane_poly2.dist, 0.05, 16, GetColor(0, 255, 255), GetColor(255, 255, 255), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面の中心 から 原点 に向かう線(水色)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(-plane_poly2.n * plane_poly2.dist, Vector3{0,0,0}, GetColor(0, 255, 255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴンを横切る線lineStart0→lineEnd1を結ぶ線(オレンジ)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, *lineEnd1, GetColor(255, 165, 0));<br>
+          &nbsp;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collisionRay2; // 三角ポリゴン(2)とマウスカーソルの光線(rayPos)の交点<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionRay2 = isCollisionPoly_Line(polygon, 3, plane_poly2, rayStart, rayEnd - rayStart, &amp;collisionRay2);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラの始点から飛ばしたレイと三角ポリゴン(2)の交点に目印の球を描画<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionRay2) DxLib::DrawSphere3D(collisionRay2, 0.01, 16, GetColor(255, 165, 0), GetColor(255, 255, 255), FALSE);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン(2)の存在する平面を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawPlane(plane_poly2, *poly2_Pos[0], 8,GetColor(0,255,255));<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面と軸並行ボックスAABBの当たり判定とその押し戻しを描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 boxMin, boxMax, boxCenter;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxPoint4-&gt;GetParams(boxCenter, boxMin, boxMax);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distAABB; // 押し戻し距離(当たってないときは平面までの距離)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneAABB = isCollisionPlane_AABB(plane_poly2, boxMin, boxMax, &amp;distAABB);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneAABB) // 平面とボックスが衝突したら↓法線×押し戻し距離 ぶんずらして描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(boxMin + plane_poly2.n * distAABB,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxMax + plane_poly2.n * distAABB, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+          &nbsp;&nbsp; &nbsp;&nbsp; <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線の始点lineStart0にカプセル(0)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 centerCapsule, startCapsule, endCapsule;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float radiusCapsule;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lineStart0-&gt;GetParams(centerCapsule, startCapsule, endCapsule, radiusCapsule);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distCapsule;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneCapsule = isCollisionPlane_Capsule(plane_poly2, startCapsule, endCapsule, radiusCapsule, &amp;distCapsule);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneCapsule) // 平面とカプセルが衝突していたら、平面の法線n方向に押し戻したゴーストを描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCapsule3D(startCapsule + plane_poly2.n * distCapsule,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; endCapsule + plane_poly2.n * distCapsule, radiusCapsule, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 線の終点lineEnd1に球体(1)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float sphereRadius;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 sphereCenter;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lineEnd1-&gt;GetParams(sphereCenter, sphereRadius);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float distSphere; <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionPlaneSphere = isCollisionPlane_Sphere(plane_poly2, sphereCenter, sphereRadius, &amp;distSphere);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionPlaneSphere) // 平面と球が衝突していたら、平面の法線n方向に押し戻したゴーストを描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(*lineEnd1 + plane_poly2.n * distSphere, sphereRadius, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollision2)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 三角ポリゴンと線(lineStart0→lineEnd1)の交わった交点に橙の球を表示<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(collision2, 0.05, 16, GetColor(255, 165, 0), GetColor(255, 255, 255), TRUE);<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 球の中心とポリゴンの3点を結ぶ線の角度の合計がほぼ360度(2π)になるかがポリゴン内部かの判定条件となる<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(collision2, *poly2_Pos[0], GetColor(255, 165, 165));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(collision2, *poly2_Pos[1], GetColor(255, 165, 165));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(collision2, *poly2_Pos[2], GetColor(255, 165, 165));<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ドラッグ点とその当たり判定のオブジェクト(ボックスや球やカプセルなど)を描く<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto dragPoint : dragPoints)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dragPoint.lock()-&gt;Draw();</em><br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.Draw(); // エディタのDraw処理<br>
         <br>
