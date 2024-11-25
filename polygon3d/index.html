@@ -1231,6 +1231,7 @@
     <p> <img src="image/blender_dice2.png" alt=""></p>
     上部のメニューバーから[シェーディング]をクリックして下画面のノード画面で右クリックして[+追加]→[テクスチャ]→[画像テ クスチャ]のノードを生成
     
+
 <p> <img src="image/blender_dice3.png" alt=""></p>
     画像テクスチャノードの画像として先ほどペイントしたdiceを選びます<br>
     <p> <img src="image/blender_dice4.png" alt=""></p>
@@ -1240,6 +1241,7 @@
     <p> <img src="image/blender_dice6.png" alt=""></p>
     メニューバーの[ファイル]→[エクスポート]→[Stanford PLY(.ply)]を選び、DXのプロジェクトのImageフォルダにdice.plyとしてエクスポート保存します。
     
+
 <p> <img src="image/blender_dice7.png" alt=""></p>
     エクスポートする際の[前方の軸][上向きの軸]はDXのmain.cppで読み取る際に対応関係があるので色んな軸の設定の仕方で実験してみましょう<br>
     <p> <img src="image/blender_dice8.png" alt=""></p>
@@ -8305,23 +8307,23 @@
         &nbsp;&nbsp;&nbsp; enum class ArrowType { None, Cone, Cube, Sphere };<br>
         <br>
         &nbsp;&nbsp;&nbsp; // 3Dの矢印(位置:start→end)を描く arrowWidth:矢印の先端の円錐などの幅(球の半径) arrowHeight:矢印の先端の円錐などの高さ(球の時は使わない)<br>
-        &nbsp;&nbsp;&nbsp; static int DrawArrow3D(const Vector3&amp; start, const Vector3&amp; end, ArrowType startType = ArrowType::None, ArrowType endType = ArrowType::Cone, float arrowWidth = 1.0f, float arrowHeight = 2.0f, unsigned int color = GetColor(255, 255, 255))<br>
+        &nbsp;&nbsp;&nbsp; static int DrawArrow3D(const Vector3&amp; start, const Vector3&amp; end, ArrowType startType = ArrowType::None, ArrowType endType = ArrowType::Cone, float arrowWidth = 0.1f, float arrowHeight = 0.2f, unsigned int color = GetColor(255, 255, 255))<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; unsigned int difColor = color; // 拡散反射の色<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; unsigned int spcColor = GetColor(0, 0, 0); // 鏡面反射の色(0,0,0)で鏡面反射は黒(反射無し)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int DivNum = 8; // ポリゴン分割数(三角錐や球体などを例.8分割したポリゴンで表示する)<br>
         <br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (startType != ArrowType::Cone) // start側の矢印のタイプが三角錐のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (startType == ArrowType::Cone) // start側の矢印のタイプが三角錐のとき<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCone3D(start, start + (end - start).normalized() * arrowHeight, arrowWidth / 2.0f, DivNum, difColor, spcColor, TRUE);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (endType != ArrowType::Cone) // end側の矢印のタイプが三角錐のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (endType == ArrowType::Cone) // end側の矢印のタイプが三角錐のとき<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCone3D(end, end + (start - end).normalized() * arrowHeight, arrowWidth / 2.0f, DivNum, difColor, spcColor, TRUE);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (startType != ArrowType::Cube) // start側の矢印のタイプがキューブ(立方体)のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (startType == ArrowType::Cube) // start側の矢印のタイプがキューブ(立方体)のとき<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(start, start + (end - start).normalized() * arrowHeight, difColor, spcColor, TRUE);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (endType != ArrowType::Cube) // end側の矢印のタイプがキューブ(立方体)のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (endType == ArrowType::Cube) // end側の矢印のタイプがキューブ(立方体)のとき<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(end, end + (start - end).normalized() * arrowHeight, difColor, spcColor, TRUE);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (startType != ArrowType::Sphere) // start側の矢印のタイプが球体のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (startType == ArrowType::Sphere) // start側の矢印のタイプが球体のとき<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(start, arrowWidth / 2.0f, DivNum, difColor, spcColor, TRUE);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (endType != ArrowType::Sphere) // end側の矢印のタイプが球体のとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (endType == ArrowType::Sphere) // end側の矢印のタイプが球体のとき<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(end, arrowWidth / 2.0f, DivNum, difColor, spcColor, TRUE);<br>
         <br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return DxLib::DrawLine3D(start, end, color);<br>
@@ -8800,7 +8802,7 @@
           <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン(2)の存在する平面を描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawPlane(plane_poly2, *poly2_Pos[0], 8,GetColor(0,255,255));<br>
-          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン(2)の存在する平面の単位法線方向の矢印(緑色)を描く<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawArrow3D(-plane_poly2.n * plane_poly2.dist, -plane_poly2.n * plane_poly2.dist + plane_poly2.n,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::ArrowType::None, MyDraw::ArrowType::Cone, 0.1f, 0.2f, GetColor(0, 255, 0));<br><br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面と軸並行ボックス(4)AABBの当たり判定とその押し戻しゴーストを描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 boxMin, boxMax, boxCenter;<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boxPoint4-&gt;GetParams(boxCenter, boxMin, boxMax);<br>
