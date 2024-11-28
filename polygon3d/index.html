@@ -5135,7 +5135,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToWorld(&amp;matWorldDefault); // デフォルトのワールド行列に戻しておく<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1DrawModel(<em>(int)*DevilData</em>); // 3Dモデル(.mv1形式)を描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1DrawModel(<em>(int)*pDevilData</em>); // 3Dモデル(.mv1形式)を描く<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0<em></em><em></em>, 100, GetColor(255, 255, 0), "x:%f y:%f Angle:%f %f %f", position.x, position.y, keyControlAngle.x, keyControlAngle.y, keyControlAngle.z);<br>
       <br>
@@ -5234,7 +5234,7 @@
         &nbsp;&nbsp;&nbsp; bool isSendDataToGPU = false; // GPUへデータを転送済みか<br>
         &nbsp;&nbsp;&nbsp; bool isGPUBufferRendering; // GPUバッファにVertexとIndexデータを送ってCPU側にはデータをもたないようにするか?<br>
         &nbsp;&nbsp;&nbsp; std::vector&lt;uint32_t&gt; Index; // 3Dモデルのポリゴンのインデックス配列<br>
-        &nbsp;&nbsp;&nbsp; std::vector&lt;VERTEX3DSHADER&gt; Vertex; // 3Dモデルのポリゴンの頂点配列<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;VERTEX3D&gt; Vertex; // 3Dモデルのポリゴンの頂点配列<br>
         <br>
         &nbsp;&nbsp;&nbsp; Ply::Data Data; //.plyのデータ<br>
         <br>
@@ -5247,7 +5247,7 @@
         <br>
         &nbsp;&nbsp;&nbsp; virtual void clearCPUData() // CPU上の配列データをクリアする<br>
         &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // [確実にメモリを空にするには] http://vivi.dyndns.org/tech/cpp/vector.html#shrink_to_fit<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;VERTEX3DSHADER&gt;().swap(Vertex); // 空のテンポラリオブジェクトでリセット<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;VERTEX3D&gt;().swap(Vertex); // 空のテンポラリオブジェクトでリセット<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;unsigned int&gt;().swap(Index); // 空のテンポラリオブジェクトでリセット<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
@@ -6618,7 +6618,7 @@
         // 平面 と ベクトルの内積 (平面の法線ベクトル と 他のベクトルの内積)<br>
         inline float dot(const Plane4&amp; plane, const Vector3&amp; rightVec)<br>
         {<br>
-        &nbsp;&nbsp;&nbsp; return plane.nx * rightVec.x + plane.ny * rightVec.y + plane.nz * rightVec.z; //普通にx同士,y同士,z同士掛けるだけ<br>
+        &nbsp;&nbsp;&nbsp; return plane.n.x * rightVec.x + plane.n.y * rightVec.y + plane.n.z * rightVec.z; //普通にx同士,y同士,z同士掛けるだけ<br>
         }<br>
         <br>
         // 線形補間する start:開始位置&nbsp; end:終了位置&nbsp; t = 補間の割合（start側が100%&nbsp; 0.0～1.0&nbsp; end側が100% でブレンド)<br>
@@ -8873,12 +8873,7 @@
           <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴンを横切る線lineStart0→lineEnd1を結ぶ線(オレンジ)を描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(*lineStart0, *lineEnd1, GetColor(255, 165, 0));<br>
-          &nbsp;<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 collisionRay2; // 三角ポリゴン(2)とマウスカーソルの光線(rayPos)の交点<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionRay2 = isCollisionPoly_Line(polygon, 3, plane_poly2, rayStart, rayEnd - rayStart, &amp;collisionRay2);<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラの始点から飛ばしたレイと三角ポリゴン(2)の交点に目印の球を描画<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionRay2) DxLib::DrawSphere3D(collisionRay2, 0.01, 16, GetColor(255, 165, 0), GetColor(255, 255, 255), FALSE);<br>
-          <br>
+          &nbsp; <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン(2)の存在する平面を描く<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawPlane(plane_poly2, *poly2_Pos[0], 8,GetColor(0,255,255));<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 三角ポリゴン(2)の存在する平面の単位法線方向の矢印(緑色)を描く<br>
