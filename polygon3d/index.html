@@ -9985,9 +9985,9 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR scale = VGet(1.0f, 1.0f, 1.0f); // 拡大縮小スケール<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // キーボードのzキー(A)とxキー(B)とcキー(C)でx,y,z軸まわりに画像を回転<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_A) <em>quaternion *= CreateRotationQuaternion(speed * DX_PI / 180, VGet(1, 0, 0));</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_B) <em>quaternion *= CreateRotationQuaternion(speed * DX_PI / 180, VGet(0, 1, 0));</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_C) <em>quaternion *= CreateRotationQuaternion(speed * DX_PI / 180, VGet(0, 0, 1));</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_A) <em>quaternion *= CreateRotationQuaternion(speed * DX_PI / 180, VGet(1, 0, 0)); // X軸(1,0,0)を軸にspeed度ぶんだけ回転</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_B) <em>quaternion *= CreateRotationQuaternion(speed * DX_PI / 180, VGet(0, 1, 0)); // Y軸(0,1,0)を軸にspeed度ぶんだけ回転</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_C) <em>quaternion *= CreateRotationQuaternion(speed * DX_PI / 180, VGet(0, 0, 1)); // Z軸(0,0,1)を軸にspeed度ぶんだけ回転</em><br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float Deg2Rad = DX_PI_F / 180.0f; // 角度(単位:°度)からラジアン(単位:rad)へ変換する係数<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>const float xRotate = keyControlAngle.x * Deg2Rad;&nbsp; const float yRotate = keyControlAngle.y * Deg2Rad; const float zRotate = keyControlAngle.z * Deg2Rad;</u><br>
@@ -10029,7 +10029,7 @@
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1DrawModel(devil3DModel); // 3Dモデル(.mv1形式)を描く<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>auto xyzAngle = QuaternionToAngle(quaternion); // クオータニオンからそれに対応するオイラー角度の候補を得る(候補は最大3種ありうるし、ある軸が傾いて0度じゃない場合他の軸も連動)</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>auto xyzAngle = QuaternionToAngle(quaternion); // クオータニオンからそれに対応するオイラー角度の候補を得る(候補は最大3種ありうるし、ある軸が傾いていて0度じゃない場合他の軸も連動)</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 100, GetColor(255, 255, 0), "x:%f y:%f Angle:<em>%d %d %d</em>", position.x, position.y, <em>(int)(xyzAngle[0].x * 180 / DX_PI), (int)(xyzAngle[0].y * 180 / DX_PI), (int)(xyzAngle[0].z * 180 / DX_PI)</em>);<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ファイルのパス + ":" + アニメ名でアクセス<br>
@@ -10061,10 +10061,26 @@
     もとのx,y,zをオイラー角で2つ以上のx,y,zを同時に回転させるとぶるぶる不安定だった回転が、明確に一つの軸を中心に回転するようになったのが実感できますでしょうか？<br>
     このようにクオータニオンなら、x,y,zを同時に回転させたり、<b>X,Y,Z軸じゃない「斜め方向の軸」などを中心に回転</b>させたりすることができて、<br>
     より自由に安定した形で回転をさせることができるので、3Dの回転にはオイラー角でなく、クオータニオンを利用するのです。<br>
-    <br>
     <img src="image/quaternion_dice1.gif">オイラー角でのx,y,zの同時押しぶるぶる回転<br>
     <img src="image/quaternion_dice2.gif">クオータニオンでの安定した回転、斜め軸回転<br>
     <br>
+    </a><a id="mozTocId0016" class="mozTocH1">
+      <h1>自作したシェーダー言語をコンパイルしてGPU上で動くプログラムを実感する</h1>
+    まず最初に、シェーダーはC++とはまったく別の言語です。(文法は多少似てるけど)<br>
+    そして、シェーダー言語はコンパイルで機械語へビルドして、事前にGPUへ送りつけておかねば動かない。<br>
+    GPUは送られたシェーダー実行ファイルをもとにした処理をCPUとは独立して実行します。<br>
+    つまり、いままで勉強してきたC++だけでは、あくまでCPUプログラマどまり、であること。<br>
+    シェーダー言語でGPUに腕を突っ込んではじめて、GPUプログラマとして、CPUとGPUを両腕にかかえてPCの支配者の見習いとなれるのだ！！<br>
+    <br>
+    シェーダ言語を定めている国際的な勢力は大きく分けて二つある。<br>
+    <a href="https://ja.wikipedia.org/wiki/High_Level_Shading_Language">HLSL</a>(マイクロソフトDirectX系、NVIDIA協力)と<a href="https://ja.wikipedia.org/wiki/GLSL">GLSL</a>(その他OpenGL:Vulkan系)の2大勢力だ。<br>
+    <br>
+    DXライブラリはDirectXをベースにしているので、HLSLの仕様をみておくとよい。<br>
+    シェーダー言語(拡張子.hlsl)をビルドするためのコンパイラは<a href="https://learn.microsoft.com/ja-jp/windows/win32/direct3dtools/fxc">fxc.exeファイル</a>であるが、<br>
+    DXライブラリにはそのうちのエフェクト(拡張子.fx)をビルドするためのコンパイラが「DXライブラリをインストールしたフォルダ/Tool/ShaderCompiler/」というフォルダにおいてある。<br>
+    まずは下記を参考にDXライブラリのツールフォルダにあるShaderCompiler.exeを探し出そう。(最新Ver.のDirectXのシェーダーをビルドするにはこれ以外にDirectXの最新版をインストールしてfxc.exeを探す必要もあるかも)<br>
+    <img src="image/shader_compile1.png"><br>
+    <img src="image/shader_compile2.png"><br>
     </a>
   </body>
 </html>
