@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type">
     <title>[C++]3D描画エンジン</title>
     <link rel="stylesheet" href="../style.css">
@@ -1231,7 +1231,8 @@
     テクスチャ画像が生成されたら黒地に白で筆の半径50pxほどのサイコロの目を描いてみましょう。<br>
     <p> <img src="image/blender_dice2.png" alt=""></p>
     上部のメニューバーから[シェーディング]をクリックして下画面のノード画面で右クリックして[+追加]→[テクスチャ]→[画像テ クスチャ]のノードを生成
-    <p> <img src="image/blender_dice3.png" alt=""></p>
+    
+<p> <img src="image/blender_dice3.png" alt=""></p>
     画像テクスチャノードの画像として先ほどペイントしたdiceを選びます<br>
     <p> <img src="image/blender_dice4.png" alt=""></p>
     画像テクスチャノードの[カラー]からプリンシプルBSDFノードの[ベースカラー]へと線を引っ張ってつなげるとサイコロのテクスチャ画像がでます<br>
@@ -1239,7 +1240,8 @@
     [テクスチャペイント]をクリックして、[画像]から[名前をつけて保存]を選び、テクスチャ画像をDXのプロジェクトのImageフォルダに dice.pngとして保存<br>
     <p> <img src="image/blender_dice6.png" alt=""></p>
     メニューバーの[ファイル]→[エクスポート]→[Stanford PLY(.ply)]を選び、DXのプロジェクトのImageフォルダにdice.plyとしてエクスポート保存します。
-    <p> <img src="image/blender_dice7.png" alt=""></p>
+    
+<p> <img src="image/blender_dice7.png" alt=""></p>
     エクスポートする際の[前方の軸][上向きの軸]はDXのmain.cppで読み取る際に対応関係があるので色んな軸の設定の仕方で実験してみましょう<br>
     <p> <img src="image/blender_dice8.png" alt=""></p>
     <p><code>main.cpp</code>のコードで読み込む.plyファイルをBlenderで作成したファイルに変えて、書き出す際のxyz 軸を変えながら試行錯誤してみましょう。</p>
@@ -1277,9 +1279,7 @@
       &nbsp;&nbsp;&nbsp; GetGraphSizeF(texImage, &amp;imgWidth, &amp;imgHeight); // テクスチャ画像のサイズを得る<br>
       <br>
       &nbsp;&nbsp;&nbsp; Ply::Data Data; // .plyのデータのクラス<br>
-      &nbsp;&nbsp;&nbsp; Ply::load("Image/<span style="font-weight: bold;">dice.ply</span>", Data); // .plyデータをロード <span
-
-        style="font-weight: bold;">軸を変えてdice1.plyや dice2.plyなどいろいろ試してみよう</span><br>
+      &nbsp;&nbsp;&nbsp; Ply::load("Image/<span style="font-weight: bold;">dice.ply</span>", Data); // .plyデータをロード <span style="font-weight: bold;">軸を変えてdice1.plyや dice2.plyなどいろいろ試してみよう</span><br>
       <br>
       &nbsp;&nbsp;&nbsp; size_t numIndex = 0; // インデックスの数<br>
       &nbsp;&nbsp;&nbsp; std::vector&lt;uint32_t&gt; Index; // 3Dモデルのポリゴンのインデックス配列<br>
@@ -1772,9 +1772,7 @@
         &nbsp;&nbsp;&nbsp; static int prevMouse; // 1フレーム前のマウス状態<br>
         &nbsp;&nbsp;&nbsp; static int currentMouse; // 現在のマウス状態<br>
         &nbsp;&nbsp;&nbsp; static int MouseX, MouseY; // 現在のマウス位置<br>
-        &nbsp;&nbsp;&nbsp; static int <span style="font-weight: bold;">TopLayerMouseX</span>, <span
-
-          style="font-weight: bold;">TopLayerMouseY</span>; // Subsreenの一番上のレイヤのマウス位置XY(Subscreenクラスで更新)<br>
+        &nbsp;&nbsp;&nbsp; static int <span style="font-weight: bold;">TopLayerMouseX</span>, <span style="font-weight: bold;">TopLayerMouseY</span>; // Subsreenの一番上のレイヤのマウス位置XY(Subscreenクラスで更新)<br>
         &nbsp;&nbsp;&nbsp; static int ClickX, ClickY, MButton, LogType;<br>
         &nbsp;&nbsp;&nbsp; static float MouseWheel; // マウスのホイールの回転<br>
         &nbsp;&nbsp;&nbsp; static std::unordered_map&lt;Mouse, int&gt; Click;//&lt;Mouse⇒int&gt; マウスのクリックXY位置辞書<br>
@@ -3503,9 +3501,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // <span style="font-weight: bold;">スクリーンの位置からカメラ画面の視界(ワールド座標)の奥への方向の単位ベクトル(ノルム) を求める</span><br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR <span style="font-weight: bold;">GetCameraWorldDirByScreenXY</span>(float screenX = (float)Input::MouseX, float screenY = (float)Input::MouseY)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // スクリーン(X,Y)からマウスの指すワールド座標(X,Y,Z)を求める<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR currentPos = <span
-
-          style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet(screenX, screenY, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR currentPos = <span style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet(screenX, screenY, 0.0f));<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カメラからマウスの指す位置への方向の単位ベクトル(ノルム)を求める<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return DxLib::VNorm(DxLib::VGet(currentPos.x - x, currentPos.y - y, currentPos.z - z));<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
@@ -3562,9 +3558,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::MouseWheel != 0.0f) // マウスのホイールをグリグリしたとき<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // スクリーンの位置からカメラ画面の視界の奥への方向の単位ベクトル(ノルム)を求める<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR camNorm = camera.<span
-
-          style="font-weight: bold;">GetCameraWorldDirByScreenXY</span>((float)Input::MouseX, (float)Input::MouseY);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR camNorm = camera.<span style="font-weight: bold;">GetCameraWorldDirByScreenXY</span>((float)Input::MouseX, (float)Input::MouseY);<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float camSpeed = camera.wheelSpeed;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.wheelSpeed *= (camera.wheelSpeed &lt; 100.0f) ? 1.5f : 1.0f; // カメラのズーム速度を加速する<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 求めた単位ベクトル×カメラのスピードぶんカメラの位置を移動<br>
@@ -3585,12 +3579,8 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (prevDragX != Input::Click[Mouse::DragLX] || prevDragY != Input::Click[Mouse::DragLY])<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // マウスポインタがある画面上の座標に該当する３Ｄ空間上の座標を取得 https://dxlib.xsrv.jp/function/dxfunc_3d_camera.html#R12N11<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float positionRatio = 0.9f;// 奥行の位置 Near 面 0.0f ～ 1.0f Far 面<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR start = <span
-
-          style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet((float)prevDragX, (float)prevDragY, positionRatio));<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR end = <span
-
-          style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet((float)Input::Click[Mouse::DragLX], (float)Input::Click[Mouse::DragLY], positionRatio));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR start = <span style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet((float)prevDragX, (float)prevDragY, positionRatio));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR end = <span style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet((float)Input::Click[Mouse::DragLX], (float)Input::Click[Mouse::DragLY], positionRatio));<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float camSpeed = 400; // ドラッグに対するカメラの移動速度<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.x -= (end.x - start.x) * camSpeed;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.y -= (end.y - start.y) * camSpeed;<br>
@@ -3693,9 +3683,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // スクリーンの位置からカメラ画面の視界(ワールド座標)の奥への方向の単位ベクトル(ノルム)を求める<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR GetCameraWorldDirByScreenXY(float screenX = (float)Input::MouseX, float screenY = (float)Input::MouseY)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // スクリーン(X,Y)からマウスの指すワールド座標(X,Y,Z)を求める<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR currentPos = <span
-
-          style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet(screenX, screenY, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR currentPos = <span style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet(screenX, screenY, 0.0f));<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カメラからマウスの指す位置への方向の単位ベクトル(ノルム)を求める<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return DxLib::VNorm(DxLib::VGet(currentPos.x - x, currentPos.y - y, currentPos.z - z));<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
@@ -3704,12 +3692,8 @@
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR GetWorldDirByCameraScreenXYDir(float screenStartX = (float)Input::MouseX, float screenStartY = (float)Input::MouseY,<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float screenEndX = (float)(Input::MouseX + 1), float screenEndY = (float)(Input::MouseY + 1))<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // スクリーン(X,Y)からマウスの指すワールド座標(X,Y,Z)を求める<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR startPos = <span
-
-            style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet(screenStartX, screenStartY, 0.0f));<br>
-          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR endPos = <span
-
-            style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet(screenEndX, screenEndY, 0.0f));<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR startPos = <span style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet(screenStartX, screenStartY, 0.0f));<br>
+          &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR endPos = <span style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet(screenEndX, screenEndY, 0.0f));<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ワールド座標におけるstartからendへ向かう方向のベクトルを求める<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return DxLib::VGet(endPos.x - startPos.x, endPos.y - startPos.y, endPos.z - startPos.z);<br>
           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
@@ -3780,9 +3764,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (Input::MouseWheel != 0.0f) // マウスのホイールをグリグリしたとき<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // スクリーンの位置からカメラ画面の視界の奥への方向の単位ベクトル(ノルム)を求める<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR camNorm = camera.<span
-
-          style="font-weight: bold;">GetCameraWorldDirByScreenXY</span>((float)Input::MouseX, (float)Input::MouseY);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR camNorm = camera.<span style="font-weight: bold;">GetCameraWorldDirByScreenXY</span>((float)Input::MouseX, (float)Input::MouseY);<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float camSpeed = camera.wheelSpeed;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.wheelSpeed *= (camera.wheelSpeed &lt; 100.0f) ? 1.5f : 1.0f; // カメラのズーム速度を加速する<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 求めた単位ベクトル×カメラのスピードぶんカメラの位置を移動<br>
@@ -3803,12 +3785,8 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (prevDragX != Input::Click[Mouse::DragLX] || prevDragY != Input::Click[Mouse::DragLY])<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // マウスポインタがある画面上の座標に該当する３Ｄ空間上の座標を取得 https://dxlib.xsrv.jp/function/dxfunc_3d_camera.html#R12N11<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float positionRatio = 0.9f;// 奥行の位置 Near 面 0.0f ～ 1.0f Far 面<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR start = <span
-
-          style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet((float)prevDragX, (float)prevDragY, positionRatio));<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR end = <span
-
-          style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet((float)Input::Click[Mouse::DragLX], (float)Input::Click[Mouse::DragLY], positionRatio));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR start = <span style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet((float)prevDragX, (float)prevDragY, positionRatio));<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR end = <span style="font-weight: bold;">DxLib::ConvScreenPosToWorldPos</span>(VGet((float)Input::Click[Mouse::DragLX], (float)Input::Click[Mouse::DragLY], positionRatio));<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float camSpeed = 400; // ドラッグに対するカメラの移動速度<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.x -= (end.x - start.x) * camSpeed;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; camera.y -= (end.y - start.y) * camSpeed;<br>
@@ -3877,9 +3855,7 @@
       <p>いかがでしょう?キーボードのDAキーとEQキーでカメラ視点を左 右や上下に移動できるようになりましたか?<br>
         カメラの上下左右方向でも重要なのは 2Dのスクリーン から 3Dのワールド座標 での方向のベクトルを求めることです<br>
         GetWorldDirByCameraScreenXYDir関数の中でもDxLib::ConvScreenPosToWorldPos関数を使って 2D → 3D座標 への変換を行っています<br>
-        カメラの左右移動方向は<span style="text-decoration: underline;">「スクリーンの枠」の左右方向</span>、 カメラの上下移動方向は<span
-
-          style="text-decoration: underline;">「スクリーンの枠」の上下方向</span>と 平行になるベクトルです<br>
+        カメラの左右移動方向は<span style="text-decoration: underline;">「スクリーンの枠」の左右方向</span>、 カメラの上下移動方向は<span style="text-decoration: underline;">「スクリーンの枠」の上下方向</span>と 平行になるベクトルです<br>
       </p>
       <br>
       <br>
@@ -4267,12 +4243,8 @@
           &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // アニメの数ぶん順番にアタッチを設定<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const char* animName = DxLib::MV1GetAnimName(devil3DModel, index); // アニメーション名を取得<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // アニメ名からインデックス番号を得るために辞書に登録しておく<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="font-weight: bold;">animNameToIndex</span>[animName] = DxLib::<span
-
-            style="font-weight: bold;">MV1AttachAnim</span>(devil3DModel, index); // アニメをアタッチして、その番号を辞書に登録<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="font-weight: bold;">animNameToTotalTime</span>[animName] = DxLib::<span
-
-            style="font-weight: bold;">MV1GetAttachAnimTotalTime</span>(devil3DModel, index); // アニメをループさせるためにアニメの総再生時間を辞書に記録しておく<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="font-weight: bold;">animNameToIndex</span>[animName] = DxLib::<span style="font-weight: bold;">MV1AttachAnim</span>(devil3DModel, index); // アニメをアタッチして、その番号を辞書に登録<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="font-weight: bold;">animNameToTotalTime</span>[animName] = DxLib::<span style="font-weight: bold;">MV1GetAttachAnimTotalTime</span>(devil3DModel, index); // アニメをループさせるためにアニメの総再生時間を辞書に記録しておく<br>
           &nbsp;&nbsp;&nbsp; }</em><br>
         &nbsp;&nbsp;&nbsp; </a><a id="mozTocId0009" class="mozTocH1"><br>
         &nbsp;&nbsp;&nbsp; int texImage = -1;<br>
@@ -4467,22 +4439,14 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0<em></em><em></em>, 100, GetColor(255, 255, 0), "x:%f y:%f Angle:%f %f %f", position.x, position.y, keyControlAngle.x, keyControlAngle.y, keyControlAngle.z);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>std::string <span
-
-            style="font-weight: bold;">animName</span> = "Take 001"; // アニメ名:DXモデルビューアでアニメ名をきちんと確認したほうがよい↓<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>std::string <span style="font-weight: bold;">animName</span> = "Take 001"; // アニメ名:DXモデルビューアでアニメ名をきちんと確認したほうがよい↓<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(animNameToTotalTime.count(animName) &gt; 0 &amp;&amp; "指定されたアニメ名のアニメはMV1に付属していませんでした");<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime += animStepTime * animSpeed; // 1.0×2倍 なら2倍速でアニメ時刻が進む<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (animTime &gt; <span
-
-            style="font-weight: bold;">animNameToTotalTime</span>[<span
-
-            style="font-weight: bold;">animName</span>])<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (animTime &gt; <span style="font-weight: bold;">animNameToTotalTime</span>[<span style="font-weight: bold;">animName</span>])<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime = 0.0f; // 0秒目へとアニメをループさせる<br>
           <br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 再生時間をセットする<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::<span style="font-weight: bold;">MV1SetAttachAnimTime</span>(devil3DModel, <span
-
-            style="font-weight: bold;">animNameToIndex</span>[<span style="font-weight: bold;">animName</span>], animTime);</em><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::<span style="font-weight: bold;">MV1SetAttachAnimTime</span>(devil3DModel, <span style="font-weight: bold;">animNameToIndex</span>[<span style="font-weight: bold;">animName</span>], animTime);</em><br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen1-&gt;ClearDrawScreen(); // 描く前に一旦キャンバスをきれいにまっさらに<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen1-&gt;DrawStart(); // このDrawStartとDrawEndのあいだにDraw～されたらサブのスクリーンに描かれるようになる<br>
@@ -5142,24 +5106,14 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0<em></em><em></em>, 100, GetColor(255, 255, 0), "x:%f y:%f Angle:%f %f %f", position.x, position.y, keyControlAngle.x, keyControlAngle.y, keyControlAngle.z);<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// ファイルのパス + ":" + アニメ名でアクセス</em><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string <em><span
-
-          style="font-weight: bold;">animPathName</span></em> = <em>(<span
-
-          style="font-weight: bold;">animeButton </span>== 0) ? "Image/devil@kick.mv1:mixamo.com" : "Image/devil@jump.mv1:mixamo.com";<br>
-      </em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(<em>pDevilData-&gt;count(<span
-
-          style="font-weight: bold;">animPathName</span>)</em> &gt; 0 &amp;&amp; "指定されたアニメ名のアニメはMV1に付属していませんでした");<em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string <em><span style="font-weight: bold;">animPathName</span></em> = <em>(<span style="font-weight: bold;">animeButton </span>== 0) ? "Image/devil@kick.mv1:mixamo.com" : "Image/devil@jump.mv1:mixamo.com";<br>
+      </em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(<em>pDevilData-&gt;count(<span style="font-weight: bold;">animPathName</span>)</em> &gt; 0 &amp;&amp; "指定されたアニメ名のアニメはMV1に付属していませんでした");<em><br>
       </em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime += animStepTime * animSpeed; // 1.0×2倍 なら2倍速でアニメ時刻が進む<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (animTime &gt; (*pDevilData)[<em><span
-
-          style="font-weight: bold;">animPathName</span></em>].endTime)<em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (animTime &gt; (*pDevilData)[<em><span style="font-weight: bold;">animPathName</span></em>].endTime)<em><br>
       </em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime = 0.0f; // 0秒目へとアニメをループさせる<em><br>
         <br>
       </em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 再生時間をセットする<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1SetAttachAnimTime(<em>(int)*pDevilData, (*pDevilData)[<span
-
-          style="font-weight: bold;">animPathName</span>].index</em>, animTime);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1SetAttachAnimTime(<em>(int)*pDevilData, (*pDevilData)[<span style="font-weight: bold;">animPathName</span>].index</em>, animTime);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen1-&gt;ClearDrawScreen(); // 描く前に一旦キャンバスをきれいにまっさらに<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; subscreen1-&gt;DrawStart(); // このDrawStartとDrawEndのあいだにDraw～されたらサブのスクリーンに描かれるようになる<br>
@@ -8944,9 +8898,9 @@
       ポリゴンの3点を移動させると、球やカプセルの押し戻し位置のゴーストも変わることも試して、平面との当たり判定を確かめてみましょう。<br>
       <br>
       <br>
-    </a><a id="mozTocId0015" class="mozTocH1">
+    </a>
       <h1>3Dモデルをクオータニオンで安定して回転できるようにする</h1>
-    <code>Quaternion.hを新規作成</code>して<a href="https://qiita.com/Arihi/items/4b306feb3d9e6cd93204">ジンバルロック</a>の心配のない回転の定義を追加しましょう。<br>
+      <code>Quaternion.hを新規作成</code>して<a href="https://qiita.com/Arihi/items/4b306feb3d9e6cd93204">ジンバルロック</a>の心配のない回転の定義を追加しましょう。<br>
     <p class="source">#ifndef QUATERNION_H_<br>
       #define QUATERNION_H_<br>
       <br>
@@ -10064,8 +10018,8 @@
     <img src="image/quaternion_dice1.gif">オイラー角でのx,y,zの同時押しぶるぶる回転<br>
     <img src="image/quaternion_dice2.gif">クオータニオンでの安定した回転、斜め軸回転<br>
     <br>
-    </a><a id="mozTocId0016" class="mozTocH1">
-      <h1>自作したシェーダー言語をコンパイルしてGPU上で動くプログラムを実感する</h1>
+    
+    <h1>自作したシェーダー言語をコンパイルしてGPU上で動くプログラムを実感する</h1>
       まず最初に、シェーダーはC++とはまったく別の言語です。(文法は多少似てるけど)<br>
       そして、シェーダー言語はコンパイルで機械語へビルドして、事前にGPUへ送りつけておかねば動かない。<br>
       GPUは送られたシェーダー実行ファイルをもとにした処理をCPUとは独立して実行します。<br>
@@ -10131,7 +10085,7 @@
       } ;<br>
       <br>
       <br>
-      // マテリアルパラメータ<br>
+      // [DirectX11版]マテリアルパラメータ<br>
       struct DX_D3D11_CONST_MATERIAL<br>
       {<br>
       &nbsp;&nbsp;&nbsp; float4&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Diffuse ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ディフューズカラー<br>
@@ -10144,7 +10098,7 @@
       &nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; TypeParam2 ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // マテリアルタイプパラメータ2<br>
       } ;<br>
       <br>
-      // フォグパラメータ<br>
+      // [DirectX11版]フォグパラメータ<br>
       struct DX_D3D11_VS_CONST_FOG<br>
       {<br>
       &nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; LinearAdd ;&nbsp;&nbsp;&nbsp; // フォグ用パラメータ end / ( end - start )<br>
@@ -10155,7 +10109,7 @@
       &nbsp;&nbsp;&nbsp; float4&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Color ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カラー<br>
       } ;<br>
       <br>
-      // ライトパラメータ<br>
+      // [DirectX11版]ライトパラメータ<br>
       struct DX_D3D11_CONST_LIGHT<br>
       {<br>
       &nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Type ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ライトタイプ( DX_LIGHTTYPE_POINT など )<br>
@@ -10181,7 +10135,7 @@
       &nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Padding2 ;&nbsp;&nbsp;&nbsp; // パディング２<br>
       } ;<br>
       <br>
-      // ピクセルシェーダー・頂点シェーダー共通パラメータ<br>
+      // [DirectX11版]ピクセルシェーダー・頂点シェーダー共通パラメータ<br>
       struct DX_D3D11_CONST_BUFFER_COMMON<br>
       {<br>
       &nbsp;&nbsp;&nbsp; DX_D3D11_CONST_LIGHT&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Light[ 6 ] ;&nbsp;&nbsp;&nbsp; // ライトパラメータ<br>
@@ -10189,7 +10143,7 @@
       &nbsp;&nbsp;&nbsp; DX_D3D11_VS_CONST_FOG&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Fog ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // フォグパラメータ<br>
       } ;<br>
       <br>
-      // 基本パラメータ<br>
+      // [DirectX11版]基本パラメータ<br>
       struct DX_D3D11_VS_CONST_BUFFER_BASE<br>
       {<br>
       &nbsp;&nbsp;&nbsp; float4&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; AntiViewportMatrix[ 4 ] ;&nbsp;&nbsp;&nbsp; // アンチビューポート行列<br>
@@ -10204,26 +10158,26 @@
       &nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Padding ;<br>
       } ;<br>
       <br>
-      // その他の行列<br>
+      // [DirectX11版]その他の行列<br>
       struct DX_D3D11_VS_CONST_BUFFER_OTHERMATRIX<br>
       {<br>
       &nbsp;&nbsp;&nbsp; float4&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ShadowMapLightViewProjectionMatrix[ 3 ][ 4 ] ;&nbsp;&nbsp;&nbsp; // シャドウマップ用のライトビュー行列とライト射影行列を乗算したもの<br>
       &nbsp;&nbsp;&nbsp; float4&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; TextureMatrix[ 3 ][ 2 ] ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // テクスチャ座標操作用行列<br>
       } ;<br>
       <br>
-      // 頂点シェーダー・ピクセルシェーダー共通パラメータ<br>
+      // [DirectX11版]頂点シェーダー・ピクセルシェーダー共通パラメータ<br>
       cbuffer cbD3D11_CONST_BUFFER_COMMON : register( b0 )<br>
       {<br>
       &nbsp;&nbsp;&nbsp; DX_D3D11_CONST_BUFFER_COMMON&nbsp;&nbsp;&nbsp; g_Common ;<br>
       } ;<br>
       <br>
-      // 基本パラメータ<br>
+      // [DirectX11版]基本パラメータ<br>
       cbuffer cbD3D11_CONST_BUFFER_VS_BASE&nbsp;&nbsp;&nbsp; : register( b1 )<br>
       {<br>
       &nbsp;&nbsp;&nbsp; DX_D3D11_VS_CONST_BUFFER_BASE&nbsp;&nbsp;&nbsp; g_Base ;<br>
       } ;<br>
       <br>
-      // その他の行列<br>
+      // [DirectX11版]その他の行列<br>
       cbuffer cbD3D11_CONST_BUFFER_VS_OTHERMATRIX : register( b2 )<br>
       {<br>
       &nbsp;&nbsp;&nbsp; DX_D3D11_VS_CONST_BUFFER_OTHERMATRIX&nbsp;&nbsp;&nbsp; g_OtherMatrix ;<br>
@@ -10251,6 +10205,78 @@
     ③コマンドプロンプトでShaderCompiler.exe /Tvs5_0 TestVS.fxを実行して TestVS.fx をビルドして TestVS.vso を生成する。<br>
     <img src="image/shader_compile3.png"><br>
     <br>
-    </a>
-  </body>
+    同じ要領で今度はTestPS.fxを作成して、ピクセルシェーダー(Pixel:画面のドットの各ピクセルの Shader:シェーダ)の略 も ビルドしましょう。<br>
+    <p><code>TestPS.fxをShaderフォルダに新規作成</code>して下記コードで 頂点シェーダなどを経由してやってきたPSInputの拡散光(Diffuse) を そのままPSOutPutのColor0に設定してreturnさせましょう。</p>
+    <p class="source">// ピクセルシェーダーの入力<br>
+      struct PS_INPUT<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; float4 Diffuse&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : COLOR0 ;<br>
+      &nbsp;&nbsp;&nbsp; float4 Specular&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : COLOR1 ;<br>
+      &nbsp;&nbsp;&nbsp; float2 TexCoords0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : TEXCOORD0 ;<br>
+      } ;<br>
+      <br>
+      // ピクセルシェーダーの出力<br>
+      struct PS_OUTPUT<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; float4 Color0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : SV_TARGET0 ;&nbsp;&nbsp;&nbsp; // 色<br>
+      } ;<br>
+      <br>
+      <br>
+      // [DirectX11版]定数バッファピクセルシェーダー基本パラメータ<br>
+      struct DX_D3D11_PS_CONST_BUFFER_BASE<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; float4&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; FactorColor ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // アルファ値等<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; MulAlphaColor ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カラーにアルファ値を乗算するかどうか( 0.0f:乗算しない&nbsp; 1.0f:乗算する )<br>
+      &nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; AlphaTestRef ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // アルファテストで使用する比較値<br>
+      &nbsp;&nbsp;&nbsp; float2&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Padding1 ;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; AlphaTestCmpMode ;&nbsp;&nbsp;&nbsp; // アルファテスト比較モード( DX_CMP_NEVER など )<br>
+      &nbsp;&nbsp;&nbsp; int3&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Padding2 ;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float4&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; IgnoreTextureColor ;&nbsp;&nbsp;&nbsp; // テクスチャカラー無視処理用カラー<br>
+      } ;<br>
+      <br>
+      // [DirectX11版]基本パラメータ https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4904<br>
+      cbuffer cbD3D11_CONST_BUFFER_PS_BASE&nbsp;&nbsp;&nbsp; : register( b1 )<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; DX_D3D11_PS_CONST_BUFFER_BASE&nbsp;&nbsp;&nbsp; g_Base ;<br>
+      } ;<br>
+      <br>
+      <br>
+      SamplerState g_DiffuseMapSampler&nbsp;&nbsp;&nbsp; : register( s0 ) ;&nbsp;&nbsp;&nbsp; // ディフューズマップテクスチャ<br>
+      Texture2D&nbsp;&nbsp;&nbsp; g_DiffuseMapTexture&nbsp;&nbsp;&nbsp; : register( t0 ) ;&nbsp;&nbsp;&nbsp; // ディフューズマップテクスチャ<br>
+      <br>
+      <br>
+      <br>
+      // main関数<br>
+      PS_OUTPUT main( PS_INPUT PSInput )<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; PS_OUTPUT PSOutput ;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 頂点シェーダなどを経由してやってきたDiffuse拡散光の色をそのまま画面スクリーンのピクセル色としてOutputする<br>
+      &nbsp;&nbsp;&nbsp; PSOutput.Color0.b = PSInput.Diffuse.r ; // R:赤&nbsp;&nbsp;&nbsp;&nbsp; 画面スクリーン上のピクセル色<br>
+      &nbsp;&nbsp;&nbsp; PSOutput.Color0.g = PSInput.Diffuse.g ; // G:緑&nbsp;&nbsp;&nbsp;&nbsp; 画面スクリーン上のピクセル色<br>
+      &nbsp;&nbsp;&nbsp; PSOutput.Color0.r = PSInput.Diffuse.b ; // B:青&nbsp;&nbsp;&nbsp;&nbsp; 画面スクリーン上のピクセル色<br>
+      &nbsp;&nbsp;&nbsp; PSOutput.Color0.a = PSInput.Diffuse.a ; // A:透明度 画面スクリーン上のピクセル色<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 出力パラメータを返す<br>
+      &nbsp;&nbsp;&nbsp; return PSOutput ;<br>
+      }<br>
+    </p>
+    <br>
+    TestPS.fxをDXのプロジェクトのShaderフォルダに保存したら、<br>
+    ①Windowsのバーからコマンドプロンプトを検索して起動して、<br>
+    ②cdコマンドを実行して、黒画面のコマンドプロンプト上でShaderフォルダに移動<br>
+    ③コマンドプロンプトでShaderCompiler.exe /Tps5_0 TestPS.fxを実行して TestPS.fx をビルドして TestPS.pso を生成する。<br>
+    <img src="image/shader_compile4.png"><br>
+    <br>
+    <br>
+  	頂点シェーダから出た頂点はラスタライザで内側にあるピクセルがもとめられ、ピクセルシェーダはその内側のピクセルの数ぶんだけ実行されます。<br>
+    頂点の3点以外の拡散光の強さDiffuse値は3点の間にあるピクセルでは適度にグラデーションで補われてやってくるので、<br>
+    厳密には TestVSの出力VSOutPutのDiffuse値 ≒ TestPSの入力PSOutPutのDiffuse値 ではありますが、<br>
+    VSのOutputの影響を受けたPSInputのDiffuse値が渡ってくるというイメージでいいと思います。<br>
+    <img src="image/shader_compile5.png"><br>
+    <br>
+	</body>
 </html>
