@@ -28,6 +28,7 @@
       <li><a href="#mozTocId0014">ドラッグできるオブジェクトのコントロール点を用意して当たり判定の球やカプセルなどの幅や高さを調整できるようにする</a></li>
       <li><a href="#mozTocId0015">3Dモデルをクオータニオンで安定して回転できるようにする</a></li>
       <li><a href="#mozTocId0016">自作したシェーダー言語をコンパイルしてGPU上で動くプログラムを実感する</a></li>
+      <li><a href="#mozTocId0017">ディレクショナルライト、ポイントライト、スポットライトを生成する</a></li>
     </ol>
     <br>
     <a id="mozTocId0001" class="mozTocH1">
@@ -10283,7 +10284,11 @@
     ③コマンドプロンプトでShaderCompiler.exe /Tvs5_0 TestVS.fxを実行して TestVS.fx をビルドして TestVS.vso を生成する。<br>
     <img src="image/shader_compile3.png"><br>
     <br>
-    <a id="mozTocId0016" class="mozTocH1"> 同じ要領で今度はTestPS.fxを作成して、ピクセルシェーダー(Pixel:画面のドットの各ピクセルの Shader:シェーダ)の略 も ビルドしましょう。<br>
+    同じ要領で今度はTestPS.fxを作成して、ピクセルシェーダー(Pixel:画面のドットの各ピクセルの Shader:シェーダ)の略 も ビルドしましょう。<br>
+    <b>[重要]</b>ピクセルシェーダは<b>別環境ではフラグメントシェーダ</b>と呼ばれます。(OpenGLのGLSL言語とか、<a
+
+      href="https://docs.unity3d.com/ja/2019.4/Manual/SL-VertexFragmentShaderExamples.html">Unityのシェーダ言語</a>では<b>fragって言葉</b>を見かけたらピクセルシェーダの処理だな、と心で読み替えましょう)<br>
+    <a id="mozTocId0016" class="mozTocH1">
       <p><code>TestPS.fxをShaderフォルダに新規作成</code>して下記コードで 頂点シェーダなどを経由してやってきたPSInputの拡散光(Diffuse) を そのままPSOutPutのColor0に設定してreturnさせましょう。</p>
       <p class="source">// ピクセルシェーダーの入力<br>
         struct PS_INPUT<br>
@@ -10593,7 +10598,7 @@
         (以下、略).... </p>
       GPUに渡されるデータについては</a><a href="https://dxlib.xsrv.jp/function/dxfunc_3d_shader.html#R17N2">DX公式サイトにも説明</a>がある<br>
     コメントに書いてあるように、中身のメンバ変数は変わる可能性がある、<br>
-    つまりゲームの3D表現ごとに描く際に必要な頂点に埋め込まれたデータは変わってくるわけなので、<br>
+    つまりゲームの3D表現ごとに描く際に必要な頂点に埋め込んでおきたいデータは変わってくるわけなので、<br>
     3D保存データの保存データ構造 と 頂点データの定義 と シェーダのプログラム と GPU上の処理 はセットで考えられる必要があるということ。<br>
     ゆえに、ゲームごとにエンジンがカスタマイズされる際に、3Dモデルのデータの書き出しスクリプトを書く人や、<br>
     <a href="https://www.4gamer.net/games/619/G061991/20230823075/">データ構造自体からカスタマイズ</a>してシェーダのプログラムをできる人..などが、必要とされる人材となるわけです。<br>
@@ -10844,7 +10849,7 @@
     このように頂点シェーダを書き換えれば、3Dの点が1万個あったとしても、頂点すべてに対してfor文を1万回まわすことなくGPUで処理を行わせることができます。<br>
     3Dを描く際に、GPUにどのように計算の処理をさせているのかの実感が少し湧いたでしょうか？<br>
     <br>
-    うーん、いまいちゲームに使う実感が湧かない？例えば、xやzに応じて色を描き分けられるということは、<a href="https://styly.cc/ja/tips/post-processing-water/">平面に模様をGPUで描かせることができるということ</a>です。<br>
+    うーん、いまいちゲームに使う実感が湧かない？例えば、xなど位置に対応して色を描き分けられるということは、<a href="https://styly.cc/ja/tips/post-processing-water/">平面に模様をGPUで描かせることへ発展できるということ</a>です(←x,yから セルラーノイズ=x,yに対応した乱数 で海中の模様を描けている)。<br>
     <br>
     <br>
     では、次の実験として、今度はTestPS.fxつまりピクセルシェーダーの方を変更して、サイコロのテクスチャの色を今作った頂点シェーダーからの色に掛け算してみましょう。<br>
@@ -10897,7 +10902,7 @@
       &nbsp;&nbsp;&nbsp; PS_OUTPUT PSOutput ;<br>
       &nbsp;&nbsp;&nbsp; <em>float4 <b>TextureDiffuseColor</b> ;<br>
         <br>
-        &nbsp;&nbsp;&nbsp; // テクスチャカラーの読み込み<br>
+        &nbsp;&nbsp;&nbsp; // テクスチャ画像の色をサンプラーで[サンプリング採集 して取り出す]<br>
         &nbsp;&nbsp;&nbsp; <b>TextureDiffuseColor</b> = <b>g_DiffuseMapTexture</b>.Sample(<b>g_DiffuseMapSampler</b>, PSInput.TexCoords0);</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; <u>// 頂点シェーダなどを経由してやってきたDiffuse拡散光の色をそのまま画面スクリーンのピクセル色としてOutputする<br>
@@ -10919,5 +10924,418 @@
     こういった視点をもった上で、普段プレイしているゲームをプレイすると、もしかしたらこの床の模様、このアイテムの点滅や光りかた、シェーダでやってるのでは？という視点が養えます。<br>
     <br>
     <br>
+    <a id="mozTocId0017" class="mozTocH1">
+      <h1>ディレクショナルライト、ポイントライト、スポットライトを生成する</h1>
+    </a> シェーダの色付けにはそれを映し出す源となる光源の存在が重要なので、次は光源となるディレクショナルライト、ポイントライト、スポットライトを生成してみましょう。<br>
+    <p><code>main.cpp</code>のコードを変更して光源を生成して、キーボードのLボタンでコントロールするライトを切り替えて、上下左右PageUp PageDownキーで動かせるようにしてみましょう。</p>
+    <p class="source">#include "DxLib.h"<br>
+      #include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
+      #include "Input.h"<br>
+      #include "Screen.h"<br>
+      #include "Ply.h"<br>
+      #include "DataMV1.h"<br>
+      #include "DataPly.h"<br>
+      #include "Collision3D.h"<br>
+      #include "MyDraw.h" // 自作の描画処理<br>
+      #include "Quaternion.h"<br>
+      <br>
+      #include "Editor.h"<br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMain からプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; SetUseDirect3DVersion(DX_DIRECT3D_11); // 最新のDXライブラリはデフォルトでDirectX11版のシェーダー言語に対応しているが、念のため11に事前設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
+      &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
+      &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+      &nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // ゲームのwhileループを開始する前の初期化処理<br>
+      &nbsp;&nbsp;&nbsp; float animTime = 0.0f; // アニメの現在時刻<br>
+      &nbsp;&nbsp;&nbsp; float animSpeed = 2.0f; // MV1のアニメの再生速度設定 2.0fなら2倍速<br>
+      &nbsp;&nbsp;&nbsp; float animStepTime = 1.0f; // MV1のアニメの毎時間の進む時間の設定<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataMV1&gt; pDevilData = Resource::MakeShared&lt;DataMV1&gt;("Image/devil@kick.mv1");<br>
+      &nbsp;&nbsp;&nbsp; pDevilData-&gt;Load(); // 3Dモデルをmv1形式で読込み<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataMV1&gt; pDevilAttackAnimData = Resource::MakeShared&lt;DataMV1&gt;("Image/devil@jump.mv1");<br>
+      &nbsp;&nbsp;&nbsp; pDevilAttackAnimData-&gt;Load(); // 3Dの追加アニメデータをmv1形式で読込み<br>
+      &nbsp;&nbsp;&nbsp; pDevilData-&gt;AttachAnim(*pDevilAttackAnimData); // アニメを追加でflyのほうをベースとしたモデルにアタッチ<br>
+      &nbsp;&nbsp;&nbsp; int animeButton = 0; // ボタンでアニメを切り替えられるようにする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; pTexImage = Resource::MakeShared&lt;Texture&gt;("Image/dice.png");<br>
+      &nbsp;&nbsp;&nbsp; pTexImage-&gt;Load(); // MakeSharedとLoadを分けた(フォルダだけ設定しておいて、あとからロードもできるように)<br>
+      &nbsp;&nbsp;&nbsp; assert((int)*pTexImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;DataPly&gt; pPlyData = Resource::MakeShared&lt;DataPly&gt;("Image/dice.ply");<br>
+      &nbsp;&nbsp;&nbsp; pPlyData-&gt;Load(); // MakeSharedとLoadを分けた(フォルダだけ設定しておいて、あとからロードもできるように)<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; int VertexShaderHandle = DxLib::LoadVertexShader("Shader/TestVS.vso"); // 頂点シェーダーを読み込む<br>
+      &nbsp;&nbsp;&nbsp; int PixelShaderHandle&nbsp; = DxLib::LoadPixelShader("Shader/TestPS.pso");&nbsp; // ピクセルシェーダーを読み込む<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <em>int DirLightHandle; // ディレクショナルライトのハンドル番号<br>
+        &nbsp;&nbsp;&nbsp; int SpotLightHandle; // スポットライトのハンドル番号<br>
+        &nbsp;&nbsp;&nbsp; int PointLightHandle; // ポイントライトのハンドル番号<br>
+        &nbsp;&nbsp;&nbsp; int controlLight = -1; // ユーザーのコントロール中のライト<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(TRUE); // 光の明暗計算を有効に 同時に有効にできるのは標準ライトを含めて３つまで<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetLightEnable(FALSE); // デフォルトで3D空間を照らしていた標準ライトは無効にする<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ※※ライトの初期化順※※※<br>
+        &nbsp;&nbsp;&nbsp; // ★[重要] CreateLight系関数を呼んだ順にシェーダーのg_Common.Light[ 0 ] g_Common.Light[ 1 ] g_Common.Light[ 2 ]にライトが対応するので<br>
+        &nbsp;&nbsp;&nbsp; // シェーダーのディレクショナルライト、スポットライト、ポイントライトの初期化の順番を合わせないといけない！！！<br>
+        &nbsp;&nbsp;&nbsp; //[<b>DXでは必ずディレクショナルライト→スポットライト→ポイントライトの順に初期化しないといけない</b>] https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=5605<br>
+        <br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // [標準ライトのデフォルトで照らしていたライトはディレクショナルライト]<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // [ディレクショナルライト] https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N1<br>
+        &nbsp;&nbsp;&nbsp; // 標準ディレクショナルライト:ディレクショナルライトとは位置を持たず方向だけを設定するライト<br>
+        &nbsp;&nbsp;&nbsp; // 太陽の光などの光源が遠すぎて何処に居ても同じ方向から照らされるライト効果などに使用<br>
+        &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期設定では標準ライトはディレクショナルライトとなる　計算負荷も最も軽い<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ★g_Common.Light[ 0 ]<br>
+        &nbsp;&nbsp;&nbsp; // ディレクショナルライトを作成する<br>
+        &nbsp;&nbsp;&nbsp; DirLightHandle = DxLib::CreateDirLightHandle(VGet(0.0f, 0.0f, 1.0f));<br>
+        &nbsp;&nbsp;&nbsp; // ディレクショナルライトのアンビエントカラーを抑える<br>
+        &nbsp;&nbsp;&nbsp; //SetLightAmbColorHandle(DirLightHandle, GetColorF(0.0f, 0.1f, 0.0f, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; // ディレクショナルライトのディフューズカラーを緑にする<br>
+        &nbsp;&nbsp;&nbsp; //SetLightDifColorHandle(DirLightHandle, GetColorF(0.0f, 1.0f, 0.0f, 0.0f));<br>
+        <br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // [スポットライト] https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N23<br>
+        &nbsp;&nbsp;&nbsp; // 位置、方向、角度範囲、距離減衰パラメータを持つスポットライト 一番計算負荷が高く また頂点単位のライティングではポリゴンを細かく分割しておかないと思ったような結果が出ないなど扱いが難しいタイプのライト<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ★g_Common.Light[ 1 ]<br>
+        &nbsp;&nbsp;&nbsp; // スポットライトを作成する<br>
+        &nbsp;&nbsp;&nbsp; SpotLightHandle = DxLib::CreateSpotLightHandle(VGet(0.0f, 0.0f, 0.0f), VGet(0.0f, -1.0f, 0.0f), 0.7f, 0.6f, 1000.0f, 0.391586f, 0.001662f, 0.0f);<br>
+        &nbsp;&nbsp;&nbsp; // スポットライトのアンビエントカラーを無効にする<br>
+        &nbsp;&nbsp;&nbsp; //SetLightAmbColorHandle(SpotLightHandle, GetColorF(0.0f, 0.0f, 0.0f, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; // スポットライトのディフューズカラーを緑にする<br>
+        &nbsp;&nbsp;&nbsp; //SetLightDifColorHandle(SpotLightHandle, GetColorF(0.0f, 1.0f, 0.0f, 0.0f));<br>
+        <br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // [ポイントライト] https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N2<br>
+        &nbsp;&nbsp;&nbsp; // 指定した位置から全方向に光を放つライト 位置と距離減衰パラメータを持つ<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ★g_Common.Light[ 2 ]<br>
+        &nbsp;&nbsp;&nbsp; // ポイントライトを作成する<br>
+        &nbsp;&nbsp;&nbsp; PointLightHandle = DxLib::CreatePointLightHandle(VGet(0.0f, 0.0f, 0.0f), 7000.0f, 1.016523f, 0.000100f, 0.000010f);<br>
+        &nbsp;&nbsp;&nbsp; // ポイントライトのアンビエントカラーを無効にする<br>
+        &nbsp;&nbsp;&nbsp; //SetLightAmbColorHandle(PointLightHandle, GetColorF(0.0f, 0.0f, 0.0f, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; // ポイントライトのディフューズカラーを強い赤色にする<br>
+        &nbsp;&nbsp;&nbsp; //SetLightDifColorHandle(PointLightHandle, GetColorF(2.0f, 0.0f, 0.0f, 0.0f));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; controlLight = PointLightHandle; // デフォルトでコントロールするのはポイントライトにする</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; VECTOR keyControlXYZ; // 上下左右キーでxy位置を動かせるように<br>
+      &nbsp;&nbsp;&nbsp; keyControlXYZ.x = 0.0f; keyControlXYZ.y = 0.0f; keyControlXYZ.z = 0;<br>
+      &nbsp;&nbsp;&nbsp; Quaternion quaternion; // 回転クオータニオン<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // サブのスクリーンを生成する<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SubScreen&gt; subscreen1 = SubScreen::Create()-&gt;Set(600, 450, 600, 100, 255, 0, "サブスクリーン1")-&gt;SetIsBarFrameShow(true,true);<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // バックカリングするか?(裏面になっているポリゴンを書かない処理)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetUseBackCulling(TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Editor&amp; editor = Editor::GetInstance(); // エディタのシングルトン参照を得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::weak_ptr&lt;DragPoint&gt;&gt; dragPoints; // ドラッグ対象の点の共有ポインタのリスト<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //奥行0.1～5000までをカメラの描画範囲とする<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetCameraNearFar(0.1f, 5000.0f);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Input::Update(); // マウスのドラッグなどを更新<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateKeyInput(); // エディタのキーのインプットを更新<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateDragPoints(&amp;dragPoints); // ドラッグ点のリストを更新<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!editor.isDraggingPoints) editor.UpdateMouseInput(); // エディタのマウスのインプットを更新<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.UpdateCamera(); // エディタのカメラを更新<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // キーボードの 0 1 キーで3Dアニメを切り替えられるようにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_0))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animeButton = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_1))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animeButton = 1;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int PadInput = GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int speed = 5;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 上下左右キーでポリゴンを描く起点(x,y)を移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_LEFT)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyControlXYZ.x -= speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (PadInput &amp; PAD_INPUT_RIGHT) keyControlXYZ.x += speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_UP)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyControlXYZ.y += speed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (PadInput &amp; PAD_INPUT_DOWN) keyControlXYZ.y -= speed;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR position = VGet(keyControlXYZ.x, keyControlXYZ.y, keyControlXYZ.z); // 3Dモデルの位置<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if (Input::GetButtonDown(Pad::Keyboard, KEY_INPUT_L)) // キーボードのLボタンが押されたら<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (controlLight == DirLightHandle) // 現在コントロール中のライトがディレクショナルライトのときは<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; controlLight = PointLightHandle; // コントロールするライトをポイントライトにスイッチする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (controlLight == PointLightHandle) // 現在コントロール中のライトがポイントライトのときは<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; controlLight = SpotLightHandle; // コントロールするライトをスポットライトにスイッチする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // それ以外のとき、すなわちデフォルトのライトか、現在コントロール中のライトがスポットライトのときは<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; controlLight = DirLightHandle; // コントロールするライトをディレクショナルライトにスイッチする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // コントロール中のライトの現在の位置<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR lightPos = (controlLight == -1) ? DxLib::GetLightPosition() : DxLib::GetLightPositionHandle(controlLight);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR nextPos = VGet(lightPos.x, lightPos.y, lightPos.z); // コントロール中のライトの次の位置<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR nextDir = VGet(0, 0, 0); // コントロール中のライトの向いている方向<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isLightMove = false; // ライトが動いているかのフラグ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ライトをキーボードの上下左右PageUp PageDownで動かす<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_LEFT) // 左矢印キーが押されたら<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextPos.x += -1; // x方向に-1動かす<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextDir = VGet(-1, 0, 0); // ライトの向いている方向を-1の方向に<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isLightMove = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (PadInput &amp; PAD_INPUT_RIGHT)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextPos.x += 1;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextDir = VGet(1, 0, 0);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isLightMove = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_UP)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextPos.z += 1;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextDir = VGet(0, 0, 1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isLightMove = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (PadInput &amp; PAD_INPUT_DOWN)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextPos.z += -1;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextDir = VGet(0, 0, -1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isLightMove = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGUP)) // PageUpボタン<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextPos.y += 1;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextDir = VGet(0, 1, 0);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isLightMove = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGDN)) // PageDownボタン<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextPos.y += -1;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nextDir = VGet(0, -1, 0);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isLightMove = true;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ライトの位置の更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isLightMove)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (controlLight == -1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetLightPosition(nextPos); // デフォルトライトの位置を更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetLightDirection(nextDir); // デフォルトライトの向きを更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetLightPositionHandle(controlLight, nextPos); // コントロール中のライトの位置を更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetLightDirectionHandle(controlLight, nextDir); // コントロール中のライトの向きを更新<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float width =&nbsp; pTexImage-&gt;m_XSize; float height =&nbsp; pTexImage-&gt;m_YSize; // テクスチャ画像のサイズ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR scale = VGet(1.0f, 1.0f, 1.0f); // 拡大縮小スケール<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // キーボードのzキー(A)とxキー(B)とcキー(C)でx,y,z軸まわりに画像を回転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_A) quaternion *= CreateRotationQuaternion(speed * DX_PI / 180, VGet(1, 0, 0)); // X軸(1,0,0)を軸にspeed度ぶんだけ回転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_B) quaternion *= CreateRotationQuaternion(speed * DX_PI / 180, VGet(0, 1, 0)); // Y軸(0,1,0)を軸にspeed度ぶんだけ回転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_C) quaternion *= CreateRotationQuaternion(speed * DX_PI / 180, VGet(0, 0, 1)); // Z軸(0,0,1)を軸にspeed度ぶんだけ回転<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const float Deg2Rad = DX_PI_F / 180.0f; // 角度(単位:°度)からラジアン(単位:rad)へ変換する係数<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseVertexShader(VertexShaderHandle); // 使用する頂点シェーダーをセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUsePixelShader(PixelShaderHandle); // 使用するピクセルシェーダーをセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseTextureToShader(0, *pTexImage); // 使用するテクスチャを0番にバインドする[ register( t0 ) ]<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX&nbsp; matWorldDefault; // デフォルトのワールド行列<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetTransformToWorldMatrix(&amp;matWorldDefault); // デフォルトのワールド行列を記憶しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[ワールド行列] https://ny-program.hatenablog.com/entry/2019/09/15/114245<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX mat; // モデルのスケール×回転×移動を行列計算で設定する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[スケール]拡大縮小のスケール行列を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat = MGetScale(scale); // まずは拡大縮小のスケール行列からはじめる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [勉強]↓スケール行列は 斜めに x , y , zのスケールの倍率がならんでいる行列<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[0][0] = scale.x;&nbsp; mat.m[0][1] = 0.0f;&nbsp;&nbsp;&nbsp; mat.m[0][2] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[0][3] = 0.0f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[1][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[1][1] = scale.y; mat.m[1][2] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[1][3] = 0.0f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[2][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[2][1] = 0.0f;&nbsp;&nbsp;&nbsp; mat.m[2][2] = scale.z;&nbsp; mat.m[2][3] = 0.0f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //mat.m[3][0] = 0.0f;&nbsp;&nbsp;&nbsp;&nbsp; mat.m[3][1] = 0.0f;&nbsp;&nbsp;&nbsp; mat.m[3][2] = 0.0f;&nbsp;&nbsp; &nbsp; mat.m[3][3] = 1.0f;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[回転]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX matRot;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::CreateIdentityMatrix(&amp;matRot);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★MMultは行列の乗算【乗算した順にz軸回転→x軸回転→y軸回転→平行移動】<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat = MMult(mat, QuaternionToMatrix(quaternion)); // スケール × 回転<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[移動]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX matTrans = MGetTranslate(VGet(position.x, position.y, position.z)); // 位置positionをここで設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat = MMult(mat, matTrans); //スケール×回転×移動<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToWorld(&amp;mat); // [ワールド行列を指定] https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4341<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawPolygon32bitIndexed3DToShader(pPlyData-&gt;Vertex.data(), pPlyData-&gt;Vertex.size(), pPlyData-&gt;Index.data(), pPlyData-&gt;numIndex / 3); // 三角形ポリゴンをたくさん描画<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToWorld(&amp;matWorldDefault); // デフォルトのワールド行列に戻しておく<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseVertexShader(-1); // -1で毎度デフォルトのシェーダに戻しておけば他の3Dモデルの描画には影響を与えない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUsePixelShader(-1); // -1で毎度デフォルトのシェーダに戻しておけば他の3Dモデルの描画には影響を与えない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1DrawModel(devil3DModel); // 3Dモデル(.mv1形式)を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto xyzAngle = QuaternionToAngle(quaternion); // クオータニオンからそれに対応するオイラー角度の候補を得る(候補は最大3種ありうるし、ある軸が傾いていて0度じゃない場合他の軸も連動)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 100, GetColor(255, 255, 0), "x:%f y:%f Angle:%d %d %d", position.x, position.y, (int)(xyzAngle[0].x * 180 / DX_PI), (int)(xyzAngle[0].y * 180 / DX_PI), (int)(xyzAngle[0].z * 180 / DX_PI));<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ファイルのパス + ":" + アニメ名でアクセス<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string animPathName = (animeButton == 0) ? "Image/devil@kick.mv1:mixamo.com" : "Image/devil@jump.mv1:mixamo.com";<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(pDevilData-&gt;count(animPathName) &gt; 0 &amp;&amp; "指定されたアニメ名のアニメはMV1に付属していませんでした");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime += animStepTime * animSpeed; // 1.0×2倍 なら2倍速でアニメ時刻が進む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (animTime &gt; (*pDevilData)[animPathName].endTime)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animTime = 0.0f; // 0秒目へとアニメをループさせる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 再生時間をセットする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1SetAttachAnimTime((int)*pDevilData, (*pDevilData)[animPathName].index, animTime);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>int lightType = (controlLight == -1) ? DxLib::GetLightType() : DxLib::GetLightTypeHandle(controlLight);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 画面にライトのタイプを描画<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string TypeName;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; switch (lightType)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case DX_LIGHTTYPE_DIRECTIONAL: TypeName = "Directional"; break;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case DX_LIGHTTYPE_POINT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TypeName = "Point";&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case DX_LIGHTTYPE_SPOT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TypeName = "Spot";&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200, GetColor(255, 255, 255), "LightType&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %s", TypeName.c_str());<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [ディレクショナルライト表示]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ライトの円錐を描画 [ディレクショナルライト] https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float coneScale = 30.0f; //&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lightPos + lightDir * coneScale<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR lightPos0 = VGet(0.0f, 0.0f, 0.0f);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR lightDir0 = (controlLight == -1) ? DxLib::GetLightDirection() : DxLib::GetLightDirectionHandle(DirLightHandle);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCone3D(lightPos0, VAdd(lightPos0, VScale(lightDir0, coneScale)), 10 * 2 * DX_PI_F, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE); //[自作円錐もあるが]https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4962<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //DrawCone3D(lightPos, VAdd(lightPos, VScale(lightDir, coneScale)), OutAngle * 2 * DX_PI_F, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (lightType == DX_LIGHTTYPE_DIRECTIONAL) // [ディレクショナルライト情報]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 30, GetColor(255, 255, 255), "Direction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f %f %f", lightDir0.x, lightDir0.y, lightDir0.z);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [スポットライト表示]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ライトの照射角度パラメータ 標準ライト:GetLightAngle() 別のライト:GetLightAngleHandle<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float OutAngle; // スポットライトの影響角度(有効な値は 0.0f ～ DX_PI_F) スポットライトの向きに対してこの引数で指定する角度以上の頂点にはライトの影響はありません。<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float InAngle; // スポットライトの影響が減衰を始める角度(有効な値は 0.0f ～ OutAngle) スポットライトが OutAngle の角度まで１００％の影響を与えて、 そこから急に影響が無い状態になりますと不自然に見えるかもしれないので、そんなときはこの引数でスポットライトの影響が弱まり始める角度を指定　スポットライトの向きに対してこの引数で指定する角度以上で且つ OutAngle 以下の場合はライトの影響が１００％ではなくなります<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (controlLight == -1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightAngle(&amp;OutAngle, &amp;InAngle);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightAngleHandle(controlLight, &amp;OutAngle, &amp;InAngle);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Range; // スポットライトの影響最大距離:距離以上の座標にある頂点は、 例え距離減衰計算の結果が０ではなくてもライトの影響は無くなる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //ライトの影響力(％) = 100.0f / ( Atten0 + Atten1 * d + Atten2 * d * d ) [d = ライトから頂点への距離]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Attenは率を除算する値ですので、 非常に小さな値でも物凄くライトの影響範囲が狭まる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Atten0; // Atten0 はライトと頂点の距離に関係なく減衰する率を指定する引数<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Atten1; // Atten1 はライトの距離に比例して減衰する率<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Atten2; // Atten2 はライトの距離の二乗に比例して減衰する率<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (controlLight == -1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightRangeAtten(&amp;Range, &amp;Atten0, &amp;Atten1, &amp;Atten2);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightRangeAttenHandle(controlLight, &amp;Range, &amp;Atten0, &amp;Atten1, &amp;Atten2);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ライトの位置に円錐を描画 [スポットライト] https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N3<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float coneScale = 15.0f; //&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lightPos + lightDir * coneScale<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR lightPos1 = DxLib::GetLightPositionHandle(SpotLightHandle);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR lightDir1 = DxLib::GetLightDirectionHandle(SpotLightHandle);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCone3D(lightPos1, VAdd(lightPos1, VScale(lightDir1, coneScale)), InAngle * 2 * DX_PI_F, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE); //[自作円錐もあるが]https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4962<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCone3D(lightPos1, VAdd(lightPos1, VScale(lightDir1, coneScale)), OutAngle * 2 * DX_PI_F, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (lightType == DX_LIGHTTYPE_SPOT) // [スポットライト情報]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 30, GetColor(255, 255, 255), "Direction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f %f %f", lightDir1.x, lightDir1.y, lightDir1.z);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 60, GetColor(255, 255, 255), "InOutAngle&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f %f", InAngle, OutAngle);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 90, GetColor(255, 255, 255), "Range&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f", Range);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 120, GetColor(255, 255, 255), "Attenuation0&nbsp;&nbsp;&nbsp; %f", Atten0);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 150, GetColor(255, 255, 255), "Attenuation1&nbsp;&nbsp;&nbsp; %f", Atten1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 180, GetColor(255, 255, 255), "Attenuation2&nbsp;&nbsp;&nbsp; %f", Atten2);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [ポイントライト表示]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [ポイントライト] 有効距離と距離減衰パラメータ https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N2<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Range; // ポイントライトの影響最大距離:距離以上の座標にある頂点は、 例え距離減衰計算の結果が０ではなくてもライトの影響は無くなる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //ライトの影響力(％) = 100.0f / ( Atten0 + Atten1 * d + Atten2 * d * d ) [d = ライトから頂点への距離]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Attenは率を除算する値ですので、 非常に小さな値でも物凄くライトの影響範囲が狭まる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Atten0; // Atten0 はライトと頂点の距離に関係なく減衰する率を指定する引数<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Atten1; // Atten1 はライトの距離に比例して減衰する率<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Atten2; // Atten2 はライトの距離の二乗に比例して減衰する率<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (controlLight == -1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightRangeAtten(&amp;Range, &amp;Atten0, &amp;Atten1, &amp;Atten2);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightRangeAttenHandle(controlLight, &amp;Range, &amp;Atten0, &amp;Atten1, &amp;Atten2);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ライトの位置に球を描画 [ポイントライト]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float scale = 10.0f;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR lightPos2 = DxLib::GetLightPositionHandle(PointLightHandle);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(lightPos2, scale, 4, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (lightType == DX_LIGHTTYPE_POINT) // [ポイントライト情報]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 90, GetColor(255, 255, 255), "Range&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f", Range);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 120, GetColor(255, 255, 255), "Attenuation0&nbsp;&nbsp;&nbsp; %f", Atten0);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 150, GetColor(255, 255, 255), "Attenuation1&nbsp;&nbsp;&nbsp; %f", Atten1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 180, GetColor(255, 255, 255), "Attenuation2&nbsp;&nbsp;&nbsp; %f", Atten2);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; editor.Draw(); // エディタのDraw処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    <br>
+    いかがでしょう？<b>キーボードのLボタン</b>を押すと、コントロールするライトが切り替わり、<b>上下左右の矢印キーとPageUpやPageDownキー</b>を押すと、ライトを奥手前:z 左右:x 上下:yに動かすことができましたか？<br>
+    <br>
+    ここで、体感しておきたいのは、ディレクショナルライト、スポットライト、ポイントライト、の違いです。<br>
+    Lキーを押すと、各ライトのパラメータが画面に表示されますが、<br>
+    読み解いておきたいことは、<br>
+    <b>ディレクショナルライト:方向(ディレクション)しかない</b>→つまり、位置がなくて、光の方向だけがあるライト<br>
+    具体的に太陽とかは朝はフィールド全体を東から西方向に、昼は全体を上から下方向に、夕方は西から東に、照らす光のようにフィールドすべてのものが右上の部分だけ明るくなるみたいな照らされ方をする光です。<br>
+    位置がないので、計算的には厳密な光の位置から反射点への角度のベクトルの計算が必要なくなるぶん、GPUの計算処理が軽くなる特徴があります。<br>
+    <br>
+    <b>ポイントライト:今度は位置はあるが、方向はない</b>→つまり、光がある1点から上下左右360度全方向に照らされるライト<br>
+    豆電球などをイメージするとよい。明かりがある点から全体を照らす感じになります。次に出てくるスポットライトよりは方向がないぶん、ちょっと計算が簡単になるかな、ぐらい。<br>
+    <br>
+    <b>スポットライト:今度は位置も方向も両方ある</b>→逆にいうと光の出ない方向があるライト<br>
   </body>
 </html>
