@@ -12207,7 +12207,7 @@
       &nbsp;&nbsp;&nbsp; // ディレクショナルライトの処理 *****************************************************( 終了 )<br>
       <br>
       &nbsp;&nbsp;&nbsp; <em>// ポイントライトの処理 g_Common.Light[2]を使う ***************************************( 開始 )<br>
-        &nbsp;&nbsp;&nbsp; // ライト方向ベクトルの計算<br>
+        &nbsp;&nbsp;&nbsp; // カメラのビュー位置からライト方向へのベクトルの計算<br>
         &nbsp;&nbsp;&nbsp; lLightDir = normalize(lViewPosition.xyz - g_Common.Light[2].Position.xyz);<br>
         &nbsp;&nbsp;&nbsp; // 距離減衰値計算 ======================================================( 開始 )<br>
         &nbsp;&nbsp;&nbsp; // 頂点とライト位置との距離の二乗を求める<br>
@@ -12287,6 +12287,188 @@
     遠くなるほど <b>lLightGen の数値が減衰するような計算式</b>を使って、最終的に lLightGen を <b>g_Common.Light[2]の拡散光などの光にかけ算して、光の強さを弱めてます</b>。<br>
     <br>
     このように計算式を かけ算 や 割り算(分母) や 距離 などで読み解いて他のライトとの違いに着目すれば、ライティングの計算は意外に納得できる意味合いをもっている実感が湧くとよいなと思います。<br>
+    <br>
+    <br>
+    では、最後に締めとして、一番複雑なスポットライトの光の蓄積値も足し算して、スポットライトの光もサイコロに反射するようにしてみよう。<br>
+    <p><code>TestVS.fx</code>を変更して光の蓄積値の計算にスポットライトの光を反映させましょう。</p>
+    <p class="source"> <br>
+      (前略).........<br>
+      <br>
+      // main関数<br>
+      VS_OUTPUT main( VS_INPUT VSInput )<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; VS_OUTPUT VSOutput ;<br>
+      &nbsp;&nbsp;&nbsp; float4 lLocalPosition; // ローカル座標<br>
+      &nbsp;&nbsp;&nbsp; float4 lWorldPosition; // ワールド座標<br>
+      &nbsp;&nbsp;&nbsp; float4 lViewPosition; // 視線ビュー座標<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; float3 lWorldNrm; // ワールド法線ベクトル<br>
+      &nbsp;&nbsp;&nbsp; float3 lViewNrm; // 視線ビュー法線ベクトル<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // ライティングの計算に必要な定義<br>
+      &nbsp;&nbsp;&nbsp; float3 lLightHalfVec; // ハーフベクトルの計算 norm( ( norm( 頂点位置からビュー視点へのベクトル ) + ライトの方向 ) )<br>
+      &nbsp;&nbsp;&nbsp; float4 lLightLitParam; // ライトのパラメータ 反射角度などの内積の値をもとめておく<br>
+      &nbsp;&nbsp;&nbsp; float4 lLightLitDest; // lit関数に上記のライトの内積パラメータを入力して光の減衰率の係数をもとめる<br>
+      &nbsp;&nbsp;&nbsp; float3 lLightDir; // 光源の向いている方向のベクトル(ディレクショナルライトやスポットライトの方向ベクトルがここに来る)<br>
+      &nbsp;&nbsp;&nbsp; float3 lLightTemp; // 頂点とライト位置との距離を2乗する前に一旦Tempに保管してそれを2乗する<br>
+      &nbsp;&nbsp;&nbsp; float lLightDistancePow2; // 頂点とライト位置との距離の2乗<br>
+      &nbsp;&nbsp;&nbsp; float lLightGen; // ライトの減衰率の計算<br>
+      &nbsp;&nbsp;&nbsp; <em>float lLightDirectionCosA; // カメラのビュー位置からライト方向へのベクトル と ライトの方向のベクトルの内積( 即ち Cos a )</em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // ディフューズ:拡散反射光 と スペキュラ:鏡面反射光の合計トータル蓄積値<br>
+      &nbsp;&nbsp;&nbsp; float3 lTotalDiffuse; // 拡散反射光のトータル蓄積値<br>
+      &nbsp;&nbsp;&nbsp; float3 lTotalSpecular; // 鏡面反射光のトータル蓄積値<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // 頂点座標変換 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // ローカル座標のセット<br>
+      &nbsp;&nbsp;&nbsp; lLocalPosition.xyz = VSInput.Position;<br>
+      &nbsp;&nbsp;&nbsp; lLocalPosition.w = 1.0f;<br>
+      &nbsp;&nbsp;&nbsp; // ローカル座標をワールド座標に変換 [3D座標がスクリーンに投影されるための行列変換の過程] https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
+      &nbsp;&nbsp;&nbsp; lWorldPosition.x = dot(lLocalPosition, g_Base.LocalWorldMatrix[0]);<br>
+      &nbsp;&nbsp;&nbsp; lWorldPosition.y = dot(lLocalPosition, g_Base.LocalWorldMatrix[1]);<br>
+      &nbsp;&nbsp;&nbsp; lWorldPosition.z = dot(lLocalPosition, g_Base.LocalWorldMatrix[2]);<br>
+      &nbsp;&nbsp;&nbsp; lWorldPosition.w = 1.0f;<br>
+      &nbsp;&nbsp;&nbsp; // ワールド座標をビュー座標に変換 [ワールド座標のカメラの位置が原点(0,0,0)になる行列変換] https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
+      &nbsp;&nbsp;&nbsp; lViewPosition.x = dot(lWorldPosition, g_Base.ViewMatrix[0]);<br>
+      &nbsp;&nbsp;&nbsp; lViewPosition.y = dot(lWorldPosition, g_Base.ViewMatrix[1]);<br>
+      &nbsp;&nbsp;&nbsp; lViewPosition.z = dot(lWorldPosition, g_Base.ViewMatrix[2]);<br>
+      &nbsp;&nbsp;&nbsp; lViewPosition.w = 1.0f;<br>
+      &nbsp;&nbsp;&nbsp; // 視線ビュー座標をプロジェクション射影座標に変換 https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Position.x = dot(lViewPosition, g_Base.ProjectionMatrix[0]);<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Position.y = dot(lViewPosition, g_Base.ProjectionMatrix[1]);<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Position.z = dot(lViewPosition, g_Base.ProjectionMatrix[2]);<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Position.w = dot(lViewPosition, g_Base.ProjectionMatrix[3]);<br>
+      &nbsp;&nbsp;&nbsp; // 頂点座標変換 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 終了 )<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // 法線をビュー空間の角度に変換 =====================================================( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // ローカル法線ベクトル:VSInput.Normal を ワールド法線ベクトル:lWorldNrm に変換<br>
+      &nbsp;&nbsp;&nbsp; lWorldNrm.x = dot(VSInput.Normal, g_Base.LocalWorldMatrix[0].xyz);<br>
+      &nbsp;&nbsp;&nbsp; lWorldNrm.y = dot(VSInput.Normal, g_Base.LocalWorldMatrix[1].xyz);<br>
+      &nbsp;&nbsp;&nbsp; lWorldNrm.z = dot(VSInput.Normal, g_Base.LocalWorldMatrix[2].xyz);<br>
+      &nbsp;&nbsp;&nbsp; // ワールド法線ベクトル:lWorldNrm を ビュー法線ベクトル:lViewNrm に変換<br>
+      &nbsp;&nbsp;&nbsp; lViewNrm.x = dot(lWorldNrm, g_Base.ViewMatrix[0].xyz);<br>
+      &nbsp;&nbsp;&nbsp; lViewNrm.y = dot(lWorldNrm, g_Base.ViewMatrix[1].xyz);<br>
+      &nbsp;&nbsp;&nbsp; lViewNrm.z = dot(lWorldNrm, g_Base.ViewMatrix[2].xyz);<br>
+      &nbsp;&nbsp;&nbsp; // 法線をビュー空間の角度に変換 =====================================================( 終了 )<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; //[※注意!ディレクショナルライト→スポットライト→ポイントライトの順に勝手にg_Common.Light[0],[1],[2]は並べ変わる]<br>
+      &nbsp;&nbsp;&nbsp; // https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=5605<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // ディレクショナルライトの処理 g_Common.Light[0]を使う******************************( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // ライトの方向セット<br>
+      &nbsp;&nbsp;&nbsp; lLightDir = g_Common.Light[0].Direction;<br>
+      &nbsp;&nbsp;&nbsp; // ライトディフューズカラーとライトスペキュラカラーの角度減衰計算 =======( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // 法線とライトの逆方向ベクトルとの内積を lLightLitParam.x にセット<br>
+      &nbsp;&nbsp;&nbsp; lLightLitParam.x = dot(lViewNrm, -lLightDir);<br>
+      &nbsp;&nbsp;&nbsp; // ハーフベクトルの計算 norm( ( norm( 頂点位置から視点へのベクトル ) + ライトの方向 ) )<br>
+      &nbsp;&nbsp;&nbsp; lLightHalfVec = normalize(normalize(-lViewPosition.xyz) - lLightDir);<br>
+      &nbsp;&nbsp;&nbsp; // 法線とハーフベクトルの内積を lLightLitParam.y にセット [法線とライトベクトルの内積で平面がカメラに向いている割合計算] https://someiyoshino.info/entry/20171231/1514692823<br>
+      &nbsp;&nbsp;&nbsp; lLightLitParam.y = dot(lLightHalfVec, lViewNrm);<br>
+      &nbsp;&nbsp;&nbsp; // スペキュラ反射率を lLightLitParam.w にセット<br>
+      &nbsp;&nbsp;&nbsp; lLightLitParam.w = g_Common.Material.Power;<br>
+      &nbsp;&nbsp;&nbsp; // ライト計算 [HLSL言語のlit関数] https://learn.microsoft.com/ja-jp/windows/win32/direct3dhlsl/dx-graphics-hlsl-lit<br>
+      &nbsp;&nbsp;&nbsp; lLightLitDest = lit(lLightLitParam.x, lLightLitParam.y, lLightLitParam.w);<br>
+      &nbsp;&nbsp;&nbsp; // ライトディフューズカラーとライトスペキュラカラーの角度減衰計算 =======( 終了 )<br>
+      &nbsp;&nbsp;&nbsp; // カラー計算 ===========================================================( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // ディフューズライト蓄積値 += ディフューズ角度減衰計算結果 * ライトのディフューズカラー * マテリアルディフューズカラー + ライトのアンビエントカラー<br>
+      &nbsp;&nbsp;&nbsp; lTotalDiffuse += lLightLitDest.y * g_Common.Light[0].Diffuse * g_Common.Material.Diffuse.xyz + g_Common.Light[0].Ambient.xyz;<br>
+      &nbsp;&nbsp;&nbsp; // スペキュラライト蓄積値 += スペキュラ角度減衰計算結果 * ライトのスペキュラカラー<br>
+      &nbsp;&nbsp;&nbsp; lTotalSpecular += lLightLitDest.z * g_Common.Light[0].Specular;<br>
+      &nbsp;&nbsp;&nbsp; // カラー計算 ===========================================================( 終了 )<br>
+      &nbsp;&nbsp;&nbsp; // ディレクショナルライトの処理 *****************************************************( 終了 )<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// スポットライトの処理 g_Common.Light[1]を使う****************************************( 開始 )<br>
+        &nbsp;&nbsp;&nbsp; // カメラのビュー位置からライト方向へのベクトルの計算<br>
+        &nbsp;&nbsp;&nbsp; lLightDir = normalize(lViewPosition.xyz - g_Common.Light[1].Position.xyz);<br>
+        &nbsp;&nbsp;&nbsp; // 距離・スポットライト減衰値計算 =======================================( 開始 )<br>
+        &nbsp;&nbsp;&nbsp; // 距離減衰計算 ------------------<br>
+        &nbsp;&nbsp;&nbsp; // 頂点とライト位置との距離の二乗を求める<br>
+        &nbsp;&nbsp;&nbsp; lLightTemp = lViewPosition.xyz - g_Common.Light[1].Position.xyz;<br>
+        &nbsp;&nbsp;&nbsp; lLightDistancePow2 = dot(lLightTemp, lLightTemp);<br>
+        &nbsp;&nbsp;&nbsp; // 減衰率の計算 lLightGen = 1 / ( 減衰値0 + 減衰値1 * 距離 + 減衰値2 * ( 距離 * 距離 ) )<br>
+        &nbsp;&nbsp;&nbsp; lLightGen = 1.0f / (g_Common.Light[1].Attenuation0 + g_Common.Light[1].Attenuation1 * sqrt(lLightDistancePow2) + g_Common.Light[1].Attenuation2 * lLightDistancePow2);<br>
+        &nbsp;&nbsp;&nbsp; // スポットライト減衰計算 --------<br>
+        &nbsp;&nbsp;&nbsp; // ライト方向ベクトルとライト位置から頂点位置へのベクトルの内積( 即ち Cos a )を計算 <br>
+        &nbsp;&nbsp;&nbsp; lLightDirectionCosA = dot(lLightDir, g_Common.Light[1].Direction);<br>
+        &nbsp;&nbsp;&nbsp; // スポットライト減衰計算&nbsp; pow( falloff, ( ( Cos a - Cos f ) / ( Cos q - Cos f ) ) )&nbsp; ※SpotParam0 =&nbsp; cos( Phi / 2.0f ) ※SpotParam1 = 1.0f / ( cos( Theta / 2.0f ) - cos( Phi / 2.0f ) )<br>
+        &nbsp;&nbsp;&nbsp; lLightGen *= saturate(pow(abs(max(lLightDirectionCosA - g_Common.Light[1].SpotParam0, 0.0f) * g_Common.Light[1].SpotParam1), g_Common.Light[1].FallOff));<br>
+        &nbsp;&nbsp;&nbsp; // 有効距離外だったら減衰率を最大にする処理<br>
+        &nbsp;&nbsp;&nbsp; lLightGen *= step(lLightDistancePow2, g_Common.Light[1].RangePow2);<br>
+        &nbsp;&nbsp;&nbsp; // 距離・スポットライト減衰値計算 =======================================( 終了 )<br>
+        &nbsp;&nbsp;&nbsp; // ライトディフューズカラーとライトスペキュラカラーの角度減衰計算 =======( 開始 )<br>
+        &nbsp;&nbsp;&nbsp; // 法線とライトの逆方向ベクトルとの内積を lLightLitParam.x にセット<br>
+        &nbsp;&nbsp;&nbsp; lLightLitParam.x = dot(lViewNrm, -lLightDir);<br>
+        &nbsp;&nbsp;&nbsp; // ハーフベクトルの計算 norm( ( norm( 頂点位置から視点へのベクトル ) + ライトの方向 ) )<br>
+        &nbsp;&nbsp;&nbsp; lLightHalfVec = normalize(normalize(-lViewPosition.xyz) - lLightDir);<br>
+        &nbsp;&nbsp;&nbsp; // 法線とハーフベクトルの内積を lLightLitParam.y にセット https://someiyoshino.info/entry/20171231/1514692823<br>
+        &nbsp;&nbsp;&nbsp; lLightLitParam.y = dot(lLightHalfVec, lViewNrm);<br>
+        &nbsp;&nbsp;&nbsp; // スペキュラ反射率を lLightLitParam.w にセット<br>
+        &nbsp;&nbsp;&nbsp; lLightLitParam.w = g_Common.Material.Power;<br>
+        &nbsp;&nbsp;&nbsp; // ライト計算<br>
+        &nbsp;&nbsp;&nbsp; lLightLitDest = lit(lLightLitParam.x, lLightLitParam.y, lLightLitParam.w);<br>
+        &nbsp;&nbsp;&nbsp; // ライトディフューズカラーとライトスペキュラカラーの角度減衰計算 =======( 終了 )<br>
+        &nbsp;&nbsp;&nbsp; // カラー計算 ===========================================================( 開始 )<br>
+        &nbsp;&nbsp;&nbsp; // ディフーズライト蓄積値 += 距離・スポットライト角度減衰値 * ( ディフーズ角度減衰計算結果 * マテリアルディフューズカラー * ライトのディフーズカラー + ライトのアンビエントカラーとマテリアルのアンビエントカラーを乗算したもの )<br>
+        &nbsp;&nbsp;&nbsp; lTotalDiffuse += lLightGen * (lLightLitDest.y * g_Common.Light[1].Diffuse * g_Common.Material.Diffuse.xyz + g_Common.Light[1].Ambient.xyz);<br>
+        &nbsp;&nbsp;&nbsp; // スペキュラライト蓄積値 += スペキュラ角度減衰計算結果 * 距離・スポットライト減衰 * ライトのスペキュラカラー<br>
+        &nbsp;&nbsp;&nbsp; lTotalSpecular += lLightGen * lLightLitDest.z * g_Common.Light[1].Specular;<br>
+        &nbsp;&nbsp;&nbsp; // カラー計算 ===========================================================( 終了 )<br>
+        &nbsp;&nbsp;&nbsp; // スポットライトの処理 *************************************************************( 終了 )</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ポイントライトの処理 g_Common.Light[2]を使う ***************************************( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // カメラのビュー位置からライト方向へのベクトルの計算<br>
+      &nbsp;&nbsp;&nbsp; lLightDir = normalize(lViewPosition.xyz - g_Common.Light[2].Position.xyz);<br>
+      &nbsp;&nbsp;&nbsp; // 距離減衰値計算 ======================================================( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // 頂点とライト位置との距離の二乗を求める<br>
+      &nbsp;&nbsp;&nbsp; lLightTemp = lViewPosition.xyz - g_Common.Light[2].Position.xyz;<br>
+      &nbsp;&nbsp;&nbsp; lLightDistancePow2 = dot(lLightTemp, lLightTemp);<br>
+      &nbsp;&nbsp;&nbsp; // 減衰率の計算 lLightGen = 1 / ( 減衰値0 + 減衰値1 * 距離 + 減衰値2 * ( 距離 * 距離 ) )<br>
+      &nbsp;&nbsp;&nbsp; lLightGen = 1.0f / (g_Common.Light[2].Attenuation0 + g_Common.Light[2].Attenuation1 * sqrt(lLightDistancePow2) + g_Common.Light[2].Attenuation2 * lLightDistancePow2);<br>
+      &nbsp;&nbsp;&nbsp; // 有効距離外だったら減衰率を最大にする処理 [HLSLのstep(y,x)関数 xがy以上なら1,未満なら0] https://learn.microsoft.com/ja-jp/windows/win32/direct3dhlsl/dx-graphics-hlsl-step<br>
+      &nbsp;&nbsp;&nbsp; lLightGen *= step(lLightDistancePow2, g_Common.Light[2].RangePow2);<br>
+      &nbsp;&nbsp;&nbsp; // 距離減衰値計算 =======================================================( 終了 )<br>
+      &nbsp;&nbsp;&nbsp; // ライトディフューズカラーとライトスペキュラカラーの角度減衰計算 ===================( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // 法線とライトの逆方向ベクトルとの内積を lLightLitParam.x にセット<br>
+      &nbsp;&nbsp;&nbsp; lLightLitParam.x = dot(lViewNrm, -lLightDir);<br>
+      &nbsp;&nbsp;&nbsp; // ハーフベクトルの計算 norm( ( norm( 頂点位置から視点へのベクトル ) + ライトの方向 ) )<br>
+      &nbsp;&nbsp;&nbsp; lLightHalfVec = normalize(normalize(-lViewPosition.xyz) - lLightDir);<br>
+      &nbsp;&nbsp;&nbsp; // 法線とハーフベクトルの内積を lLightLitParam.y にセット https://someiyoshino.info/entry/20171231/1514692823<br>
+      &nbsp;&nbsp;&nbsp; lLightLitParam.y = dot(lLightHalfVec, lViewNrm);<br>
+      &nbsp;&nbsp;&nbsp; // スペキュラ反射率を lLightLitParam.w にセット<br>
+      &nbsp;&nbsp;&nbsp; lLightLitParam.w = g_Common.Material.Power;<br>
+      &nbsp;&nbsp;&nbsp; // ライトパラメータ計算<br>
+      &nbsp;&nbsp;&nbsp; lLightLitDest = lit(lLightLitParam.x, lLightLitParam.y, lLightLitParam.w);<br>
+      &nbsp;&nbsp;&nbsp; // ライトディフューズカラーとライトスペキュラカラーの角度減衰計算 ==================( 終了 )<br>
+      &nbsp;&nbsp;&nbsp; // カラー計算 ===========================================================( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // ディフーズライト蓄積値 += 距離・スポットライト角度減衰値 * ( ディフーズ角度減衰計算結果 * マテリアルディフューズカラー * ライトのディフーズカラー + ライトのアンビエントカラーとマテリアルのアンビエントカラーを乗算したもの )<br>
+      &nbsp;&nbsp;&nbsp; lTotalDiffuse += lLightGen * (lLightLitDest.y * g_Common.Light[2].Diffuse * g_Common.Material.Diffuse.xyz + g_Common.Light[2].Ambient.xyz);<br>
+      &nbsp;&nbsp;&nbsp; // スペキュラライト蓄積値 += スペキュラ角度減衰計算結果 * 距離・スポットライト減衰 * ライトのスペキュラカラー<br>
+      &nbsp;&nbsp;&nbsp; lTotalSpecular += lLightGen * lLightLitDest.z * g_Common.Light[2].Specular;<br>
+      &nbsp;&nbsp;&nbsp; // カラー計算 ===========================================================( 終了 )<br>
+      &nbsp;&nbsp;&nbsp; // ポイントライトの処理 ************************************************************( 終了 )<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ディフューズカラー = ディフューズライト蓄積値 + マテリアルのアンビエントカラーとグローバルアンビエントカラーを乗算したものとマテリアルエミッシブカラーを加算したもの<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Diffuse.xyz = lTotalDiffuse + g_Common.Material.Ambient_Emissive.xyz;<br>
+      &nbsp;&nbsp;&nbsp; // ディフューズのアルファはマテリアルのディフューズカラーのアルファをそのまま使う<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Diffuse.w = g_Common.Material.Diffuse.w;<br>
+      &nbsp;&nbsp;&nbsp; // スペキュラカラー = スペキュラライト蓄積値 * マテリアルのスペキュラカラー<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Specular.xyz = lTotalSpecular * g_Common.Material.Specular.xyz;<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // テクスチャ座標変換行列による変換を行った結果のテクスチャ座標をセット<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.TexCoords0.x = dot(VSInput.TexCoords0, g_OtherMatrix.TextureMatrix[0][0]);<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.TexCoords0.y = dot(VSInput.TexCoords0, g_OtherMatrix.TextureMatrix[0][1]);<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 出力パラメータを返す<br>
+      &nbsp;&nbsp;&nbsp; return VSOutput ;<br>
+      }<br>
+    </p>
+    TestVS.fxを変更したら保存して、<b>コマンドプロンプトから再びShaderCompiler.exeのコマンドでビルドしなおし</b>ます。(キーボードの<b>上キーを押すと過去に実行したコマンドが出てきて楽</b>) <br>
+    <br>
+    いかがでしょう？実行したら<b>キーボードのLボタンを押して、スポットライトに切り替えて、上下左右PageDown,PageUpボタンを押して、スポットライトを動かすと</b>スポットライトの当たった面が<b>水色</b>に表示されましたか？<br>
     <br>
   </body>
 </html>
