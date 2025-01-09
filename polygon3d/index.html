@@ -10239,30 +10239,30 @@
       VS_OUTPUT main( VS_INPUT VSInput )<br>
       {<br>
       &nbsp;&nbsp;&nbsp; VS_OUTPUT VSOutput ;<br>
-      &nbsp;&nbsp;&nbsp; float4 lLocalPosition;<br>
-      &nbsp;&nbsp;&nbsp; float4 lWorldPosition;<br>
-      &nbsp;&nbsp;&nbsp; float4 lViewPosition;<br>
+      &nbsp;&nbsp;&nbsp; float4 lLocalPosition; // ローカル座標<br>
+      &nbsp;&nbsp;&nbsp; float4 lWorldPosition; // ワールド座標<br>
+      &nbsp;&nbsp;&nbsp; float4 lViewPosition; // 視線ビュー座標<br>
       &nbsp;&nbsp;&nbsp; <br>
-      &nbsp;&nbsp;&nbsp; // 頂点座標変換 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // 頂点座標変換 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 開始 )<br>
       &nbsp;&nbsp;&nbsp; // ローカル座標のセット<br>
       &nbsp;&nbsp;&nbsp; lLocalPosition.xyz = VSInput.Position;<br>
       &nbsp;&nbsp;&nbsp; lLocalPosition.w = 1.0f;<br>
-      &nbsp;&nbsp;&nbsp; // ローカル座標をワールド座標に変換<br>
+      &nbsp;&nbsp;&nbsp; // ローカル座標をワールド座標に変換 [3D座標がスクリーンに投影されるための行列変換の過程] https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
       &nbsp;&nbsp;&nbsp; lWorldPosition.x = dot(lLocalPosition, g_Base.LocalWorldMatrix[0]);<br>
       &nbsp;&nbsp;&nbsp; lWorldPosition.y = dot(lLocalPosition, g_Base.LocalWorldMatrix[1]);<br>
       &nbsp;&nbsp;&nbsp; lWorldPosition.z = dot(lLocalPosition, g_Base.LocalWorldMatrix[2]);<br>
       &nbsp;&nbsp;&nbsp; lWorldPosition.w = 1.0f;<br>
-      &nbsp;&nbsp;&nbsp; // ワールド座標をビュー座標に変換<br>
+      &nbsp;&nbsp;&nbsp; // ワールド座標をビュー座標に変換 [ワールド座標のカメラの位置が原点(0,0,0)になる行列変換] https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
       &nbsp;&nbsp;&nbsp; lViewPosition.x = dot(lWorldPosition, g_Base.ViewMatrix[0]);<br>
       &nbsp;&nbsp;&nbsp; lViewPosition.y = dot(lWorldPosition, g_Base.ViewMatrix[1]);<br>
       &nbsp;&nbsp;&nbsp; lViewPosition.z = dot(lWorldPosition, g_Base.ViewMatrix[2]);<br>
       &nbsp;&nbsp;&nbsp; lViewPosition.w = 1.0f;<br>
-      &nbsp;&nbsp;&nbsp; // ビュー座標を射影座標に変換<br>
+      &nbsp;&nbsp;&nbsp; // 視線ビュー座標をプロジェクション射影座標に変換 https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
       &nbsp;&nbsp;&nbsp; VSOutput.Position.x = dot(lViewPosition, g_Base.ProjectionMatrix[0]);<br>
       &nbsp;&nbsp;&nbsp; VSOutput.Position.y = dot(lViewPosition, g_Base.ProjectionMatrix[1]);<br>
       &nbsp;&nbsp;&nbsp; VSOutput.Position.z = dot(lViewPosition, g_Base.ProjectionMatrix[2]);<br>
       &nbsp;&nbsp;&nbsp; VSOutput.Position.w = dot(lViewPosition, g_Base.ProjectionMatrix[3]);<br>
-      &nbsp;&nbsp;&nbsp; // 頂点座標変換 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 終了 )<br>
+      &nbsp;&nbsp;&nbsp; // 頂点座標変換 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 終了 )<br>
       <br>
       &nbsp;&nbsp;&nbsp; VSOutput.TexCoords0 = VSInput.TexCoords0; // テクスチャの座標をそのままOutputする<br>
       &nbsp;&nbsp;&nbsp; <br>
@@ -10807,30 +10807,30 @@
       VS_OUTPUT main( VS_INPUT VSInput )<br>
       {<br>
       &nbsp;&nbsp;&nbsp; VS_OUTPUT VSOutput ;<br>
-      &nbsp;&nbsp;&nbsp; float4 lLocalPosition;<br>
-      &nbsp;&nbsp;&nbsp; float4 lWorldPosition;<br>
-      &nbsp;&nbsp;&nbsp; float4 lViewPosition;<br>
+      &nbsp;&nbsp;&nbsp; float4 lLocalPosition; // ローカル座標<br>
+      &nbsp;&nbsp;&nbsp; float4 lWorldPosition; // ワールド座標<br>
+      &nbsp;&nbsp;&nbsp; float4 lViewPosition; // 視線ビュー座標<br>
       &nbsp;&nbsp;&nbsp; <br>
-      &nbsp;&nbsp;&nbsp; // 頂点座標変換 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // 頂点座標変換 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 開始 )<br>
       &nbsp;&nbsp;&nbsp; // ローカル座標のセット<br>
       &nbsp;&nbsp;&nbsp; lLocalPosition.xyz = VSInput.Position;<br>
       &nbsp;&nbsp;&nbsp; lLocalPosition.w = 1.0f;<br>
-      &nbsp;&nbsp;&nbsp; // ローカル座標をワールド座標に変換<br>
+      &nbsp;&nbsp;&nbsp; // ローカル座標をワールド座標に変換 [3D座標がスクリーンに投影されるための行列変換の過程] https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
       &nbsp;&nbsp;&nbsp; lWorldPosition.x = dot(lLocalPosition, g_Base.LocalWorldMatrix[0]);<br>
       &nbsp;&nbsp;&nbsp; lWorldPosition.y = dot(lLocalPosition, g_Base.LocalWorldMatrix[1]);<br>
       &nbsp;&nbsp;&nbsp; lWorldPosition.z = dot(lLocalPosition, g_Base.LocalWorldMatrix[2]);<br>
       &nbsp;&nbsp;&nbsp; lWorldPosition.w = 1.0f;<br>
-      &nbsp;&nbsp;&nbsp; // ワールド座標をビュー座標に変換<br>
+      &nbsp;&nbsp;&nbsp; // ワールド座標をビュー座標に変換 [ワールド座標のカメラの位置が原点(0,0,0)になる行列変換] https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
       &nbsp;&nbsp;&nbsp; lViewPosition.x = dot(lWorldPosition, g_Base.ViewMatrix[0]);<br>
       &nbsp;&nbsp;&nbsp; lViewPosition.y = dot(lWorldPosition, g_Base.ViewMatrix[1]);<br>
       &nbsp;&nbsp;&nbsp; lViewPosition.z = dot(lWorldPosition, g_Base.ViewMatrix[2]);<br>
       &nbsp;&nbsp;&nbsp; lViewPosition.w = 1.0f;<br>
-      &nbsp;&nbsp;&nbsp; // ビュー座標を射影座標に変換<br>
+      &nbsp;&nbsp;&nbsp; // 視線ビュー座標をプロジェクション射影座標に変換 https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
       &nbsp;&nbsp;&nbsp; VSOutput.Position.x = dot(lViewPosition, g_Base.ProjectionMatrix[0]);<br>
       &nbsp;&nbsp;&nbsp; VSOutput.Position.y = dot(lViewPosition, g_Base.ProjectionMatrix[1]);<br>
       &nbsp;&nbsp;&nbsp; VSOutput.Position.z = dot(lViewPosition, g_Base.ProjectionMatrix[2]);<br>
       &nbsp;&nbsp;&nbsp; VSOutput.Position.w = dot(lViewPosition, g_Base.ProjectionMatrix[3]);<br>
-      &nbsp;&nbsp;&nbsp; // 頂点座標変換 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 終了 )<br>
+      &nbsp;&nbsp;&nbsp; // 頂点座標変換 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 終了 )<br>
       <br>
       &nbsp;&nbsp;&nbsp; VSOutput.TexCoords0 = VSInput.TexCoords0; // テクスチャの座標をそのままOutputする<br>
       &nbsp;&nbsp;&nbsp; <br>
@@ -10911,8 +10911,8 @@
         &nbsp;&nbsp;&nbsp; PSOutput.Color0.b = PSInput.Diffuse.b ; // B:青&nbsp;&nbsp;&nbsp;&nbsp; 画面スクリーン上のピクセル色<br>
         &nbsp;&nbsp;&nbsp; PSOutput.Color0.a = PSInput.Diffuse.a ; // A:透明度 画面スクリーン上のピクセル色</u><br>
       <br>
-      &nbsp;&nbsp;&nbsp; <em>// [実験]出力する色はテクスチャの色とディフューズカラーをかけ算したもの<br>
-        &nbsp;&nbsp;&nbsp; PSOutput.<b>Color0</b> = <b>TextureDiffuseColor</b> * PSInput.Diffuse;</em><br>
+      &nbsp;&nbsp;&nbsp; <em>// [実験]出力する色はディフューズカラーをテクスチャの色にかけ算したもの<br>
+        &nbsp;&nbsp;&nbsp; PSOutput.<b>Color0</b> = PSInput.Diffuse * <b>TextureDiffuseColor</b>;</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; // 出力パラメータを返す<br>
       &nbsp;&nbsp;&nbsp; return PSOutput ;<br>
@@ -10989,12 +10989,12 @@
         &nbsp;&nbsp;&nbsp; int SpotLightHandle; // スポットライトのハンドル番号<br>
         &nbsp;&nbsp;&nbsp; int PointLightHandle; // ポイントライトのハンドル番号<br>
         &nbsp;&nbsp;&nbsp; int controlLight = -1; // ユーザーのコントロール中のライト<br>
-        &nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(TRUE); // 光の明暗計算を有効に 同時に有効にできるのは標準ライトを含めて３つまで<br>
-        &nbsp;&nbsp;&nbsp; DxLib::SetLightEnable(FALSE); // デフォルトで3D空間を照らしていた標準ライトは無効にする<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(TRUE); // 光の明暗計算を有効に 同時に有効にできるのは標準ライトを含めて3～6つ(シェーダーのVerやLight[]配列の数の定義による)<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetLightEnable(FALSE); // デフォルトで3D空間を照らしていた標準ライトは無効にする(<b>無効にしないとg_Common.Light[ 0 ]に標準のデフォルトライトが割り込んじゃう</b>)<br>
         <br>
         &nbsp;&nbsp;&nbsp; // ※※ライトの初期化順※※※<br>
-        &nbsp;&nbsp;&nbsp; // ★[重要] CreateLight系関数を呼んだ順にシェーダーのg_Common.Light[ 0 ] g_Common.Light[ 1 ] g_Common.Light[ 2 ]にライトが対応するので<br>
-        &nbsp;&nbsp;&nbsp; // シェーダーのディレクショナルライト、スポットライト、ポイントライトの初期化の順番を合わせないといけない！！！<br>
+        &nbsp;&nbsp;&nbsp; // ★[重要] CreateLight系関数を呼んだ順にシェーダー側のg_Common.Light[ 0 ] g_Common.Light[ 1 ] g_Common.Light[ 2 ]にライトが対応するので<br>
+        &nbsp;&nbsp;&nbsp; // <b>シェーダーのコードとの対応関係を考えた上でディレクショナルライト、スポットライト、ポイントライトの初期化の順番を合わせないといけない！！！</b><br>
         &nbsp;&nbsp;&nbsp; //[<b>DXでは必ずディレクショナルライト→スポットライト→ポイントライトの順に初期化しないといけない</b>] https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=5605<br>
         <br>
         <br>
@@ -11009,9 +11009,9 @@
         &nbsp;&nbsp;&nbsp; // ディレクショナルライトを作成する<br>
         &nbsp;&nbsp;&nbsp; DirLightHandle = DxLib::CreateDirLightHandle(VGet(0.0f, 0.0f, 1.0f));<br>
         &nbsp;&nbsp;&nbsp; // ディレクショナルライトのアンビエントカラーを抑える<br>
-        &nbsp;&nbsp;&nbsp; //SetLightAmbColorHandle(DirLightHandle, GetColorF(0.0f, 0.1f, 0.0f, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; //DxLib::SetLightAmbColorHandle(DirLightHandle, GetColorF(0.0f, 0.1f, 0.0f, 0.0f));<br>
         &nbsp;&nbsp;&nbsp; // ディレクショナルライトのディフューズカラーを緑にする<br>
-        &nbsp;&nbsp;&nbsp; //SetLightDifColorHandle(DirLightHandle, GetColorF(0.0f, 1.0f, 0.0f, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetLightDifColorHandle(DirLightHandle, GetColorF(0.0f, 1.0f, 0.0f, 0.0f));<br>
         <br>
         <br>
         &nbsp;&nbsp;&nbsp; // [スポットライト] https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N23<br>
@@ -11021,9 +11021,9 @@
         &nbsp;&nbsp;&nbsp; // スポットライトを作成する<br>
         &nbsp;&nbsp;&nbsp; SpotLightHandle = DxLib::CreateSpotLightHandle(VGet(0.0f, 0.0f, 0.0f), VGet(0.0f, -1.0f, 0.0f), 0.7f, 0.6f, 1000.0f, 0.391586f, 0.001662f, 0.0f);<br>
         &nbsp;&nbsp;&nbsp; // スポットライトのアンビエントカラーを無効にする<br>
-        &nbsp;&nbsp;&nbsp; //SetLightAmbColorHandle(SpotLightHandle, GetColorF(0.0f, 0.0f, 0.0f, 0.0f));<br>
-        &nbsp;&nbsp;&nbsp; // スポットライトのディフューズカラーを緑にする<br>
-        &nbsp;&nbsp;&nbsp; //SetLightDifColorHandle(SpotLightHandle, GetColorF(0.0f, 1.0f, 0.0f, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; //DxLib::SetLightAmbColorHandle(SpotLightHandle, GetColorF(0.0f, 0.0f, 0.0f, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; // スポットライトのディフューズカラーを水色にする<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetLightDifColorHandle(SpotLightHandle, GetColorF(0.0f, 1.0f, 1.0f, 0.0f));<br>
         <br>
         <br>
         &nbsp;&nbsp;&nbsp; // [ポイントライト] https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N2<br>
@@ -11033,11 +11033,11 @@
         &nbsp;&nbsp;&nbsp; // ポイントライトを作成する<br>
         &nbsp;&nbsp;&nbsp; PointLightHandle = DxLib::CreatePointLightHandle(VGet(0.0f, 0.0f, 0.0f), 7000.0f, 1.016523f, 0.000100f, 0.000010f);<br>
         &nbsp;&nbsp;&nbsp; // ポイントライトのアンビエントカラーを無効にする<br>
-        &nbsp;&nbsp;&nbsp; //SetLightAmbColorHandle(PointLightHandle, GetColorF(0.0f, 0.0f, 0.0f, 0.0f));<br>
-        &nbsp;&nbsp;&nbsp; // ポイントライトのディフューズカラーを強い赤色にする<br>
-        &nbsp;&nbsp;&nbsp; //SetLightDifColorHandle(PointLightHandle, GetColorF(2.0f, 0.0f, 0.0f, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; //DxLib::SetLightAmbColorHandle(PointLightHandle, GetColorF(0.0f, 0.0f, 0.0f, 0.0f));<br>
+        &nbsp;&nbsp;&nbsp; // ポイントライトのディフューズカラーをピンク色にする<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetLightDifColorHandle(PointLightHandle, GetColorF(1.0f, 0.0f, 1.0f, 0.0f));<br>
         <br>
-        &nbsp;&nbsp;&nbsp; controlLight = PointLightHandle; // デフォルトでコントロールするのはポイントライトにする</em><br>
+        &nbsp;&nbsp;&nbsp; controlLight = DirLightHandle; // デフォルトでコントロールするのはディレクショナルライトにする</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; VECTOR keyControlXYZ; // 上下左右キーでxy位置を動かせるように<br>
       &nbsp;&nbsp;&nbsp; keyControlXYZ.x = 0.0f; keyControlXYZ.y = 0.0f; keyControlXYZ.z = 0;<br>
@@ -11220,7 +11220,6 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::MV1SetAttachAnimTime((int)*pDevilData, (*pDevilData)[animPathName].index, animTime);<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>int lightType = (controlLight == -1) ? DxLib::GetLightType() : DxLib::GetLightTypeHandle(controlLight);<br>
-        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 画面にライトのタイプを描画<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string TypeName;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; switch (lightType)<br>
@@ -11229,9 +11228,9 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case DX_LIGHTTYPE_POINT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TypeName = "Point";&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case DX_LIGHTTYPE_SPOT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TypeName = "Spot";&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200, GetColor(255, 255, 255), "LightType&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %s", TypeName.c_str());<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200, GetColor(255, 255, 255), "LightType&nbsp;&nbsp;&nbsp; %s", TypeName.c_str());<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [ディレクショナルライト表示]<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ライトの円錐を描画 [ディレクショナルライト] https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N1<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float coneScale = 30.0f; //&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lightPos + lightDir * coneScale<br>
@@ -11241,9 +11240,9 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //DrawCone3D(lightPos, VAdd(lightPos, VScale(lightDir, coneScale)), OutAngle * 2 * DX_PI_F, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (lightType == DX_LIGHTTYPE_DIRECTIONAL) // [ディレクショナルライト情報]<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 30, GetColor(255, 255, 255), "Direction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f %f %f", lightDir0.x, lightDir0.y, lightDir0.z);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 60, GetColor(255, 255, 255), "Direction&nbsp;&nbsp;&nbsp; %f %f %f", lightDir0.x, lightDir0.y, lightDir0.z);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [スポットライト表示]<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ライトの照射角度パラメータ 標準ライト:GetLightAngle() 別のライト:GetLightAngleHandle<br>
@@ -11252,7 +11251,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (controlLight == -1)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightAngle(&amp;OutAngle, &amp;InAngle);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightAngleHandle(controlLight, &amp;OutAngle, &amp;InAngle);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightAngleHandle(SpotLightHandle, &amp;OutAngle, &amp;InAngle);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Range; // スポットライトの影響最大距離:距離以上の座標にある頂点は、 例え距離減衰計算の結果が０ではなくてもライトの影響は無くなる<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //ライトの影響力(％) = 100.0f / ( Atten0 + Atten1 * d + Atten2 * d * d ) [d = ライトから頂点への距離]<br>
@@ -11263,7 +11262,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (controlLight == -1)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightRangeAtten(&amp;Range, &amp;Atten0, &amp;Atten1, &amp;Atten2);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightRangeAttenHandle(controlLight, &amp;Range, &amp;Atten0, &amp;Atten1, &amp;Atten2);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetLightRangeAttenHandle(SpotLightHandle, &amp;Range, &amp;Atten0, &amp;Atten1, &amp;Atten2);<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ライトの位置に円錐を描画 [スポットライト] https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N3<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float coneScale = 15.0f; //&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lightPos + lightDir * coneScale<br>
@@ -11271,18 +11270,17 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR lightDir1 = DxLib::GetLightDirectionHandle(SpotLightHandle);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCone3D(lightPos1, VAdd(lightPos1, VScale(lightDir1, coneScale)), InAngle * 2 * DX_PI_F, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE); //[自作円錐もあるが]https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4962<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCone3D(lightPos1, VAdd(lightPos1, VScale(lightDir1, coneScale)), OutAngle * 2 * DX_PI_F, 8, GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (lightType == DX_LIGHTTYPE_SPOT) // [スポットライト情報]<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 30, GetColor(255, 255, 255), "Direction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f %f %f", lightDir1.x, lightDir1.y, lightDir1.z);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 60, GetColor(255, 255, 255), "InOutAngle&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f %f", InAngle, OutAngle);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 90, GetColor(255, 255, 255), "Range&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f", Range);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 120, GetColor(255, 255, 255), "Attenuation0&nbsp;&nbsp;&nbsp; %f", Atten0);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 150, GetColor(255, 255, 255), "Attenuation1&nbsp;&nbsp;&nbsp; %f", Atten1);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 180, GetColor(255, 255, 255), "Attenuation2&nbsp;&nbsp;&nbsp; %f", Atten2);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 30,&nbsp; GetColor(255, 255, 255), "Position&nbsp;&nbsp;&nbsp;&nbsp; %f %f %f", lightPos1.x, lightPos1.y, lightPos1.z);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 60,&nbsp; GetColor(255, 255, 255), "Direction&nbsp;&nbsp;&nbsp; %f %f %f", lightDir1.x, lightDir1.y, lightDir1.z);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 90,&nbsp; GetColor(255, 255, 255), "InOutAngle&nbsp;&nbsp; %f %f", InAngle, OutAngle);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 120, GetColor(255, 255, 255), "Range&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f", Range);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 150, GetColor(255, 255, 255), "Attenuation&nbsp; %f %f %f", Atten0, Atten1, Atten2);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [ポイントライト表示]<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [ポイントライト] 有効距離と距離減衰パラメータ https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N2<br>
@@ -11304,10 +11302,9 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (lightType == DX_LIGHTTYPE_POINT) // [ポイントライト情報]<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 90, GetColor(255, 255, 255), "Range&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f", Range);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 120, GetColor(255, 255, 255), "Attenuation0&nbsp;&nbsp;&nbsp; %f", Atten0);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 150, GetColor(255, 255, 255), "Attenuation1&nbsp;&nbsp;&nbsp; %f", Atten1);<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 180, GetColor(255, 255, 255), "Attenuation2&nbsp;&nbsp;&nbsp; %f", Atten2);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 30,&nbsp; GetColor(255, 255, 255), "Position&nbsp;&nbsp;&nbsp;&nbsp; %f %f %f", lightPos2.x, lightPos2.y, lightPos2.z);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 120, GetColor(255, 255, 255), "Range&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f", Range);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 200 + 150, GetColor(255, 255, 255), "Attenuation&nbsp; %f %f %f", Atten0, Atten1, Atten2);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
       <br>
@@ -11344,6 +11341,192 @@
     例えば、たいまつを洞窟に置くときも、たいまつは全方向に光が出るからポイントライトかな？と思うかもしれないが、たいまつの付け根の部分は木とつながってて光がでない。<br>
     だから、スポットライトの広がる角度を180度以上にすれば、スポットライトの傘が台風で逆向きになる感じになって、付け根付近までその広がりを広げればスポットライトでも表現できる。<br>
     光を出さない方向があればあるほど、計算の負荷はさがるという節約志向で、照明をうまく使う必要がある。そのためにはこういったデータの定義と計算の基礎考察をイメージできる確かな基礎教養が重要です。<br>
+    <br>
+    <br>
+    さて、現在のままでは、ダイスには生成したディレクショナルライトなどの光の照りこみは映っていないはずです。(ダイスは赤や青、ディレクショナルライトは緑色)<br>
+    なぜなら、自作したシェーダーのコードにはまだディレクショナルライトなどの光の蓄積する計算式をまだ書いてないからです。<br>
+    つぎは、自作の頂点シェーダーにディレクショナルライトの光の計算式を書き込んで、ダイスが緑色の光を拡散反射できるようにしてみましょう。<br>
+    <br>
+    <p><code>TestVS.fx</code>を変更してディレクショナルライト(g_Common.Light[0])の光の蓄積値を計算して結果をVS_OUTで出力しましょう。</p>
+    <p class="source"> <br>
+      <br>
+      <br>
+      (前略).........<br>
+      <br>
+      // main関数<br>
+      VS_OUTPUT main( VS_INPUT VSInput )<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; VS_OUTPUT VSOutput ;<br>
+      &nbsp;&nbsp;&nbsp; float4 lLocalPosition; // ローカル座標<br>
+      &nbsp;&nbsp;&nbsp; float4 lWorldPosition; // ワールド座標<br>
+      &nbsp;&nbsp;&nbsp; float4 lViewPosition; // 視線ビュー座標<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <em>float3 lWorldNrm; // ワールド法線ベクトル<br>
+        &nbsp;&nbsp;&nbsp; float3 lViewNrm; // 視線ビュー法線ベクトル<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // ライティングの計算に必要な定義<br>
+        &nbsp;&nbsp;&nbsp; float3 lLightHalfVec; // ハーフベクトルの計算 norm( ( norm( 頂点位置からビュー視点へのベクトル ) + ライトの方向 ) )<br>
+        &nbsp;&nbsp;&nbsp; float4 lLightLitParam; // ライトのパラメータ 反射角度などの内積の値をもとめておく<br>
+        &nbsp;&nbsp;&nbsp; float4 lLightLitDest; // lit関数に上記のライトの内積パラメータを入力して光の減衰率の係数をもとめる<br>
+        &nbsp;&nbsp;&nbsp; float3 lLightDir; // 光源の向いている方向のベクトル(ディレクショナルライトやスポットライトの方向ベクトルがここに来る)<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // ディフューズ:拡散反射光 と スペキュラ:鏡面反射光の合計トータル蓄積値<br>
+        &nbsp;&nbsp;&nbsp; float3 lTotalDiffuse; // 拡散反射光のトータル蓄積値<br>
+        &nbsp;&nbsp;&nbsp; float3 lTotalSpecular; // 鏡面反射光のトータル蓄積値</em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // 頂点座標変換 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 開始 )<br>
+      &nbsp;&nbsp;&nbsp; // ローカル座標のセット<br>
+      &nbsp;&nbsp;&nbsp; lLocalPosition.xyz = VSInput.Position;<br>
+      &nbsp;&nbsp;&nbsp; lLocalPosition.w = 1.0f;<br>
+      &nbsp;&nbsp;&nbsp; // ローカル座標をワールド座標に変換 [3D座標がスクリーンに投影されるための行列変換の過程] https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
+      &nbsp;&nbsp;&nbsp; lWorldPosition.x = dot(lLocalPosition, g_Base.LocalWorldMatrix[0]);<br>
+      &nbsp;&nbsp;&nbsp; lWorldPosition.y = dot(lLocalPosition, g_Base.LocalWorldMatrix[1]);<br>
+      &nbsp;&nbsp;&nbsp; lWorldPosition.z = dot(lLocalPosition, g_Base.LocalWorldMatrix[2]);<br>
+      &nbsp;&nbsp;&nbsp; lWorldPosition.w = 1.0f;<br>
+      &nbsp;&nbsp;&nbsp; // ワールド座標をビュー座標に変換 [ワールド座標のカメラの位置が原点(0,0,0)になる行列変換] https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
+      &nbsp;&nbsp;&nbsp; lViewPosition.x = dot(lWorldPosition, g_Base.ViewMatrix[0]);<br>
+      &nbsp;&nbsp;&nbsp; lViewPosition.y = dot(lWorldPosition, g_Base.ViewMatrix[1]);<br>
+      &nbsp;&nbsp;&nbsp; lViewPosition.z = dot(lWorldPosition, g_Base.ViewMatrix[2]);<br>
+      &nbsp;&nbsp;&nbsp; lViewPosition.w = 1.0f;<br>
+      &nbsp;&nbsp;&nbsp; // 視線ビュー座標をプロジェクション射影座標に変換 https://light11.hatenadiary.com/entry/2019/01/27/160541<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Position.x = dot(lViewPosition, g_Base.ProjectionMatrix[0]);<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Position.y = dot(lViewPosition, g_Base.ProjectionMatrix[1]);<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Position.z = dot(lViewPosition, g_Base.ProjectionMatrix[2]);<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.Position.w = dot(lViewPosition, g_Base.ProjectionMatrix[3]);<br>
+      &nbsp;&nbsp;&nbsp; // 頂点座標変換 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++( 終了 )<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <em>// 法線をビュー空間の角度に変換 =====================================================( 開始 )<br>
+        &nbsp;&nbsp;&nbsp; // ローカル法線ベクトル:VSInput.Normal を ワールド法線ベクトル:lWorldNrm に変換<br>
+        &nbsp;&nbsp;&nbsp; lWorldNrm.x = dot(VSInput.Normal, g_Base.LocalWorldMatrix[0].xyz);<br>
+        &nbsp;&nbsp;&nbsp; lWorldNrm.y = dot(VSInput.Normal, g_Base.LocalWorldMatrix[1].xyz);<br>
+        &nbsp;&nbsp;&nbsp; lWorldNrm.z = dot(VSInput.Normal, g_Base.LocalWorldMatrix[2].xyz);<br>
+        &nbsp;&nbsp;&nbsp; // ワールド法線ベクトル:lWorldNrm を ビュー法線ベクトル:lViewNrm に変換<br>
+        &nbsp;&nbsp;&nbsp; lViewNrm.x = dot(lWorldNrm, g_Base.ViewMatrix[0].xyz);<br>
+        &nbsp;&nbsp;&nbsp; lViewNrm.y = dot(lWorldNrm, g_Base.ViewMatrix[1].xyz);<br>
+        &nbsp;&nbsp;&nbsp; lViewNrm.z = dot(lWorldNrm, g_Base.ViewMatrix[2].xyz);<br>
+        &nbsp;&nbsp;&nbsp; // 法線をビュー空間の角度に変換 =====================================================( 終了 )<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; //[※注意!ディレクショナルライト→スポットライト→ポイントライトの順に勝手にg_Common.Light[0],[1],[2]は並べ変わる]<br>
+        &nbsp;&nbsp;&nbsp; // https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=5605<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // ディレクショナルライトの処理 g_Common.Light[0]を使う******************************( 開始 )<br>
+        &nbsp;&nbsp;&nbsp; // ライトの方向セット<br>
+        &nbsp;&nbsp;&nbsp; lLightDir = g_Common.Light[0].Direction;<br>
+        &nbsp;&nbsp;&nbsp; // ライトディフューズカラーとライトスペキュラカラーの角度減衰計算 =======( 開始 )<br>
+        &nbsp;&nbsp;&nbsp; // 法線とライトの逆方向ベクトルとの内積を lLightLitParam.x にセット<br>
+        &nbsp;&nbsp;&nbsp; lLightLitParam.x = dot(lViewNrm, -lLightDir);<br>
+        &nbsp;&nbsp;&nbsp; // ハーフベクトルの計算 norm( ( norm( 頂点位置から視点へのベクトル ) + ライトの方向 ) )<br>
+        &nbsp;&nbsp;&nbsp; lLightHalfVec = normalize(normalize(-lViewPosition.xyz) - lLightDir);<br>
+        &nbsp;&nbsp;&nbsp; // 法線とハーフベクトルの内積を lLightLitParam.y にセット [法線とライトベクトルの内積で平面がカメラに向いている割合計算] https://someiyoshino.info/entry/20171231/1514692823<br>
+        &nbsp;&nbsp;&nbsp; lLightLitParam.y = dot(lLightHalfVec, lViewNrm);<br>
+        &nbsp;&nbsp;&nbsp; // スペキュラ反射率を lLightLitParam.w にセット<br>
+        &nbsp;&nbsp;&nbsp; lLightLitParam.w = 20.0f;<br>
+        &nbsp;&nbsp;&nbsp; // ライト計算 [HLSL言語のlit関数] https://learn.microsoft.com/ja-jp/windows/win32/direct3dhlsl/dx-graphics-hlsl-lit<br>
+        &nbsp;&nbsp;&nbsp; lLightLitDest = lit(lLightLitParam.x, lLightLitParam.y, lLightLitParam.w);<br>
+        &nbsp;&nbsp;&nbsp; // ライトディフューズカラーとライトスペキュラカラーの角度減衰計算 =======( 終了 )<br>
+        &nbsp;&nbsp;&nbsp; // カラー計算 ===========================================================( 開始 )<br>
+        &nbsp;&nbsp;&nbsp; // ディフューズライト蓄積値 += ディフューズ角度減衰計算結果 * ライトのディフューズカラー + ライトのアンビエントカラー<br>
+        &nbsp;&nbsp;&nbsp; lTotalDiffuse += lLightLitDest.y * g_Common.Light[0].Diffuse + g_Common.Light[0].Ambient.xyz;<br>
+        &nbsp;&nbsp;&nbsp; // スペキュラライト蓄積値 += スペキュラ角度減衰計算結果 * ライトのスペキュラカラー<br>
+        &nbsp;&nbsp;&nbsp; lTotalSpecular += lLightLitDest.z * g_Common.Light[0].Specular;<br>
+        &nbsp;&nbsp;&nbsp; // カラー計算 ===========================================================( 終了 )<br>
+        &nbsp;&nbsp;&nbsp; // ディレクショナルライトの処理 *****************************************************( 終了 )<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ディフューズカラー = ディフューズライト蓄積値<br>
+        &nbsp;&nbsp;&nbsp; VSOutput.Diffuse.xyz = lTotalDiffuse;<br>
+        &nbsp;&nbsp;&nbsp; // スペキュラカラー = スペキュラライト蓄積値<br>
+        &nbsp;&nbsp;&nbsp; VSOutput.Specular.xyz = lTotalSpecular;<br>
+        &nbsp;&nbsp;&nbsp; </em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <u>VSOutput.TexCoords0 = VSInput.TexCoords0; // テクスチャの座標をそのままOutputする</u><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // テクスチャ座標変換行列による変換を行った結果のテクスチャ座標をセット<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.TexCoords0.x = dot(VSInput.TexCoords0, g_OtherMatrix.TextureMatrix[0][0]);<br>
+      &nbsp;&nbsp;&nbsp; VSOutput.TexCoords0.y = dot(VSInput.TexCoords0, g_OtherMatrix.TextureMatrix[0][1]);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <u>// [実験]頂点カラーの拡散光をxの位置が0.0f以上か以下かで青か赤かに描き分ける処理を書いてみる<br>
+        &nbsp;&nbsp;&nbsp; VSOutput.Diffuse.r = (VSOutput.Position.x &gt; 0.0f) ? 1.0f : 0.0f; // R(赤の拡散値)<br>
+        &nbsp;&nbsp;&nbsp; VSOutput.Diffuse.g = 0.0f; // G(緑の拡散値)<br>
+        &nbsp;&nbsp;&nbsp; VSOutput.Diffuse.b = (VSOutput.Position.x &gt; 0.0f) ? 0.0f : 1.0f; // B(青の拡散値)</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 出力パラメータを返す<br>
+      &nbsp;&nbsp;&nbsp; return VSOutput ;<br>
+      }<br>
+    </p>
+    <br>
+    TestVS.fxを変更したら保存して、<b>コマンドプロンプトから再びShaderCompiler.exeのコマンドでビルドしなおし</b>ます。(キーボードの<b>上キーを押すと過去に実行したコマンドが出てきて楽</b>) <br>
+    <br>
+    続いて、ピクセルシェーダーの計算式もすこし変更しておきましょう。<br>
+    <p><code>TestPS.fx</code>を変更して下記コードで 頂点シェーダからやってくるのPSInputの鏡面反射光(Specular) も PSOutput.Color0に足し算して合成して出力しましょう。</p>
+    <p class="source">// ピクセルシェーダーの入力<br>
+      struct PS_INPUT<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; float4 Diffuse&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : COLOR0 ;<br>
+      &nbsp;&nbsp;&nbsp; float4 <b>Specular&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : COLOR1</b> ;<br>
+      &nbsp;&nbsp;&nbsp; float2 TexCoords0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : TEXCOORD0 ;<br>
+      } ;<br>
+      <br>
+      // ピクセルシェーダーの出力<br>
+      struct PS_OUTPUT<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; float4 Color0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : SV_TARGET0 ;&nbsp;&nbsp;&nbsp; // 色<br>
+      } ;<br>
+      <br>
+      <br>
+      // [DirectX11版]定数バッファピクセルシェーダー基本パラメータ<br>
+      struct DX_D3D11_PS_CONST_BUFFER_BASE<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; float4&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; FactorColor ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // アルファ値等<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; MulAlphaColor ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カラーにアルファ値を乗算するかどうか( 0.0f:乗算しない&nbsp; 1.0f:乗算する )<br>
+      &nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; AlphaTestRef ;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // アルファテストで使用する比較値<br>
+      &nbsp;&nbsp;&nbsp; float2&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Padding1 ;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; AlphaTestCmpMode ;&nbsp;&nbsp;&nbsp; // アルファテスト比較モード( DX_CMP_NEVER など )<br>
+      &nbsp;&nbsp;&nbsp; int3&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Padding2 ;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float4&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; IgnoreTextureColor ;&nbsp;&nbsp;&nbsp; // テクスチャカラー無視処理用カラー<br>
+      } ;<br>
+      <br>
+      // [DirectX11版]基本パラメータ https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4904<br>
+      cbuffer cbD3D11_CONST_BUFFER_PS_BASE&nbsp;&nbsp;&nbsp; : register( b1 )<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; DX_D3D11_PS_CONST_BUFFER_BASE&nbsp;&nbsp;&nbsp; g_Base ;<br>
+      } ;<br>
+      <br>
+      <br>
+      SamplerState g_DiffuseMapSampler&nbsp;&nbsp;&nbsp; : register( s0 ) ;&nbsp;&nbsp;&nbsp; // ディフューズマップテクスチャ<br>
+      Texture2D&nbsp;&nbsp;&nbsp; g_DiffuseMapTexture&nbsp;&nbsp;&nbsp; : register( t0 ) ;&nbsp;&nbsp;&nbsp; // ディフューズマップテクスチャ<br>
+      <br>
+      <br>
+      <br>
+      // main関数<br>
+      PS_OUTPUT main( PS_INPUT PSInput )<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; PS_OUTPUT PSOutput ;<br>
+      &nbsp;&nbsp;&nbsp; float4 TextureDiffuseColor ;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // テクスチャ画像の色をサンプラーで[サンプリング採集 して取り出す]<br>
+      &nbsp;&nbsp;&nbsp; TextureDiffuseColor = g_DiffuseMapTexture.Sample(g_DiffuseMapSampler, PSInput.TexCoords0);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 出力カラー = ディフューズカラー * テクスチャカラー + スペキュラカラー</em><br>
+      &nbsp;&nbsp;&nbsp; PSOutput.Color0 = PSInput.Diffuse * TextureDiffuseColor<em> + PSInput.Specular</em>;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 出力パラメータを返す<br>
+      &nbsp;&nbsp;&nbsp; return PSOutput ;<br>
+      }<br>
+    </p>
+    TestPS.fxを変更したら保存して、<b>コマンドプロンプトから再びShaderCompiler.exeのコマンドでビルドしなおし</b>ます。(キーボードの<b>上キーを押すと過去に実行したコマンドが出てきて楽</b>) <br>
+    <br>
+    いかがでしょう？実行したら、サイコロの表面にディレクショナルライトの緑色が反映されたでしょうか？<br>
+    <b>キーボードの上下左右PageDown,PageUpボタンを押して、ディレクショナルライトの方向が変わると緑色に光る面が変わることを確認</b>してみましょう。<br>
+    <br>
+    シェーダーのコード内では、たくさんの頂点を、ローカル→ワールド→カメラからのビューへと行列変換して、<br>
+    求めたカメラからのビューの法線ベクトル と 光源のライトの光の方向のベクトル を dotで内積したパラメータなどを <a href="https://learn.microsoft.com/ja-jp/windows/win32/direct3dhlsl/dx-graphics-hlsl-lit">HLSL言語のlit関数</a> に入れて、ライトの角度による減衰を計算しています。<br>
+    このようにポリゴンの表面の光の反射具合は、シェーダー言語に処理を書いてGPUに計算させることで、画面に3D空間の光の反射した3Dモデルが描かれているわけです。<br>
+    シェーダー言語を自分で書いて勉強することで、3Dモデルのデータが画面にドットの色として描かれるまでの一連の計算の流れを頭の中でイメージできることがゲームの描画プログラマとして一歩レベルアップするのに必要です。<br>
     <br>
     <br>
   </body>
