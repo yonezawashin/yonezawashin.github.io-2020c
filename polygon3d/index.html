@@ -12086,11 +12086,9 @@
     このように、数式レベルでどういった計算がされるかを知った上で、3D空間のライティングをイメージすることが大事です。<br>
     <br>
     これを機に、<a href="https://qiita.com/YukiMiyatake/items/f71aa766de336fbc6781">計算方式には名前があるので勉強</a>しておきましょう。<br>
-    まず、ライトの<b>光源の逆ベクトルとポリゴンの面からの法線の内積dotを計算</b>している計算部分、これは<b>ランバート(Lambert)の反射</b>モデル(<a
-
-      href="https://ja.wikipedia.org/wiki/%E3%83%A9%E3%83%B3%E3%83%90%E3%83%BC%E3%83%88%E5%8F%8D%E5%B0%84">wiki</a>)だ。<br>
+    まず、ライトの<b>光源の逆ベクトルとポリゴンの面からの法線</b>の<a href="https://someiyoshino.info/entry/20171231/1514692823">内積dotを計算</a>している計算部分、これは<b>ランバート(Lambert)の反射</b>モデル(<a href="https://ja.wikipedia.org/wiki/%E3%83%A9%E3%83%B3%E3%83%90%E3%83%BC%E3%83%88%E5%8F%8D%E5%B0%84">wiki</a>)だ。<br>
     つぎに、Power値を設定して鏡面反射を計算している部分、こちらは<b>フォン(Phong)のライティング</b>(<a href="https://ja.wikipedia.org/wiki/Phong%E3%81%AE%E5%8F%8D%E5%B0%84%E3%83%A2%E3%83%87%E3%83%AB">wiki</a>)だ。<br>
-    よく出てくるこの2つの言葉ぐらいは基礎として覚えておいた方がいい。古典的シェーディングの用語だ。<br>
+    よく出てくるこの2つの言葉ぐらいは基礎として覚えておいた方がいい。<a href="https://qiita.com/YukiMiyatake/items/f71aa766de336fbc6781">古典的シェーディング</a>の用語だ。<br>
     そして、古典的シェーディングと違う、最近のシェーディング方式は、物理ベースシェーディング(PBS:Physically-Based Shading:<a
 
       href="https://ja.wikipedia.org/wiki/%E7%89%A9%E7%90%86%E3%83%99%E3%83%BC%E3%82%B9%E3%82%B7%E3%82%A7%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0">wiki</a>)と呼ばれる。<a
