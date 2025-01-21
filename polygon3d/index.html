@@ -10599,8 +10599,8 @@
         (以下、略).... </p>
       GPUに渡されるデータについては</a><a href="https://dxlib.xsrv.jp/function/dxfunc_3d_shader.html#R17N2">DX公式サイトにも説明</a>がある<br>
     コメントに書いてあるように、中身のメンバ変数は変わる可能性がある、<br>
-    つまりゲームの3D表現ごとに描く際に必要な頂点に埋め込んでおきたいデータは変わってくるわけなので、<br>
-    3D保存データの保存データ構造 と 頂点データの定義 と シェーダのプログラム と GPU上の処理 はセットで考えられる必要があるということ。<br>
+    つまり<b>ゲームの3D表現ごとに描く際に必要な頂点に埋め込んでおきたいデータは変わってくることもありうる</b>わけなので、<br>
+    <b>3D保存データの保存データ構造 と 頂点データの定義 と シェーダのプログラム と GPU上の処理 はセット</b>で考えられる必要があるということ。<br>
     ゆえに、ゲームごとにエンジンがカスタマイズされる際に、3Dモデルのデータの書き出しスクリプトを書く人や、<br>
     <a href="https://www.4gamer.net/games/619/G061991/20230823075/">データ構造自体からカスタマイズ</a>してシェーダのプログラムをできる人..などが、必要とされる人材となるわけです。<br>
     そのためには最低限、ポリゴンからシェーダーを経由して、画面にドットが映し出されるまでの過程をイメージできるだけのセンスが重要です。<br>
@@ -10847,7 +10847,7 @@
     <br>
     TestVS.fxを変更したら保存して、<b>コマンドプロンプトから再びShaderCompiler.exeのコマンドでビルドしなおし</b>ます。(キーボードの<b>上キーを押すと過去に実行したコマンドが出てきて楽</b>) <br>
     いかがでしょう？実行したら、サイコロが真ん中より右方向(x＋方向:赤)か左方向(x－方向:青)かで描き分けられているでしょうか？<br>
-    このように頂点シェーダを書き換えれば、3Dの点が1万個あったとしても、頂点すべてに対してfor文を1万回まわすことなくGPUで処理を行わせることができます。<br>
+    このように<b>頂点シェーダを書き換えれば、3Dの点が1万個あったとしても、頂点すべてに対してfor文を1万回まわすことなくGPUで処理を行わせる</b>ことができます。<br>
     3Dを描く際に、GPUにどのように計算の処理をさせているのかの実感が少し湧いたでしょうか？<br>
     <br>
     うーん、いまいちゲームに使う実感が湧かない？例えば、xなど位置に対応して色を描き分けられるということは、<a href="https://styly.cc/ja/tips/post-processing-water/">平面に模様をGPUで描かせることへ発展できるということ</a>です(←x,yから セルラーノイズ=x,yに対応した乱数 で海中の模様を描けている)。<br>
@@ -12111,7 +12111,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // アンビエント環境光の反射色(法線の影響なくライトが当たる範囲内なら表面が光ってみえる)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; COLOR_F&nbsp;&nbsp;&nbsp; Ambient; Ambient.r = 0.3f; Ambient.g = 0.3f; Ambient.b = 0.3f; Ambient.a = 1.0f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // エミッシブ自己発光の色(ライトの光ではなく、3Dの物体自体が自分で発光して表面が光って見える)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; COLOR_F&nbsp;&nbsp;&nbsp; Emissive; Emissive.r = <em>0.0f</em>; Emissive.g = 0.0f; Emissive.b = 0.0f; Emissive.a = 1.0f; // 光があたっていなくても赤色に光るようにEmissive.r = 0.5f;にする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; COLOR_F&nbsp;&nbsp;&nbsp; Emissive; Emissive.r = <em>0.0f</em>; Emissive.g = 0.0f; Emissive.b = 0.0f; Emissive.a = 1.0f;<u> // 光があたっていなくても赤色に光るようにEmissive.r = 0.5f;にする</u><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スペキュラ鏡面反射光の色(スプーンなどの表面のように面の法線と視点の角度が狭いと鋭く反射して見える)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; COLOR_F&nbsp;&nbsp;&nbsp; Specular; Specular.r = 0.5f; Specular.g = 0.5f; Specular.b = 0.5f; Specular.a = 1.0f;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Power = 20.0f; // スペキュラ反射の角度による減衰強度、大きい数字になると反射する面積が小さくなり鋭くキラッと反射して見える<br>
