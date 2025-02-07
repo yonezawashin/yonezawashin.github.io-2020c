@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+    <title>[C++]3Dタイル描画エンジン</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+      
+    </style>
+  </head>
+  <body>
+    <p class="title">[C++]3Dタイル描画エンジン1</p>
+    <ol id="mozToc">
+      <!--mozToc h1 1-->
+      <li><a href="#mozTocId0001">試しにボックス型のタイルをポリゴンを表示してみる</a></li>
+      <li><a href="#mozTocId0002">複数カメラと複数スクリーンで複数プレイヤ視点で3D空間を描けるようにする</a></li>
+      <li><a href="#mozTocId0003">文字タグ判定の代わりに使えるハッシュ(32bit)でカメラにhash32タグをつけて管理する</a></li>
+    </ol>
+    <br>
+    <a id="mozTocId0001" class="mozTocH1">
+      <h1>試しにボックス型のタイルをポリゴンを表示してみる</h1>
+    </a> (DXの<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId0002">プロジェクトはシューティングの別記事を参考</a>に作っておいてください。<br>
+    <p><code>Resource.h と Resource.cppは次の記事を参考に作っておきます→</code><a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/polygon3d/index.html#mozTocId0011">画像や音声や3Dのファイルを読み込んで辞書で管理するクラス</a><br>
+    </p>
+    <p><code>Mapフォルダ</code>を作成して、地形画像ファイル<code>mapchip.png</code>は<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/practice.html#mozTocId0010">2Dアクションゲームの別記事を参考</a>にMap/mapchip.pngで保管されている前提で進めます)</p>
+    <p><code>main.cppを新規作成</code>して、分割テクスチャ画像でタイルを正しく表示できるかテストします。</p>
+    <p class="source"> #include "DxLib.h"<br>
+      <br>
+      #include "<b>Resource.h</b>"<br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(960, 540, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(960, 540);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("3Dタイルゲーム");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; //↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // タイルマップを読み込む <b>縦8マス、横8マス、縦32ピクセル、横32ピクセル</b><br>
+      &nbsp;&nbsp;&nbsp; std::string mapChipPath{ "<b>Map/mapchip.png</b>" };<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath,8,8,32,32)-&gt;Load(); // <b>メソッドチェーン</b> -&gt; でMakeShared読込後にLoadもする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 2Dタイル描画処理(位置x, y, 拡大率, 回転, 画像ID, TRUEなら透過有効)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawRotaGraphF(100, 200, 1.0f, 0, Resource::files[mapChipPath]-&gt;m_handles[<b>2</b>], TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    <br>
+    <p><code>MyDraw.hを新規作成</code>して、3Dで分割テクスチャ画像を描画する関数を準備します。</p>
+    <p class="source"> #ifndef MYDRAW_H_<br>
+      #define MYDRAW_H_<br>
+      <br>
+      #include &lt;assert.h&gt; // 画像読込み失敗表示用<br>
+      #include &lt;cmath&gt; // std::absを使う<br>
+      #include &lt;vector&gt;<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Resource.h"<br>
+      <br>
+      // 3Dのタイルを描くための自作描画系処理のクラス<br>
+      class MyDraw<br>
+      {<br>
+      public:<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; enum class Plane<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // XYZ平面の指定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; X = 1,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Y,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Z<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ★デフォルトではDXライブラリ2D座標系に合わせて右手系 &amp; Yの矢印を画面下方向に設定<br>
+      &nbsp;&nbsp;&nbsp; //static bool isLeftHanded;<br>
+      &nbsp;&nbsp;&nbsp; static VECTOR XYZ_ARROW;<br>
+      &nbsp;&nbsp;&nbsp; static bool IsReverseX_Texture;<br>
+      &nbsp;&nbsp;&nbsp; static bool IsReverseY_Texture;<br>
+      &nbsp;&nbsp;&nbsp; static bool IsReverseZ_Texture;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ★【Y矢印の方向と右手・左手系】の設定に合わせたVECTORを取得<br>
+      &nbsp;&nbsp;&nbsp; // このVGetを通せば座標系を統一できる<br>
+      &nbsp;&nbsp;&nbsp; // 入力される座標x,y,zは左上を(x,y,z) = (0,0,0)としてZの奥方向をプラス<br>
+      &nbsp;&nbsp;&nbsp; // Yをマイナス下方向としたDXライブラリの画面座標系を想定<br>
+      &nbsp;&nbsp;&nbsp; static VECTOR VGet(float x, float y, float z)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // DXライブラリの3D描画座標系に変換<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (XYZ_ARROW.x == 1 &amp;&amp; XYZ_ARROW.y == 1 &amp;&amp; XYZ_ARROW.z == 1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // DX デフォルト2D描画座標系<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return DxLib::VGet(x, y, z);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (XYZ_ARROW.x == 1 &amp;&amp; XYZ_ARROW.y == -1 &amp;&amp; XYZ_ARROW.z == 1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // DX 3D描画座標系<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return DxLib::VGet(x, -y, z);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR Result;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (XYZ_ARROW.x == 1) Result.x = x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else Result.x = -x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (XYZ_ARROW.y == 1) Result.y = y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else Result.y = -y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (XYZ_ARROW.z == 1) Result.z = z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else Result.z = -z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Result;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline static VECTOR_D VecAngle(Plane plane, double Angle)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D AngleVec = DxLib::VGetD(0.0F, 0.0F, 0.0F);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 平面に合わせて回転軸を選択<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (plane == Plane::X) AngleVec.x = Angle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (plane == Plane::Y) AngleVec.y = Angle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (plane == Plane::Z) AngleVec.z = Angle;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return AngleVec;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 回転行列からXYZ軸周りの角度(単位:ラジアン)に戻す<br>
+      &nbsp;&nbsp;&nbsp; inline static VECTOR_D GetAngle(MATRIX_D rotMat)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double threshold = 0.001;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D radAngle; // XYZ軸周りの角度(単位:ラジアン)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[参考:opencvは左手系なので行列位置は斜め鏡映し逆] https://qiita.com/q_tarou/items/46e5045068742dfb2fa6<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (std::abs(rotMat.m[1][2] - 1.0) &lt; threshold) { // rotMat[1][2] = sin(x) = 1の時<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; radAngle.x = DX_PI / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; radAngle.y = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; radAngle.z = std::atan2(rotMat.m[0][1], rotMat.m[0][0]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (std::abs(rotMat.m[1][2] + 1.0) &lt; threshold) { // rotMat[1][2] = sin(x) = -1の時<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; radAngle.x = -DX_PI / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; radAngle.y = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; radAngle.z = std::atan2(rotMat.m[0][1], rotMat.m[0][0]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; radAngle.x = std::asin(rotMat.m[1][2]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; radAngle.y = std::atan2(-rotMat.m[0][2], rotMat.m[2][2]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; radAngle.z = std::atan2(-rotMat.m[1][0], rotMat.m[1][1]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return radAngle;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // UnityにならってfarClipPlane(z方向のどこまで遠いものを描くか)<br>
+      &nbsp;&nbsp;&nbsp; // https://qiita.com/shoridevel/items/5c4a249ff09244645c93<br>
+      &nbsp;&nbsp;&nbsp; //static int farClipPlane;// = 1000;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラの視点、注視点、アップベクトルを設定する( アップベクトルはＹ軸方向から導き出す )<br>
+      &nbsp;&nbsp;&nbsp; static int SetCameraPositionAndTarget_UpVecY(VECTOR Position, VECTOR Target)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 右手・左手系とY軸矢印の方向に従い座標を変換<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR Position_COVERT_XYZ = VGet(Position.x, Position.y, Position.z);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR Target_COVERT_XYZ = VGet(Target.x, Target.y, Target.z);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return DxLib::SetCameraPositionAndTarget_UpVecY(Position_COVERT_XYZ, Target_COVERT_XYZ);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 画像のビルボード描画(常に面がカメラ向き)( 座標指定が float 版 )<br>
+      &nbsp;&nbsp;&nbsp; static int DrawDivBillboardGraphF3D(Plane plane, float xf, float yf, float zf, double ExRate, VECTOR_D Angle, Texture&amp; divTexture, int id, int TransFlag = TRUE, int ReverseXFlag = FALSE, int ReverseYFlag = FALSE, int ReverseZFlag = FALSE)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return MyDraw::DrawDivRotaGraphF3D(plane, xf, yf, zf, ExRate, Angle, divTexture, id, TransFlag, ReverseXFlag, ReverseYFlag, ReverseZFlag, true); // ビルボード描画フラグをtrueに<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 画像の回転描画( 座標指定が float 版 )<br>
+      &nbsp;&nbsp;&nbsp; static int DrawDivRotaGraphF(float xf, float yf, double ExRate, double Angle, Texture&amp; divTexture, int id, int TransFlag, int ReverseXFlag = FALSE, int ReverseYFlag = FALSE, int ReverseZFlag = FALSE)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // Zの値を0.0Fとして<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return MyDraw::DrawDivRotaGraphF3D(Plane::Z, xf, yf, 0.0F, ExRate, Angle, divTexture, id, TransFlag, ReverseXFlag, ReverseYFlag, ReverseZFlag);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 画像の回転描画( 座標指定が float 版 )【注意！】現状Angle回転機能は未対応<br>
+      &nbsp;&nbsp;&nbsp; static int DrawDivRotaGraphF3D(Plane plane, float xf, float yf, float zf, double ExRate, double Angle, Texture&amp; divTexture, int id, int TransFlag = TRUE, int ReverseXFlag = FALSE, int ReverseYFlag = FALSE, int ReverseZFlag = FALSE)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D AngleVec = VecAngle(plane, Angle);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 角度だけ↓VECTOR化<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return MyDraw::DrawDivRotaGraphF3D(plane, xf, yf, zf, ExRate, AngleVec, divTexture, id, TransFlag, ReverseXFlag, ReverseYFlag, ReverseZFlag);<br>
+      &nbsp;&nbsp;&nbsp; }&nbsp;&nbsp; // ↓すぐ下のAngleベクタ版関数に引き継ぐ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 画像の回転描画( 座標指定が float 版 )【注意！】現状Angle回転機能は未対応<br>
+      &nbsp;&nbsp;&nbsp; static int <b>DrawDivRotaGraphF3D</b>(Plane plane, float xf, float yf, float zf, double ExRate, VECTOR_D Angle, Texture&amp; divTexture, int id, int TransFlag = TRUE, int ReverseXFlag = FALSE, int ReverseYFlag = FALSE, int ReverseZFlag = FALSE, bool isBillboard = false)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 遠すぎるものは描かないで即return<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (zf &gt; farClipPlane) return -1;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 右手・左手系とY軸矢印の方向に従い座標を変換<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR COVERT_XYZ = MyDraw::VGet(xf, yf, zf);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float Xf = COVERT_XYZ.x, Yf = COVERT_XYZ.y, Zf = COVERT_XYZ.z;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (id &lt; 0 &amp;&amp; divTexture.m_handles.size() &lt;= id) { assert("div画像id指定範囲外" == ""); return -1; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imageWidth = divTexture.m_XSize;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imageHeight = divTexture.m_YSize;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float u_X0 = 0.0F, v_Y0 = 0.0F; //点Vertex[0]のuとvの値<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float u_X3 = 1.0F, v_Y3 = 1.0F; //点Vertex[3]のuとvの値<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (divTexture.m_XNum &gt; 1 || divTexture.m_YNum &gt; 1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // div分割画像の分割位置確定のため横uと縦vの値を計算<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int divX = id % divTexture.m_XNum;//分割X列番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int divY = id / divTexture.m_XNum;//分割Y行番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_X0 = (float)divX / (float)(divTexture.m_XNum);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; v_Y0 = (float)divY / (float)(divTexture.m_YNum);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_X3 = (float)(divX + 1) / (float)(divTexture.m_XNum);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; v_Y3 = (float)(divY + 1) / (float)(divTexture.m_YNum);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 【拡大縮小率ExRate】をかけて画像サイズを再計算<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imageWidth = (int)(imageWidth * ExRate);&nbsp; // 拡大縮小した画像の幅<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imageHeight = (int)(imageHeight * ExRate);// 拡大縮小した画像の高さ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float halfWidth = (float)(imageWidth / 2);//画像幅の1/2(先に計算し使いまわして処理削減)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float halfHeight = (float)(imageHeight / 2);//画像高さの1/2(先に計算し使いまわして処理削減)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //【テクスチャ反転処理】幅halfWidthと高さhalfHeightをマイナスにすることで反転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★ReverseXFlagとIsReverseX_Texture両方反転は【反転の反転で=反転しない!】<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 【反転の反転で=反転しない!】は★XOR【排他的論理和 ^ 演算子】<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [排他的論理和 ^ 演算子]http://www7b.biglobe.ne.jp/~robe/cpphtml/html01/cpp01047.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if ((IsReverseX_Texture ^ (ReverseXFlag == TRUE))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;&amp; (plane == Plane::Y || plane == Plane::Z))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マイナス幅でテクスチャ反転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; halfWidth = -halfWidth;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if ((IsReverseY_Texture ^ (ReverseYFlag == TRUE))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;&amp; (plane == Plane::X || plane == Plane::Z))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マイナス幅でテクスチャ反転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; halfHeight = -halfHeight;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (IsReverseZ_Texture ^ (ReverseZFlag == TRUE))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マイナス幅でテクスチャ反転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (plane == Plane::X) halfWidth = -halfWidth;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (plane == Plane::Y) halfHeight = -halfHeight;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [頂点VERTEXは四角形は6個必要] https://dixq.net/rp/57.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★CGの【最小単位は三角形】2Dはドットの集合で描くが【CGは三角形の集合で描く】<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>VERTEX3DSHADER</b> Vertex[6]; // ポリゴン２枚なので、頂点は６個(三角3点×2)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★頂点情報のセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // Plane=X なら X平面に(Y,Z) = (yf,zf)中心に描画<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Plane=Y なら Y平面に(X,Z) = (xf,zf)中心に描画<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Plane=Z なら Z平面に(X,Y) = (xf,yf)中心に描画<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 回転は以下リンク参照<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=past&amp;no=2749<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX TransformMatrix;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 回転( x, y, z軸回転の順に回転した後、座標移動行列により平行移動)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★★MMultは行列の乗算【乗算した順にx軸回転→y軸回転→z軸回転→平行移動】<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★【複数軸回転は頭が混乱するのでクォータニオンをつかうやり方もある】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isBillboard)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D billboardAngle = (isBillboard) ? GetAngle(DxLib::GetCameraBillboardMatrixD()) : DxLib::VGetD(0, 0, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Angle.x += billboardAngle.x; Angle.y += billboardAngle.y; Angle.z += billboardAngle.z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TransformMatrix = MGetRotX((float)Angle.x);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TransformMatrix = MMult(TransformMatrix, MGetRotY((float)Angle.y));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TransformMatrix = MMult(TransformMatrix, MGetRotZ((float)Angle.z));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★【座標移動行列により移動】<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TransformMatrix = MMult(TransformMatrix, MGetTranslate(VGet(Xf, Yf, Zf)));<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (plane == Plane::X)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //座標固定平面→→→→→→→→→↓X平面指定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].pos = VTransform(VGet(0.0F, +halfHeight, -halfWidth), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].pos = VTransform(VGet(0.0F, +halfHeight, +halfWidth), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].pos = VTransform(VGet(0.0F, -halfHeight, -halfWidth), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].pos = VTransform(VGet(0.0F, -halfHeight, +halfWidth), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (plane == Plane::Y)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //座標固定平面→→→→→→→→→→→→→→→→↓Y平面指定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].pos = VTransform(VGet(-halfWidth, 0.0F, +halfHeight), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].pos = VTransform(VGet(+halfWidth, 0.0F, +halfHeight), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].pos = VTransform(VGet(-halfWidth, 0.0F, -halfHeight), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].pos = VTransform(VGet(+halfWidth, 0.0F, -halfHeight), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // if (plane == Plane::Z)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //座標固定平面→→→→→→→→→→→→→→→→→→→→→→↓Z平面指定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].pos = VTransform(VGet(-halfWidth, +halfHeight, 0.0F), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].pos = VTransform(VGet(+halfWidth, +halfHeight, 0.0F), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].pos = VTransform(VGet(-halfWidth, -halfHeight, 0.0F), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].pos = VTransform(VGet(+halfWidth, -halfHeight, 0.0F), TransformMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[4].pos = Vertex[2].pos; // 点2と点4は同じ位置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[5].pos = Vertex[1].pos; // 点1と点5は同じ位置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //↑点0 点1&amp;5 点4&amp;2 点3 の4点の四角形を描く<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★div分割画像を考慮に入れて【UV展開】切り出し位置を0.0～1.0で指定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].u = u_X0; Vertex[0].v = v_Y0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].u = u_X3; Vertex[1].v = v_Y0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].u = u_X0; Vertex[2].v = v_Y3;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].u = u_X3; Vertex[3].v = v_Y3;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[4].u = u_X0; Vertex[4].v = v_Y3;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[5].u = u_X3; Vertex[5].v = v_Y0;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 輝度(拡散光:Diffuseの明るさ)は全地点100% a(拡散光:Diffuseのアルファ不透明度) も最大値(255=不透明 0=透明)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].dif.r = Vertex[0].dif.g = Vertex[0].dif.b = Vertex[0].dif.a = 255;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].dif.r = Vertex[1].dif.g = Vertex[1].dif.b = Vertex[1].dif.a = 255;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].dif.r = Vertex[2].dif.g = Vertex[2].dif.b = Vertex[2].dif.a = 255;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].dif.r = Vertex[3].dif.g = Vertex[3].dif.b = Vertex[3].dif.a = 255;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[4].dif.r = Vertex[4].dif.g = Vertex[4].dif.b = Vertex[4].dif.a = 255;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[5].dif.r = Vertex[5].dif.g = Vertex[5].dif.b = Vertex[5].dif.a = 255;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 0 1 2<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 5 4 3<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //↑上の順の点で点0 点1&amp;5 点4&amp;2 点3 の4点の四角形を描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //DxLib::DrawSphere3D(VGet(Xf, Yf, Zf),1, 4, GetColor(255, 255, 255),GetColor(255, 255, 255),FALSE); // テストとして四角形の中心に目印の球体を描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (divTexture[id] != -1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::<b>SetUseTextureToShader</b>(0, <b>divTexture[id]</b>); // 使用するテクスチャを０番にセット<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴンを２枚描画<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::<b>DrawPolygon3DToShader</b>(Vertex, 2); // <b>シェーダーにも対応できるようにToShader系関数を通して描く</b><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 画像ボックスの回転描画( 座標指定が float 版 )<br>
+      &nbsp;&nbsp;&nbsp; static void <b>DrawDivBoxF3D</b>(float xf, float yf, float zf, double ExRate, Texture&amp; divTexture, int id, int TransFlag = TRUE, int ReverseXFlag = FALSE, int ReverseYFlag = FALSE, int ReverseZFlag = FALSE)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imageWidth = (int)((double)divTexture.m_XSize * ExRate);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imageHeight = (int)((double)divTexture.m_YSize * ExRate);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D Angle = VGetD(0,0,0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //サイコロの6面を描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(Plane::Y, xf, yf - imageHeight / 2, zf, ExRate, Angle, divTexture, id, TransFlag, ReverseXFlag, ReverseYFlag, ReverseZFlag);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(Plane::Y, xf, yf + imageHeight / 2, zf, ExRate, Angle, divTexture, id, TransFlag, ReverseXFlag, ReverseYFlag, ReverseZFlag);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // X方向の裏側は左右反転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(Plane::X, xf - imageWidth / 2, yf, zf, ExRate, Angle, divTexture, id, TransFlag, ReverseXFlag, ReverseYFlag, !ReverseZFlag);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(Plane::X, xf + imageWidth / 2, yf, zf, ExRate, Angle, divTexture, id, TransFlag, ReverseXFlag, ReverseYFlag, ReverseZFlag);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(Plane::Z, xf, yf, zf - imageHeight / 2, ExRate, Angle, divTexture, id, TransFlag, ReverseXFlag, ReverseYFlag, ReverseZFlag);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Z方向の裏側は左右反転<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(Plane::Z, xf, yf, zf + imageHeight / 2, ExRate, Angle, divTexture, id, TransFlag, !ReverseXFlag, ReverseYFlag, ReverseZFlag);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 床の回転描画( 座標指定が float 版 )<br>
+      &nbsp;&nbsp;&nbsp; static int DrawDivRotaFloorF3D(Plane plane, float xf, float yf, float zf, double ExRate, double Angle, Texture&amp; divTexture, int id, int TransFlag = TRUE, int ReverseXFlag = FALSE, int ReverseYFlag = FALSE, int ReverseZFlag = FALSE)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D AngleVec = VecAngle(plane, Angle);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imageHeight = (int)((double)divTexture.m_YSize * ExRate);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 角度だけ↓VECTOR化<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return MyDraw::DrawDivRotaGraphF3D(plane, xf, yf - imageHeight / 2, zf, ExRate, AngleVec, divTexture, id, TransFlag, ReverseXFlag, ReverseYFlag, ReverseZFlag);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 四角形（枠線のみ）を描画する<br>
+      &nbsp;&nbsp;&nbsp; static int DrawLineBox(VECTOR startPos, VECTOR endPos, unsigned int color)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return DxLib::DrawCube3D(startPos, endPos, color, color, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <p><code>main.cpp</code>にプログラムを追加し、MyDrawクラスを通して、ポリゴンでサイコロ状のボックスを描いてみましょう。</p>
+    <p class="source"> #include "DxLib.h"<br>
+      <br>
+      #include "Resource.h"<br>
+      <em>#include "MyDraw.h"</em><br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(960, 540, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(960, 540);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("3Dタイルゲーム");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; //↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // タイルマップを読み込む 縦8マス、横8マス、縦32ピクセル、横32ピクセル<br>
+      &nbsp;&nbsp;&nbsp; std::string mapChipPath{ "Map/mapchip.png" };<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath,8,8,32,32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込語にLoadもする<br>
+      <em></em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>// 2Dタイル描画処理(位置x, y, 拡大率, 回転, 画像ID, TRUEなら透過有効)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawRotaGraphF(100, 200, 1.0f, 0, Resource::files[mapChipPath]-&gt;m_handles[2], TRUE);</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(40, 40, 40, 1.0,&nbsp; *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 2);</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    <br>
+    いかがでしょう？謎のバラバラの変な図形がでちゃいましたか？<br>
+    よく眺めてみましょう。お互いがお互いを塗りつぶしあっている感じですね。<br>
+    これは、<b>カメラからの距離に応じて塗りつぶすかどうかを決める「Zバッファ」</b>が効いてない状態です。<br>
+    Zバッファが効いていない状態では、3Dの図形を描いた順に塗りつぶされます。<br>
+    <br>
+    <p><code>main.cpp</code>のプログラムを変更し、Zバッファを有効にして描いてみましょう。</p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      #include "Resource.h"<br>
+      #include "MyDraw.h"<br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(960, 540, 32); // 画面サイズ960×540のカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(960, 540);// ウィンドウサイズ960×540(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("3Dタイルゲーム");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; //↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // タイルマップを読み込む 縦8マス、横8マス、縦32ピクセル、横32ピクセル<br>
+      &nbsp;&nbsp;&nbsp; std::string mapChipPath{ "Map/mapchip.png" };<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath,8,8,32,32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込語にLoadもする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// Ｚバッファを有効にする [Zの深度]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファへの書き込みを有効にする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetWriteZBuffer3D(TRUE);</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(40, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 2);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }<br>
+    </p>
+    <br>
+    いかがですか？カメラからの距離に応じてタイルがサイコロ状に描画されましたか?<br>
+    <br>
+    Zバッファが有効ならば、<b>カメラから見た奥行き(=Z)と、すでにZバッファに塗られているドットの奥行きを比較して、手前のものが上に塗られていきます</b>。<br>
+    逆にいうなら、岩の裏に隠れてカメラから見えないアイテムを、アイテムを描く際にZバッファを一時的に有効にしたり、無効にさせたりして、チカチカさせれば、<br>
+    岩に隠れているアイテムを一番上に塗りつぶして、目立たせるような演出もできなくはないわけです(岩とかマップすべてがアイテムより先に描かれていればだが)<br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <a id="mozTocId0002" class="mozTocH1">
+      <h1>複数カメラと複数スクリーンで複数プレイヤ視点で3D空間を描けるようにする</h1>
+    </a>
+    <p><code>Input.hとInput.cppを別記事から作成しておきます→</code><a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId50020">Inputクラスを拡張してマウス、キーボード対応させる</a></p>
+    <p><code>Vector3.hとVector3.cppを別記事から作成しておきます→</code><a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/polygon3d/index.html#mozTocId0013">Vector3に色々な関数を用意して3D空間の当たり判定をする</a></p>
+    <br>
+    さて、複数のプレイヤで遊べるゲームを作るためには、カメラが複数あって、スクリーンに複数の視点が描ける機能が必要ですよね。<br>
+    そう、実は、カメラが複数あるということはそれを描く先であるスクリーンも複数だったり、切り替える場合はスクリーン1枚だったりと、<br>
+    カメラとそれを描くスクリーンは関連づいたり切り替わったり「リンクしあう関係に」なるのですね。<br>
+    そして、GPUでの3Dの描画過程でも3D上のローカル位置→ワールド位置→カメラからのビュー行列変換→スクリーン射影変換→クリッピング...と、<br>
+    <b>カメラの行列変換処理(3D)とスクリーン位置(2D)は、実は行列計算をはさんで表裏一体</b>の近い関係なのです。<br>
+    <br>
+    では、カメラとスクリーンの数だけ、変換行列がDXライブラリの内部に沢山あるのでしょうか？<br>
+    実はそうではなくて、カメラのための変換行列は内部で1つだけ、で運用されています。<br>
+    え、そうすると複数カメラ視点はどうやるの？と疑問と不安が出てきそうですが、<br>
+    描く処理(=<b>Drawコール</b>)の直前に、その都度、カメラのための変換行列の設定値を変える処理を呼びだして、<br>
+    カメラの行列のセッティングを変えたい→3Dを描きたい(=Drawコール)→カメラ行列設定を変えたい→.. 以下繰り返し<br>
+    のような「コマンドをセットでまとめてGPUに送り付ける」という方式で、<br>
+    画面スクリーン(画面に映らないスクリーンにも描ける)にGPUは処理の結果の数値(色など)を格納している、というわけで、<br>
+    実はGPU側からすれば「カメラのセッティングを変えろ！」も「描け！(Drawコール)」もコマンドの1種として、<br>
+    沢山の届いた一連のコマンドを「コマンドの順番に沿って たんたん と実行」してるにすぎないわけです。<br>
+    <br>
+    では、複数のカメラの視点を描くにはどうするかというと、<br>
+    ①「描く先のスクリーンを変えろ！」→「カメラの位置などの設定を変えろ！」→...→「現在の行列設定でポリゴンを描け」...<br>
+    ②「描く先のスクリーンを変えろ！」→「カメラの位置などの設定を変えろ！」→...→「現在の行列設定でポリゴンを描け」...<br>
+    上記の一連のコマンドを、複数あるカメラの数①、②..ぶん繰り返せば、スクリーン①②..には違う視点の映像が描かれていくわけです。<br>
+    <br>
+    上記の世界観をイメージできると、<a href="https://docs.unity3d.com/ja/2021.3/Manual/optimizing-draw-calls.html">ドローコールに関する話題</a>もなんとなくイメージできるようになります。<br>
+    そう、ほんとは、DxLib::DrawPolygonIndexed3DToShaderなどを呼ぶ回数を減らすために<br>
+    「点のVertexをサイコロの面全部まとめて詰め込めば一気に6面(12ポリゴンぶん)」12コールのかわりに1回だけDrawコールを呼ぶ工夫など、<br>
+    GPUの処理の負荷を下げる努力なども実はできて、アピールポイントにすることもできたりするわけです。<br>
+    (点をまとめることはできるが、その点に張るテクスチャ指定は1枚=GPUの設計的に←だからUnityの木[同じ共通テクスチャの]が沢山ある森なんかは1回のドローコールにできるかも)<br>
+    とりあえずは、基礎を勉強するために、最も愚直な形で1ポリゴンずつ3Dを描く形から始めているわけです。<br>
+    一番愚直なスタンダードで愚かな基礎の経験から始めてこそ、それを工夫して変化させた「発展の発想ができる地力につながるわけなので」<br>
+    逆に言うなら「便利に慣れすぎて原型に出会えない損失」のほうが危険な「ドローコールってなんですか状態(遊戯王っすか)」に陥るので。<br>
+    (同じようなゲームを繰り替えし作るループでは地力は上がらない、次のゲームを作るためにどんな新たな知識を必要とし出会えたか？)<br>
+    DXライブラリのDrawPolygonIndexed3DToShaderという関数を知っていることには、世間的には何の意味もないナンセンスだけども、<br>
+    ポリゴンを描く「ドローコール」がGPUにどのように届くかの世界観を持っていることは、Unityにも他のゲームエンジンにも共通する意味のあること。<br>
+    逆に言うならば、Unityの便利な関数を使いこなして同じようなゲームを作る作業ループも実はナンセンスを浪費してないか？を一旦振り返る必要がある。<br>
+    <br>
+    MyDraw.hというファイルの名前をつけてあるのも、マイダイアリー(私の日記)みたいなニュアンスで、<br>
+    あくまで個人の見解のプログラムというニュアンスで名付けてあります。個人の見解でおのおのが進化させる余地があるということです。<br>
+    <br>
+    さて、では本題であるところの複数視点の描画に挑戦していきましょう。<br>
+    <br>
+    <p><code>Screen.hを新規作成</code>して、デフォルトの画面全体の縦横のサイズと<b>違うサイズの別スクリーンがStar()～End()関数で指定</b>されたときにも、<br>
+      視野(FOV=<a href="https://www.youtube.com/watch?v=iqAvAFvlLy0">Field Of View</a>:フィールドのビュー)すなわちスクリーンに描かれる3Dの範囲を StartFov()～EndFov()関数でDraw系関数を囲うことで、<br>
+      一時的にカメラの射影変換行列(プロジェクション行列)の幅w 高さhの行列のパラメータを変更した状態で、GPUに描かせることができるようにしましょう。</p>
+    <p class="source">#ifndef _SCREEN_H<br>
+      #define _SCREEN_H<br>
+      <br>
+      #include "DxLib.h"<br>
+      <br>
+      #include "Input.h"<br>
+      <br>
+      #include &lt;assert.h&gt; // アサート警告表示用<br>
+      <br>
+      // 画面解像度<br>
+      class Screen<br>
+      {<br>
+      public: //publicはC＃と違いpublic:以下にまとめて書かれるスタイル<br>
+      &nbsp;&nbsp;&nbsp; static constexpr int Width = 1280; // 幅(Nintendoスイッチの縦横サイズ[いわゆるHD画質16:9]を採用)<br>
+      &nbsp;&nbsp;&nbsp; static constexpr int Height = 720; // 高さ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // X,Yがウィンドウの中にあるか<br>
+      &nbsp;&nbsp;&nbsp; static bool IsInsideWindow(int screenX = Input::MouseX, int screenY = Input::MouseY) { return (0 &lt;= screenX &amp;&amp; screenX &lt; Width) &amp;&amp; (0 &lt;= screenY &amp;&amp; screenY &lt; Height); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; static int SubWidth, tmpSubWidth; // 現在指定中のサブのスクリーンの幅:SubWidth と 指定前のスクリーンの幅:tmpSubWidth<br>
+      &nbsp;&nbsp;&nbsp; static int SubHeight, tmpSubHeight; // 現在指定中のサブのスクリーンの高さ:SubHeight と 指定前のスクリーンの高さ:tmpSubHeight<br>
+      &nbsp;&nbsp;&nbsp; static int DrawHandle; // Start()～End()で指定中のハンドル番号<br>
+      &nbsp;&nbsp;&nbsp; static int tmpDrawHandle; // Endまでのあいだ一旦変更前のhandleを退避<br>
+      &nbsp;&nbsp;&nbsp; static int tmpResetSetting; // SetDrawScreen切り替え前に 設定を一旦tmpに退避<br>
+      &nbsp;&nbsp;&nbsp; static MATRIX_D tmpViewportMatrix; // StartFov前に もとのビューポート行列を一旦退避<br>
+      &nbsp;&nbsp;&nbsp; static MATRIX_D tmpProjectionMatrix; // StartFov前に もとの射影変換行列を一旦退避<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 射影変換行列とビューポート行列をスクリーンの大きさに合わせて再設定<br>
+      &nbsp;&nbsp;&nbsp; static void StartFov(int handle, double fovAngle = 0)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // [描画の縦横領域が変わっても画角維持] https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4639<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmpViewportMatrix = DxLib::GetCameraViewportMatrixD(); // もとのビューポート行列を一旦退避<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmpProjectionMatrix = DxLib::GetCameraProjectionMatrixD(); // もとの射影変換行列を一旦退避<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int handleWidth, handleHeight; // <b>描画するスクリーンのサイズ</b>を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetGraphSize(handle, <b>&amp;handleWidth, &amp;handleHeight</b>);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 射影行列を再設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX_D ProjectionMatrix;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double fovRad = (fovAngle == 0) ? DxLib::GetCameraFovD() : DX_PI * fovAngle / 180.0; // スクリーンに描くカメラの画角の設定 0のときは既存のFOVの設定を適用<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto dotAspect = DxLib::GetCameraDotAspectD(); // スクリーンに描くカメラのドットアスペクト比率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::<b>CreatePerspectiveFovMatrixD</b>(&amp;ProjectionMatrix, fovRad, DxLib::GetCameraNear(), DxLib::GetCameraFar(), (double)<b>handleHeight / handleWidth * dotAspect</b>);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToProjectionD(&amp;ProjectionMatrix); // 射影変換行列をスクリーン幅や高さやFOVの設定に合わせて一時的に再設定<br>
+      #if 0 // [参考]デフォルトの射影変換行列のDXライブラリの内部計算<br>
+      #define FOV&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (60.0 * DX_PI / 180.0)<br>
+      #define NEARZ&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (0.0)<br>
+      #define FARZ&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (1000.0)<br>
+      #define TAN_FOV_HALF&nbsp;&nbsp;&nbsp; (0.52359877559829887307710723054658) // /*(0.57735026918962573)*/ tan( FOV * 0.5 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (略)...<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>w</b> = GSYS.DrawSetting.DrawSizeX;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>h</b> = GSYS.DrawSetting.DrawSizeY;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; D = (double)((h / 2) / TAN_FOV_HALF);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (略)...<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CreatePerspectiveFovMatrixD(&amp;mat, FOV, D * 0.1, D + FARZ, -1.0f); // デフォルトの射影変換行列 呼び出し<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (略)...<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ↓ デフォルトの射影変換行列<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MATRIX_D mat; // ProjectionMatrix 射影行列<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double Sin = std::sin(fov / 2), Cos = std::cos(fov / 2); // tan(θ / 2) = Sin / Cos&nbsp;&nbsp; θ = fovのとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (-0.0001 &lt; Sin &amp;&amp; Sin &lt; 0.0001) return -1;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aspect = (double)MathScreenSizeY / (double)MathScreenSizeX;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double <b>w = aspect * (Cos / Sin); // = 高/幅 / tan( θ / 2 )</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double <b>h = 1.0 * (Cos / Sin); // = 1 / tan( θ / 2 )</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat-&gt;m[0][0] = <b>w</b>;&nbsp;&nbsp; mat-&gt;m[0][1] = 0;&nbsp;&nbsp; mat-&gt;m[0][2] = 0;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat-&gt;m[0][3] = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat-&gt;m[1][0] = 0;&nbsp;&nbsp; mat-&gt;m[1][1] = <b>h</b>;&nbsp;&nbsp; mat-&gt;m[1][2] = 0;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat-&gt;m[1][3] = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat-&gt;m[2][0] = 0;&nbsp;&nbsp; mat-&gt;m[2][1] = 0;&nbsp;&nbsp; mat-&gt;m[2][2] = zFar / (zFar - zNear);&nbsp; mat-&gt;m[2][3] = 1.0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mat-&gt;m[3][0] = 0;&nbsp;&nbsp; mat-&gt;m[3][1] = 0;&nbsp;&nbsp; mat-&gt;m[3][2] = -zNear * zFar / (zFar - zNear);&nbsp; mat-&gt;m[3][3] = 0.0;<br>
+      #endif<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ビューポート行列の再設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[<b>スクリーン上の3Dの消失点をスクリーンのサイズの1/2の真ん中の位置に設定</b>] https://dxlib.xsrv.jp/function/dxfunc_3d_camera.html#R12N12<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetCameraScreenCenter((float)handleWidth / 2.0f, (float)handleHeight / 2.0f);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 射影変換行列とビューポート行列をStartFovする前に戻す<br>
+      &nbsp;&nbsp;&nbsp; static void EndFov()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToProjectionD(&amp;tmpViewportMatrix);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetTransformToViewportD(&amp;tmpProjectionMatrix);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ★このStartとEndのあいだの描画処理は別スクリーンに描かれるようになる is3Dに<br>
+      &nbsp;&nbsp;&nbsp; static int Start(int handle = DX_SCREEN_BACK, bool is3D = false, double fovAngle = 0)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // スクリーンのハンドルが 0以下 なら普通のスクリーンに描画する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (handle &lt; 0) handle = DX_SCREEN_BACK;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::tmpResetSetting = DxLib::GetUseSetDrawScreenSettingReset(); // 設定を一旦tmpに退避<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseSetDrawScreenSettingReset(FALSE); // SetDrawScreen切り替え時に設定をリセットしない(FALSE)(これをやらないとカメラ視点などがリセットされるから)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::tmpDrawHandle = DxLib::GetDrawScreen(); // Endまでのあいだ一旦変更前のhandleを退避<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetGraphSize(tmpDrawHandle, &amp;tmpSubWidth, &amp;tmpSubHeight); // 現在のスクリーンのサイズを一旦退避<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 描く先を別途用意した別スクリーン(指定されたhandle)に設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (DxLib::<b>SetDrawScreen(handle)</b> == -1) DxLib::SetDrawScreen(handle = DX_SCREEN_BACK); // -1 失敗したら普通のDX_SCREEN_BACKのほうに描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::DrawHandle = handle; // 現在選択中のスクリーンのハンドル番号を handleに 変更<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 描画するスクリーンのサイズを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (DxLib::GetGraphSize(handle, &amp;Screen::SubWidth, &amp;Screen::SubHeight) == -1) return handle; // -1 失敗したらreturn<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (is3D) // 3Dのときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::<b>StartFov(handle, fovAngle); // 射影変換行列とビューポート行列をスクリーンの大きさに合わせて再設定</b><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return handle;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ★このStartとEndのあいだの描画処理は別スクリーンに描かれるようになる<br>
+      &nbsp;&nbsp;&nbsp; static void End(bool is3D = false)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ゲームを描く先をもとのデフォルトに戻しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetDrawScreen(tmpDrawHandle = (tmpDrawHandle &lt; 0) ? DX_SCREEN_BACK : tmpDrawHandle);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::DrawHandle = tmpDrawHandle; // 現在選択中のスクリーンのハンドル番号を handleに 変更<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int beforeSubWidth = Screen::SubWidth, beforeSubHeight = Screen::SubHeight; // Start()で変更した幅と高さを 一時退避<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (DxLib::GetGraphSize(tmpDrawHandle, &amp;Screen::SubWidth, &amp;Screen::SubHeight) == -1) return; // -1 失敗したらreturn<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (is3D) // 3Dのときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::<b>EndFov(); // 射影変換行列とビューポート行列をStartFovする前に戻す</b><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseSetDrawScreenSettingReset((tmpResetSetting == -1) ? TRUE : tmpResetSetting); // 設定をStart()前の元に戻す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 指定した screenHandle のキャンバスをきれいにまっさらにクリアする<br>
+      &nbsp;&nbsp;&nbsp; static void ClearDrawScreen(int screenHandle)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::Start(screenHandle);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen(); // screenHandle のキャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::End();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };// C＃と違ってクラスの定義も;セミコロンで終わる<br>
+      <br>
+      <br>
+      <br>
+      #endif</p>
+    <br>
+    <p><code>Screen.cppを新規作成</code>して、Start()～End()やStartFov()～EndFov()の間にはさんでDrawコールするあいだ、<br>
+      Start()で一時的にパラメータを変更する前のカメラの行列のパラメータを一旦保管するtmp～系変数をstatic定義します。<br>
+    </p>
+    <p class="source">#include "Screen.h"<br>
+      <br>
+      <br>
+      int Screen::SubWidth{ 0 }, Screen::tmpSubWidth{ 0 }; // 現在指定中のサブのスクリーンの幅:SubWidth と 指定前のスクリーンの幅:tmpSubWidth<br>
+      int Screen::SubHeight{ 0 }, Screen::tmpSubHeight{ 0 }; // 現在指定中のサブのスクリーンの高さ:SubHeight と 指定前のスクリーンの高さ:tmpSubHeight<br>
+      <br>
+      int Screen::DrawHandle{ DxLib::GetDrawScreen() }; // Start()～End()で指定中のハンドル番号<br>
+      int Screen::tmpDrawHandle{ -1 }; // Endまでのあいだ一旦変更前のhandleを退避<br>
+      int Screen::tmpResetSetting{ -1 }; // SetDrawScreen切り替え前に 設定を一旦tmpに退避<br>
+      MATRIX_D Screen::tmpViewportMatrix; // StartFov前に もとのビューポート行列を一旦退避<br>
+      MATRIX_D Screen::tmpProjectionMatrix; // StartFov前に もとの射影変換行列を一旦退避<br>
+      <br>
+    </p>
+    Start()で一旦もとからのパラメータをtmp～の変数に退避しておいて、End()でそれを元のパラメータ設定に戻すという方式です。<br>
+    <br>
+    さて、スクリーンのStart()関数にFOV視野の角度を渡さなければならぬということは、<br>
+    当然、カメラ側から現在のFOV視野の角度のセッティングなどをDXライブラリ内部のカメラのビュー行列から得るための関数も必要です。<br>
+    さらに、複数カメラがあるということは、カメラの位置も複数持てるように、カメラの初期化コンストラクタやカメラの位置の変数を準備する必要があります。<br>
+    <p><code>Camera.hを新規作成</code>して、GetCameraSetting関数などで現在のFov視野角などの情報を得たり、個別にカメラをコンストラクタで初期化できるようにしましょう。</p>
+    <p class="source">#ifndef CAMERA_H_<br>
+      #define CAMERA_H_<br>
+      <br>
+      #include &lt;functional&gt; // カメラのDraw関数に「引数として関数=ラムダ式」を渡してカメラのDraw関数の外側の呼び出し元から描画したい処理を渡すことができるようにする<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "MyDraw.h"<br>
+      #include "Vector3.h"<br>
+      <br>
+      <br>
+      class Camera<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // カメラの位置(ワールド座標)<br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 pos; // カメラの位置(ワールド座標)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float x, y, z; }; // unionしてx,y,zでもアクセスできるように<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; struct Rotate { double V, H, T; }; // カメラの回転角度定義 DXライブラリの内部行列ではfloatじゃなくてdouble型で保持されているので倍精度のdouble型にした<br>
+      &nbsp;&nbsp;&nbsp; Rotate rot{ 0.0, 0.0, 0.0 }; // カメラの3軸の回転角度<br>
+      &nbsp;&nbsp;&nbsp; double <b>fovAngle</b> = 0; // カメラをスクリーンに描くときの視野角(0～179度) 0のときはDxLib::GetCameraFovD()で得られる値が適用される<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 板ポリゴンのキャラは常にカメラ方向に面を見せるようにするための角度<br>
+      &nbsp;&nbsp;&nbsp; double anglePlaneChara{ 0.0f };<br>
+      &nbsp;&nbsp;&nbsp; double anglePlaneCharaRotate{ 0.0f }; //←この角度を0～2πに変えるとクルっとオセロのように回転させる<br>
+      &nbsp;&nbsp;&nbsp; float cameraLookAtHeight{ 0.0f }; // LookAtする対象を見下ろす高さ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; int <b>screenHandle</b> = DX_SCREEN_BACK; //<b>カメラを描くスクリーンのハンドル番号</b><br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Camera(Vector3 worldPos) : pos{ worldPos } {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; ~Camera() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラを通して描くスクリーンのハンドル番号を設定する<br>
+      &nbsp;&nbsp;&nbsp; void <b>SetScreenHandle</b>(int handle) { <b>screenHandle</b> = handle; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラの位置をセットしなおす<br>
+      &nbsp;&nbsp;&nbsp; void SetPosition(Vector3 worldPos)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ワールド座標系として保存<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;pos = worldPos;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
+      &nbsp;&nbsp;&nbsp; void LookAt(Vector3 targetXYZ)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラの位置と向きを設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //MyDraw::SetCameraPositionAndTarget_UpVecY(pos, targetXYZ + Vector3(0, cameraLookAtHeight,0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 注視点はターゲットの座標から cameraLookAtHeight 分だけ高い位置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetCameraPositionAndTarget_UpVecY(this-&gt;pos, targetXYZ + Vector3(0, this-&gt;cameraLookAtHeight, 0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラ回転後の角度を保存して板ポリゴンキャラクタが常にカメラに面を見せるようにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;rot.H = this-&gt;anglePlaneChara = DxLib::GetCameraAngleHRotateD(); // カメラの水平方向の向きを取得<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;rot.V = DxLib::GetCameraAngleVRotateD();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;rot.T = DxLib::GetCameraAngleTRotateD();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 現在のDX内部のカメラのビュー行列などに入っているカメラの設定パラメータを得る<br>
+      &nbsp;&nbsp;&nbsp; static void <b>GetCameraSettings</b>(VECTOR_D* pPosition, double* pRotV = nullptr, double* pRotH = nullptr, double* pRotT = nullptr,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double* <b>pFov</b> = nullptr, double* pNear = nullptr, double* pFar = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pPosition != nullptr) *pPosition = DxLib::GetCameraPositionD(); // カメラ位置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pRotV != nullptr) *pRotV = DxLib::GetCameraAngleVRotateD(); // カメラの角度V<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pRotH != nullptr) *pRotH = DxLib::GetCameraAngleHRotateD(); // カメラの角度H<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pRotT != nullptr) *pRotT = DxLib::GetCameraAngleTRotateD(); // カメラの角度T<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pFov != nullptr) *pFov = DxLib::<b>GetCameraFovD</b>(); // カメラの視野角<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pNear != nullptr) *pNear = DxLib::GetCameraNearD(); // カメラ一番近くの描き始めるレンジ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pFar != nullptr) *pFar = DxLib::GetCameraFarD(); // カメラ一番遠くの描くレンジ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラの視野角に変更があったら変えて射影変換行列を再計算する (現在と同じfovの数値の場合は再計算をしないで負荷を回避)<br>
+      &nbsp;&nbsp;&nbsp; static inline void SetupCamera_PerspectiveD(double fov) { if (DxLib::GetCameraFovD() != fov) DxLib::SetupCamera_PerspectiveD(fov); }<br>
+      &nbsp;&nbsp;&nbsp; // カメラの視野角に変更があったら変えて射影変換行列を再計算する (現在と同じfovの数値の場合は再計算をしないで負荷を回避)<br>
+      &nbsp;&nbsp;&nbsp; static inline void SetCameraNearFarD(double Near, double Far) { if (DxLib::GetCameraNearD() != Near &amp;&amp; DxLib::GetCameraFarD() != Far) DxLib::SetCameraNearFarD(Near, Far); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラの設定を変える<br>
+      &nbsp;&nbsp;&nbsp; static void SetCameraSettings(VECTOR_D* pPosition, double* pRotV, double* pRotH, double* pRotT,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double* pFov = nullptr, double* pNear = nullptr, double* pFar = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pPosition != nullptr &amp;&amp; pRotV != nullptr &amp;&amp; pRotH != nullptr &amp;&amp; pRotT != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetCameraPositionAndAngleD(*pPosition, *pRotV, *pRotH, *pRotT);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pFov != nullptr) Camera::<b>SetupCamera_PerspectiveD(*pFov)</b>; // カメラの視野角に変化があったら射影変換行列を更新<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pNear != nullptr &amp;&amp; pFar != nullptr) Camera::SetCameraNearFarD(*pNear, *pFar); // カメラ一番近くから遠くまで描くレンジ<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // このワールドに存在するカメラすべてに対して funcで描きたい処理を渡して 全カメラのスクリーンに対して描画処理を走らせる<br>
+      &nbsp;&nbsp;&nbsp; inline void Draw(<b>std::function&lt;void()&gt; drawFunc</b>) noexcept<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D beforeCamPos; // 設定変更前のカメラのパラメータを一旦、保管<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double beforeVRot, beforeHRot, beforeTRot, beforeNear, beforeFar, beforeFov;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Camera::<b>GetCameraSettings</b>(&amp;beforeCamPos, &amp;beforeVRot, &amp;beforeHRot, &amp;beforeTRot, &amp;<b>beforeFov</b>, &amp;beforeNear, &amp;beforeFar);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::<b>SetCameraPositionAndAngle</b>(this-&gt;pos, this-&gt;rot.V, this-&gt;rot.H, this-&gt;rot.T); // カメラの位置、回転を設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Screen::Start</b>(this-&gt;<b>screenHandle</b>, true, this-&gt;<b>fovAngle</b>); // <b>カメラに関連付けられたscreenHandleのスクリーンを描画先にする</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>drawFunc(); // 渡された描画処理を実行</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Screen::End</b>(true); // 描画先を元に戻す<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // <b>カメラの設定をもとに戻しておく</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Camera::SetCameraSettings(&amp;beforeCamPos, &amp;beforeVRot, &amp;beforeHRot, &amp;beforeTRot, &amp;<b>beforeFov</b>, &amp;beforeNear, &amp;beforeFar);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    個々のカメラには、上記↑のDraw関数を準備して、その引数に std::function型のdrawfunc 経由で描きたい処理(=関数)を渡せるようにしてあります。<br>
+    トリッキーに聞こえるかもしれませんが、関数の引数( )内に関数を渡すのです。<br>
+    Draw関数に関数を渡せれば、Draw関数を呼び出す外側から色んなDraw系の処理を使う側が自由に渡せます。<br>
+    std::function型のラムダ式ならばそれができます。プログラミングの自由度がめちゃめちゃ上がります。<br>
+    <br>
+    <br>
+    では、実際にそのDraw関数にラムダ式[&amp;]{ ～ }で描画処理を渡してみましょう。<br>
+    <p><code>main.cppを変更</code>して、複数カメラ視点、複数カメラで3Dを描いてみましょう。</p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      <em>#include "Screen.h"<br>
+        #include "Camera.h"</em><br>
+      #include "Resource.h"<br>
+      #include "MyDraw.h"<br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(<em>Screen::Width, Screen::Height</em>, 32); // 画面サイズ <em>Width×Height</em>のカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(<em>Screen::Width, Screen::Height</em>);// ウィンドウサイズ <em>Width×Height</em>(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("3Dタイルゲーム");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; //↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // タイルマップを読み込む 縦8マス、横8マス、縦32ピクセル、横32ピクセル<br>
+      &nbsp;&nbsp;&nbsp; std::string mapChipPath{ "Map/mapchip.png" };<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath,8,8,32,32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <em>// SetDrawScreen に引数として渡せる( 描画対象として使用できる )グラフィックハンドルを作成するかどうかを設定する<br>
+        &nbsp;&nbsp;&nbsp; // ( TRUE:描画可能グラフィックハンドルを作成する&nbsp; FLASE:通常のグラフィックハンドルを作成する( デフォルト ) )<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(TRUE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // サブのスクリーンを2つ生成 画面の全体の縦方向サイズの Height / 2 にして、上下分割で配置できるようにする<br>
+        &nbsp;&nbsp;&nbsp; int screenHandle0 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+        &nbsp;&nbsp;&nbsp; int screenHandle1 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // スクリーンを作成したらデフォルト設定に戻しておかないと<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(FALSE);<br>
+        <br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // カメラを2つ生成して、2つのカメラ視点を2つのスクリーンにそれぞれ関連付ける<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;std::shared_ptr&lt;Camera&gt;&gt; cameras; // 複数のカメラへのポインタを格納する配列<br>
+        &nbsp;&nbsp;&nbsp; cameras.emplace_back(std::make_shared&lt;Camera&gt;(Vector3{ 20,40,-50 })); // カメラ0<br>
+        &nbsp;&nbsp;&nbsp; cameras.emplace_back(std::make_shared&lt;Camera&gt;(Vector3{ 80,30,-50 })); // カメラ1<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; cameras[0]-&gt;screenHandle = screenHandle0; // カメラ0 と スクリーン0 を関連付ける<br>
+        &nbsp;&nbsp;&nbsp; cameras[1]-&gt;screenHandle = screenHandle1; // カメラ1 と スクリーン1 を関連付ける</em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Screen::ClearDrawScreen(screenHandle0); // 一旦スクリーン0のキャンバスをきれいにまっさらに<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦スクリーン1のキャンバスをきれいにまっさらに</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファを有効にする [Zの深度]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファへの書き込みを有効にする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetWriteZBuffer3D(TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 複数のカメラを 範囲 for文 で回す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : cameras)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ラムダ式[&amp;](){ ～ }で{}の外側の変数すべてを &amp; キャプチャで&amp;参照として「Draw関数の内側へ引き連れて」処理できる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;Draw([&amp;]()<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Draw関数() の 外側にある変数 mapChipPath も[&amp;]効果で { } の内側で問題なくアクセスできている↓</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(40, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 2);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 0);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 70, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 4);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// スクリーン0の内容を画面に描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, 0, screenHandle0, FALSE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, 0, Screen::Width, Screen::Height / 2, GetColor(255, 0, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スクリーン1の内容を画面に描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, Screen::Height / 2, screenHandle1, FALSE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, Screen::Height / 2, Screen::Width, Screen::Height, GetColor(0, 255, 0));</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }<br>
+    </p>
+    いかがでしょう？複数のカメラ視点からの3Dのビューが、上下複数のスクリーンに描画されたでしょうか？<br>
+    (見やすいようにタイルのブロックの数も3つに増やしておきました。)<br>
+    ラムダ式は便利なのですが、あまり初心者向けのC++の本には出てきたのを見たことがありません。<br>
+    私もC++とは関係ない別言語のJavascript経由で、<a href="https://dqn.sakusakutto.jp/2009/01/javascript_1.html">関数の中に関数があると便利</a>だというニーズに気づきました。<br>
+    今回のラムダ式はJavascriptでいうところの、<a href="https://dqn.sakusakutto.jp/2009/01/javascript_2.html">無名関数としてブロックを描く処理</a>をdrawfuncとしてDraw関数の引数に渡した形という雰囲気でしょうか。<br>
+    ある言語においては基本的な文法が、別の言語では初心者向けではない、みたいな扱いになっていたりするのは機会の損失ですよね。<br>
+    大事なのは「文法を実際に使いたくなるシチュエーションに出会えるかどうか」です。<br>
+    その意味で今回のDrawへの 無名ラムダ式渡し はぴったりの実例だと思います。<br>
+    ラムダ式がなかったら...色んな種類のDraw処理を書き分けるのが...どうするよ...難しくなります。<br>
+    <br>
+    「それでは今回の文法ニーズを振り返っておきましょう。」<br>
+    Start() ～ End() で囲い込むスタイルの書き方のニーズがある。→<a href="https://qiita.com/Ushio/items/446d78c881334919e156">imguiのBegin()～End()囲いの雰囲気</a><br>
+    関数の中に関数を渡すにはラムダ式が便利。(C++の入門書にはあまり出てこないので学校で勉強してても卒業まで出会えないことも多い)<br>
+    <br>
+    今回はDraw関数にdrawfuncとして、描きたい処理を渡すことで、<br>
+    <p class="source">void Draw関数 (&nbsp;&nbsp;&nbsp; drawfunc &nbsp;&nbsp;&nbsp;)<br>
+      {<br>
+      &nbsp;&nbsp;Start() ←カメラやスクリーンの設定を変える(もとの設定を一旦保管しておく)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;drawfunc() ←描きたい処理をはさみこんだ真ん中で実行する<br>
+      <br>
+      &nbsp;&nbsp;End() ←カメラやスクリーンの設定を元に戻す<br>
+      }<br>
+    </p>
+    以上の処理を割と簡単に書くことができました。<br>
+    ん、カメラもDrawStart() ～ DrawEnd() みたいに囲うスタイルにもできるんじゃないかって？<br>
+    確かに、できますね。<br>
+    要はセッティングの変数をDXライブラリ内部やCameraクラスやScreenクラスが蓄えることができれば、<br>
+    Start() ～ End() 方式で設計することもできますね。<br>
+    では、ラムダ式が真に威力を発揮するのはどういうときでしょうか？<br>
+    たとえばStart() End()でさばけないような、複雑なデータの木の枝をたどって、<br>
+    目的のデータにたどりついたら drawfunc を実行するとしたらどうでしょう？<br>
+    沢山の関節があるCGデータやフォルダの中にフォルダがあるような木の構造をたどって、<br>
+    CGの指だったらある処理を走らせたいとか、<br>
+    フォルダをたどった先にあるデータが写真形式だったら写真アイコンを描く、<br>
+    とか複雑な構造の場合はラムダ式を渡すのが向いているかもしれません。<br>
+    <br>
+    <br>
+    <br>
+    <a id="mozTocId0003" class="mozTocH1">
+      <h1>文字タグ判定の代わりに使えるハッシュ(32bit)でカメラにhash32タグをつけて管理する</h1>
+      まず、最初にハッシュという言葉は色んな意味で使われている(ハッシュドビーフも)ので区別しなければいけない<br>
+      英語圏で＃はハッシュと読まれる。だからハッシュタグのハッシュは＃の意味だ。<br>
+      それとは<b>全く異なる</b> <b>情報科学の言葉</b>としても「</a><a href="https://ja.wikipedia.org/wiki/%E6%9A%97%E5%8F%B7%E5%AD%A6%E7%9A%84%E3%83%8F%E3%83%83%E3%82%B7%E3%83%A5%E9%96%A2%E6%95%B0">暗号学的ハッシュ関数</a>」のようなハッシュという言葉がある。<br>
+    今回のハッシュはこちらの情報科学のハッシュ関数に近い概念だ。<br>
+    例えば、パスワードは入力された文字の羅列をそのままネットで送信すると、個人情報が「もれ放題」になる。<br>
+    なので<b>パスワードの文字の羅列を数字などの羅列に変換するパスワード変換の関数を通して</b>から、ネット経由でサーバーに送られる。<br>
+    その変換に「法則性がなければ、ないほど」解読が難しい変換の関数として評価される。<br>
+    ただし、忘れてはいけないのは、ある文字の羅列に対して、<br>
+    変換した後にできる数字などの羅列が他のパスワードを入力した場合にできるものと同じ(かぶる)だと、<br>
+    別の間違ったパスワードでログインできちゃうことになりうる。<br>
+    なので、ある文字の羅列に対して、変換後にできる数字などの羅列は「<b>ほぼかぶらない(42億分の1とか)</b>」必要がある。<br>
+    <b>ハッシュ関数は、この「変換前のパターンに対して、変換後のパターンが※ほぼかぶらない」性質を持つ色んな数式的関数</b>のことを言う。<br>
+    <b>逆にいうと「めっちゃかぶる手抜きのハッシュ関数」の計算ルールも考え出すこともできる</b>。<br>
+    例えば、ある数字のパスワードを、あるキーとなる数字で割った余りを変換後のパスワードとするとすると<br>
+    <b>パスワードの数字が10だったとする。パスワードをキー:8で割るというハッシュ関数を考える</b>とすると<br>
+    <b>パスワード:10 が 変換後:2</b> になる。<br>
+    そうすると<b>9ではログインできないが10や18なら余りが2になってログインできるハッシュ関数</b>ができあがる。<br>
+    やばいじゃん！と思うかもしれないが<b>ハッシュ関数のルールとはそれが8分の1の確率なのか、42億分の1の確率なのかの違いに過ぎない</b>。<br>
+    ハッシュの一致判定とは、<b>ある入力を一定のかぶりにくいルールで変換して、その変換後の出力どうしが一致するか判定すること</b>だ。<br>
+    そして、もう一つ着目してほしい点がある。<br>
+    8で割ると10が2になって、<b>2桁の10 が 1桁の2 の数字になって数字の桁数が減っている！</b><br>
+    これは890とか3桁の数字にも当てはまる。<br>
+    そう、<b>どんな入力も一定の桁数内に収めてしまう性質をもったハッシュ関数がありうる</b>のだ。<br>
+    今回、<b>導入するhash32はどんな文字の羅列でも32桁の0と1の2進数に収めてしまう性質</b>をもったハッシュ関数が採用されている。<br>
+    "Zako0"などの判別タグを、文字列のままデータとしてキープしておくと長い文字列のタグでデータはかさばるし、 <br>
+    それよりは、<b>用途が「タグが一致するか」だけなら、文字列のままではなく、hash32型の32桁の0と1のビットとして保管</b>しておいて、<b><br>
+      32桁の0,1の数字どうしを判別</b>したほうが、<br>
+    <b>メモリの消費量</b>(=32bitで一定)的にも、<b>一致判定の速度的</b>にも(文字列どうしの比較はめちゃ遅いので)効率的になる。<br>
+    <br>
+    <p><code>MyHash.hを新規作成</code>して、文字列をハッシュのルールに基づいて32桁の0と1に変換してhash32型のタグどうしで一致判定できるようにしましょう。</p>
+    <p class="source">#ifndef MYHASH_H_<br>
+      #define MYHASH_H_<br>
+      <br>
+      #include &lt;string&gt;<br>
+      #include &lt;stdint.h&gt; // uint32_t 型 32ビットの unsined 数値型に変換する<br>
+      <br>
+      #define CRC32_TABLE_SIZE (256) // CRC32テーブルの要素数<br>
+      <br>
+      // 言語 C++ C# など や ビルドするコンパイラ VisualStudioやgccなどに関係なく同じハッシュを計算値できる<br>
+      // [参考] https://norizn.hatenablog.com/entry/2020/10/18/145628<br>
+      <br>
+      // <b>生成済みのCRC32テーブル</b> このテーブルをベースとして使用してハッシュ値を計算する<br>
+      static constexpr uint32_t s_crc32_table[CRC32_TABLE_SIZE] =<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; 0x00000000, 0x04C11DB7, 0x09823B6E, 0x0D4326D9,<br>
+      &nbsp;&nbsp;&nbsp; 0x130476DC, 0x17C56B6B, 0x1A864DB2, 0x1E475005,<br>
+      &nbsp;&nbsp;&nbsp; 0x2608EDB8, 0x22C9F00F, 0x2F8AD6D6, 0x2B4BCB61,<br>
+      &nbsp;&nbsp;&nbsp; 0x350C9B64, 0x31CD86D3, 0x3C8EA00A, 0x384FBDBD,<br>
+      &nbsp;&nbsp;&nbsp; 0x4C11DB70, 0x48D0C6C7, 0x4593E01E, 0x4152FDA9,<br>
+      &nbsp;&nbsp;&nbsp; 0x5F15ADAC, 0x5BD4B01B, 0x569796C2, 0x52568B75,<br>
+      &nbsp;&nbsp;&nbsp; 0x6A1936C8, 0x6ED82B7F, 0x639B0DA6, 0x675A1011,<br>
+      &nbsp;&nbsp;&nbsp; 0x791D4014, 0x7DDC5DA3, 0x709F7B7A, 0x745E66CD,<br>
+      &nbsp;&nbsp;&nbsp; 0x9823B6E0, 0x9CE2AB57, 0x91A18D8E, 0x95609039,<br>
+      &nbsp;&nbsp;&nbsp; 0x8B27C03C, 0x8FE6DD8B, 0x82A5FB52, 0x8664E6E5,<br>
+      &nbsp;&nbsp;&nbsp; 0xBE2B5B58, 0xBAEA46EF, 0xB7A96036, 0xB3687D81,<br>
+      &nbsp;&nbsp;&nbsp; 0xAD2F2D84, 0xA9EE3033, 0xA4AD16EA, 0xA06C0B5D,<br>
+      &nbsp;&nbsp;&nbsp; 0xD4326D90, 0xD0F37027, 0xDDB056FE, 0xD9714B49,<br>
+      &nbsp;&nbsp;&nbsp; 0xC7361B4C, 0xC3F706FB, 0xCEB42022, 0xCA753D95,<br>
+      &nbsp;&nbsp;&nbsp; 0xF23A8028, 0xF6FB9D9F, 0xFBB8BB46, 0xFF79A6F1,<br>
+      &nbsp;&nbsp;&nbsp; 0xE13EF6F4, 0xE5FFEB43, 0xE8BCCD9A, 0xEC7DD02D,<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; 0x34867077, 0x30476DC0, 0x3D044B19, 0x39C556AE,<br>
+      &nbsp;&nbsp;&nbsp; 0x278206AB, 0x23431B1C, 0x2E003DC5, 0x2AC12072,<br>
+      &nbsp;&nbsp;&nbsp; 0x128E9DCF, 0x164F8078, 0x1B0CA6A1, 0x1FCDBB16,<br>
+      &nbsp;&nbsp;&nbsp; 0x018AEB13, 0x054BF6A4, 0x0808D07D, 0x0CC9CDCA,<br>
+      &nbsp;&nbsp;&nbsp; 0x7897AB07, 0x7C56B6B0, 0x71159069, 0x75D48DDE,<br>
+      &nbsp;&nbsp;&nbsp; 0x6B93DDDB, 0x6F52C06C, 0x6211E6B5, 0x66D0FB02,<br>
+      &nbsp;&nbsp;&nbsp; 0x5E9F46BF, 0x5A5E5B08, 0x571D7DD1, 0x53DC6066,<br>
+      &nbsp;&nbsp;&nbsp; 0x4D9B3063, 0x495A2DD4, 0x44190B0D, 0x40D816BA,<br>
+      &nbsp;&nbsp;&nbsp; 0xACA5C697, 0xA864DB20, 0xA527FDF9, 0xA1E6E04E,<br>
+      &nbsp;&nbsp;&nbsp; 0xBFA1B04B, 0xBB60ADFC, 0xB6238B25, 0xB2E29692,<br>
+      &nbsp;&nbsp;&nbsp; 0x8AAD2B2F, 0x8E6C3698, 0x832F1041, 0x87EE0DF6,<br>
+      &nbsp;&nbsp;&nbsp; 0x99A95DF3, 0x9D684044, 0x902B669D, 0x94EA7B2A,<br>
+      &nbsp;&nbsp;&nbsp; 0xE0B41DE7, 0xE4750050, 0xE9362689, 0xEDF73B3E,<br>
+      &nbsp;&nbsp;&nbsp; 0xF3B06B3B, 0xF771768C, 0xFA325055, 0xFEF34DE2,<br>
+      &nbsp;&nbsp;&nbsp; 0xC6BCF05F, 0xC27DEDE8, 0xCF3ECB31, 0xCBFFD686,<br>
+      &nbsp;&nbsp;&nbsp; 0xD5B88683, 0xD1799B34, 0xDC3ABDED, 0xD8FBA05A,<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; 0x690CE0EE, 0x6DCDFD59, 0x608EDB80, 0x644FC637,<br>
+      &nbsp;&nbsp;&nbsp; 0x7A089632, 0x7EC98B85, 0x738AAD5C, 0x774BB0EB,<br>
+      &nbsp;&nbsp;&nbsp; 0x4F040D56, 0x4BC510E1, 0x46863638, 0x42472B8F,<br>
+      &nbsp;&nbsp;&nbsp; 0x5C007B8A, 0x58C1663D, 0x558240E4, 0x51435D53,<br>
+      &nbsp;&nbsp;&nbsp; 0x251D3B9E, 0x21DC2629, 0x2C9F00F0, 0x285E1D47,<br>
+      &nbsp;&nbsp;&nbsp; 0x36194D42, 0x32D850F5, 0x3F9B762C, 0x3B5A6B9B,<br>
+      &nbsp;&nbsp;&nbsp; 0x0315D626, 0x07D4CB91, 0x0A97ED48, 0x0E56F0FF,<br>
+      &nbsp;&nbsp;&nbsp; 0x1011A0FA, 0x14D0BD4D, 0x19939B94, 0x1D528623,<br>
+      &nbsp;&nbsp;&nbsp; 0xF12F560E, 0xF5EE4BB9, 0xF8AD6D60, 0xFC6C70D7,<br>
+      &nbsp;&nbsp;&nbsp; 0xE22B20D2, 0xE6EA3D65, 0xEBA91BBC, 0xEF68060B,<br>
+      &nbsp;&nbsp;&nbsp; 0xD727BBB6, 0xD3E6A601, 0xDEA580D8, 0xDA649D6F,<br>
+      &nbsp;&nbsp;&nbsp; 0xC423CD6A, 0xC0E2D0DD, 0xCDA1F604, 0xC960EBB3,<br>
+      &nbsp;&nbsp;&nbsp; 0xBD3E8D7E, 0xB9FF90C9, 0xB4BCB610, 0xB07DABA7,<br>
+      &nbsp;&nbsp;&nbsp; 0xAE3AFBA2, 0xAAFBE615, 0xA7B8C0CC, 0xA379DD7B,<br>
+      &nbsp;&nbsp;&nbsp; 0x9B3660C6, 0x9FF77D71, 0x92B45BA8, 0x9675461F,<br>
+      &nbsp;&nbsp;&nbsp; 0x8832161A, 0x8CF30BAD, 0x81B02D74, 0x857130C3,<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; 0x5D8A9099, 0x594B8D2E, 0x5408ABF7, 0x50C9B640,<br>
+      &nbsp;&nbsp;&nbsp; 0x4E8EE645, 0x4A4FFBF2, 0x470CDD2B, 0x43CDC09C,<br>
+      &nbsp;&nbsp;&nbsp; 0x7B827D21, 0x7F436096, 0x7200464F, 0x76C15BF8,<br>
+      &nbsp;&nbsp;&nbsp; 0x68860BFD, 0x6C47164A, 0x61043093, 0x65C52D24,<br>
+      &nbsp;&nbsp;&nbsp; 0x119B4BE9, 0x155A565E, 0x18197087, 0x1CD86D30,<br>
+      &nbsp;&nbsp;&nbsp; 0x029F3D35, 0x065E2082, 0x0B1D065B, 0x0FDC1BEC,<br>
+      &nbsp;&nbsp;&nbsp; 0x3793A651, 0x3352BBE6, 0x3E119D3F, 0x3AD08088,<br>
+      &nbsp;&nbsp;&nbsp; 0x2497D08D, 0x2056CD3A, 0x2D15EBE3, 0x29D4F654,<br>
+      &nbsp;&nbsp;&nbsp; 0xC5A92679, 0xC1683BCE, 0xCC2B1D17, 0xC8EA00A0,<br>
+      &nbsp;&nbsp;&nbsp; 0xD6AD50A5, 0xD26C4D12, 0xDF2F6BCB, 0xDBEE767C,<br>
+      &nbsp;&nbsp;&nbsp; 0xE3A1CBC1, 0xE760D676, 0xEA23F0AF, 0xEEE2ED18,<br>
+      &nbsp;&nbsp;&nbsp; 0xF0A5BD1D, 0xF464A0AA, 0xF9278673, 0xFDE69BC4,<br>
+      &nbsp;&nbsp;&nbsp; 0x89B8FD09, 0x8D79E0BE, 0x803AC667, 0x84FBDBD0,<br>
+      &nbsp;&nbsp;&nbsp; 0x9ABC8BD5, 0x9E7D9662, 0x933EB0BB, 0x97FFAD0C,<br>
+      &nbsp;&nbsp;&nbsp; 0xAFB010B1, 0xAB710D06, 0xA6322BDF, 0xA2F33668,<br>
+      &nbsp;&nbsp;&nbsp; 0xBCB4666D, 0xB8757BDA, 0xB5365D03, 0xB1F740B4,<br>
+      };<br>
+      <br>
+      // 言語 C++ C# など や ビルドするコンパイラ VisualStudioやgccなどに関係なく変換後が同じになるハッシュ値を計算する<br>
+      class hash32<br>
+      <b>#ifdef _DEBUG</b> // [デバッグビルド時だけ _DEBUG が定義] デバッグのときだけ std::string を継承して文字列と同じ扱いにできる(メモリ量は無駄なのでReleaseビルドのときは継承させない)<br>
+      &nbsp;&nbsp;&nbsp; : protected std::string // [std::stringはデストラクタがvirtualではないのでprotected:継承] https://mahou-ptr.hatenablog.com/entry/2017/12/05/163120<br>
+      <b>#endif</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [std::stringを継承するときの注意点] https://qiita.com/samakusa/items/d6f0bf48a3f1e72edae1<br>
+      {<br>
+      public:<br>
+      <b>#ifndef _DEBUG</b> // Releaseビルドのときは コンストラクタに constexpr をつけて、ビルド中のうちに文字列からハッシュ値へ事前計算を走らせる<br>
+      &nbsp;&nbsp;&nbsp; <b>constexpr</b><br>
+      <b>#endif</b><br>
+      &nbsp;&nbsp;&nbsp; inline hash32(const char* str) : m_hash{ hashcode(str, std::string(str).length()) }<br>
+      <b>#ifdef _DEBUG</b> // デバッグ機能(デバッグの時だけ _DEBUG が定義)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; ,std::string(str) // Releaseビルドのときはstd::stringは継承されないのでメモリ量は32ビットになり、コンパクトになる<br>
+      <b>#endif</b><br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ちょっと読みにくいけど ここがコンストラクタになってる<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      <b>#ifndef _DEBUG</b> // Releaseビルドのときは コンストラクタに constexpr をつけて、ビルド中のうちに文字列からハッシュ値へ事前計算を走らせる<br>
+      &nbsp;&nbsp;&nbsp; constexpr<br>
+      <b>#endif</b><br>
+      &nbsp;&nbsp;&nbsp; inline hash32(const std::string &amp; str) : m_hash{ hashcode(str.c_str(), str.length()) }<br>
+      <b>#ifdef _DEBUG</b> // デバッグ機能(デバッグの時だけ _DEBUG が定義)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; ,std::string(str) // Releaseビルドのときはstd::stringは継承されないのでメモリ量は32ビットになり、コンパクトになる<br>
+      <b>#endif</b><br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ちょっと読みにくいけど ここがコンストラクタになってる<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      <b>#ifdef _DEBUG</b> // デバッグ機能(デバッグの時だけ _DEBUG が定義)<br>
+      &nbsp;&nbsp;&nbsp; ~hash32() { std::string().swap(*this); } // デバッグのときだけ念のため継承しているstd::stringを空のstd::string()とswapしておく(stringにはvirtualデストラクタがない)<br>
+      <b>#endif</b><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // <b>文字列からハッシュ値を計算して返す</b><br>
+      &nbsp;&nbsp;&nbsp; static <b>constexpr</b> uint32_t <b>hashcode</b>(const char* str, const size_t length)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // CRC32 Hashの特徴: 計算が簡単で速い 広く利用されている　ハッシュの衝突が発生する確率が低い(1/43億) ハードウェアでの実装が容易<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; uint32_t hash = 0xffffffff; //[CRC32] https://norizn.hatenablog.com/entry/2020/10/18/145628<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (size_t i = 0; i &lt; length; ++i) //[CRC32] https://qiita.com/He3-toolbox/items/3c40ca4b744bad2c0e04<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hash = (hash &lt;&lt; 8) ^ s_crc32_table[((hash &gt;&gt; 24) ^ str[i]) &amp; 0xff];<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return hash;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 一致演算子 hash32型 どうしを比較する std::unordered_mapなどのキーにするときにも比較は必須<br>
+      &nbsp;&nbsp;&nbsp; constexpr inline bool operator == (const hash32 &amp; other) const { return this-&gt;m_hash == other.m_hash; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 不一致演算子 hash32型 どうしを比較する std::unordered_mapなどのキーにするときにも比較は必須<br>
+      &nbsp;&nbsp;&nbsp; constexpr inline bool operator != (const hash32 &amp; other) const { return this-&gt;m_hash != other.m_hash; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 一致演算子 m_hashの値が一致するか判定<br>
+      &nbsp;&nbsp;&nbsp; constexpr inline bool operator == (const char* str) const { return m_hash == hashcode(str, std::string(str).length()); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 不一致演算子<br>
+      &nbsp;&nbsp;&nbsp; <b>constexpr</b> inline bool operator != (const char* str) const { return m_hash != hashcode(str, std::string(str).length()); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 一致演算子 m_hashの値が一致するか判定<br>
+      &nbsp;&nbsp;&nbsp; <b>constexpr</b> inline bool operator == (const std::string &amp; str) const { return m_hash == hashcode(str.c_str(), str.length()); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 一致演算子 m_hashの値が一致するか判定<br>
+      &nbsp;&nbsp;&nbsp; <b>constexpr</b> inline bool operator != (const std::string &amp; str) const { return m_hash != hashcode(str.c_str(), str.length()); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ハッシュ値を取得<br>
+      &nbsp;&nbsp;&nbsp; <b>constexpr</b> inline operator uint32_t() const { return m_hash; }<br>
+      <br>
+      private:<br>
+      &nbsp;&nbsp;&nbsp; // 文字列から変換した ハッシュ値<br>
+      &nbsp;&nbsp;&nbsp; uint32_t m_hash{ 0 }; // 同じ文字列からは必ず同じハッシュ値に計算変換されるので、文字列を比較せずにすむ(文字列の比較は計算が重たいので回避できる)<br>
+      };<br>
+      <br>
+      // <b>std::unordered_map で 自作クラスをキーにできるようにするには operator() と == 一致演算子が必須</b>&nbsp; https://qiita.com/izmktr/items/8e0fd1b6e37de59a9bd0<br>
+      namespace std {<br>
+      &nbsp;&nbsp;&nbsp; template&lt;&gt;<br>
+      &nbsp;&nbsp;&nbsp; class hash&lt;<b>hash32</b>&gt; {<br>
+      &nbsp;&nbsp;&nbsp; public: //[<b>std::unordered_mapのキー が uint32_t型のとき</b>の 速度やメモリ使用量比較] https://tech.preferred.jp/ja/blog/sparse-vector/<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t operator () (const hash32&amp; hash) const { return std::hash&lt;uint32_t&gt;()(hash); }<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      }<br>
+      <br>
+      // "Zako0"hash32 などのように 文字列 "～" の後ろにhash32 をつけるとhash32型 -&gt; uint32_tに変換される オペレータ"" を定義<br>
+      <b>constexpr</b> uint32_t operator"" hash32(const char* str, std::size_t length) // [参考] https://cpprefjp.github.io/lang/cpp11/user_defined_literals.html<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; return hash32::hashcode(str, length); // hash32型のハッシュルールで32ビットのuint型に変換して返す<br>
+      }<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    さて、いろいろ難しいコードがでてきたが、最初のほうに出てきたのは<a href="https://ja.wikipedia.org/wiki/%E5%B7%A1%E5%9B%9E%E5%86%97%E9%95%B7%E6%A4%9C%E6%9F%BB">CRC-32 で32桁への変換をするため</a> のテーブルである。<br>
+    詳細はwikiをみてもらえば、数学者であれば完全理解できると思うので、そのへんの解説は↑wikiに譲るとしよう。<br>
+    <br>
+    今回作成したのはhash32クラスである。<br>
+    このクラスには<b>「仕掛け」</b>がしてある。<br>
+    デバッグ用ビルド ではデバック用に class hash32 : protected std::string の:継承の形でstd::string型を継承して文字タグを残しておき、<br>
+    本番リリース用ビルドでは、<b>#ifndef _DEBUG マクロ の効果</b>で↑ 文字タグを継承せず、完全に純粋な32桁の0と1の32bitぶんのデータしか持たず、<br>
+    リリース時には文字列タグのムダなメモリ使用を打ち消す工夫が「仕掛け」てある。<br>
+    <br>
+    さらに、<b>第2の「仕掛け」</b>として、<br>
+    == 一致判定 や != 不一致判定の 演算子オペレータoperator の先頭に<br>
+    <b>constexpr</b> を付けてある。<br>
+    <a href="https://qiita.com/saltheads/items/dd65935878a0901fe9e7">constexprとは何か</a>というと、<br>
+    [再生ビルド]ボタンを押して、<b>コンパイルをしている最中に計算できる数値はビルド中に事前計算しておいてくれる</b>ものだ。<br>
+    例えば、if (tag == "Zako0") という判別するプログラムがあったとする。<br>
+    tag が ただのstd::string型であれば、ゲームの実行中に tag が"Zako0" と一致するかの遅くてムダな計算が走る。<br>
+    constexpr をつけたhash32の == オペレータならば<b>[再生ビルド]ボタンを押してビルドをしている最中に"Zako0"が32桁のビットとして事前に計算されうる</b>ので<br>
+    ゲームを起動して遊んでいる最中には、ムダな文字列のハッシュへの変換処理も、文字列どうしの比較一致判定処理も まったくいらなくなる。<br>
+    <br>
+    hash32クラスの導入も簡単だ。<br>
+    <b>std::string tag; // 文字列タグ<br>
+      ↓<br>
+      hash32 tag; // hash32タグ</b> <br>
+    たった<b>これだけの変更で、もとの if (tag == "Zako0") の判定の部分は変えなくても高速な32桁の数値どうしの一致判定に変わる</b>。<br>
+    <b>必要なのは「hash32とは何なのか」を理解して「自分の言葉で説明できること」</b>のみ。<br>
+    (当然「自分の言葉で説明できない」場合は「ハッシュ判定のありがたみ」はわからないわけなのでその人にとっては使う意味もない)<br>
+    <br>
+    さて、<b>第3の「仕掛け」</b>も理解しておこう。<br>
+    今回導入したハッシュ関数の数式の変換ルールは<br>
+    <b>「C#やC++などの言語やVisualStudioやgccやclangなどのビルドするコンパイラ」が違っても同じハッシュ値になる</b><br>
+    という性質をもっている。<br>
+    C++にもデフォルトの std::hash でハッシュ値を計算する機能がある。<br>
+    じゃあ、なぜデフォルトを使わないか？<br>
+    <b>今回導入したハッシュ関数[CRC32]ならば、ウィンドウズ上でセーブしたデータもスマホのiPhone上でセーブしたデータもハッシュ値に一貫性</b>がある。<br>
+    つまり、スマホでセーブしたデータをウィンドウズ上で続きをあそぶときにも、<br>
+    "Zako0"のhash32タグが010100001010...32桁のビット値としてスマホでセーブされていれば、<br>
+    ウィンドウズでゲームを再開して、セーブされた010100001010...32桁のタグの数値は、ちゃんと"Zako0"として一致判定できるということだ。<br>
+    <b>CRC32というルールで変換された、というルールさえ一致していれば、きちんと環境が違っても変換結果は一致</b>する。<br>
+    デフォルトの std::hash を使った場合はどうなるか？<br>
+    std::hash はVisualStudio(ウインドウズ)やclang(スマホiPhone)のビルドする環境によって、違うハッシュルールでビルドされる可能性がある。(環境依存)<br>
+    ゆえに、デフォルトのstd::hashでは変換後の数値をセーブして引き継ぎたいときにはまったくあてにならない。<br>
+    <b>どうせハッシュを使うなら「CRC32というルールで保存するぞ」と明確に変換ルールを決めて運用するほうが、機動力や互換性が高くなる</b>。<br>
+    <br>
+    ゆえに、hash32は保存データを伴うプログラムを作る上での「基本インフラ」として組み込むニーズがある。<br>
+    MyRandomクラスの乱数生成のメルセンヌツイスタと同じような「基本の情報科学的インフラ」として、持っておいて損はない。<br>
+    では、実際にこのMyHash.hを使って、カメラにhash32でタグを振ってみよう。<br>
+    <br>
+    <p><code>main.cppを変更</code>して、hash32でカメラをstd::vectorではなくstd::unordered_mapの辞書にhash32タグを振って管理してみましょう。</p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      #include "Screen.h"<br>
+      #include "Camera.h"<br>
+      <em>#include "MyHash.h"</em><br>
+      #include "Resource.h"<br>
+      #include "MyDraw.h"<br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ Width×Heightのカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ Width×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("3Dタイルゲーム");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; //↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // タイルマップを読み込む 縦8マス、横8マス、縦32ピクセル、横32ピクセル<br>
+      &nbsp;&nbsp;&nbsp; std::string mapChipPath{ "Map/mapchip.png" };<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath,8,8,32,32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp; // SetDrawScreen に引数として渡せる( 描画対象として使用できる )グラフィックハンドルを作成するかどうかを設定する<br>
+      &nbsp;&nbsp;&nbsp; // ( TRUE:描画可能グラフィックハンドルを作成する&nbsp; FLASE:通常のグラフィックハンドルを作成する( デフォルト ) )<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // サブのスクリーンを2つ生成 画面の全体の縦方向サイズの Height / 2 にして、上下分割で配置できるようにする<br>
+      &nbsp;&nbsp;&nbsp; int screenHandle0 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; int screenHandle1 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーンを作成したらデフォルト設定に戻しておかないと<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(FALSE);<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラを2つ生成して、2つのカメラ視点を2つのスクリーンにそれぞれ関連付ける<br>
+      &nbsp;&nbsp;&nbsp; <em>std::unordered_map&lt;hash32, </em>std::shared_ptr&lt;Camera&gt;&gt; cameras; // 複数のカメラへのポインタを格納する<em>タグを振った辞書</em>配列<br>
+      &nbsp;&nbsp;&nbsp; cameras.emplace<em>("カメラ0", </em>std::make_shared&lt;Camera&gt;(Vector3{ 20,40,-50 })); // カメラ0<br>
+      &nbsp;&nbsp;&nbsp; cameras.emplace<em>("カメラ1", </em>std::make_shared&lt;Camera&gt;(Vector3{ 80,30,-50 })); // カメラ1<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; cameras["カメラ0"]-&gt;screenHandle = screenHandle0; // カメラ0 と スクリーン0 を関連付ける<br>
+      &nbsp;&nbsp;&nbsp; cameras["カメラ1"]-&gt;screenHandle = screenHandle1; // カメラ1 と スクリーン1 を関連付ける<br>
+      &nbsp;&nbsp; &nbsp;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle0); // 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファを有効にする [Zの深度]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファへの書き込みを有効にする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetWriteZBuffer3D(TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 2Dタイル描画処理(位置x, y, 拡大率, 回転, 画像ID, TRUEなら透過有効)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawRotaGraphF(100, 200, 1.0f, 0, Resource::files[mapChipPath]-&gt;m_handles[2], TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 複数のカメラを 範囲 for文 で回す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : cameras)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ラムダ式[&amp;](){ ～ }で{}の外側の変数すべてを &amp; キャプチャで&amp;参照として「Draw関数の内側へ引き連れて」処理できる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera.second-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Draw関数() の 外側にある変数 mapChipPath も[&amp;]効果で { } の内側で問題なくアクセスできている↓<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(40, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 2);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 70, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 4);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if (camera.first == "カメラ0")<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらがカメラ0", GetColor(255, 0, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (camera.first == "カメラ1")<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらはカメラ1", GetColor(0, 255, 0));</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スクリーン0の内容を画面に描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, 0, screenHandle0, FALSE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, 0, Screen::Width, Screen::Height / 2, GetColor(255, 0, 0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スクリーン1の内容を画面に描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, Screen::Height / 2, screenHandle1, FALSE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, Screen::Height / 2, Screen::Width, Screen::Height, GetColor(0, 255, 0));<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    <br>
+    いかがでしょう？ちゃんと上の画面に赤色の文字で「こちらがカメラ0」、下の画面に緑色の文字で「こららはカメラ1、現場からお伝えします」と出てきましたでしょうか？<br>
+    <br>
+    一応お伝えしておきますが、CRC32についてはwebで検索すればでてきますが、<br>
+    hash32クラスはこの記事で作成したクラスなので当然、web検索してもでてきません。<br>
+    std::stringを継承してあたかも文字列のように扱える設計も特にweb検索してもでてくるはずがないです。<br>
+    つまり、使うユーザー側が 記事の内容や意図を理解 して、使わない限りは「<b>文字列タグで一致判定しているのとほぼ変わらない</b>」ということです。<br>
+    <b>std::のライブラリだって「使う側が特性を理解して使わない限りはプログラムの動作や速度をカスタマイズできない」のと同じ</b>です。<br>
+    AIやChatGPTだってそうです。便利な時代になっても、<b>どのみち求められているのは「使う側の基礎知識 = 地力」</b>なのです。<br>
+    <br>
+    数学すべてを理解する必要はないが「<a href="https://www.1101.com/nintendo/pikmin3/2013-07-19.html">物事の本質や道理を把握するちから</a>」は大事なのです。<br>
+    プログラムや数学の専門家じゃない任天堂の宮本先生でも「原理と機能を把握するちから = 地力」は持っている。<br>
+    ゲームが計算機をベースにしている以上、その原理や源流を脳みそからシャットアウトする人には、新しいものを生み出す機会を損失するリスクが伴うということです<br>
+    誰だって「原理や機能を把握する地力のあるかしこい人」と仕事するほうが実力が発揮できる現場になる、のは あたりまえでしょう。<br>
+    その能力はむしろ「ゲームをプランニングするプランナ側」に必要な能力です。プログラマの能力を最大限に引き出される現場で働きたいでしょう。<br>
+    ゲームの学科などではプログラミングをあきらめた人がゲームのプランナを逃げで選択し、プログラミングを続ける人を逆に使う側になったりしがちですが、<br>
+    ゲームのプランニングはプログラミングやCGやデザインなど確固たるバックグラウンドに持った地力のある人のほうが現場で対話を通して実力を引き出せると思います。<br>
+    <br>
+    数学やプログラムより、むしろ大事なのは<b>「むずかしいことを自分のことばで把握して説明できること = 脳力」</b>ではないでしょうか。<br>
+    <br>
+    <br>
+    <br>
+    
+  </body>
+</html>
