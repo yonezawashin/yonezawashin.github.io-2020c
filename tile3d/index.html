@@ -15,6 +15,7 @@
       <li><a href="#mozTocId0001">試しにボックス型のタイルをポリゴンを表示してみる</a></li>
       <li><a href="#mozTocId0002">複数カメラと複数スクリーンで複数プレイヤ視点で3D空間を描けるようにする</a></li>
       <li><a href="#mozTocId0003">文字タグ判定の代わりに使えるハッシュ(32bit)でカメラにhash32タグをつけて管理する</a></li>
+      <li><a href="#mozTocId0004">ワールドを定義して、複数プレイヤと複数カメラをワールドに保持する</a></li>
     </ol>
     <br>
     <a id="mozTocId0001" class="mozTocH1">
@@ -64,9 +65,9 @@
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
       &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
       &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
       &nbsp;&nbsp;&nbsp; return 0;<br>
       }</p>
@@ -196,7 +197,7 @@
       &nbsp;&nbsp;&nbsp; }&nbsp;&nbsp; // ↓すぐ下のAngleベクタ版関数に引き継ぐ<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 画像の回転描画( 座標指定が float 版 )【注意！】現状Angle回転機能は未対応<br>
-      &nbsp;&nbsp;&nbsp; static int <b>DrawDivRotaGraphF3D</b>(Plane plane, float xf, float yf, float zf, double ExRate, VECTOR_D Angle, Texture&amp; divTexture, int id, int TransFlag = TRUE, int ReverseXFlag = FALSE, int ReverseYFlag = FALSE, int ReverseZFlag = FALSE, bool isBillboard = false)<br>
+      &nbsp;&nbsp;&nbsp; static int <b>DrawDivRotaGraphF3D</b>(Plane plane, float xf, float yf, float zf, double ExRate, VECTOR_D Angle, Texture&amp; <b>divTexture</b>, int <b>id</b>, int TransFlag = TRUE, int ReverseXFlag = FALSE, int ReverseYFlag = FALSE, int ReverseZFlag = FALSE, bool isBillboard = false)<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 遠すぎるものは描かないで即return<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (zf &gt; farClipPlane) return -1;<br>
@@ -249,7 +250,8 @@
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [頂点VERTEXは四角形は6個必要] https://dixq.net/rp/57.html<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★CGの【最小単位は三角形】2Dはドットの集合で描くが【CGは三角形の集合で描く】<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>VERTEX3DSHADER</b> Vertex[6]; // ポリゴン２枚なので、頂点は６個(三角3点×2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>VERTEX3D</b> Vertex[6]; // ポリゴン２枚なので、頂点は６個(三角3点×2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // VERTEX3DSHADER Vertex[6]; // シェーダの頂点を使う場合<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★頂点情報のセット<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // Plane=X なら X平面に(Y,Z) = (yf,zf)中心に描画<br>
@@ -299,20 +301,36 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //↑点0 点1&amp;5 点4&amp;2 点3 の4点の四角形を描く<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★div分割画像を考慮に入れて【UV展開】切り出し位置を0.0～1.0で指定<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].u = u_X0; Vertex[0].v = v_Y0;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].u = u_X3; Vertex[1].v = v_Y0;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].u = u_X0; Vertex[2].v = v_Y3;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].u = u_X3; Vertex[3].v = v_Y3;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[4].u = u_X0; Vertex[4].v = v_Y3;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[5].u = u_X3; Vertex[5].v = v_Y0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].u = u_X0; Vertex[0].v = v_Y0; Vertex[0].su = u_X0; Vertex[0].sv = v_Y0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].u = u_X3; Vertex[1].v = v_Y0; Vertex[1].su = u_X3; Vertex[1].sv = v_Y0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].u = u_X0; Vertex[2].v = v_Y3; Vertex[2].su = u_X0; Vertex[2].sv = v_Y3;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].u = u_X3; Vertex[3].v = v_Y3; Vertex[3].su = u_X3; Vertex[3].sv = v_Y3;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[4].u = u_X0; Vertex[4].v = v_Y3; Vertex[4].su = u_X0; Vertex[4].sv = v_Y3;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[5].u = u_X3; Vertex[5].v = v_Y0; Vertex[5].su = u_X3; Vertex[5].sv = v_Y0;<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 輝度(拡散光:Diffuseの明るさ)は全地点100% a(拡散光:Diffuseのアルファ不透明度) も最大値(255=不透明 0=透明)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].dif.r = Vertex[0].dif.g = Vertex[0].dif.b = Vertex[0].dif.a = 255;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].dif.r = Vertex[1].dif.g = Vertex[1].dif.b = Vertex[1].dif.a = 255;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].dif.r = Vertex[2].dif.g = Vertex[2].dif.b = Vertex[2].dif.a = 255;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].dif.r = Vertex[3].dif.g = Vertex[3].dif.b = Vertex[3].dif.a = 255;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[4].dif.r = Vertex[4].dif.g = Vertex[4].dif.b = Vertex[4].dif.a = 255;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[5].dif.r = Vertex[5].dif.g = Vertex[5].dif.b = Vertex[5].dif.a = 255;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].dif = GetColorU8(255, 255, 255, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].dif = GetColorU8(255, 255, 255, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].dif = GetColorU8(255, 255, 255, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].dif = GetColorU8(255, 255, 255, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[4].dif = GetColorU8(255, 255, 255, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[5].dif = GetColorU8(255, 255, 255, 255);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 鏡面反射光(スペキュラ)は全地点30<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].spc = GetColorU8(0, 0, 0, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].spc = GetColorU8(0, 0, 0, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].spc = GetColorU8(0, 0, 0, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].spc = GetColorU8(0, 0, 0, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[4].spc = GetColorU8(0, 0, 0, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[5].spc = GetColorU8(0, 0, 0, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 法線を設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[0].norm = VGet(0.0f, 0.0f, -1.0f); // Vertex[0].binorm = // シェーダーを利用するとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[1].norm = VGet(0.0f, 0.0f, -1.0f); // Vertex[1].binorm = <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[2].norm = VGet(0.0f, 0.0f, -1.0f); // Vertex[2].binorm = <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[3].norm = VGet(0.0f, 0.0f, -1.0f); // Vertex[3].binorm = <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[4].norm = VGet(0.0f, 0.0f, -1.0f); // Vertex[4].binorm = <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertex[5].norm = VGet(0.0f, 0.0f, -1.0f); // Vertex[5].binorm = <br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 0 1 2<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 5 4 3<br>
@@ -321,11 +339,15 @@
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //DxLib::DrawSphere3D(VGet(Xf, Yf, Zf),1, 4, GetColor(255, 255, 255),GetColor(255, 255, 255),FALSE); // テストとして四角形の中心に目印の球体を描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (divTexture[id] != -1)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::<b>SetUseTextureToShader</b>(0, <b>divTexture[id]</b>); // 使用するテクスチャを０番にセット<br>
-      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ポリゴンを２枚描画<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::<b>DrawPolygon3DToShader</b>(Vertex, 2); // <b>シェーダーにも対応できるようにToShader系関数を通して描く</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::<b>DrawPolygon3D</b>(Vertex, 2, <b>divTexture[id]</b>, TransFlag);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (divTexture[id] != -1) //[シェーダーを利用する場合] https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4204<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; DxLib::SetUseTextureToShader(0, divTexture[id]); // 使用するテクスチャを０番にセット<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // シェーダーを利用して描く場合はこちら https://dxlib.xsrv.jp/cgi/patiobbs/patio.cgi?mode=view&amp;no=4204<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //DxLib::DrawPolygon3DToShader(Vertex, 2); // シェーダーにも対応できるようにToShader系関数を通して描く<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       <br>
@@ -401,6 +423,9 @@
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 光の明暗計算を無効に<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(FALSE);</em><br>
+      <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>// 2Dタイル描画処理(位置x, y, 拡大率, 回転, 画像ID, TRUEなら透過有効)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawRotaGraphF(100, 200, 1.0f, 0, Resource::files[mapChipPath]-&gt;m_handles[2], TRUE);</u><br>
       <br>
@@ -411,9 +436,9 @@
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
       &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
       &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
       &nbsp;&nbsp;&nbsp; return 0;<br>
       }</p>
@@ -458,6 +483,9 @@
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光の明暗計算を無効に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(FALSE);<br>
+      <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// Ｚバッファを有効にする [Zの深度]<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
@@ -471,9 +499,9 @@
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
       &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
       &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
       &nbsp;&nbsp;&nbsp; return 0;<br>
       }<br>
@@ -710,9 +738,6 @@
       &nbsp;&nbsp;&nbsp; Rotate rot{ 0.0, 0.0, 0.0 }; // カメラの3軸の回転角度<br>
       &nbsp;&nbsp;&nbsp; double <b>fovAngle</b> = 0; // カメラをスクリーンに描くときの視野角(0～179度) 0のときはDxLib::GetCameraFovD()で得られる値が適用される<br>
       <br>
-      &nbsp;&nbsp;&nbsp; // 板ポリゴンのキャラは常にカメラ方向に面を見せるようにするための角度<br>
-      &nbsp;&nbsp;&nbsp; double anglePlaneChara{ 0.0f };<br>
-      &nbsp;&nbsp;&nbsp; double anglePlaneCharaRotate{ 0.0f }; //←この角度を0～2πに変えるとクルっとオセロのように回転させる<br>
       &nbsp;&nbsp;&nbsp; float cameraLookAtHeight{ 0.0f }; // LookAtする対象を見下ろす高さ<br>
       <br>
       &nbsp;&nbsp;&nbsp; int <b>screenHandle</b> = DX_SCREEN_BACK; //<b>カメラを描くスクリーンのハンドル番号</b><br>
@@ -740,8 +765,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //MyDraw::SetCameraPositionAndTarget_UpVecY(pos, targetXYZ + Vector3(0, cameraLookAtHeight,0));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 注視点はターゲットの座標から cameraLookAtHeight 分だけ高い位置<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetCameraPositionAndTarget_UpVecY(this-&gt;pos, targetXYZ + Vector3(0, this-&gt;cameraLookAtHeight, 0));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラ回転後の角度を保存して板ポリゴンキャラクタが常にカメラに面を見せるようにする<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;rot.H = this-&gt;anglePlaneChara = DxLib::GetCameraAngleHRotateD(); // カメラの水平方向の向きを取得<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;rot.H = DxLib::GetCameraAngleHRotateD(); // カメラの水平方向の向きを取得<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;rot.V = DxLib::GetCameraAngleVRotateD();<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;rot.T = DxLib::GetCameraAngleTRotateD();<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -867,6 +891,9 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Screen::ClearDrawScreen(screenHandle0); // 一旦スクリーン0のキャンバスをきれいにまっさらに<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦スクリーン1のキャンバスをきれいにまっさらに</em><br>
       <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光の明暗計算を無効に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(FALSE);<br>
+      <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファを有効にする [Zの深度]<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
@@ -902,9 +929,9 @@
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
       &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
       &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
       &nbsp;&nbsp;&nbsp; return 0;<br>
       }<br>
@@ -912,8 +939,8 @@
     いかがでしょう？複数のカメラ視点からの3Dのビューが、上下複数のスクリーンに描画されたでしょうか？<br>
     (見やすいようにタイルのブロックの数も3つに増やしておきました。)<br>
     ラムダ式は便利なのですが、あまり初心者向けのC++の本には出てきたのを見たことがありません。<br>
-    私もC++とは関係ない別言語のJavascript経由で、<a href="https://dqn.sakusakutto.jp/2009/01/javascript_1.html">関数の中に関数があると便利</a>だというニーズに気づきました。<br>
-    今回のラムダ式はJavascriptでいうところの、<a href="https://dqn.sakusakutto.jp/2009/01/javascript_2.html">無名関数としてブロックを描く処理</a>をdrawfuncとしてDraw関数の引数に渡した形という雰囲気でしょうか。<br>
+    私もC++とは関係ない別言語のJavascript経由で、<a href="https://dqn.sakusakutto.jp/2009/01/javascript_1.html">関数の中に関数を渡せると便利</a>だというニーズに気づきました。<br>
+    今回のラムダ式はJavascriptでいうところの、<a href="https://dqn.sakusakutto.jp/2009/01/javascript_2.html">無名関数として3Dブロックを描く処理</a>をdrawfuncとしてDraw関数の引数に渡した形という雰囲気でしょうか。<br>
     ある言語においては基本的な文法が、別の言語では初心者向けではない、みたいな扱いになっていたりするのは機会の損失ですよね。<br>
     大事なのは「文法を実際に使いたくなるシチュエーションに出会えるかどうか」です。<br>
     その意味で今回のDrawへの 無名ラムダ式渡し はぴったりの実例だと思います。<br>
@@ -939,20 +966,20 @@
     要はセッティングの変数をDXライブラリ内部やCameraクラスやScreenクラスが蓄えることができれば、<br>
     Start() ～ End() 方式で設計することもできますね。<br>
     では、ラムダ式が真に威力を発揮するのはどういうときでしょうか？<br>
-    たとえばStart() End()でさばけないような、複雑なデータの木の枝をたどって、<br>
+    たとえばStart() End()でさばけないような、データが複雑な木構造のときに、木の枝をたどって、<br>
     目的のデータにたどりついたら drawfunc を実行するとしたらどうでしょう？<br>
     沢山の関節があるCGデータやフォルダの中にフォルダがあるような木の構造をたどって、<br>
     CGの指だったらある処理を走らせたいとか、<br>
     フォルダをたどった先にあるデータが写真形式だったら写真アイコンを描く、<br>
-    とか複雑な構造の場合はラムダ式を渡すのが向いているかもしれません。<br>
+    とか複雑な構造の場合はラムダ式を渡す形が向いているかもしれません。<br>
     <br>
     <br>
     <br>
     <a id="mozTocId0003" class="mozTocH1">
       <h1>文字タグ判定の代わりに使えるハッシュ(32bit)でカメラにhash32タグをつけて管理する</h1>
-      まず、最初にハッシュという言葉は色んな意味で使われている(ハッシュドビーフも)ので区別しなければいけない<br>
-      英語圏で＃はハッシュと読まれる。だからハッシュタグのハッシュは＃の意味だ。<br>
-      それとは<b>全く異なる</b> <b>情報科学の言葉</b>としても「</a><a href="https://ja.wikipedia.org/wiki/%E6%9A%97%E5%8F%B7%E5%AD%A6%E7%9A%84%E3%83%8F%E3%83%83%E3%82%B7%E3%83%A5%E9%96%A2%E6%95%B0">暗号学的ハッシュ関数</a>」のようなハッシュという言葉がある。<br>
+    </a> まず、最初にハッシュという言葉は色んな意味で使われている(ハッシュドビーフも)ので区別しなければいけない<br>
+    英語圏で＃はハッシュと読まれる。だからハッシュタグのハッシュは＃の意味だ。<br>
+    それとは<b>全く異なる</b> <b>情報科学の言葉</b>としても「<a href="https://ja.wikipedia.org/wiki/%E6%9A%97%E5%8F%B7%E5%AD%A6%E7%9A%84%E3%83%8F%E3%83%83%E3%82%B7%E3%83%A5%E9%96%A2%E6%95%B0">暗号学的ハッシュ関数</a>」のようなハッシュという言葉がある。<br>
     今回のハッシュはこちらの情報科学のハッシュ関数に近い概念だ。<br>
     例えば、パスワードは入力された文字の羅列をそのままネットで送信すると、個人情報が「もれ放題」になる。<br>
     なので<b>パスワードの文字の羅列を数字などの羅列に変換するパスワード変換の関数を通して</b>から、ネット経由でサーバーに送られる。<br>
@@ -1260,14 +1287,14 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle0); // 一旦キャンバスをきれいにまっさらに<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦キャンバスをきれいにまっさらに<br>
       <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光の明暗計算を無効に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(FALSE);<br>
+      <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファを有効にする [Zの深度]<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファへの書き込みを有効にする<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetWriteZBuffer3D(TRUE);<br>
-      <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 2Dタイル描画処理(位置x, y, 拡大率, 回転, 画像ID, TRUEなら透過有効)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawRotaGraphF(100, 200, 1.0f, 0, Resource::files[mapChipPath]-&gt;m_handles[2], TRUE);<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 複数のカメラを 範囲 for文 で回す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : cameras)<br>
@@ -1284,7 +1311,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 70, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 4);<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if (camera.first == "カメラ0")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if (camera.first == "カメラ0") <b>//←"カメラ0"はビルド時に事前にハッシュ値が計算され、文字列ではない数値とおきかわっている</b><br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらがカメラ0", GetColor(255, 0, 0));<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (camera.first == "カメラ1")<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらはカメラ1", GetColor(0, 255, 0));</em><br>
@@ -1303,9 +1330,9 @@
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
       &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
       &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
       &nbsp;&nbsp;&nbsp; return 0;<br>
       }</p>
@@ -1325,12 +1352,774 @@
     誰だって「原理や機能を把握する地力のあるかしこい人」と仕事するほうが実力が発揮できる現場になる、のは あたりまえでしょう。<br>
     その能力はむしろ「ゲームをプランニングするプランナ側」に必要な能力です。プログラマの能力を最大限に引き出される現場で働きたいでしょう。<br>
     ゲームの学科などではプログラミングをあきらめた人がゲームのプランナを逃げで選択し、プログラミングを続ける人を逆に使う側になったりしがちですが、<br>
-    ゲームのプランニングはプログラミングやCGやデザインなど確固たるバックグラウンドに持った地力のある人のほうが現場で対話を通して実力を引き出せると思います。<br>
+    ゲームのプランニングはプログラミングやCGやデザインなど確固たるバックグラウンドに持った地力のある人が仕切るほうが対話が現場で生まれ実力が引き出されると思います。<br>
     <br>
-    数学やプログラムより、むしろ大事なのは<b>「むずかしいことを自分のことばで把握して説明できること = 脳力」</b>ではないでしょうか。<br>
+    数学やプログラムより、むしろ大事なのは<b>「むずかしいことを自分のことばで把握して説明できること = 脳力」(ものわかりのよさ、話のわかるひと)</b>ではないでしょうか。<br>
+    技術側は技術を自分のことばで説明する能力を持つ、それを活かす側はその話を理解できるよう基礎に興味を持ちきちんと時代ともに追いかける、それが理想的開発現場です。<br>
     <br>
     <br>
     <br>
-    
+    <br>
+    <a id="mozTocId0004" class="mozTocH1">
+      <h1>ワールドを定義して、複数プレイヤと複数カメラをワールドに保持する</h1>
+    </a>
+    <p><code>別記事でImageフォルダにImage/pikkoron.pngと新たに別に自作したImage/satan.pngを保存しておいてください</code><a
+
+        href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/practice.html#mozTocId0008">→CharaMELで自作のキャラのタイル分割画像を作る</a></p>
+    <br>
+    Unityなどゲームエンジンには「シーン」などの概念がある。<br>
+    「シーン」の下に複数のカメラや複数のゲームオブジェクトがヒエラルキーとしてぶら下がっている。<br>
+    シーンを閉じるとともにぶら下がっている複数のゲームオブジェクトを巻き込んで「道ずれにシーンごとリセット」される。<br>
+    シーンをまたぐためには「<a href="https://rurugamedev-blog.com/entry/2023/04/13/%E3%80%90Unity%E3%80%91SingletonMonobehaviour%E3%81%A8%E3%81%AF%EF%BC%9F%E7%9B%AE%E7%9A%84%E3%82%84%E4%BD%BF%E3%81%84%E6%96%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E8%A7%A3%E8%AA%AC">別シーンをロードしても消えないDontDestoroyOnLoadを前提としたSingletonMonoBehaviorなど</a>」がパターンとして使われる。<br>
+    ゆえに、プレイヤが扉に入って、別ワールドに移動するような場合「シーン切り替え=ワールド移動」のようにイメージされていると思う。<br>
+    じゃあ、例えばプレイヤ①がワールド①にいて、プレイヤ②がワールド①からワールド②に扉で移動するとしたケースでは、<br>
+    ワールド①とワールド② を シーン①とシーン② のように設計しているとすると、シーン②をLoadするときにシーン①が消えてしまうではないか。<br>
+    (ワールド①をDontDestoroyOnLoadにしたときには、シーン①とシーン②のステージのXYZ座標のエリアが「かぶらないように」しないと、2つのステージがごっちゃになった世界になっちゃう)<br>
+    ゆえに、今回は「シーン」という概念と「ワールド」という概念を明確に区別する設計をしてみよう。<br>
+    「シーン」の下に複数の「ワールド」がぶら下がるような設計をするためには、<br>
+    複数のカメラやゲームオブジェクトの保持(と道連れリセット)は「ワールド」にて分担する形がいい。<br>
+    <br>
+    今回は先行して「ワールド」のみの設計に集中する。<br>
+    設計するにあたり、<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId00073">シューティングでGameManger(シングルトン)の担った役割</a>をワールドが代わりに担うため、<br>
+    色んな別クラスでWorld.hが #include "World.h" されて<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId00071">インクルードのリンクがワールドに集中して循環インクルード問題が起こる</a>ことが事前に予想される。<br>
+    ゆえにワールドは「個別の Player.hやCamera.h のインクルードはしない」設計が適切になる。<br>
+    #includeするかわりに「前方宣言をして Playerというクラスや Cameraというクラスがありうる」という宣言だけをしてやる。<br>
+    <p class="source">class Camera; // 前方宣言だけして#include はしなければポインタ型 Camera* の定義は許される<br>
+      class Player;<br>
+      <br>
+      class World<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; Camera* camera; // 前方宣言をすればポインタは定義が許されるようになる<br>
+      &nbsp;&nbsp;&nbsp; Player* player;<br>
+      };<br>
+    </p>
+    ポインタの実体は「メモリ上の住所 = 番地番号」である。<br>
+    だから64bit環境のマシンではポインタは64ビットの番地を持てるし、少し昔の32bit環境のマシンではポインタは32ビットの番地を持っているに過ぎない<br>
+    ようは、void* 型のポインタも Player* 型のポインタも「実は同じ64bitの数字 = int型やshort型などと同類」に過ぎないわけです。<br>
+    だから.hヘッダでPlayerのメンバの変数や関数を呼び出したりしない状況にして、ポインタだけならば、<br>
+    実は #include しなくてもポインタ番号だけの定義にしてしまえば「インクルードするまでもない」のです。<br>
+    Playerのメンバ変数の hp ヒットポイント などまでアクセスしたり、コンストラクタで初期化したいなら #include Playerまで必要だが、<br>
+    Worldクラスの中に、Player* player; や Camera* camera; など「ポインタを羅列するだけなら前方宣言だけでいい」のである。<br>
+    そして、この「ポインタならばインクルード不要」を応用することで「循環インクルード」を回避できるのである。<br>
+    <br>
+    ワールドクラスの定義はプレイヤやカメラなどの「ポインタをキープ」することに特化する。<br>
+    ようは「住所番地の掲示板」を主とした役割として設計するのだ。<br>
+    <br>
+    第2の設計要件として必要なのが「キープ = 道連れ」の役割である。<br>
+    ワールドを閉じたときにワールド内にカメラやプレイヤがいたら「ワールドもろとも一緒にメモリから消えてお掃除してほしい = バルス」<br>
+    「キープ(道ずれ)」は共有ポインタの役目そのものである。<br>
+    <a href="https://sleepygamersmemo.blogspot.com/2019/01/unity-optimizing-gc-collect.html">C#で暗に黙々とガベージコレクタがやってくれている役割</a>を共有ポインタで代行する。<br>
+    <p class="source">#include &lt;memory&gt; // 共有ポインタを使う<br>
+      class Camera; // 前方宣言だけして#include はしなければポインタ型 Camera* の定義は許される<br>
+      class Player;<br>
+      <br>
+      class World<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Camera&gt; camera; // 前方宣言をすればポインタは定義が許されるようになる<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Player&gt; player;<br>
+      };<br>
+    </p>
+    これで、Worldクラスが削除されるとともに、cameraやplayerが別の個所に共有リンクが張られていない状態(共有カウンタが1←ワールドのみの)ならば、<br>
+    worldが最後までキープしていた共有カウンタ1が、このworldクラスが閉じられるとともに、共有カウンタが0になり、道ずれにできる。<br>
+    つまり、Worldクラスは共有ポインタの最後の命綱(いのちづな)の共有カウント 1 をキープする役割を上記コードで期待できるわけです。<br>
+    具体的には、以下のコード例で、プレイヤは命綱をキープして消えずにワールドを移動できます。<br>
+    <p class="source">world2-&gt;player = world1-&gt;player; // <b>ワールド2でプレイヤへのリンクが張られた</b>のでplayerポインタの<b>共有カウンタが+1</b>になる<br>
+      world1-&gt;player = nullptr; // <b>world1のplayerポインタがnullになる</b>のでplayerの<b>共有カウンタが-1</b>される<br>
+      // 結果、playerは<b>ワールド2のぶんは最低限の共有カウンタ1は確保</b>されているので消えない(ワールド移動完了!!!!)<br>
+    </p>
+    このように、ようはstd::shared_ptr型のリンクがnullptrじゃないリンクされた数だけ共有ポインタのplayer内部の共有カウンタが+1され、<br>
+    全リンクがnullptrにならない限り、playerは消えるのを免れられるということ。<br>
+    <br>
+    例えるならば、メンヘラ系VTuberがいいねが完全に0になったら死ぬ(引退するする詐欺)みたいな状況をイメージすると、ワールドが最後の推し 1 カウントを保持していて、<br>
+    完全にどこからも気にされない状態(共有リンク切れ)ならばワールド消滅とともにさすがに消していいだろ。<br>
+    という「この世界(ワールド)にいるうちは最後まで見捨てないよ設計」です。<br>
+    なので、<b>デッドロック(互いにどっかのクラス同士で共有リンク張りあい状態)のときは<br>
+      「永遠にメンヘラが世界消滅後もメモリに残り続けるという罠」</b>もあったりするので気を付けましょう。<br>
+    <br>
+    そして、もしPlayerのhpなどメンバ変数にアクセスしたかったり、<br>
+    コンストラクタを呼んで初期化したいときはWorld.cppのほうで#include "Player.h"すれば、循環インクルードは回避できる構造を設計できる。<br>
+    <p class="source"><b>World.h</b>の例<br>
+      #include &lt;memory&gt; // 共有ポインタを使う<br>
+      class Camera; // 前方宣言だけして#include はしなければポインタ型 Camera* の定義は許される<br>
+      class Player;<br>
+      <br>
+      class World<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Camera&gt; camera; // 前方宣言をすればポインタは定義が許されるようになる<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Player&gt; player;<br>
+      &nbsp;&nbsp;&nbsp; void MakePlayer(); //<b> .hでは初期化を直で呼ばずに、間接的に初期化するための関数だけを定義</b><br>
+      };<br>
+    </p>
+    <p class="source"><b>World.cpp</b>の例 <br>
+      #include "World.h";<br>
+      <br>
+      #include "Player.h"; // <b>.cppでは</b>std::make_sharedで初期化コンストラクタを呼ぶために<b>インクルードは必要</b><br>
+      #include "Camera.h";<br>
+      <br>
+      void World::MakePlayer()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; player = std::make_shared&lt;Player&gt;(); // 初期化コンストラクタを呼ぶ<br>
+      &nbsp;&nbsp;&nbsp; player-&gt;hp = 10; // インクルードしてればメンバ変数にもアクセスできる<br>
+      };<br>
+    </p>
+    こういう風にして<b>実際の#includeを.cppに逃がせば</b>、少なくとも<b>Player.h と World.hどうしが循環インクルードすることはない構造を設計できる</b>。<br>
+    まあ、普通はめんどくさがらずに「実際の処理は全部 .cpp に書くようにする」のが王道の世間一般のC++のプログラミングスタイルではある。<br>
+    ただ、私はVisual Studioで「定義をここに表示」で.hヘッダの処理をワンクリックで追いかけて見たりできて便利なので<br>
+    「コードを試行錯誤で書いている最中は.hで処理を書いて考えたり、必要に応じて.cppに処理を移したり、最後に丁寧に.cppに処理を移してきれいにする」<br>
+    みたいな形で書き進めがちなので .h書き をおすすめしてるわけではない。<br>
+    きれいな理想的なコーディングスタイルは<a href="https://github.com/raulmur/ORB_SLAM/blob/master/include/Map.h">FaceBookの元技術者の人</a>の恐ろしいほど簡潔で「読める」コードをみて真似するのがよい。最終理想形である。<br>
+    上記のプロジェクトでも、中身が1行の処理のようなinline展開できそうな簡単な関数の処理は.hに書かれていたりする。<br>
+    また、<a href="https://github.com/nlohmann/json/blob/develop/single_include/nlohmann/json.hpp">ヘッダオンリーなライブラリなどの文化</a>もあるので、<b>スタイルは場合や人や開発現場によりけり</b>である。<br>
+    <br>
+    <br>
+    <br>
+    <p><code>World.hを新規作成</code>して、世界で保持する(道ずれにする)要素を共有ポインタで定義しましょう。</p>
+    <p class="source">#ifndef WORLD_H_<br>
+      #define WORLD_H_<br>
+      <br>
+      #include &lt;list&gt;<br>
+      #include &lt;memory&gt;<br>
+      #include &lt;unordered_map&gt;<br>
+      #include &lt;functional&gt; // std::functionのラムダ式 で 関数を Draw関数の引数にして、カメラすべてに対して描画処理を発動させる <br>
+      <br>
+      #include "MyHash.h" // ワールドのタグをhash32型で管理する<br>
+      <br>
+      <br>
+      // [前方宣言] 宣言だけして、#includeはしてないので、ポインタだけはこのファイル内でつかえる<br>
+      // #includeはしてないので、hpなどの変数には#include "～.h"しないとアクセスできないので循環インクルード防止のため.cppでインクルードしてください<br>
+      class GameScene;<br>
+      class Player;<br>
+      class PlayerBullet;<br>
+      class Enemy;<br>
+      class Camera;<br>
+      <br>
+      // プレイヤや敵や弾などの共有ポインタを管理し、EraseRemoveIfで消して参照カウンタが0になったらそれらを消滅させるクラス(C#のガベージコレクタの代わり)<br>
+      class World<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; inline World(GameScene* pScene, const std::string&amp; worldTag = "") : m_pScene{ pScene }, tag{ worldTag } {}<br>
+      &nbsp;&nbsp;&nbsp; inline ~World() {}<br>
+      protected: // public:にすると他で外部で後からタグやシーンを書き換えられると辞書での管理などの前提がおかしくなるのでprotected:する<br>
+      &nbsp;&nbsp;&nbsp; hash32 tag{ "" }; // ワールド名のタグ<br>
+      &nbsp;&nbsp;&nbsp; GameScene* m_pScene{ nullptr }; // ワールドを所有するシーン<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; hash32 Tag() const { return tag; }<br>
+      &nbsp;&nbsp;&nbsp; GameScene* scene() { return m_pScene; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::<b>shared_ptr</b>&lt;Player&gt;&gt; players; // プレイヤのタグ辞書<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 削除処理を共通テンプレート関数にする<br>
+      &nbsp;&nbsp;&nbsp; // [共通テンプレート関数]https://programming-place.net/ppp/contents/cpp/language/009.html#function_template<br>
+      &nbsp;&nbsp;&nbsp; template &lt;typename TypeT, class T_if&gt;<br>
+      &nbsp;&nbsp;&nbsp; void EraseRemoveIf(std::list&lt;TypeT&gt;&amp; v, T_if if_condition)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 特定のタイプT↑&nbsp; ↑配列v&nbsp;&nbsp; ↑条件式if_condition<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; v.erase(<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::remove_if(v.begin(), v.end(), if_condition),<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; v.end() //&nbsp; ↓remove_ifの位置<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; );//例.[生][生][死][死][死]← v.end()の位置<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::<b>shared_ptr</b>&lt;Camera&gt;&gt; cameras; // このワールドに存在するカメラの辞書&lt;カメラにつけたタグ, カメラの共有ポインタ&gt;<br>
+      &nbsp;&nbsp;&nbsp; // 指定されたタグのカメラへの共有ポインタを得る　カメラ辞書に存在しないタグでアクセスしたときにunordered_mapの特性で勝手に意図しないカメラができるのを防ぐ関数<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Camera&gt; camera(const std::string&amp; cameraTag) { auto itr = cameras.find(cameraTag); return (itr != end(cameras)) ? itr-&gt;second : nullptr; }<br>
+      &nbsp;&nbsp;&nbsp; // このワールドに存在するカメラすべてに対して drawFuncで描きたい処理を渡して 全カメラのスクリーンに対して描画処理を走らせる<br>
+      &nbsp;&nbsp;&nbsp; void Draw(std::function&lt;void()&gt; drawFunc) noexcept;<br>
+      &nbsp;&nbsp;&nbsp; // カメラにタグをつけてワールドに追加 カメラにもワールドへのポインタリンクを張る<br>
+      &nbsp;&nbsp;&nbsp; inline bool AddCamera(const std::string&amp; cameraTag, std::shared_ptr&lt;Camera&gt; pCamera);<br>
+      &nbsp;&nbsp;&nbsp; // 指定したタグのカメラをこのワールドから削除する カメラ側の worldへのリンクのポインタも nullptr にする<br>
+      &nbsp;&nbsp;&nbsp; inline bool EraseCamera(const std::string&amp; cameraTag);<br>
+      &nbsp;&nbsp;&nbsp; // カメラを nowWorld から nextWorld に移動させる<br>
+      &nbsp;&nbsp;&nbsp; static bool MoveCamera(const std::string&amp; cameraTag, World* nowWorld, World* nextWorld);<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>World.cppを新規作成</code>して、ポインタ以外の実体のインクルードが必要な処理を記述しましょう。</p>
+    <p class="source">#include "World.h"<br>
+      <br>
+      #include "Player.h"<br>
+      #include "Camera.h"<br>
+      #include "Screen.h"<br>
+      <br>
+      <br>
+      // カメラにタグをつけてワールドに追加 カメラにもワールドへの生ポインタリンクを渡す<br>
+      bool World::AddCamera(const std::string&amp; cameraTag, std::shared_ptr&lt;Camera&gt; pCamera)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (pCamera == nullptr) return false;<br>
+      &nbsp;&nbsp;&nbsp; if (cameras.count(cameraTag) &gt; 0) return false; // すでに同じタグのカメラがワールドにあったら false<br>
+      &nbsp;&nbsp;&nbsp; if (pCamera-&gt;world() != nullptr) pCamera-&gt;world()-&gt;EraseCamera(cameraTag); // すでにカメラが別ワールドに配置されていたら別ワールドから削除<br>
+      &nbsp;&nbsp;&nbsp; cameras.emplace(cameraTag, pCamera); // ワールドにカメラを追加する<br>
+      &nbsp;&nbsp;&nbsp; pCamera-&gt;world(this); // カメラにもワールドへのポインタリンクを張る<b>(カメラ側に渡すのは共有ポインタではない生ポインタだから共有デッドロックにはならない)</b><br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      // 指定したタグのカメラをこのワールドから削除する カメラ側の worldへのリンクのポインタも nullptr にする<br>
+      bool World::EraseCamera(const std::string&amp; cameraTag)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; auto itr = cameras.find(cameraTag); // 指定したタグのカメラを探す<br>
+      &nbsp;&nbsp;&nbsp; if (itr == end(cameras)) return false; // 指定したタグのカメラがワールドにない<br>
+      &nbsp;&nbsp;&nbsp; auto pCamera = itr-&gt;second;<br>
+      &nbsp;&nbsp;&nbsp; pCamera-&gt;world(nullptr); // カメラ側の worldへのリンクのポインタも nullptrに<br>
+      &nbsp;&nbsp;&nbsp; cameras.erase(cameraTag); // カメラを辞書から削除<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      // カメラを nowWorld から nextWorld に移動させる<br>
+      bool World::MoveCamera(const std::string&amp; cameraTag, World* nowWorld, World* nextWorld)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (nowWorld == nullptr) return false;<br>
+      &nbsp;&nbsp;&nbsp; auto itr = nowWorld-&gt;cameras.find(cameraTag); // タグでカメラを探す<br>
+      &nbsp;&nbsp;&nbsp; if (itr == end(nowWorld-&gt;cameras)) return false; // タグに関連づいたカメラがなかった<br>
+      &nbsp;&nbsp;&nbsp; auto targetCamera = itr-&gt;second; // カメラの共有ポインタをキープ(次の行でeraseしてもカメラの共有カウンタは0にはならずこのリンクのおかげでカメラはメモリに残存)<br>
+      &nbsp;&nbsp;&nbsp; targetCamera-&gt;world(nullptr); // カメラ側の worldへのリンクのポインタを一旦 nullptrに<br>
+      &nbsp;&nbsp;&nbsp; nowWorld-&gt;cameras.erase(cameraTag); // nowWorld からは カメラを消す<br>
+      &nbsp;&nbsp;&nbsp; if (nextWorld == nullptr) return false;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return nextWorld-&gt;AddCamera(cameraTag, targetCamera); // 次のワールドにカメラを追加する<br>
+      }<br>
+      <br>
+      // このワールドに存在するカメラすべてに対して funcで描きたい処理を渡して 全カメラのスクリーンに対して描画処理を走らせる<br>
+      void World::Draw(std::function&lt;void()&gt; drawFunc) noexcept<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : cameras)&nbsp;&nbsp;&nbsp; // このワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR_D beforeCamPos; // 設定変更前のカメラのパラメータを一旦、保管<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double beforeVRot, beforeHRot, beforeTRot, beforeNear, beforeFar, beforeFov;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Camera::GetCameraSettings(&amp;beforeCamPos, &amp;beforeVRot, &amp;beforeHRot, &amp;beforeTRot, &amp;beforeFov, &amp;beforeNear, &amp;beforeFar);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //camera-&gt;screenID<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::SetCameraPositionAndAngle(camera-&gt;pos, camera-&gt;rot.V, camera-&gt;rot.H, camera-&gt;rot.T); // 各カメラの位置、回転を設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Screen::Start(camera-&gt;screenHandle, true, camera-&gt;fovAngle); // カメラに関連付けられたスクリーンIDを描画先にする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; drawFunc(); // 渡された描画処理を実行<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Screen::End(true); // 描画先を元に戻す<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カメラの設定をもとに戻しておく<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Camera::SetCameraSettings(&amp;beforeCamPos, &amp;beforeVRot, &amp;beforeHRot, &amp;beforeTRot, &amp;beforeFov, &amp;beforeNear, &amp;beforeFar);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+    </p>
+    <br>
+    <p><code>Camera.hを変更</code>して、ワールドに所有される立場のカメラ側からも自分の今いるワールドの情報にアクセスできるために<br>
+      World* 型の生ポインタを初期化と同時に渡しておけるようにしましょう。</p>
+    <p class="source">#ifndef CAMERA_H_<br>
+      #define CAMERA_H_<br>
+      <br>
+      #include &lt;functional&gt; // カメラのDraw関数に「引数として関数=ラムダ式」を渡してカメラのDraw関数の外側の呼び出し元から描画したい処理を渡すことができるようにする<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Screen.h"<br>
+      #include "MyDraw.h"<br>
+      #include "Vector3.h"<br>
+      <br>
+      <br>
+      class Camera<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // カメラの位置(ワールド座標)<br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 pos; // カメラの位置(ワールド座標)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float x, y, z; }; // unionしてx,y,zでもアクセスできるように<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; struct Rotate { double V, H, T; }; // カメラの回転角度定義 DXライブラリの内部行列ではfloatじゃなくてdouble型で保持されているので倍精度のdouble型にした<br>
+      &nbsp;&nbsp;&nbsp; Rotate rot{ 0.0, 0.0, 0.0 }; // カメラの3軸の回転角度<br>
+      &nbsp;&nbsp;&nbsp; double fovAngle = 0; // カメラをスクリーンに描くときの視野角(0～179度) 0のときはDxLib::GetCameraFovD()で得られる値が適用される<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float cameraLookAtHeight{ 0.0f }; // LookAtする対象を見下ろす高さ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; int screenHandle = DX_SCREEN_BACK; //カメラを描くスクリーンのハンドル番号<br>
+      <em>protected:<br>
+        &nbsp;&nbsp;&nbsp; World* m_world; // カメラが存在するワールドへのポインタ<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; World* world() { return m_world; } //ワールドへのポインタを得る<br>
+        &nbsp;&nbsp;&nbsp; Camera&amp; world(World* pWorld) { m_world = pWorld; return *this; } // ワールドへのポインタを再セットする</em><br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Camera(<em>World* pWorld, </em>Vector3 worldPos) : <em>m_world{ pWorld }, </em>pos { worldPos } {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; ~Camera() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラを通して描くスクリーンのハンドル番号を設定する<br>
+      &nbsp;&nbsp;&nbsp; void SetScreenHandle(int handle) { screenHandle = handle; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラの位置をセットしなおす<br>
+      &nbsp;&nbsp;&nbsp; void SetPosition(Vector3 worldPos)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ワールド座標系として保存<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;pos = worldPos;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 指定されたワールド座標が画面の中心に来るように、カメラの位置を変更する<br>
+      &nbsp;&nbsp;&nbsp; void LookAt(Vector3 targetXYZ)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラの位置と向きを設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //MyDraw::SetCameraPositionAndTarget_UpVecY(pos, targetXYZ + Vector3(0, cameraLookAtHeight,0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 注視点はターゲットの座標から cameraLookAtHeight 分だけ高い位置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetCameraPositionAndTarget_UpVecY(this-&gt;pos, targetXYZ + Vector3(0, this-&gt;cameraLookAtHeight, 0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラ回転後の角度を保存<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;rot.H = DxLib::GetCameraAngleHRotateD(); // カメラの水平方向の向きを取得<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;rot.V = DxLib::GetCameraAngleVRotateD();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;rot.T = DxLib::GetCameraAngleTRotateD();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 現在のDX内部のカメラのビュー行列などに入っているカメラの設定パラメータを得る<br>
+      &nbsp;&nbsp;&nbsp; static void GetCameraSettings(VECTOR_D* pPosition, double* pRotV = nullptr, double* pRotH = nullptr, double* pRotT = nullptr,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double* pFov = nullptr, double* pNear = nullptr, double* pFar = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pPosition != nullptr) *pPosition = DxLib::GetCameraPositionD(); // カメラ位置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pRotV != nullptr) *pRotV = DxLib::GetCameraAngleVRotateD(); // カメラの角度V<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pRotH != nullptr) *pRotH = DxLib::GetCameraAngleHRotateD(); // カメラの角度H<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pRotT != nullptr) *pRotT = DxLib::GetCameraAngleTRotateD(); // カメラの角度T<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pFov != nullptr) *pFov = DxLib::GetCameraFovD(); // カメラの視野角<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pNear != nullptr) *pNear = DxLib::GetCameraNearD(); // カメラ一番近くの描き始めるレンジ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pFar != nullptr) *pFar = DxLib::GetCameraFarD(); // カメラ一番遠くの描くレンジ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラの視野角に変更があったら変えて射影変換行列を再計算する (現在と同じfovの数値の場合は再計算をしないで負荷を回避)<br>
+      &nbsp;&nbsp;&nbsp; static inline void SetupCamera_PerspectiveD(double fov) { if (DxLib::GetCameraFovD() != fov) DxLib::SetupCamera_PerspectiveD(fov); }<br>
+      &nbsp;&nbsp;&nbsp; // カメラの視野角に変更があったら変えて射影変換行列を再計算する (現在と同じfovの数値の場合は再計算をしないで負荷を回避)<br>
+      &nbsp;&nbsp;&nbsp; static inline void SetCameraNearFarD(double Near, double Far) { if (DxLib::GetCameraNearD() != Near &amp;&amp; DxLib::GetCameraFarD() != Far) DxLib::SetCameraNearFarD(Near, Far); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラの設定を変える<br>
+      &nbsp;&nbsp;&nbsp; static void SetCameraSettings(VECTOR_D* pPosition, double* pRotV, double* pRotH, double* pRotT,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double* pFov = nullptr, double* pNear = nullptr, double* pFar = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pPosition != nullptr &amp;&amp; pRotV != nullptr &amp;&amp; pRotH != nullptr &amp;&amp; pRotT != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetCameraPositionAndAngleD(*pPosition, *pRotV, *pRotH, *pRotT);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pFov != nullptr) Camera::SetupCamera_PerspectiveD(*pFov); // カメラの視野角に変化があったら射影変換行列を更新<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pNear != nullptr &amp;&amp; pFar != nullptr) Camera::SetCameraNearFarD(*pNear, *pFar); // カメラ一番近くから遠くまで描くレンジ<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // このワールドに存在するカメラすべてに対して funcで描きたい処理を渡して 全カメラのスクリーンに対して描画処理を走らせる<br>
+      &nbsp;&nbsp;&nbsp; inline void Draw(std::function&lt;void()&gt; drawFunc) noexcept<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D beforeCamPos; // 設定変更前のカメラのパラメータを一旦、保管<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double beforeVRot, beforeHRot, beforeTRot, beforeNear, beforeFar, beforeFov;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Camera::GetCameraSettings(&amp;beforeCamPos, &amp;beforeVRot, &amp;beforeHRot, &amp;beforeTRot, &amp;beforeFov, &amp;beforeNear, &amp;beforeFar);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetCameraPositionAndAngle(this-&gt;pos, this-&gt;rot.V, this-&gt;rot.H, this-&gt;rot.T); // カメラの位置、回転を設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::Start(this-&gt;screenHandle, true, this-&gt;fovAngle); // カメラに関連付けられたscreenHandleのスクリーンを描画先にする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; drawFunc(); // 渡された描画処理を実行<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::End(true); // 描画先を元に戻す<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // カメラの設定をもとに戻しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Camera::SetCameraSettings(&amp;beforeCamPos, &amp;beforeVRot, &amp;beforeHRot, &amp;beforeTRot, &amp;beforeFov, &amp;beforeNear, &amp;beforeFar);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>MyMath.hを新規作成</code>して、プレイヤが歩き回るさいの計算に必要な円周率などの定数を定義しましょう。</p>
+    <p class="source">#ifndef MYMATH_H_<br>
+      #define MYMATH_H_<br>
+      <br>
+      // 数学関連クラス<br>
+      class MyMath<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // [<b>static constexprを使うことでstaticな定数を.hヘッダで初期化</b>] https://onihusube.hatenablog.com/entry/2019/06/30/230431<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; static constexpr float Sqrt2 = 1.41421356237f; // ルート2<br>
+      &nbsp;&nbsp;&nbsp; static constexpr float PI = 3.14159265359f; // 円周率<br>
+      &nbsp;&nbsp;&nbsp; static constexpr float Deg2Rad = PI / 180.0f; // 度からラジアンに変換する定数<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>Player.hを新規作成</code>して、ワールドを歩きまわるプレイヤをタイル分割画像でパラパラアニメ描画できるようにしましょう。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Resource.h"<br>
+      #include "MyHash.h" // hash32型でプレイヤが現在いるワールドのタグを管理する<br>
+      #include "Vector3.h"<br>
+      <br>
+      class World; // 前方宣言<br>
+      class Camera; // 前方宣言<br>
+      <br>
+      class Player<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Player(World* world, Pad pad, Vector3 position)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : pad{ pad }, world{ world }, position{ position }, velocity{ 0,0,0 }, force{0,0,0}<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Player";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Player() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★下記3つはメモリ上で共用状態になる(position、x,y,z、xyzどの名前から数値を変えたり読出してもメモリ上は同じ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 同じデータに3種類の名前を付けたイメージ、しかもVector3の機能や配列としてのアクセスの仕方もできて便利<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float x, y, z; }; // XYZ座標&nbsp; [匿名共用体とは] https://code.i-harness.com/ja-jp/q/4d437c<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 position; // XYZ座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
+      &nbsp;&nbsp;&nbsp; };// unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vx, vy, vz; }; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 velocity; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyz;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vxForce, vyForce, vzForce; }; // XYZ方向にかかる力(Unityでいうと AddForce関数 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 force; // XYZ方向の力(物理的には加速度:1フレームごとにvelocityの増える=加速する量)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyzForce;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; hash32 tag{ "" }; // プレイヤにつけるタグ<br>
+      &nbsp;&nbsp;&nbsp; World* world; // プレイヤを所有するワールドへのポインタ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Pad pad; // 操作するコントローラー番号<br>
+      &nbsp;&nbsp;&nbsp; hash32 worldTag{ "" }; // 現在いるワールドのタグ<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeedMax = 6; // 移動速度Max値<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeed = 0;//移動速度<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float moveAngle = 0; // X軸→方向から何度か<br>
+      &nbsp;&nbsp;&nbsp; float deltaAngle = 0; // プレイヤの動く角度の変化率、ハンドルを切ったらだんだんもとに戻る<br>
+      &nbsp;&nbsp;&nbsp; int animCount = 0;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; image; // プレイヤの板ポリゴンで描くタイル分割画像への共有リンク<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Camera* camera{ nullptr }; // プレイヤを追随するカメラ<br>
+      &nbsp;&nbsp;&nbsp; void SetCamera(Camera* pCamera) { camera = pCamera; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw();<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <p><code>Player.cppを新規作成</code>して、ワールドを歩きまわる処理を記述にしましょう。</p>
+    <p class="source">#include "Player.h"<br>
+      <br>
+      #include &lt;cmath&gt; // 浮動小数点の余り%演算子がC++にないのでfmodを使うため<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "MyDraw.h"<br>
+      <br>
+      #include "Camera.h"<br>
+      #include "World.h"<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      void Player::HandleInput()<br>
+      {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_LEFT) <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_A)) )<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = - MoveSpeed; // 左<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle += 1; //ハンドルを左に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_RIGHT)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_D)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle -= 1; //ハンドルを右に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_UP)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_W)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = - MoveSpeed; // 上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed += 0.6f; //アクセルを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &gt; MoveSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = MoveSpeedMax;//Maxスピードで止める<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (Input::GetButton(pad, PAD_INPUT_DOWN)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_S)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed -= 0.6f; //ブレーキを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &lt; -0.9f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = -0.9f;//ちょっとだけバックできるように<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (pad == Pad::Key || pad == Pad::One) // コントローラ1またはキーボード操作のプレイヤのときだけ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGUP)) // キーボードのPageUp ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = 2.0f; // テスト用に空中の上方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGDN)) // キーボードのPageDown ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -2.0f; // テスト用に空中の下方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      }<br>
+      <br>
+      <br>
+      // 更新処理<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; deltaAngle *= 0.5F; // 車のハンドルの方向をだんだんニュートラルに戻す<br>
+      &nbsp;&nbsp;&nbsp; MoveSpeed *= 0.9F; // 移動速度も減速する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理 <br>
+      &nbsp;&nbsp;&nbsp; HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; moveAngle += deltaAngle; // ハンドルを回したぶんプレイヤの進行方向を変える<br>
+      &nbsp;&nbsp;&nbsp; if (moveAngle &lt; -180) moveAngle = 360 + moveAngle; // -180以下の角度にならないようにマイナスになったら+180度にループさせる<br>
+      &nbsp;&nbsp;&nbsp; else if (moveAngle &gt; +180) moveAngle = -360 + moveAngle; // +180以下の角度にならないようにマイナスになったら-180度にループさせる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ↓進行方向角度をX方向とZ方向の速度に変える<br>
+      &nbsp;&nbsp;&nbsp; vx = (float)std::cos((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      &nbsp;&nbsp;&nbsp; vz = (float)std::sin((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 実際に位置を動かす<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // まず横に移動する<br>
+      &nbsp;&nbsp;&nbsp; x += vx;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次に縦に動かす<br>
+      &nbsp;&nbsp;&nbsp; y += vy;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次にZ奥行き方向に動かす<br>
+      &nbsp;&nbsp;&nbsp; z += vz;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; vy += vyForce; // 勢い(力・フォースを加算<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラのプレイヤ追尾<br>
+      &nbsp;&nbsp;&nbsp; float camDistance = 150; // プレイヤからカメラまでのY平面上の距離<br>
+      &nbsp;&nbsp;&nbsp; float camHeight = 100; // プレイヤからカメラまでのY方向上の高さ<br>
+      &nbsp;&nbsp;&nbsp; float camAngleX = (float)std::cos((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; float camAngleZ = (float)std::sin((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; if (camera != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // カメラの位置をプレイヤの進行方向と真逆に設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;SetPosition(position + Vector3(camAngleX, camHeight, camAngleZ));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;LookAt(position); //カメラはプレイヤの方を見る<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      // 描画処理<br>
+      void Player::Draw()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; int animIndex = animCount / 20; // キャラのパラパラアニメの画像番号(最大3)<br>
+      &nbsp;&nbsp;&nbsp; float abs_vx = (vx &gt; 0) ? vx : -vx; // x方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; float abs_vz = (vz &gt; 0) ? vz : -vz; // y方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; if (abs_vx &gt; 1.00f || abs_vz &gt; 1.00f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animCount += 6; // キャラが地面のXとZ方向に少しでもスピードがあったらアニメを走らせる<br>
+      &nbsp;&nbsp;&nbsp; if (animCount &gt;= 60) animCount = 0; // アニメ時間を0へループ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ワールドに存在するすべてのカメラに関連づいたスクリーンに対して描画する<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : world-&gt;cameras) // プレイヤのいるワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 常にカメラ方向を向くビルボード回転の角度を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D angle = MyDraw::GetAngle(DxLib::GetCameraBillboardMatrixD());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; angle.x = 0; angle.z = 0; // Y軸周りのビルボード回転だけ有効にする X軸,Z軸まわりの回転は 0 にする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imgIndex = 9; // キャラチップ画像の起点番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ビルボードの角度 と キャラの向いている向き の 差 によって、別のプレイヤのカメラから見たキャラチップの向きの画像を切り替える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // -180 ～ +180 : angle.y&nbsp; moveAngle : -180 ～ +180 ↓<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float difAngleY = angle.y * 180.0f / DX_PI_F + moveAngle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imgIndex = (difAngleY &lt; -135 || 135 &lt; difAngleY) ? 0 // カメラ向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &lt; -45) ? 6 // 右 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &gt; 45) ? 3&nbsp; // 左 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 9; // 奥向きの画像<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(MyDraw::Plane::Z, x, y, z, 1.0f, angle, *image, imgIndex + animIndex, TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+    </p>
+    <br>
+    <br>
+    <p><code>main.cppを変更</code>して、hash32でカメラをstd::vectorではなくstd::unordered_mapの辞書にhash32タグを振って管理してみましょう。</p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      #include "Screen.h"<br>
+      #include "Camera.h"<br>
+      #include "MyHash.h"<br>
+      #include "Resource.h"<br>
+      #include "MyDraw.h"<br>
+      <em>#include "Player.h"</em><br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ Width×Heightのカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ Width×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("3Dタイルゲーム");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; //↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // タイルマップを読み込む 縦8マス、横8マス、縦32ピクセル、横32ピクセル<br>
+      &nbsp;&nbsp;&nbsp; std::string mapChipPath{ "Map/mapchip.png" };<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath,8,8,32,32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>std::string playerImgPath1{ "Image/<b>pikkoron.png</b>" };<br>
+        &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath1, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; std::string playerImgPath2{ "Image/<b>satan.png</b>" };<br>
+        &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath2, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする</em><br>
+      <br>
+      &nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp; // SetDrawScreen に引数として渡せる( 描画対象として使用できる )グラフィックハンドルを作成するかどうかを設定する<br>
+      &nbsp;&nbsp;&nbsp; // ( TRUE:描画可能グラフィックハンドルを作成する&nbsp; FLASE:通常のグラフィックハンドルを作成する( デフォルト ) )<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // サブのスクリーンを2つ生成 画面の全体の縦方向サイズの Height / 2 にして、上下分割で配置できるようにする<br>
+      &nbsp;&nbsp;&nbsp; int screenHandle0 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; int screenHandle1 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーンを作成したらデフォルト設定に戻しておかないと<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// ワールドを生成<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;World&gt; world1 = std::make_shared&lt;World&gt;(nullptr, "ワールド1");</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラを2つ生成して、2つのカメラ視点を2つのスクリーンにそれぞれ関連付ける<br>
+      &nbsp;&nbsp;&nbsp; <u>std::unordered_map&lt;hash32, std::shared_ptr&lt;Camera&gt;&gt; cameras; // 複数のカメラへのポインタを格納するタグを振った辞書配列</u><br>
+      &nbsp;&nbsp;&nbsp; <em>world1-&gt;</em>cameras.emplace<em>(</em>"カメラ0", std::make_shared&lt;Camera&gt;(<em>world1.get(), </em>Vector3{ 20,40,-50 })); // カメラ0<br>
+      &nbsp;&nbsp;&nbsp; <em>world1-&gt;</em>cameras.emplace<em>(</em>"カメラ1", std::make_shared&lt;Camera&gt;(<em>world1.get(), </em>Vector3{ 80,30,-50 })); // カメラ1<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>world1-&gt;</em>cameras["カメラ0"]-&gt;screenHandle = screenHandle0; // カメラ0 と スクリーン0 を関連付ける<br>
+      &nbsp;&nbsp;&nbsp; <em>world1-&gt;</em>cameras["カメラ1"]-&gt;screenHandle = screenHandle1; // カメラ1 と スクリーン1 を関連付ける<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <em>world1-&gt;players.emplace("プレイヤ0", std::make_shared&lt;Player&gt;(world1.get(), Pad::Key, Vector3{ 20,30,-50 }));<br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players.emplace("プレイヤ1", std::make_shared&lt;Player&gt;(world1.get(), Pad::Two, Vector3{ 80,30,0 }));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players["プレイヤ0"]-&gt;SetCamera(world1-&gt;cameras["カメラ0"].get()); // .get()で共有ポインタstd::shared_ptrから生の*ポインタへ変換<br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players["プレイヤ1"]-&gt;SetCamera(world1-&gt;cameras["カメラ1"].get());<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players["プレイヤ0"]-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath1]);<br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players["プレイヤ1"]-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath2]);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Input::Init(); // 入力状態を初期化</em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle0); // 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>Input::Update(); // 入力状態を更新</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光の明暗計算を無効に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファを有効にする [Zの深度]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファへの書き込みを有効にする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetWriteZBuffer3D(TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// world1のプレイヤを更新する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; pair : world1-&gt;players)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer = pair.second;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer-&gt;Update();<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // world1のプレイヤを描画する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; pair : world1-&gt;players)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer = pair.second;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer-&gt;Draw();<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 複数のカメラを 範囲 for文 で回す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : cameras)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ラムダ式[&amp;](){ ～ }で{}の外側の変数すべてを &amp; キャプチャで&amp;参照として「Draw関数の内側へ引き連れて」処理できる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera.second-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Draw関数() の 外側にある変数 mapChipPath も[&amp;]効果で { } の内側で問題なくアクセスできている↓<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(40, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 2);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 70, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 4);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (camera.first == "カメラ0")<b> </b>//←"カメラ0"はビルド時に事前にハッシュ値が計算され、文字列ではない数値とおきかわっている<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらがカメラ0", GetColor(255, 0, 0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (camera.first == "カメラ1")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらはカメラ1", GetColor(0, 255, 0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スクリーン0の内容を画面に描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, 0, screenHandle0, FALSE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, 0, Screen::Width, Screen::Height / 2, GetColor(255, 0, 0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スクリーン1の内容を画面に描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, Screen::Height / 2, screenHandle1, FALSE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, Screen::Height / 2, Screen::Width, Screen::Height, GetColor(0, 255, 0));<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    <br>
+    いかがでしょう？実行したら、キーボードの上下左右矢印キーで上画面のプレイヤ0を、WASDキーで下画面のプレイヤ1を操作することができたでしょうか？<br>
+    worldを間にはさんだことで、cameraとplayerがworldのポインタを経由して互いのデータにアクセスできるため、<br>
+    違うキャラのカメラと自分のキャラの位置など、トリッキーなデータどうしのアクセスもworldを通してできるようになっています。<br>
+    また、違うワールドにいるときはカメラのforループでは違うワールドにあるカメラはfor文に引っかからないわけなので、<br>
+    別の世界にいるキャラは当然、描かれない仕組みがワールドの配下にcamaraやplayerのポインタが管理されることによって実現できています。<br>
   </body>
 </html>
