@@ -16,6 +16,7 @@
       <li><a href="#mozTocId0002">複数カメラと複数スクリーンで複数プレイヤ視点で3D空間を描けるようにする</a></li>
       <li><a href="#mozTocId0003">文字タグ判定の代わりに使えるハッシュ(32bit)でカメラにhash32タグをつけて管理する</a></li>
       <li><a href="#mozTocId0004">ワールドを定義して、複数プレイヤと複数カメラをワールドに保持する</a></li>
+      <li><a href="#mozTocId0005">シーンを定義して、ゲームシーンの中に複数ワールドを保持する</a></li>
     </ol>
     <br>
     <a id="mozTocId0001" class="mozTocH1">
@@ -1764,7 +1765,7 @@
       public:<br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
       &nbsp;&nbsp;&nbsp; Player(World* world, Pad pad, Vector3 position)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : pad{ pad }, world{ world }, position{ position }, velocity{ 0,0,0 }, force{0,0,0}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : pad{ pad }, m_world{ world }, position{ position }, velocity{ 0,0,0 }, force{0,0,0}<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;tag = "Player";<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -1794,7 +1795,13 @@
       &nbsp;&nbsp;&nbsp; };<br>
       <br>
       &nbsp;&nbsp;&nbsp; hash32 tag{ "" }; // プレイヤにつけるタグ<br>
-      &nbsp;&nbsp;&nbsp; World* world; // プレイヤを所有するワールドへのポインタ<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; World* m_world; // 配置されたワールドへのリンク<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドへのポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; virtual World* world() { return m_world; }<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドのポインタを変更する<br>
+      &nbsp;&nbsp;&nbsp; virtual void world(World* changeWorld) { m_world = changeWorld; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; Pad pad; // 操作するコントローラー番号<br>
       &nbsp;&nbsp;&nbsp; hash32 worldTag{ "" }; // 現在いるワールドのタグ<br>
@@ -1940,7 +1947,7 @@
       &nbsp;&nbsp;&nbsp; if (animCount &gt;= 60) animCount = 0; // アニメ時間を0へループ<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ワールドに存在するすべてのカメラに関連づいたスクリーンに対して描画する<br>
-      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : world-&gt;cameras) // プレイヤのいるワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : world()-&gt;cameras) // プレイヤのいるワールドにあるすべてのカメラぶんループ<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;Draw([&amp;]()<br>
@@ -2121,5 +2128,1088 @@
     違うキャラのカメラと自分のキャラの位置など、トリッキーなデータどうしのアクセスもworldを通してできるようになっています。<br>
     また、違うワールドにいるときはカメラのforループでは違うワールドにあるカメラはfor文に引っかからないわけなので、<br>
     別の世界にいるキャラは当然、描かれない仕組みがワールドの配下にcamaraやplayerのポインタが管理されることによって実現できています。<br>
+    <br>
+    <br>
+    <a id="mozTocId0005" class="mozTocH1">
+      <h1>シーンを定義して、ゲームシーンの中に複数ワールドを保持する</h1>
+    </a>
+    <p><code>前提として乱数クラスMyRandomを別記事から作成しておきます</code>←<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId20052">乱数で散乱弾を作成する</a><br>
+    </p>
+    <br>
+    つぎは、シーンを定義して、ワールドはGameSceneの中で複数保持できるように設計していきましょう。<br>
+    <br>
+    <p><code>Scene.hを新規作成</code>して、様々なシーンの基底ベースとなるクラスを定義します(UpdateやDrawなどを純粋仮想関数としてoverride必須にしておく)。<br>
+    </p>
+    <p class="source">#ifndef SCENE_H_<br>
+      #define SCENE_H_<br>
+      <br>
+      #include &lt;string&gt; // シーンの判別文字列tagに使う<br>
+      #include "MyHash.h" // hash32型をタグ判別に使う<br>
+      <br>
+      // シーンの基底クラス あいまいなabstract型タイプ(virtual ～() = 0;の純粋仮想関数を含む)<br>
+      class Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; std::string tag{ "" }; // シーンの判別に使う<br>
+      &nbsp;&nbsp;&nbsp; hash32 typeTag{ "" }; // シーンのタイプの判別に使う<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Scene(const std::string&amp; sceneTag = "") : tag{ sceneTag }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //仮想デストラクタ【忘れるとメモリがヤバいダメ絶対】<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Scene()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 特に配列とかなくても★string文字列も内部では実質配列だから！5文字分のメモリとかがすり減ってく..<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 仮想デストラクタはstringなど暗黙に内部に配列を持つ要素のデストラクタを暗黙に呼んでくれている！<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //★純粋仮想関数=0は継承したGameSceneなどの必須機能(継承したら絶対override必須縛り)<br>
+      &nbsp;&nbsp;&nbsp; // 必須縛りによってSceneを継承したものは【Update,Drawが実装されてるはずの確証があるので】<br>
+      &nbsp;&nbsp;&nbsp; // for文であいまいなSceneのまま【まとめてUpdate,Drawできる】のだ。<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Initialize() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 終了処理(大抵Initializeと同じくリセット処理を行うがInitと区別して終了時だけやりたいリセットもある)<br>
+      &nbsp;&nbsp;&nbsp; virtual void Finalize() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; //純粋仮想関数に(継承したらoverride必須)<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    次に、シーンを管理するマネージャーが欲しいので、シングルトンのテンプレートクラスを準備します。<br>
+    <p><code>Singleton.hを新規作成</code>して、シングルトンのテンプレートクラスを定義します。<br>
+    </p>
+    <p class="source">#ifndef SINGLETON_H_<br>
+      #define SINGLETON_H_<br>
+      <br>
+      // テンプレートT型シングルトンSingleton&lt;～&gt; ～になんでも指定して唯一物にできる<br>
+      // ★Singleton&lt;TypeT&gt;型は【必ず唯一で複製不可】(使い方:どこからでもアクセスし変数を共有するクラス向き)<br>
+      // ★ゲーム内の【どこからアクセスしても統一性が保たれる】(唯一だから)「クラス名と実体が一致」<br>
+      template&lt;class TypeT&gt;<br>
+      class Singleton<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // Instance()を通して【しか】T型クラスをつくれないうえに、<br>
+      &nbsp;&nbsp;&nbsp; // ★作ったものは【かならず唯一で複製不可】<br>
+      &nbsp;&nbsp;&nbsp; // それが【シングルトン型】！<br>
+      &nbsp;&nbsp;&nbsp; // ゲーム中で唯一で複製不可にしたい【ゲームを一律管理するクラス】などに最適！<br>
+      &nbsp;&nbsp;&nbsp; // https://teratail.com/questions/17416<br>
+      &nbsp;&nbsp;&nbsp; // http://rudora7.blog81.fc2.com/blog-entry-393.html<br>
+      &nbsp;&nbsp;&nbsp; // ②↓同じ関数の定義はプログラム全体で１つだけしか許されません。(static関数名は被らない)<br>
+      &nbsp;&nbsp;&nbsp; static inline TypeT&amp; Instance()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //①↓関数の中で定義されたstatic変数は、関数の定義毎に１つ領域が確保されます。<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; static TypeT instance; //メモリ上にstatic変数確保(静かに常に待機するinstance)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return instance; //①=(常駐)②=(唯一) ①と②両方満たすinstanceは【メモリ上に唯一】<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; Singleton() {} // 外部でのインスタンス作成は禁止(protected:内部公開、外部禁止)<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Singleton() {} // 仮想デストラクタ(シングルトンを【継承するためには忘れちゃダメ】)<br>
+      <br>
+      private:<br>
+      &nbsp;&nbsp;&nbsp; void operator=(const Singleton&amp; obj) {} // 代入演算子禁止<br>
+      &nbsp;&nbsp;&nbsp; Singleton(const Singleton&amp; obj) {} // コピーコンストラクタ禁止(コピーできない【唯一】)<br>
+      &nbsp;&nbsp;&nbsp; static TypeT* instance; // private:だから外部アクセスできない【GetInstance()経由しか無理】<br>
+      };<br>
+      <br>
+      // いつもcppで書いたstatic変数初期化も★【Tテンプレートクラスだからすべて.hヘッダにまとめて書いた】<br>
+      template&lt; class TypeT &gt;<br>
+      TypeT* Singleton&lt; TypeT &gt;::instance = 0; //cppでの定義を.h内に書いた(static変数はclass内で初期化できないから)<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>SceneManager.hを新規作成</code>して、シングルトンを継承してどこからでもアクセスできるマネージャを定義します。<br>
+    </p>
+    <p class="source">#ifndef SCNENEMANAGER_H_<br>
+      #define SCNENEMANAGER_H_<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      #include &lt;memory&gt;<br>
+      #include &lt;string&gt;<br>
+      #include &lt;assert.h&gt; // シーン読み込みの失敗表示用<br>
+      <br>
+      #include "MyHash.h" // hash32型でタグを管理する<br>
+      #include "Singleton.h"<br>
+      <br>
+      class Scene; //クラス宣言だけで★インクルードしないのでこのマネージャファイルで循環は止まる<br>
+      <br>
+      class SceneManager : public Singleton&lt;SceneManager&gt;//←&lt;～&gt;として継承すると唯一のシングルトン型タイプとなる<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; friend class Singleton&lt;SceneManager&gt;; // Singleton でのインスタンス作成は許可<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Scene&gt; prevScene{ nullptr }; // 一つ前のシーン<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Scene&gt; currentScene{ nullptr }; // 現在のシーン<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; hash32 currentSceneType{ "" }; // 現在のシーン名を保管しておく<br>
+      &nbsp;&nbsp;&nbsp; std::string currentSceneTag{ "" }; // 現在のシーンのタグを保管しておく<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; hash32 changingSceneType{ "" }; // 予約された次のシーンのクラス名(次に移動予定のシーン名を保管しておく)<br>
+      &nbsp;&nbsp;&nbsp; std::string changingSceneTag{ "" }; // 予約された次のシーンのタグ(次に移動予定のシーンのタグを保管しておく)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // シーン名を比較、何の変化もなければfalseでシーン移動不必要の判定<br>
+      &nbsp;&nbsp;&nbsp; bool isChanging(const std::string&amp; nextSceneType, const std::string&amp; nextSceneTag = "");<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次のシーンの予約だけしてLoadScene()を引数なしで呼び出したタイミングで遷移する(ループの途中じゃないキリのいいタイミングを狙って遷移させる)<br>
+      &nbsp;&nbsp;&nbsp; void NextScene(const std::string&amp; nextSceneName, const std::string&amp; nextSceneTag = "");<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // シーンをチェンジし遷移する(前のシーンのリセット処理もする)<br>
+      &nbsp;&nbsp;&nbsp; void LoadScene(const std::string&amp; sceneName = "", const std::string&amp; nextSceneTag = "");<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; SceneManager() {}; // 外部からのインスタンス作成は禁止<br>
+      &nbsp;&nbsp;&nbsp; virtual ~SceneManager() {}; //外部からのインスタンス破棄も禁止<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <p><code>SceneManager.cppを新規作成</code>して、先行してGameSceneなどをロード・切り替えする処理を先に書いておきます。<br>
+    </p>
+    <p class="source">#include "SceneManager.h"<br>
+      <br>
+      #include "Scene.h"<br>
+      #include "TitleScene.h"<br>
+      #include "GameScene.h"<br>
+      #include "GameOverScene.h"<br>
+      <br>
+      bool SceneManager::isChanging(const std::string&amp; nextSceneType, const std::string&amp; nextSceneTag)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (currentSceneType != nextSceneType) //シーンのタイプ不一致<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true; // シーンのタイプが変更<br>
+      &nbsp;&nbsp;&nbsp; if (currentSceneTag != nextSceneTag) //シーンのタグ不一致<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true; // シーンのタグが変更<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return false; // シーンに変更無し<br>
+      }<br>
+      <br>
+      void SceneManager::NextScene(const std::string&amp; nextSceneType, const std::string&amp; nextSceneTag)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 遷移予定nextシーン名と現在のシーン名を比較、何の変化もなければfalseでシーン移動不必要の判定<br>
+      &nbsp;&nbsp;&nbsp; if (isChanging(nextSceneType) == false) return; //特に変更なしでシーン移動の必要なし<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; changingSceneType = nextSceneType; // 次に移動予定のシーン名を保管しておく<br>
+      }<br>
+      <br>
+      void SceneManager::LoadScene(const std::string&amp; nextSceneType, const std::string&amp; nextSceneTag)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; hash32 loadSceneType = nextSceneType;<br>
+      &nbsp;&nbsp;&nbsp; std::string loadSceneTag = nextSceneTag;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // nextSceneTypeの指定が空の場合にはNextScene()での事前のシーン変更予約があるかチェック<br>
+      &nbsp;&nbsp;&nbsp; if (nextSceneType == "" &amp;&amp; changingSceneType != "")<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; loadSceneType = changingSceneType;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; loadSceneTag = changingSceneTag;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; if (loadSceneType == "") return; // シーン指定がないときは終了<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 現在のシーンの終了処理<br>
+      &nbsp;&nbsp;&nbsp; if (currentScene != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; currentScene-&gt;Finalize(); // 終了処理を呼び出す<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (loadSceneType == "TitleScene")<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 次のシーンの生成<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; currentScene = std::make_shared&lt;TitleScene&gt;(loadSceneTag);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (loadSceneType == "GameScene")<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 次のシーンの生成<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; currentScene = std::make_shared&lt;GameScene&gt;(loadSceneTag);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (loadSceneType == "GameOverScene")<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 次のシーンの生成<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; currentScene = std::make_shared&lt;GameOverScene&gt;(loadSceneTag);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert("指定されたシーンの生成処理が見つからなかった→SceneManager.cppを見直しましょう" == "");<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; currentSceneType = loadSceneType; // 現在のシーン名の更新<br>
+      &nbsp;&nbsp;&nbsp; currentSceneTag = loadSceneTag; // 現在のシーンのタグの更新<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; changingSceneType = ""; // NextScenceのシーン予約名をリセット<br>
+      &nbsp;&nbsp;&nbsp; changingSceneTag = ""; // NextScenceのシーン予約タグをリセット<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次のシーンの初期化<br>
+      &nbsp;&nbsp;&nbsp; currentScene-&gt;Initialize(); // 初期化を呼び出す<br>
+      }<br>
+    </p>
+    今回はシューティングのときと違って、初期化のときにシーンのタグを渡せるように設計しました。<br>
+    たとえば、同じ"GameScene"のシーンタイプでも、どのステージを遊ぶのかなどをタグを通して渡せれば、<br>
+    ステージごとにシーンタイプを増やして別定義しなくてすむようになりますし、柔軟性が増します。<br>
+    <br>
+    <p><code>TitleScene.hを新規作成</code>して、特に今回は処理を書きませんが実際に制作するときにはタイトル画面を実装するためのひな形だけ作っておきます。<br>
+    </p>
+    <p class="source">#ifndef TITLESCENE_H_<br>
+      #define TITLESCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      <br>
+      #include "SceneManager.h"<br>
+      <br>
+      class TitleScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; SceneManager&amp; sm = SceneManager::Instance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; TitleScene(const std::string&amp; sceneTag = "") : Scene(sceneTag)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "TitleScene";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; void Initialize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
+      &nbsp;&nbsp;&nbsp; void Finalize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(Pad::All, PAD_INPUT_1))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sm.LoadScene("GameScene"); //シーン遷移<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "TitleSceneです。ボタン押下でGameSceneへ。", GetColor(255, 255, 255));<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <p><code>GameOverScene.hを新規作成</code>して、特に今回は処理を書きませんが実際に制作するときにはゲームオーバー画面を実装するためのひな形だけ作っておきます。<br>
+    </p>
+    <p class="source">#ifndef GAMEOVERSCENE_H_<br>
+      #define GAMEOVERSCENE_H_<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      <br>
+      #include "SceneManager.h"<br>
+      <br>
+      class GameOverScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; SceneManager&amp; sm = SceneManager::Instance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; GameOverScene(const std::string&amp; sceneTag = "") : Scene(sceneTag)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "GameOverScene";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; void Initialize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
+      &nbsp;&nbsp;&nbsp; void Finalize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(Pad::All, PAD_INPUT_1))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sm.LoadScene("TitleScene"); //シーン遷移<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return; // シーンをロードしたらUpdateを即終了しないとUpdateの他の処理が走っちゃう<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "GameOver....ボタン押下でPlaySceneへ", GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    さて、今回の本題のGameSceneを作成する前に、シーンに関するセッティングをCSVファイルから読みだせるようにすれば、<br>
+    ゲームシーンに関する情報、例えば、ステージのマップのファイルの場所一覧、などをプランナがエクセルで管理でき、それをCSVに吐き出して、<br>
+    そのセッティングに合わせて、ゲームのシーンの初期化と同時に、ワールドのマップ読出しに必要な情報をCSVファイルから柔軟に得ることができます。<br>
+    <p><code>DaraCsv.hを新規作成</code>して、CSV形式のファイルをロードできるようにします。<br>
+    </p>
+    <p class="source">#ifndef DATACSV_H_<br>
+      #define DATACSV_H_<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      #include &lt;string&gt;<br>
+      <br>
+      #include &lt;fstream&gt; // ファイル読み出しifstreamに必要<br>
+      #include &lt;string&gt; //文字列に必要<br>
+      #include &lt;sstream&gt; // 文字列ストリームに必要<br>
+      <br>
+      #include &lt;assert.h&gt; // 読込み失敗表示用<br>
+      <br>
+      <br>
+      //★CsvValue型をint型や文字列string型や小数float型として【カメレオン】のように使える。<br>
+      // 【エクセルはマス目がカメレオン】整数も小数も文字列もありうる。<br>
+      // それを解消して統一して扱える便利な★CsvValue型。<br>
+      class CsvValue<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; enum class Type : unsigned char<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Int,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Float,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; String,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; NUM<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; Type type = Type::String;<br>
+      protected: // 内部データを書き換え禁止:書き換えられるとintと文字列とのずれが起きうる<br>
+      &nbsp;&nbsp;&nbsp; // エクセルのCsvデータはマス目がint,float,stringの3種類ありうる<br>
+      &nbsp;&nbsp;&nbsp; union {&nbsp; // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int intData = 0; // 整数int型データを格納<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float floatData; // 小数float型データを格納<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::string stringData{ "" }; // 文字列string型データを格納<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; CsvValue() = default;<br>
+      &nbsp;&nbsp;&nbsp; // 3種類のコンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; CsvValue(float floatData) : type{ Type::Float }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;floatData = floatData;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;stringData = std::to_string(floatData);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; CsvValue(const std::string&amp; stringData) : type{ Type::String }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;stringData = stringData;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; ~CsvValue() {}; // 仮想デストラクタ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; void operator=(const int&amp; intValue) // 代入演算子<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;intData = intValue;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; void copy(const CsvValue&amp; value)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; type = value.type;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (value.type == Type::Int) { this-&gt;intData = value.intData; this-&gt;stringData = std::to_string(value.intData); }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (value.type == Type::Float) { this-&gt;floatData = value.floatData; this-&gt;stringData = std::to_string(value.floatData); }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (value.type == Type::String) { this-&gt;stringData = value.stringData; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; void operator=(const CsvValue&amp; value) { copy(value); } // 代入演算子<br>
+      &nbsp;&nbsp;&nbsp; CsvValue(const CsvValue&amp; value) { copy(value); } // コピーコンストラクタ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 変換演算子によりCSVのセルをintとしてもstringとしても扱えるように<br>
+      &nbsp;&nbsp;&nbsp; // https://programming-place.net/ppp/contents/cpp/language/019.html#conversion_op<br>
+      &nbsp;&nbsp;&nbsp; // 3種類の読み取りオペレータ<br>
+      &nbsp;&nbsp;&nbsp; operator int()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (type == Type::Float) return (int)floatData;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (type == Type::String &amp;&amp; intData == 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; intData = intFromString(); // デフォルトで文字列として読込んだデータをintに変換<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return intData;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline operator float()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (type == Type::Int) return (float)intData;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (type == Type::String &amp;&amp; intData == 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; floatData = floatFromString(); // デフォルトで文字列として読込んだデータをfloatに変換<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return floatData;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline operator std::string() const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return stringData;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; int intFromString() // 文字列データからint型への変換する関数<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::istringstream ss(stringData); //文字列ストリームの初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int num; // 数字単体<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ss &gt;&gt; num; // 文字列ストリームから数字への変換<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return num;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; float floatFromString() // 文字列データからfloat型への変換する関数<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::istringstream ss(stringData); //文字列ストリームの初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float num; // 数字単体<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ss &gt;&gt; num; // 文字列ストリームから数字への変換<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return num;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      // CSVの1行を[]オペレータでアクセスした際1行のサイズが足りない場合に自動resizeする機能を[]オペレータに実装する<br>
+      struct CsvLine : public std::vector&lt;CsvValue&gt;<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; inline std::vector&lt;CsvValue&gt;&amp; operator[](std::size_t index) {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (index &gt;= size()) { resize(index + 1); }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return (*this)[index]; // 読み書き<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      // CSVファイルを読込み幅や高さとデータ本体を保持するデータ型<br>
+      struct DataCsv<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; enum class CsvType<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; IntMap,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; CsvValue<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; CsvType type;<br>
+      &nbsp;&nbsp;&nbsp; bool isInitialized = false; //[継承2重ロード対策]ベース基底でロードしたらtrueに<br>
+      &nbsp;&nbsp;&nbsp; // 読込んだデータファイルの情報<br>
+      &nbsp;&nbsp;&nbsp; std::string FilePath{ "" };<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;CsvLine&gt; Data;// csvデータ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ★スムーズに[][]でアクセスできるように[]演算子を独自定義する<br>
+      &nbsp;&nbsp;&nbsp; // https://www.hiramine.com/programming/c_cpp/operator.html<br>
+      &nbsp;&nbsp;&nbsp; inline std::vector&lt;CsvValue&gt;&amp; operator[](std::size_t index) { <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (index &gt;= Data.size())<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Data.resize(index + 1); // 範囲外アクセス時は自動リサイズ(使う人が大きな数字間違っていれるとやばいので注意)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Data[index]; // 読取り<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::size_t size()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // size()関数の名前をvectorと被らせることで使う側はvectorインvectorのままのコードで使える<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Data.size();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // 初期化コンストラクタでファイル名を指定して初期化と同時にファイル読込<br>
+      &nbsp;&nbsp;&nbsp; DataCsv(std::string FilePath = "", CsvType csvType = CsvType::IntMap) : type{csvType}, FilePath { FilePath }<br>
+      &nbsp;&nbsp;&nbsp; {// csvファイルの読込み★【初期化と同時なのでファイルとデータ型が一心同体で使いやすい】<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (FilePath != "")<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Load(FilePath, csvType); // ファイル読込み<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; virtual ~DataCsv()<br>
+      &nbsp;&nbsp;&nbsp; {// 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; clear();// 2次元配列データのお掃除<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // データをクリアしてメモリを節約する<br>
+      &nbsp;&nbsp;&nbsp; virtual void clear()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // [確実にメモリを空にするには] http://vivi.dyndns.org/tech/cpp/vector.html#shrink_to_fit<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::vector&lt;CsvLine&gt;().swap(Data); // 空のテンポラリオブジェクトでリセット<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isInitialized = false; //ロード済みフラグをOFF<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // csvファイルの読み込み<br>
+      &nbsp;&nbsp;&nbsp; virtual void Load(std::string filePath, CsvType csvType = CsvType::IntMap)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (filePath == "" || isInitialized) return; //ファイル名がないもしくはロード済<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;FilePath = filePath; // ファイル名を保管<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;type = csvType;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Data.clear(); //データを一旦クリア<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 読み込むcsvファイルを開く(std::ifstreamのコンストラクタで開く)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::ifstream ifs_csv_file(filePath);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::string line; //1行単位の読込み文字列<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int readWidth = 0, readHeight = 0; //読込みデータの幅と高さ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int maxWidth = 0; //今から読み込んだ時のMAXの幅<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; while (std::getline(ifs_csv_file, line)) // ファイルを行ごとに読み込む<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; CsvLine valuelist; // 1行の数字リスト<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::istringstream linestream(line); // 各行の文字列ストリーム<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::string splitted; // カンマ分割文字列<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int widthCount = 0; //この行の幅をカウント<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (this-&gt;type == CsvType::IntMap)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; while (std::getline(linestream, splitted, { ',' }))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::istringstream ss; //文字列ストリームの初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ss = std::istringstream(splitted); //文字列ストリーム<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int num; // 数字単体<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ss &gt;&gt; num; // 文字列ストリームから数字への変換<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; valuelist.push_back(CsvValue(num)); // 数字をリスト(1行リスト)に追加<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; widthCount++; //この行の幅をカウントアップ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (this-&gt;type == CsvType::CsvValue)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; while (std::getline(linestream, splitted, { ',' }))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (splitted.size() &gt; 1 &amp;&amp; splitted[0] == '\"')<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; splitted = splitted.substr(1, splitted.size() - 2);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; valuelist.emplace_back(splitted); // 数字を数字のリスト(1行リスト)に追加<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; widthCount++; //この行の幅をカウントアップ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (widthCount &gt; maxWidth) maxWidth = widthCount; //暫定Max幅を更新<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 1行分をvectorに追加<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (valuelist.size() != 0) Data.emplace_back(valuelist);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; readHeight++; //マップの高さをカウントアップ<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; readWidth = maxWidth; //MAX幅の王者を確定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert(readWidth &gt; 0); // マップ幅がおかしい<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert(readHeight &gt; 0); // マップ高さがおかしい<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // コンストラクタで初期化でロードの場合とLoad関数経由で読む経路があるから<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isInitialized = true; // 読込み初期化済みフラグをON<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>Mapフォルダの中にGameSceneSetting.csvを新規作成</code>して、下記内容のcsvのデータで、シーン1というタグでGameSceneを初期生成するとき、<br>
+      ステージ1というタグのついたワールドにMap/stage1.jsonから読みだしたマップを読み出し生成する、という情報を記述し保存しておきましょう。(マップのjson読み出しはのちの章でやる予定です)<br>
+    </p>
+    <p class="source">"//","GameSceneでシーン名を指定するとその行以降をそのシーンで使うworldsとしてロードする",,,,<br>
+      "GameScene","シーン1",,,,<br>
+      "ステージ1","Map/stage1.json",,,,<br>
+      <br>
+    </p>
+    <br>
+    <br>
+    <p><code>GameScene.hを新規作成</code>して、ゲームを実際にUpdateしたりDrawしたりするためのシーンを定義しましょう(ワールドの定義もシーンの中にある)。<br>
+    </p>
+    <p class="source">#ifndef GAMESCENE_H_<br>
+      #define GAMESCENE_H_<br>
+      <br>
+      #include &lt;memory&gt; // 共有ポインタ std::shared_ptrを使う<br>
+      #include &lt;unordered_map&gt; // ワールドにタグをつけて複数のワールドを管理 複数あれば(扉→別マップへの移動→元のマップへ戻っても敵が消えずに残せる)<br>
+      <br>
+      #include "Scene.h"<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Resource.h"<br>
+      #include "Screen.h"<br>
+      #include "Camera.h"<br>
+      #include "DataCsv.h"<br>
+      <br>
+      #include "SceneManager.h"<br>
+      <br>
+      struct GameSceneSetting // ゲームシーン情報をGameSceneSetting.csvなどから読みだす<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; GameSceneSetting(const std::string&amp; csvFileName = "")<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (csvFileName != "") Load(csvFileName);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; ~GameSceneSetting() {}; //デストラクタ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; struct WorldTag_Path<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WorldTag_Path() = default;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inline WorldTag_Path(const std::string&amp; tag, const std::string&amp; mapFilePath) : tag{ tag }, mapFilePath{ mapFilePath } {}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inline ~WorldTag_Path() {}<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string tag{ "" }; // ワールドにつけるtag<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string mapFilePath{ "" }; // マップのファイルパス<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; struct Info : public std::unordered_map&lt;hash32, WorldTag_Path&gt; // &lt;ワールド名のタグ, ワールドのファイルパス&gt;<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Info() = default;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inline Info(const std::string&amp; gameSceneTag) : gameSceneTag{ gameSceneTag } {};<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ~Info() {};<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string gameSceneTag{ "" }; // シーン名のタグ<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, Info&gt; info; //[辞書]シーン名のタグ → ワールド情報<br>
+      &nbsp;&nbsp;&nbsp; bool isInitialized = false; //[継承2重ロード対策]<br>
+      &nbsp;&nbsp;&nbsp; std::string FilePath{ "" }; // csvのファイルパス<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Info&amp; operator[](const std::string&amp; gameSceneTag) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(info.count(gameSceneTag) != 0 &amp;&amp; "シーン情報が読み取れていません Map/GameSceneSettings.csv に情報があるか確認！");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return info[gameSceneTag]; // 読み書き<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; void Load(const std::string&amp; csvFileName = "")<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isInitialized) return; // 2重ロード対策<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (csvFileName != "") this-&gt;FilePath = csvFileName;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;FilePath == "") return;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DataCsv Data; // マップ情報一覧のデータ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Data.Load(csvFileName, DataCsv::CsvType::CsvValue);// CSVファイルからデータをロード<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string gameSceneTag; //ゲームシーン名<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; Data.size(); ++j)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if ((std::string)Data[j][0] == "//") continue; // 一番左の列が//なら読み飛ばしのコメント行<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if ((std::string)Data[j][0] == "GameScene")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gameSceneTag = Data[j][1]; //ゲームシーン名<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; info.emplace(std::piecewise_construct, std::forward_as_tuple(gameSceneTag), std::forward_as_tuple(gameSceneTag));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; continue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (gameSceneTag == "") continue; //ステージファイル名が未確定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if ((std::string)Data[j][0] != "")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; info[gameSceneTag][(std::string)Data[j][0]] = std::move(WorldTag_Path(Data[j][0], Data[j][1])); //ワールド名 → ワールドのファイルのパスを読み取り<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isInitialized = true;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      <br>
+      class GameScene : public Scene<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; static GameSceneSetting settings; // ゲームシーンの設定情報 デフォルトは{ "Map/GameSceneSetting.csv" } を読み取り<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; SceneManager&amp; sm = SceneManager::Instance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;World&gt;&gt; worlds; // 複数ワールドの共有ポインタ辞書<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // ワールドをタグをつけて生成する<br>
+      &nbsp;&nbsp;&nbsp; void CreateWorld(const std::string&amp; worldTag) { if (worlds.count(worldTag) == 0) { worlds.emplace(worldTag, std::make_shared&lt;World&gt;(this, worldTag)); } }<br>
+      &nbsp;&nbsp;&nbsp; // タグからワールドへのポインタリンクを得る<br>
+      &nbsp;&nbsp;&nbsp; World* world(const std::string&amp; worldTag) { auto itr = worlds.find(worldTag); return (itr != end(worlds)) ? itr-&gt;second.get() : nullptr; }<br>
+      &nbsp;&nbsp;&nbsp; // 指定したゲームシーンのタグに関連づいたファイル名に対応したワールドを初期化する<br>
+      &nbsp;&nbsp;&nbsp; bool LoadWorlds(const std::string&amp; gameSceneTag);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // プレイヤはタイトル画面などでも初期選択できるようにあえてworld配下の管理ではなく<br>
+      &nbsp;&nbsp;&nbsp; // GameScene配下の管理でゲーム開始時から直接生成できるようにここに定義<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;Player&gt;&gt; players; // &lt;タグ,プレイヤへの共有ポインタ&gt;辞書[複数プレイヤ可能]<br>
+      &nbsp;&nbsp;&nbsp; void ChangeWorld(const std::string&amp; worldTag, std::shared_ptr&lt;Player&gt; pPlayer); // プレイヤのいるワールドを移動する<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; int score = 0; // プレイ中のゲームのスコア:短期的数値でシーン遷移ごとにリセットされる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; GameScene(const std::string&amp; sceneTag = "") : Scene(sceneTag)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "GameScene";<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;tag != "") // this-&gt;tag には : Scene(sceneTag) 経由で sceneTag が設定されている<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LoadWorlds(this-&gt;tag); // GameSceneSetting.csv に設定したタグに対応したファイルをロード<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; void Initialize() override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 終了処理(大抵Initializeと同じリセットだがInitと区別して終了時だけやりたいリセットもある)<br>
+      &nbsp;&nbsp;&nbsp; void Finalize() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ここにプレイ終了時のリセット処理(ゲームクリアやゲームオーバーなど)<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override;<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>GameScene.cppを新規作成</code>して、ゲームをUpdateしたりDrawしたりする処理を実装しましょう。<br>
+    </p>
+    <p class="source">#include "GameScene.h"<br>
+      <br>
+      #include "Player.h"<br>
+      <br>
+      GameSceneSetting GameScene::settings{ "Map/GameSceneSetting.csv" }; // ゲームシーンの設定情報<br>
+      <br>
+      // 指定したゲームシーンのタグに関連づいたファイル名に対応したワールドを初期化する<br>
+      bool GameScene::LoadWorlds(const std::string&amp; gameSceneTag)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (settings.info.count(gameSceneTag) == 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto&amp; info = settings[gameSceneTag];<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; tag_mapPath : info)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CreateWorld(tag_mapPath.second.tag); // ワールドをタグをつけて生成<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      void GameScene::ChangeWorld(const std::string&amp; worldTag, std::shared_ptr&lt;Player&gt; pPlayer)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (pPlayer == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp; if (worlds.count(worldTag) == 0) return; // 存在しないタグだった<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; pPlayer-&gt;world(worlds[worldTag].get()); // ワールドへのリンクをすげ替える<br>
+      }<br>
+      <br>
+      <br>
+      void GameScene::Initialize()<br>
+      {// Init処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // Ｚバッファを有効にする [Zの深度]<br>
+      &nbsp;&nbsp;&nbsp; //[参考]https://docs.google.com/presentation/d/1Z23t1yAS7uzPDVakgW_M02p20qt9DeTs4ku4IiMDLco/edit?usp=sharing<br>
+      &nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp; // Ｚバッファへの書き込みを有効にする<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWriteZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp; // 光の明暗計算を無効に<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // SetDrawScreen に引数として渡せる( 描画対象として使用できる )グラフィックハンドルを作成するかどうかを設定する<br>
+      &nbsp;&nbsp;&nbsp; // ( TRUE:描画可能グラフィックハンドルを作成する&nbsp; FLASE:通常のグラフィックハンドルを作成する( デフォルト ) )<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // サブのスクリーンを2つ生成 画面の全体の縦方向サイズの Height / 2 にして、上下分割で配置できるようにする<br>
+      &nbsp;&nbsp;&nbsp; screenHandle0 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; screenHandle1 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーンを作成したらデフォルト設定に戻しておかないと<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(FALSE);<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath, 8, 8, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath1, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath2, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // プレイヤの生成<br>
+      &nbsp;&nbsp;&nbsp; if (pWorld != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //pWorld-&gt;AddCamera("プレイヤ1", Camera::defaultCamera); // プレイヤ1というタグをデフォルトカメラにつけてワールドにデフォルトカメラを配置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("プレイヤ1", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera1 = pWorld-&gt;camera("プレイヤ1"); // プレイヤ1 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera1-&gt;SetScreenHandle(screenHandle0); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer1 = std::make_shared&lt;Player&gt;(pWorld, Pad::Key, Vector3(90 + 256, 32, 95 + 256));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ1", pPlayer1); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath1]);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;camera = pCamera1.get(); // カメラをプレイヤにリンクする<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("プレイヤ2", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera2 = pWorld-&gt;camera("プレイヤ2"); // プレイヤ2 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera2-&gt;SetScreenHandle(screenHandle1); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer2 = std::make_shared&lt;Player&gt;(pWorld, Pad::Two, Vector3(190, 32, 195));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ2", pPlayer2); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath2]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;camera = pCamera2.get(); // カメラをプレイヤにリンクする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      <br>
+      void GameScene::Update()<br>
+      {// 更新処理<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle0); // 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Input::Update(); // 入力状態を更新<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; for (const auto&amp; player : players)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; player.second-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+      <br>
+      }<br>
+      <br>
+      void GameScene::Draw()<br>
+      {// 描画処理<br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; for (const auto&amp; player : players)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; player.second-&gt;Draw(); // プレイヤの描画【忘れるとプレイヤ表示されない】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // プレイヤのいるワールドのカメラのみを描けば、プレイヤのいないワールドは描かずに済む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 複数のカメラを 範囲 for文 で回す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : player.second-&gt;world()-&gt;cameras)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ラムダ式[&amp;](){ ～ }で{}の外側の変数すべてを &amp; キャプチャで&amp;参照として「Draw関数の内側へ引き連れて」処理できる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera.second-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Draw関数() の 外側にある変数 mapChipPath も[&amp;]効果で { } の内側で問題なくアクセスできている↓<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(40, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 2);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 70, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 8);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (camera.first == "プレイヤ1")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらがプレイヤ1", GetColor(255, 0, 0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (camera.first == "プレイヤ2")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらはプレイヤ2", GetColor(0, 255, 0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーン0の内容を画面に描く<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, 0, screenHandle0, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, 0, Screen::Width, Screen::Height / 2, GetColor(255, 0, 0));<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーン1の内容を画面に描く<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, Screen::Height / 2, screenHandle1, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, Screen::Height / 2, Screen::Width, Screen::Height, GetColor(0, 255, 0));<br>
+      <br>
+      }<br>
+    </p>
+    さて、このまま、main.cppでシーンを直接Update、Drawしていいものか？<br>
+    なぜなら、タイトルシーンやゲームオーバー、ゲーム中のシーンで共通するような処理はあるでしょうから、<br>
+    シーンとmain.cppの間にもう一つGameというクラスをはさんで、共通の処理はそちらにさせるようにしましょう。<br>
+    <br>
+    <br>
+    <p><code>Game.hを新規作成</code>して、各シーンで共通する処理をUpdateしたりDrawしたりする処理を実装しましょう。<br>
+    </p>
+    <p class="source">#ifndef GAME_H_<br>
+      #define GAME_H_<br>
+      <br>
+      #include "SceneManager.h"<br>
+      #include "Scene.h"<br>
+      #include "MyRandom.h"<br>
+      #include "Input.h"<br>
+      <br>
+      class Game<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; Game() {}; // 初期化コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; ~Game() {}; // 破棄処理デストラクタ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
+      &nbsp;&nbsp;&nbsp; SceneManager&amp; sm = SceneManager::Instance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; void Init()<br>
+      &nbsp;&nbsp;&nbsp; {// Init処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Input::Init(); // 入力機能の初期化<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数のシードを現時点の時刻に連動して初期化<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ゲーム開始して最初のシーンに遷移<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.LoadScene("<b>GameScene</b>", "<b>シーン1</b>");<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; void Update() {// 更新処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Input::Update(); //【注意】これ忘れるとキー入力押してもキャラ動かない<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // シーンの更新処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.currentScene-&gt;Update();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // NextScene関数で次のシーン移動予約があったらシーンを移動する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.LoadScene(); // 引数無し呼び出しの場合、事前に NextScene関数で予約がない場合はスルーされる<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; void Draw()<br>
+      &nbsp;&nbsp;&nbsp; {// 描画処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // シーンの描画処理<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sm.currentScene-&gt;Draw();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>main.cppを変更</code>して、Gameクラスを通じてシーンをInit、Update、Drawしましょう。</p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      <em>#include "Game.h"</em><br>
+      <br>
+      #include "Screen.h"<br>
+      <u>#include "Camera.h"<br>
+        #include "MyHash.h"<br>
+        #include "Resource.h"<br>
+        #include "MyDraw.h"<br>
+        #include "Player.h"</u><br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ Width×Heightのカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ Width×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("3Dタイルゲーム");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; //↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 初期化処理<br>
+        &nbsp;&nbsp;&nbsp; Game game;<br>
+        &nbsp;&nbsp;&nbsp; game.Init(); // gameのInit準備</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <u>// タイルマップを読み込む 縦8マス、横8マス、縦32ピクセル、横32ピクセル<br>
+        &nbsp;&nbsp;&nbsp; std::string mapChipPath{ "Map/mapchip.png" };<br>
+        &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath,8,8,32,32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; std::string playerImgPath1{ "Image/pikkoron.png" };<br>
+        &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath1, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; std::string playerImgPath2{ "Image/satan.png" };<br>
+        &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath2, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+        <br>
+        &nbsp;&nbsp; &nbsp;<br>
+        &nbsp;&nbsp;&nbsp; // SetDrawScreen に引数として渡せる( 描画対象として使用できる )グラフィックハンドルを作成するかどうかを設定する<br>
+        &nbsp;&nbsp;&nbsp; // ( TRUE:描画可能グラフィックハンドルを作成する&nbsp; FLASE:通常のグラフィックハンドルを作成する( デフォルト ) )<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(TRUE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // サブのスクリーンを2つ生成 画面の全体の縦方向サイズの Height / 2 にして、上下分割で配置できるようにする<br>
+        &nbsp;&nbsp;&nbsp; int screenHandle0 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+        &nbsp;&nbsp;&nbsp; int screenHandle1 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // スクリーンを作成したらデフォルト設定に戻しておかないと<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(FALSE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // ワールドを生成<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;World&gt; world1 = std::make_shared&lt;World&gt;(nullptr, "ワールド1");<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // カメラを2つ生成して、2つのカメラ視点を2つのスクリーンにそれぞれ関連付ける<br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;cameras.emplace("カメラ0", std::make_shared&lt;Camera&gt;(world1.get(), Vector3{ 20,40,-50 })); // カメラ0<br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;cameras.emplace("カメラ1", std::make_shared&lt;Camera&gt;(world1.get(), Vector3{ 80,30,-50 })); // カメラ1<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;cameras["カメラ0"]-&gt;screenHandle = screenHandle0; // カメラ0 と スクリーン0 を関連付ける<br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;cameras["カメラ1"]-&gt;screenHandle = screenHandle1; // カメラ1 と スクリーン1 を関連付ける<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players.emplace("プレイヤ0", std::make_shared&lt;Player&gt;(world1.get(), Pad::Key, Vector3{ 20,30,-50 }));<br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players.emplace("プレイヤ1", std::make_shared&lt;Player&gt;(world1.get(), Pad::Two, Vector3{ 80,30,0 }));<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players["プレイヤ0"]-&gt;SetCamera(world1-&gt;cameras["カメラ0"].get()); // .get()で共有ポインタstd::shared_ptrから生の*ポインタへ変換<br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players["プレイヤ1"]-&gt;SetCamera(world1-&gt;cameras["カメラ1"].get());<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players["プレイヤ0"]-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath1]);<br>
+        &nbsp;&nbsp;&nbsp; world1-&gt;players["プレイヤ1"]-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath2]);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Input::Init(); // 入力状態を初期化</u><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>game.Update(); //ゲームの更新処理<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; game.Draw(); // パラパラ漫画の描画処理</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle0); // 一旦キャンバスをきれいにまっさらに<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦キャンバスをきれいにまっさらに<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Input::Update(); // 入力状態を更新<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 光の明暗計算を無効に<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(FALSE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファを有効にする [Zの深度]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Ｚバッファへの書き込みを有効にする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::SetWriteZBuffer3D(TRUE);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // world1のプレイヤを更新する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; pair : world1-&gt;players)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer = pair.second;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer-&gt;Update();<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // world1のプレイヤを描画する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; pair : world1-&gt;players)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer = pair.second;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer-&gt;Draw();<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 複数のカメラを 範囲 for文 で回す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : cameras)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ラムダ式[&amp;](){ ～ }で{}の外側の変数すべてを &amp; キャプチャで&amp;参照として「Draw関数の内側へ引き連れて」処理できる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera.second-&gt;Draw([&amp;]()<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Draw関数() の 外側にある変数 mapChipPath も[&amp;]効果で { } の内側で問題なくアクセスできている↓<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(40, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 2);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 0);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 70, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 4);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (camera.first == "カメラ0") //←"カメラ0"はビルド時に事前にハッシュ値が計算され、文字列ではない数値とおきかわっている<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらがカメラ0", GetColor(255, 0, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (camera.first == "カメラ1")<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらはカメラ1", GetColor(0, 255, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スクリーン0の内容を画面に描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, 0, screenHandle0, FALSE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, 0, Screen::Width, Screen::Height / 2, GetColor(255, 0, 0));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // スクリーン1の内容を画面に描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, Screen::Height / 2, screenHandle1, FALSE);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, Screen::Height / 2, Screen::Width, Screen::Height, GetColor(0, 255, 0));</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    <br>
+    いかがでしょう？無事、2つのプレイヤから見える世界が映し出され、操作できましたか？<br>
+    Gameクラスに任せることで、main.cppはすっきり見通しがよくなりました。<br>
+    <br>
+    
   </body>
 </html>
