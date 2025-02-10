@@ -17,6 +17,7 @@
       <li><a href="#mozTocId0003">文字タグ判定の代わりに使えるハッシュ(32bit)でカメラにhash32タグをつけて管理する</a></li>
       <li><a href="#mozTocId0004">ワールドを定義して、複数プレイヤと複数カメラをワールドに保持する</a></li>
       <li><a href="#mozTocId0005">シーンを定義して、ゲームシーンの中に複数ワールドを保持する</a></li>
+      <li><a href="#mozTocId0006">MyTimerクラスでchronoから得た時刻でゲームの描画のFPSを管理する</a></li>
     </ol>
     <br>
     <a id="mozTocId0001" class="mozTocH1">
@@ -55,7 +56,7 @@
       &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath,8,8,32,32)-&gt;Load(); // <b>メソッドチェーン</b> -&gt; でMakeShared読込後にLoadもする<br>
       <br>
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0)<br>
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       <br>
@@ -420,7 +421,7 @@
       <em></em><br>
       <br>
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0)<br>
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       <br>
@@ -480,7 +481,7 @@
       &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath,8,8,32,32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込語にLoadもする<br>
       <br>
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0)<br>
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       <br>
@@ -885,7 +886,7 @@
         &nbsp;&nbsp;&nbsp; cameras[1]-&gt;screenHandle = screenHandle1; // カメラ1 と スクリーン1 を関連付ける</em><br>
       &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0)<br>
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       <br>
@@ -1281,7 +1282,7 @@
       &nbsp;&nbsp; &nbsp;<br>
       <br>
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0)<br>
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       <br>
@@ -2050,7 +2051,7 @@
       &nbsp;&nbsp;&nbsp; <br>
       <br>
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0)<br>
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       <br>
@@ -2934,7 +2935,6 @@
       <br>
       void GameScene::Update()<br>
       {// 更新処理<br>
-      &nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
       <br>
       &nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle0); // 一旦キャンバスをきれいにまっさらに<br>
       &nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦キャンバスをきれいにまっさらに<br>
@@ -3000,6 +3000,7 @@
     <p class="source">#ifndef GAME_H_<br>
       #define GAME_H_<br>
       <br>
+      #include "Screen.h"<br>
       #include "SceneManager.h"<br>
       #include "Scene.h"<br>
       #include "MyRandom.h"<br>
@@ -3016,6 +3017,12 @@
       <br>
       &nbsp;&nbsp;&nbsp; void Init()<br>
       &nbsp;&nbsp;&nbsp; {// Init処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 各種Init中に、<b>ユーザーにお待ちいただく間、不安を和らげるためのメッセージをScreenFlipで表示</b>してからInit開始<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::string loadingStr("ゲーム起動中...&nbsp; 必要なファイルをロードしています");<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int strSize = DxLib::GetFontSize() * loadingStr.size();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawString(Screen::Width / 2 - strSize / 2, Screen::Height / 2, loadingStr.c_str(), GetColor(255, 255, 255));<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
       <br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Input::Init(); // 入力機能の初期化<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; MyRandom::Init(); // 乱数のシードを現時点の時刻に連動して初期化<br>
@@ -3129,12 +3136,13 @@
       &nbsp;&nbsp;&nbsp; <br>
       <br>
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0)<br>
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>game.Update(); //ゲームの更新処理<br>
-        <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; game.Draw(); // パラパラ漫画の描画処理</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; game.Draw(); // パラパラ漫画の描画処理</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
         <br>
@@ -3210,6 +3218,379 @@
     いかがでしょう？無事、2つのプレイヤから見える世界が映し出され、操作できましたか？<br>
     Gameクラスに任せることで、main.cppはすっきり見通しがよくなりました。<br>
     <br>
-    
+    <a id="mozTocId0006" class="mozTocH1">
+      <h1>MyTimerクラスでchronoから得た時刻でゲームの描画のFPSを管理する</h1>
+    </a> さて、板ポリとはいえ3Dを描画するので、描画のフレームレート[単位 FPS:Frame Per Second]を管理したいところです。<br>
+    <p><code>MyTimer.hを新規作成</code>して、chrono経由で現在時刻などを計測できる機能をシングルトンとして準備しましょう。</p>
+    <p class="source">#ifndef MYTIMER_H_<br>
+      #define MYTIMER_H_<br>
+      <br>
+      <br>
+      #include &lt;chrono&gt; // 精度の高い時刻を得る(C++ならWindows,Macなど色んな環境で使える)<br>
+      #include &lt;thread&gt; // 処理休止sleep_forするために必要<br>
+      #include &lt;string&gt; // 文字列string型に必要<br>
+      #include &lt;sstream&gt; // ostringstreamに必要 標準出力(ostringstreamで文字列に標準出力を)<br>
+      #include &lt;iomanip&gt; // 時間の文字列出力put_time()に必要<br>
+      <br>
+      #include "Singleton.h"<br>
+      <br>
+      // マルチプラットフォーム対応のchrono使用の時刻取り扱いクラス(C++11対応なら移植容易)<br>
+      class MyTimer : public Singleton&lt;MyTimer&gt;<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp; &nbsp;friend class Singleton&lt;MyTimer&gt;; // Singleton でのインスタンス作成は許可<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 最初にsystem_clockとsteady_clockの両方で現在時間を取得<br>
+      &nbsp;&nbsp; &nbsp;// ★system_clockは【WindowなどOSの時刻(ユーザーが変更したら巻き戻しもありうる)】<br>
+      &nbsp;&nbsp; &nbsp;// ★steady_clockは【↑OSに依存しない時刻(不可逆なので時間計測に向いている)】<br>
+      &nbsp;&nbsp; &nbsp;std::chrono::system_clock::time_point systemInitTime = std::chrono::system_clock::now();<br>
+      &nbsp;&nbsp; &nbsp;std::chrono::steady_clock::time_point steadyInitTime = std::chrono::steady_clock::now();<br>
+      &nbsp;&nbsp; &nbsp;std::chrono::steady_clock::time_point steadyNowTime = std::chrono::steady_clock::now();<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;std::chrono::system_clock::time_point systemTimeFromStart = UpdateSystemTimeFromStart();<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 時刻を保管する文字列【注意】UpdateSystemTimeFromStart()呼ばないうちは最新に更新されない<br>
+      &nbsp;&nbsp; &nbsp;std::string timeStringSystemClock = GetTimeString("%Y年%m月%d日%H時%M分%S秒");<br>
+      &nbsp;&nbsp; &nbsp;float timeScale = 1.0f;//[実験機能]main.cppで画面を描く速度と連動させてスローモーションや早送りも<br>
+      &nbsp;&nbsp; &nbsp;bool isTimeScaleMode = false; //[実験機能]スローモーション、早送りモードをON OFF<br>
+      <br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 起動時間の記録の初期化/リセット(Initし直せば再取得もできる)<br>
+      &nbsp;&nbsp; &nbsp;inline void Init()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // 最初にsystem_clockとsteady_clockの両方で現在時間を取得(再取得も)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; systemInitTime = std::chrono::system_clock::now();<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; steadyInitTime = <b>std::chrono::steady_clock::now();</b><br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 現時刻をOSに左右されず求める(計算結果はsystemTimeFromStartに保管)<br>
+      &nbsp;&nbsp; &nbsp;inline std::chrono::system_clock::time_point <b>UpdateSystemTimeFromStart</b>()<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; steadyNowTime = <b>std::chrono::steady_clock::now(); //現時刻を得る(OSの時刻じゃない方)</b><br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // <b>開始時のsteady_clock::nowとの差</b>をとって、開始時のsystem_clock::nowに足す<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // [参考] https://techblog.kayac.com/steady_clock<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; systemTimeFromStart =<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; systemInitTime + std::chrono::duration_cast&lt;std::chrono::seconds&gt;(<b>steadyNowTime - steadyInitTime</b>);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return systemTimeFromStart;<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 現時刻を特定の文字列フォーマットで得る(得たものはsteadyNowTimeとtimeStringSystemClockに保管)<br>
+      &nbsp;&nbsp; &nbsp;// 出力は"%c"ならフォーマットは[Mon Nov 27 10:58:32 2017]<br>
+      &nbsp;&nbsp; &nbsp;// "%Y年%m月%d日%H時%M分%S秒"なら[2020年12月11日14時30分15秒](デフォルト)<br>
+      &nbsp;&nbsp; &nbsp;// [フォーマット例] https://cpprefjp.github.io/reference/chrono/local_time.html<br>
+      &nbsp;&nbsp; &nbsp;inline std::string&amp; GetTimeString(const char* timeStringFormat = "%Y年%m月%d日%H時%M分%S秒")<br>
+      &nbsp;&nbsp; &nbsp;{<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; systemTimeFromStart = UpdateSystemTimeFromStart();//現時刻をOS時刻に左右されず得る<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // 時刻タイプ型をsystem_clockのtime_point型からtime_t型に変換する。<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::time_t timeFromStart = std::chrono::system_clock::to_time_t(systemTimeFromStart);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // ローカルタイムを得る(ローカルタイムについては以下リンク参照)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // https://programming.pc-note.net/c/time.html<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; struct tm localTimeFromStart;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; localtime_s(&amp;localTimeFromStart, &amp;timeFromStart);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //【ostringstream】は文字列ストリームに&lt;&lt;演算子などの方法でデータを流し込んでいく<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // https://programming-place.net/ppp/contents/cpp/library/029.html#write_to_string_stream<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::ostringstream oss;<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //↓この一行で文字列ストリームに流し込み<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; oss &lt;&lt; std::put_time(&amp;localTimeFromStart, timeStringFormat) &lt;&lt; std::endl;<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; timeStringSystemClock = oss.std::ostringstream::str(); //str()で文字列string化して保管<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return timeStringSystemClock; //現時刻を文字列として返す<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// Initしてから現在までの経過時間を得る(単位Tick = 100ナノ秒 = 1/10000000秒)<br>
+      &nbsp;&nbsp; &nbsp;inline long GetElapsedTicks()<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// 時刻を更新<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; <b>UpdateSystemTimeFromStart</b>();<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // Initしてから現在までの経過時間(ナノ秒)<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; auto durationFromInit = std::chrono::duration_cast&lt;std::chrono::nanoseconds&gt;(steadyNowTime - steadyInitTime);<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; // Tick数。1Tick = 100ナノ秒 = 1/10000000秒<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return (long)(durationFromInit.count() / 100);<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 指定ナノ秒 プログラムを休止<br>
+      &nbsp;&nbsp; &nbsp;inline void SleepForNanoSec(int waittime)<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// 指定ナノ秒 プログラムを休止<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::this_thread::sleep_for(std::chrono::nanoseconds(waittime));<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 指定マイクロ秒 プログラムを休止<br>
+      &nbsp;&nbsp; &nbsp;inline void SleepForMicroSec(int waittime)<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// 指定ミリ秒 プログラムを休止<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::this_thread::sleep_for(std::chrono::microseconds(waittime));<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 指定ミリ秒 プログラムを休止<br>
+      &nbsp;&nbsp; &nbsp;inline void SleepForMilliSec(int waittime)<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// 指定ミリ秒 プログラムを休止<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::this_thread::sleep_for(std::chrono::milliseconds(waittime));<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 指定 秒 プログラムを休止<br>
+      &nbsp;&nbsp; &nbsp;inline void SleepForSec(int waittime)<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// 指定 秒 プログラムを休止<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::this_thread::sleep_for(std::chrono::seconds(waittime));<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      &nbsp;&nbsp; &nbsp;// 指定 分 プログラムを休止<br>
+      &nbsp;&nbsp; &nbsp;inline void SleepForMinutes(int waittime)<br>
+      &nbsp;&nbsp; &nbsp;{&nbsp;&nbsp; &nbsp;// 指定 分 プログラムを休止<br>
+      &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; std::this_thread::sleep_for(std::chrono::minutes(waittime));<br>
+      &nbsp;&nbsp; &nbsp;}<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp; &nbsp;// 外部からのインスタンス作成は禁止<br>
+      &nbsp;&nbsp; &nbsp;MyTimer() {};<br>
+      &nbsp;&nbsp; &nbsp;//外部からのインスタンス破棄も禁止<br>
+      &nbsp;&nbsp; &nbsp;virtual ~MyTimer() {};<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <p><code>main.cppを変更</code>して、MyTimerクラスでゲームの毎フレーム描画処理(GameDraw)を「スキップやウェイト待ち処理」などしてフレームレートを安定させましょう。</p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      #include "Game.h"<br>
+      <em>#include "MyTimer.h"</em><br>
+      #include "Screen.h"<br>
+      <br>
+      <em>//[g_グローバル変数 と s_スタティックグローバル変数の違い] https://zenn.dev/melos/articles/1ddb67d024220f<br>
+        // グローバル変数は「他のファイルからもアクセス可能な変数」になる<br>
+        // staticグローバル変数は「他のファイルからはアクセスできないこのファイル限定呼び出し可能変数」になる<br>
+        <br>
+        // FPS 60フレームを目標にして描画に時間がかかるときに描画をスキップして1秒あたりのフレームレートを安定させる<br>
+        <br>
+        int g_targetFPS{ 60 }; // 目標のFPS(Frame Per Second, 1秒あたりのフレーム数)<br>
+        static bool s_isEnableFrameSkip{ true }; // 高負荷時にフレームスキップするか（falseの場合は処理落ち（スロー））<br>
+        double g_maxAllowSkipTime{ 0.2 }; // フレームスキップする最大間隔（秒）これ以上の間隔が空いた場合はスキップせずに処理落ちにする。<br>
+        long g_intervalTicks = (long)(1.0 / g_targetFPS * 10000000); // フレーム間のTick数 1Tick = 100ナノ秒 = 1/10000000秒<br>
+        int g_maxAllowSkipCount = (int)(g_targetFPS * g_maxAllowSkipTime); // フレームスキップを許す最大数<br>
+        <br>
+        static long s_nextFrameTicks = g_intervalTicks; // 次のフレームの目標時刻<br>
+        static long s_fpsTicks{ 0 }; // FPS計測のためのTicks<br>
+        static int s_skipCount{ 0 }; // 何回連続でフレームスキップしたか<br>
+        static int s_fpsFrameCount{ 0 }; // FPS計測のためのフレームカウント 60回数えるごとに、要した時間からFPSを算出する<br>
+        <br>
+        <br>
+        static float s_currentFPS; // 現在のFPS (Frame per Second)<br>
+        <br>
+        // ゲームを描く処理<br>
+        static inline void GameDraw(Game&amp; game)<br>
+        {//↑staticグローバル関数は「他のファイルからはアクセスできないこのファイル限定呼び出し可能関数」になる<br>
+        &nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+        &nbsp;&nbsp;&nbsp; game.Draw(); // パラパラ漫画の描画処理<br>
+        #ifdef DEBUG_DRAW_FPS<br>
+        &nbsp;&nbsp;&nbsp; DxLib::DrawString(Screen::Width - 130, 30, (std::string("FPS:") + std::to_string(s_currentFPS)).c_str(), GetColor(255, 255, 255));<br>
+        #endif<br>
+        &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); // 裏で描いておいたパラパラ漫画を表面に入れ替えフリップ<br>
+        &nbsp;&nbsp;&nbsp; s_skipCount = 0; // フレームスキップのカウントをリセット<br>
+        }</em><br>
+      <br>
+      <br>
+      // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
+      int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; <em>// [Windowsの機能]このプログラム実行の処理優先度を上げたいときに呼ぶ<br>
+        &nbsp;&nbsp;&nbsp; SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; // ★垂直同期とはモニターへの描画が完了するまで処理全体を停止し、<br>
+        &nbsp;&nbsp;&nbsp; // 描画処理と更新処理の間隔を双方一定となるように処理の間隔を調整すること<br>
+        &nbsp;&nbsp;&nbsp; // https://qiita.com/Seiten_Minagawa/items/615312ebe5e688ffee7f<br>
+        &nbsp;&nbsp;&nbsp; // 画面リフレッシュレートと目標フレームレートが等しい場合は垂直同期を有効に、等しくない場合は垂直同期を無効にする<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetWaitVSyncFlag( (DxLib::GetRefreshRate() == g_targetFPS) ? TRUE : FALSE ); //垂直同期を切るか?<br>
+        &nbsp;&nbsp;&nbsp; //DxLib::SetWaitVSyncFlag(0); // 垂直同期を強制的に切りたい場合はコメントをはずす https://www.ay3s-room.com/entry/dxlib-framerate-controll</em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズ Width×Heightのカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズ Width×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("3Dタイルゲーム");//この行でエラーになったら【設定】マルチバイト文字セットが間違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; <em>DxLib::SetAlwaysRunFlag(TRUE); // ウィンドウが非アクティブでも動作させるか?</em><br>
+      &nbsp;&nbsp;&nbsp; //↑ここまでの設定は↓下のDXライブラリ初期化より先にやらないとDxLib_Init()中は画面がフルスクリーンになって終わってからウィンドウサイズが変更になり見苦しい<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 独自時刻クラスの参照を得る(シングルトン型)<br>
+        &nbsp;&nbsp;&nbsp; MyTimer&amp; timer = MyTimer::Instance();<br>
+        &nbsp;&nbsp;&nbsp; timer.Init(); // 時刻計測開始</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初期化処理<br>
+      &nbsp;&nbsp;&nbsp; Game game;<br>
+      &nbsp;&nbsp;&nbsp; game.Init(); // gameのInit準備<br>
+      <em>#ifdef _DEBUG // デバッグ用にgameのinit終了までの秒数を一瞬画面に出す(初期化ロード時間計測のため)<br>
+        &nbsp;&nbsp;&nbsp; long initTime = timer.GetElapsedTicks(); // デバッグ用にInitの経過時間を取得<br>
+        &nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, std::to_string(initTime / 10000000.0).c_str(), GetColor(255, 255, 255));<br>
+        #endif</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <em>timer.Init(); // 時刻計測開始時間リセット(game.Initにかかった時間は計測時間に含めないため)</em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
+      &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0)<br>
+      &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
+      <em>#ifdef DEBUG_DRAW_FPS // ←#defineされていたら FPSを画面右上に描画する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // FPSの計測(FPS = 1秒あたりのパラパラ漫画枚数)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ++s_fpsFrameCount; // フレーム数のカウントを +1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (s_fpsFrameCount &gt;= 60) // 60フレームを超えたら<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 経過時間 1Tick = 100ナノ秒 = 1/10000000秒 (elasped=経過)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long elapsedTicks = timer.GetElapsedTicks() - s_fpsTicks;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float elapsedSec = (float)elapsedTicks / 10000000; // 単位を秒(s:Second)に変換<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s_currentFPS = s_fpsFrameCount / elapsedSec;// 現在のFPS<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s_fpsFrameCount = 0; // 60枚数えたら0リセット<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 60枚数えたら現在のFPS(パラパラ速度)を記録<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s_fpsTicks = timer.GetElapsedTicks();<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        #endif</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; game.Update(); //ゲームの更新処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>game.Draw(); // パラパラ漫画の描画処理<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え</u><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>//[実験機能]スローモーション、早送り(time.timeScaleが 2で2倍速 0.5で1/2スロー)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (timer.isTimeScaleMode &amp;&amp; timer.timeScale &gt; 0)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // フレームレートを再計算し早送りやスローモーション<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_targetFPS = (int)(60 * timer.timeScale); // 目標のFPS(Frame Per Second, 1秒あたりのフレーム数)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_maxAllowSkipTime = 0.2; // フレームスキップする最大間隔（秒）。これ以上の間隔が空いた場合はスキップせずに処理落ちにする。<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_intervalTicks = (long)(1.0 / g_targetFPS * 10000000); // フレーム間のTick数。1Tick = 100ナノ秒 = 1/10000000秒<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_maxAllowSkipCount = (int)(g_targetFPS * g_maxAllowSkipTime);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★垂直同期がDX設定で効いているならDXライブラリにWait処理を任せられる(フレームスキップだけ自分でやる)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (DxLib::GetWaitVSyncFlag() == TRUE &amp;&amp; timer.isTimeScaleMode == false)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ★フレームスキップとは描画処理が重い時にパラパラ漫画を1枚飛ばすか?<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (s_isEnableFrameSkip)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ★余った時刻 = 次のパラパラ予定時刻 - 現在の時刻<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long waitTicks = s_nextFrameTicks - timer.GetElapsedTicks();<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (waitTicks &lt; 0) // 目標時刻をオーバーしている<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★あまりにも漫画のパラパラページ数を飛ばすとキャラがワープして見えるので限度をつけてる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (s_skipCount &lt; g_maxAllowSkipCount) // 連続フレームスキップ数が最大スキップ数を超えていなければ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ++s_skipCount; // フレームスキップした数を +1（描画処理を飛ばした数）<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 最大スキップ数を超えてるので、フレームスキップしないで描画<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s_nextFrameTicks = timer.GetElapsedTicks();<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GameDraw(game); // ★限度越えでスロー描画処理に切替え<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 目標時刻OKなのでフレームスキップしないで描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★DXライブラリが自動で液晶の60Hzとタイミング合わせて描画<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GameDraw(game); // 描画処理<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 次のパラパラ予定時刻はIntervalTicks(単位:100ナノ秒)あと<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s_nextFrameTicks += g_intervalTicks;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ここのelseは何があってもフレームスキップしない設定の時に来る<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GameDraw(game); // ★スロー描画処理<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ★垂直同期がDX設定で【効いてない】ならWait処理を自力でやる(フレームスキップも自分でやる)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ↓こちらはフレームスキップ処理(waitTicks = 次のパラパラ予定時刻 - 現在の時刻)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long waitTicks = s_nextFrameTicks - timer.GetElapsedTicks(); // 余った時間（待機が必要な時間）<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (s_isEnableFrameSkip &amp;&amp; waitTicks &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // あまりにも漫画のパラパラページ数を飛ばしすぎるとキャラがワープして見えるので限度をつけてる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (s_skipCount &lt; g_maxAllowSkipCount)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ++s_skipCount; // フレームスキップ（描画処理を飛ばす）<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // スキップ数の許容限度をオーバーしたら、FPSを落としてでもスローで無理してでも描く<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 次のパラパラ予定時刻を現時刻に設定するので次も絶対遅れてwaitTicks &lt; 0になる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s_nextFrameTicks = timer.GetElapsedTicks();<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GameDraw(game); //遅れつつもスローモーションで描いてゆく設定の時はここ(当然Updateも遅れていく)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ★自力でWait処理<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (waitTicks &gt; 20000) // あと2ミリ秒以上待つ必要がある<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ★自作TimeクラスのSleepで一定時間プログラム休止<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://marycore.jp/prog/objective-c/sleep-process/#sleep_for<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Sleepは指定した時間でピッタリ戻ってくるわけではないので、<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 余裕を持って、「待たなければならない時間-2ミリ秒」Sleepする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int waitMillsec = (int)(waitTicks / 10000) - 2;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; timer.SleepForMilliSec(waitMillsec);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 時間が来るまで何もしないループを回して待機する<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; while (timer.GetElapsedTicks() &lt; s_nextFrameTicks)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 所定の時間になるまで空ループ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GameDraw(game); // 所定の時間になったら描画処理<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 次のパラパラ予定時刻はIntervalTicks(単位:100ナノ秒)あと<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s_nextFrameTicks += g_intervalTicks;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
+      &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
+      &nbsp;&nbsp;&nbsp; return 0;<br>
+      }</p>
+    <br>
+    いかがでしょう？フレームレートを安定させる処理をいれました。<br>
+    といわれても実感があまり湧きませんね。<br>
+    では、画面にFPSを表示させてみましょう。<br>
+    <p><code>main.cppを変更</code>して、#define DEBUG_DRAW_FPSで FPSを画面右上に表示させるマクロを発動させましょう。</p>
+    <p class="source">#include "DxLib.h"<br>
+      <br>
+      #include "Game.h"<br>
+      #include "MyTimer.h"<br>
+      #include "Screen.h"<br>
+      <br>
+      <br>
+      <em>#define DEBUG_DRAW_FPS // ここをコメントアウトすると画面にFPSを文字で表示しない</em><br>
+      <br>
+      <br>
+      //[g_グローバル変数 と s_スタティックグローバル変数の違い] https://zenn.dev/melos/articles/1ddb67d024220f<br>
+      // グローバル変数は「他のファイルからもアクセス可能な変数」になる<br>
+      // staticグローバル変数は「他のファイルからはアクセスできないこのファイル限定呼び出し可能変数」になる<br>
+      <br>
+      // FPS 60フレームを目標にして描画に時間がかかるときに描画をスキップして1秒あたりのフレームレートを安定させる<br>
+      <br>
+      int g_targetFPS{ 60 }; // 目標のFPS(Frame Per Second, 1秒あたりのフレーム数)<br>
+      static bool s_isEnableFrameSkip{ true }; // 高負荷時にフレームスキップするか（falseの場合は処理落ち（スロー））<br>
+      double g_maxAllowSkipTime{ 0.2 }; // フレームスキップする最大間隔（秒）これ以上の間隔が空いた場合はスキップせずに処理落ちにする。<br>
+      long g_intervalTicks = (long)(1.0 / g_targetFPS * 10000000); // フレーム間のTick数 1Tick = 100ナノ秒 = 1/10000000秒<br>
+      int g_maxAllowSkipCount = (int)(g_targetFPS * g_maxAllowSkipTime); // フレームスキップを許す最大数<br>
+      <br>
+      (中略)..........................<br>
+      <br>
+      // ゲームを描く処理<br>
+      static inline void GameDraw(Game&amp; game)<br>
+      {//↑staticグローバル関数は「他のファイルからはアクセスできないこのファイル限定呼び出し可能関数」になる<br>
+      &nbsp;&nbsp;&nbsp; ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp; game.Draw(); // パラパラ漫画の描画処理<br>
+      #ifdef <b>DEBUG_DRAW_FPS</b><em> // game.Drawを描いたあとに上のレイヤにぬりつぶす形でFPSを文字で画面右上に表示</em><br>
+      &nbsp;&nbsp;&nbsp; DxLib::<b>DrawString</b>(Screen::Width - 130, 30, (std::string("FPS:") + std::to_string(<b>s_currentFPS</b>)).c_str(), GetColor(255, 255, 255));<br>
+      #endif<br>
+      &nbsp;&nbsp;&nbsp; ScreenFlip(); // 裏で描いておいたパラパラ漫画を表面に入れ替えフリップ<br>
+      &nbsp;&nbsp;&nbsp; s_skipCount = 0; // フレームスキップのカウントをリセット<br>
+      }<br>
+      <br>
+      <br>
+      (以下略).....<br>
+    </p>
+    <br>
+    いかがでしょう？game.Draw()の「あとにFPSを描画」しているので、<br>
+    ゲーム本体の描画のレイヤの上を、必ず塗りつぶして画面右上に現在のFPSを表示させることができます。<br>
+    今は快適なFPSで描画できていますが、今後、ゲームの描画を複雑化させたときにFPSの状況をモニタリングする必要もでてくるかもしれません。<br>
   </body>
 </html>
