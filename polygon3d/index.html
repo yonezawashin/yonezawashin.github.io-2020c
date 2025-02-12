@@ -9071,7 +9071,7 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double angle = std::acos(w);<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double sin_angle = std::sin(angle);<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (result_radian != nullptr) *result_radian = angle * 2.0; // result_radianに計算した角度を返す<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector3{ x / sin_angle, y / sin_angle, z / sin_angle };<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector3{ (float)(x / sin_angle), (float)(y / sin_angle), (float)(z / sin_angle) };<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // 回転角度だけを求める<br>
