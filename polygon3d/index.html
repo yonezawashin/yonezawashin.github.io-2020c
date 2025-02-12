@@ -8962,31 +8962,31 @@
         // クオータニオン http://noa1105.seesaa.net/article/239449116.html<br>
         struct Quaternion<br>
         {<br>
-        &nbsp;&nbsp;&nbsp; float x, y, z, w;<br>
+        &nbsp;&nbsp;&nbsp; double x, y, z, w;<br>
         &nbsp;&nbsp;&nbsp; VECTOR eular(); // オイラー角を得る<br>
         <br>
-        &nbsp;&nbsp;&nbsp; inline Quaternion(float x = 0.0f, float y = 0.0f, float z = 0.0f, float w = 1.0f) : x{ x }, y{ y }, z{ z }, w{ w } {}<br>
+        &nbsp;&nbsp;&nbsp; inline Quaternion(double x = 0.0, double y = 0.0, double z = 0.0, double w = 1.0) : x{ x }, y{ y }, z{ z }, w{ w } {}<br>
         <br>
         &nbsp;&nbsp;&nbsp; ~Quaternion() {}<br>
         <br>
         &nbsp;&nbsp;&nbsp; //[コンストラクタ] 回転クォータニオン Axis軸(x軸,y軸,z軸)周りにradianの角度回転したクオータニオンを生成<br>
-        &nbsp;&nbsp;&nbsp; inline Quaternion(float radian, const Vector3&amp; axis) : w{ 1.0f }, x{ 0.0f }, y{ 0.0f }, z{ 0.0f }<br>
+        &nbsp;&nbsp;&nbsp; inline Quaternion(double radian, const Vector3&amp; axis) : w{ 1.0 }, x{ 0.0 }, y{ 0.0 }, z{ 0.0 }<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; setRotate(radian, axis.x, axis.y, axis.z);<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // axis軸周り に 回転角度radian 回転したクオータニオンを設定する <br>
-        &nbsp;&nbsp;&nbsp; inline Quaternion&amp; setRotate(float radian, float axisX, float axisY, float axisZ)<br>
+        &nbsp;&nbsp;&nbsp; inline Quaternion&amp; setRotate(double radian, double axisX, double axisY, double axisZ)<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float norm, cos_rad2, sin_rad2;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double norm, cos_rad2, sin_rad2;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; norm = axisX * axisX + axisY * axisY + axisZ * axisZ;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (norm &lt;= 0.0f) return *this; // normの2乗 が 0 なら そのままreturn<br>
         <br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; norm = 1.0 / std::sqrt(norm);<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; axisX *= norm; axisY *= norm; axisZ *= norm;<br>
         <br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; cos_rad2 = std::cosf(radian / 2.0f);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sin_rad2 = std::sinf(radian / 2.0f);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; cos_rad2 = std::cos(radian / 2.0);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sin_rad2 = std::sin(radian / 2.0);<br>
         <br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; w = cos_rad2;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; x = sin_rad2 * axisX;<br>
@@ -8997,18 +8997,18 @@
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // axis軸周り に 回転角度radian 回転したクオータニオンを設定する <br>
-        &nbsp;&nbsp;&nbsp; inline Quaternion&amp; setRotate(float radian, const Vector3&amp; axis)<br>
+        &nbsp;&nbsp;&nbsp; inline Quaternion&amp; setRotate(double radian, const Vector3&amp; axis)<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return setRotate(radian, axis.x, axis.y, axis.z);<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // ヨー ピッチ ロールで指定する形でクオータニオンの回転を設定する<br>
-        &nbsp;&nbsp;&nbsp; inline Quaternion&amp; setYawPitchRoll(float yaw, float pitch, float roll)<br>
+        &nbsp;&nbsp;&nbsp; inline Quaternion&amp; setYawPitchRoll(double yaw, double pitch, double roll)<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //[ヨー ピッチ ロールについて] http://fantom1x.blog130.fc2.com/blog-entry-255.html<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float sinYaw&nbsp;&nbsp; = std::sinf(yaw / 2.0f),&nbsp;&nbsp; cosYaw&nbsp;&nbsp; = std::cosf(yaw / 2.0f);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float sinPitch = std::sinf(pitch / 2.0f), cosPitch = std::cosf(pitch / 2.0f);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float sinRoll&nbsp; = std::sinf(roll / 2.0f),&nbsp; cosRoll&nbsp; = std::cosf(roll / 2.0f);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double sinYaw&nbsp;&nbsp; = std::sin(yaw / 2.0),&nbsp;&nbsp; cosYaw&nbsp;&nbsp; = std::cos(yaw / 2.0);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double sinPitch = std::sin(pitch / 2.0), cosPitch = std::cos(pitch / 2.0);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double sinRoll&nbsp; = std::sin(roll / 2.0),&nbsp; cosRoll&nbsp; = std::cos(roll / 2.0);<br>
         <br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; x = sinRoll * cosPitch * cosYaw - cosRoll * sinPitch * sinYaw;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; y = cosRoll * sinPitch * cosYaw + sinRoll * cosPitch * sinYaw;<br>
@@ -9022,17 +9022,17 @@
         &nbsp;&nbsp;&nbsp; // 単位クオータニオンを返す<br>
         &nbsp;&nbsp;&nbsp; static Quaternion identity()<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Quaternion{ 0.0f, 0.0f, 0.0f, 1.0f };<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Quaternion{ 0.0, 0.0, 0.0, 1.0 };<br>
         &nbsp;&nbsp;&nbsp; };<br>
         <br>
         &nbsp;&nbsp;&nbsp; // クオータニオンの大きさ<br>
-        &nbsp;&nbsp;&nbsp; inline float magnitude() const<br>
+        &nbsp;&nbsp;&nbsp; inline double magnitude() const<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return std::sqrtf(x * x + y * y + z * z + w * w); // √(x*x + y*y + z*z + w*w)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return std::sqrt(x * x + y * y + z * z + w * w); // √(x*x + y*y + z*z + w*w)<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // クオータニオンの大きさの2乗<br>
-        &nbsp;&nbsp;&nbsp; inline float sqrMagnitude() const<br>
+        &nbsp;&nbsp;&nbsp; inline double sqrMagnitude() const<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return x * x + y * y + z * z + w * w;<br>
         &nbsp;&nbsp;&nbsp; }<br>
@@ -9040,9 +9040,9 @@
         &nbsp;&nbsp;&nbsp; // 正規化したクオータニオンを返す<br>
         &nbsp;&nbsp;&nbsp; inline Quaternion normalized() const<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float mag = magnitude();<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (mag &lt; 0.00001f) // ほぼ0か？<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Quaternion{ 0.0f, 0.0f, 0.0f, 0.0f };<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double mag = magnitude();<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (mag &lt; 0.00001) // ほぼ0か？<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Quaternion{ 0.0, 0.0, 0.0, 0.0 };<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Quaternion{ x / mag, y / mag, z / mag, w / mag }; // x / |x|, y / |y|, z / |z|, w / |w|<br>
         &nbsp;&nbsp;&nbsp; }<br>
@@ -9058,33 +9058,33 @@
         &nbsp;&nbsp;&nbsp; // 逆クオータニオンを返す(メンバ関数版)<br>
         &nbsp;&nbsp;&nbsp; inline Quaternion inverse() const<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float mag = magnitude();<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (mag &lt; 0.00001f) // ほぼ0か？<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Quaternion{ 0.0f, 0.0f, 0.0f, 0.0f };<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double mag = magnitude();<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (mag &lt; 0.00001) // ほぼ0か？<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Quaternion{ 0.0, 0.0, 0.0, 0.0 };<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Quaternion{ -x / mag, -y / mag, -z / mag, w / mag }; // -x / |x|, -y / |y|, -z / |z|, w / |w|<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // クオータニオンからx,y,z軸Axis軸周りの回転角度 result_radian と 軸axisをreturnする<br>
-        &nbsp;&nbsp;&nbsp; inline Vector3 getAxisAngle(float* result_radian = nullptr) const<br>
+        &nbsp;&nbsp;&nbsp; inline Vector3 getAxisAngle(double* result_radian = nullptr) const<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float angle = std::acosf(w);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float sin_angle = std::sinf(angle);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (result_radian != nullptr) *result_radian = angle * 2.0f; // result_radianに計算した角度を返す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double angle = std::acos(w);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double sin_angle = std::sin(angle);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (result_radian != nullptr) *result_radian = angle * 2.0; // result_radianに計算した角度を返す<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector3{ x / sin_angle, y / sin_angle, z / sin_angle };<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // 回転角度だけを求める<br>
-        &nbsp;&nbsp;&nbsp; inline float getAngle() const { return std::acosf(w) * 2.0f; }<br>
+        &nbsp;&nbsp;&nbsp; inline double getAngle() const { return std::acos(w) * 2.0; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // ヨーを求める(単位:ラジアン)<br>
-        &nbsp;&nbsp;&nbsp; inline float getYaw() const { return std::asin(-2.0f * (x * z - w * y)); }<br>
+        &nbsp;&nbsp;&nbsp; inline double getYaw() const { return std::asin(-2.0 * (x * z - w * y)); }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // ピッチを求める(単位:ラジアン)<br>
-        &nbsp;&nbsp;&nbsp; inline float getPitch() const { return std::atan2(w * w - x * x - y * y + z * z, 2.0f * (y * z + w * x)); }<br>
+        &nbsp;&nbsp;&nbsp; inline double getPitch() const { return std::atan2(w * w - x * x - y * y + z * z, 2.0 * (y * z + w * x)); }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // ロールを求める(単位:ラジアン)<br>
-        &nbsp;&nbsp;&nbsp; inline float getRoll() const { return std::atan2(w * w + x * x - y * y - z * z, 2.0f * (x * y + w * z)); }<br>
+        &nbsp;&nbsp;&nbsp; inline double getRoll() const { return std::atan2(w * w + x * x - y * y - z * z, 2.0 * (x * y + w * z)); }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // 演算子operatorのオーバーロード<br>
         <br>
@@ -9129,7 +9129,7 @@
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // *= クオータニオンの数値倍の掛け算演算子のオーバーロード<br>
-        &nbsp;&nbsp;&nbsp; inline Quaternion operator *= (float right)<br>
+        &nbsp;&nbsp;&nbsp; inline Quaternion operator *= (double right)<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; w = w * right;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; x = x * right;<br>
@@ -9139,7 +9139,7 @@
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // /= クオータニオンを数値で割る演算子のオーバーロード<br>
-        &nbsp;&nbsp;&nbsp; inline Quaternion operator /= (float right)<br>
+        &nbsp;&nbsp;&nbsp; inline Quaternion operator /= (double right)<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; w = w / right;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; x = x / right;<br>
@@ -9198,7 +9198,7 @@
         }<br>
         <br>
         // クォータニオンをスカラー倍する乗算(左側にfloat)<br>
-        inline Quaternion operator * (float left, const Quaternion&amp; right)<br>
+        inline Quaternion operator * (double left, const Quaternion&amp; right)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; return right * left; // 上の定義(左:クオータニオン)を再利用する<br>
         }<br>
@@ -9207,14 +9207,14 @@
         inline Vector3 operator * (const Quaternion&amp; left, const Vector3&amp; right)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; Vector3 result;<br>
-        &nbsp;&nbsp;&nbsp; float _2x = left.x * 2.0f, _2y = left.y * 2.0f, _2z = left.z * 2.0f;<br>
-        &nbsp;&nbsp;&nbsp; float x2x = left.x * _2x,&nbsp; y2y = left.y * _2y,&nbsp; z2z = left.z * _2z;<br>
-        &nbsp;&nbsp;&nbsp; float x2y = left.x * _2y,&nbsp; x2z = left.x * _2z,&nbsp; y2z = left.y * _2z;<br>
-        &nbsp;&nbsp;&nbsp; float w2x = left.w * _2x,&nbsp; w2y = left.w * _2y,&nbsp; w2z = left.w * _2z;<br>
+        &nbsp;&nbsp;&nbsp; double _2x = left.x * 2.0, _2y = left.y * 2.0, _2z = left.z * 2.0;<br>
+        &nbsp;&nbsp;&nbsp; double x2x = left.x * _2x,&nbsp; y2y = left.y * _2y,&nbsp; z2z = left.z * _2z;<br>
+        &nbsp;&nbsp;&nbsp; double x2y = left.x * _2y,&nbsp; x2z = left.x * _2z,&nbsp; y2z = left.y * _2z;<br>
+        &nbsp;&nbsp;&nbsp; double w2x = left.w * _2x,&nbsp; w2y = left.w * _2y,&nbsp; w2z = left.w * _2z;<br>
         <br>
-        &nbsp;&nbsp;&nbsp; result.x = (1.0f - (y2y + z2z)) * right.x + (x2y - w2z) * right.y + (x2z + w2y) * right.z;<br>
-        &nbsp;&nbsp;&nbsp; result.y = (x2y + w2z) * right.x + (1.0f - (x2x + z2z)) * right.y + (y2z - w2x) * right.z;<br>
-        &nbsp;&nbsp;&nbsp; result.z = (x2z - w2y) * right.x + (y2z + w2x) * right.y + (1.0f - (x2x + y2y)) * right.z;<br>
+        &nbsp;&nbsp;&nbsp; result.x = (1.0 - (y2y + z2z)) * right.x + (x2y - w2z) * right.y + (x2z + w2y) * right.z;<br>
+        &nbsp;&nbsp;&nbsp; result.y = (x2y + w2z) * right.x + (1.0 - (x2x + z2z)) * right.y + (y2z - w2x) * right.z;<br>
+        &nbsp;&nbsp;&nbsp; result.z = (x2z - w2y) * right.x + (y2z + w2x) * right.y + (1.0 - (x2x + y2y)) * right.z;<br>
         <br>
         &nbsp;&nbsp;&nbsp; return result;<br>
         }<br>
@@ -9233,13 +9233,13 @@
         <br>
         <br>
         // クオータニオンの内積<br>
-        inline float dot(const Quaternion&amp; q1, const Quaternion&amp; q2)<br>
+        inline double dot(const Quaternion&amp; q1, const Quaternion&amp; q2)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; return&nbsp;&nbsp;&nbsp; q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;<br>
         }<br>
         <br>
         // クオータニオンの線形補間 q1→q2へ(t:補間値パラメータ)<br>
-        inline Quaternion lerp(const Quaternion&amp; q1, const Quaternion&amp; q2, float t)<br>
+        inline Quaternion lerp(const Quaternion&amp; q1, const Quaternion&amp; q2, double t)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; Quaternion result;<br>
         &nbsp;&nbsp;&nbsp; result.x = q1.x * (1 - t) + q2.x * t; // t と 1-tの比率でブレンド<br>
@@ -9250,11 +9250,11 @@
         }<br>
         <br>
         // クオータニオンの球面線形補間 q1→q2(t:補間値パラメータ)<br>
-        inline Quaternion slerp(const Quaternion&amp; q1, const Quaternion&amp; q2, float t)<br>
+        inline Quaternion slerp(const Quaternion&amp; q1, const Quaternion&amp; q2, double t)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; Quaternion result;<br>
         &nbsp;&nbsp;&nbsp; Quaternion q2_dash;<br>
-        &nbsp;&nbsp;&nbsp; float cos_theta = q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;<br>
+        &nbsp;&nbsp;&nbsp; double cos_theta = q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;<br>
         &nbsp;&nbsp;&nbsp; if (cos_theta &lt; 0.0f) // cosθが0以下のときは<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; cos_theta = -cos_theta; // cosθに-をつけて+にする<br>
@@ -9263,13 +9263,13 @@
         &nbsp;&nbsp;&nbsp; else<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; q2_dash = q2; // cosθ &gt;= 0のときはそのままq2を使う<br>
         <br>
-        &nbsp;&nbsp;&nbsp; float _1_t = 1.0f - t;<br>
+        &nbsp;&nbsp;&nbsp; double _1_t = 1.0 - t;<br>
         <br>
-        &nbsp;&nbsp;&nbsp; if (1.0f - cos_theta &gt; 0.001f) // cosθが1.0fではないときは<br>
+        &nbsp;&nbsp;&nbsp; if (1.0 - cos_theta &gt; 0.001) // cosθが1.0ではないときは<br>
         &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 球面線形補間では t と 1-tの代わりに 角度θについてのtと1-t での sinθで補間<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float theta = std::acosf(cos_theta);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; _1_t = std::sinf(theta * _1_t) / std::sinf(theta);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; t = std::sinf(theta * t) / std::sinf(theta);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double theta = std::acos(cos_theta);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; _1_t = std::sin(theta * _1_t) / std::sin(theta);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; t = std::sin(theta * t) / std::sin(theta);<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // t と _1_t を使って球面線形補間を計算する<br>
@@ -9285,7 +9285,7 @@
         inline Quaternion CreateRotationQuaternion(double radian, VECTOR axis)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; Quaternion result;<br>
-        &nbsp;&nbsp;&nbsp; float norm, cos_rad2, sin_rad2;<br>
+        &nbsp;&nbsp;&nbsp; double norm, cos_rad2, sin_rad2;<br>
         &nbsp;&nbsp;&nbsp; result.w = result.x = result.y = result.z = 0.0;<br>
         <br>
         &nbsp;&nbsp;&nbsp; norm = axis.x * axis.x + axis.y * axis.y + axis.z * axis.z;<br>
@@ -9296,8 +9296,8 @@
         &nbsp;&nbsp;&nbsp; axis.y *= norm;<br>
         &nbsp;&nbsp;&nbsp; axis.z *= norm;<br>
         <br>
-        &nbsp;&nbsp;&nbsp; cos_rad2 = std::cosf(radian / 2.0f);<br>
-        &nbsp;&nbsp;&nbsp; sin_rad2 = std::sinf(radian / 2.0f);<br>
+        &nbsp;&nbsp;&nbsp; cos_rad2 = std::cos(radian / 2.0);<br>
+        &nbsp;&nbsp;&nbsp; sin_rad2 = std::sin(radian / 2.0);<br>
         <br>
         &nbsp;&nbsp;&nbsp; result.w = cos_rad2;<br>
         &nbsp;&nbsp;&nbsp; result.x = sin_rad2 * axis.x;<br>
@@ -9369,25 +9369,25 @@
         {<br>
         &nbsp;&nbsp;&nbsp; MATRIX mat = MGetIdent();<br>
         &nbsp;&nbsp;&nbsp; //X軸<br>
-        &nbsp;&nbsp;&nbsp; mat.m[0][0] = 1.0f - 2.0f * q.y * q.y - 2.0f * q.z * q.z;<br>
-        &nbsp;&nbsp;&nbsp; mat.m[0][1] = 2.0f * q.x * q.y + 2.0f * q.w * q.z;<br>
-        &nbsp;&nbsp;&nbsp; mat.m[0][2] = 2.0f * q.x * q.z - 2.0f * q.w * q.y;<br>
+        &nbsp;&nbsp;&nbsp; mat.m[0][0] = 1.0 - 2.0 * q.y * q.y - 2.0 * q.z * q.z;<br>
+        &nbsp;&nbsp;&nbsp; mat.m[0][1] = 2.0 * q.x * q.y + 2.0 * q.w * q.z;<br>
+        &nbsp;&nbsp;&nbsp; mat.m[0][2] = 2.0 * q.x * q.z - 2.0 * q.w * q.y;<br>
         <br>
         &nbsp;&nbsp;&nbsp; //Y軸<br>
-        &nbsp;&nbsp;&nbsp; mat.m[1][0] = 2.0f * q.x * q.y - 2.0f * q.w * q.z;<br>
-        &nbsp;&nbsp;&nbsp; mat.m[1][1] = 1.0f - 2.0f * q.x * q.x - 2.0f * q.z * q.z;<br>
-        &nbsp;&nbsp;&nbsp; mat.m[1][2] = 2.0f * q.y * q.z + 2.0f * q.w * q.x;<br>
+        &nbsp;&nbsp;&nbsp; mat.m[1][0] = 2.0 * q.x * q.y - 2.0 * q.w * q.z;<br>
+        &nbsp;&nbsp;&nbsp; mat.m[1][1] = 1.0 - 2.0 * q.x * q.x - 2.0 * q.z * q.z;<br>
+        &nbsp;&nbsp;&nbsp; mat.m[1][2] = 2.0 * q.y * q.z + 2.0 * q.w * q.x;<br>
         <br>
         &nbsp;&nbsp;&nbsp; //Z軸<br>
-        &nbsp;&nbsp;&nbsp; mat.m[2][0] = 2.0f * q.x * q.z + 2.0f * q.w * q.y;<br>
-        &nbsp;&nbsp;&nbsp; mat.m[2][1] = 2.0f * q.y * q.z - 2.0f * q.w * q.x;<br>
-        &nbsp;&nbsp;&nbsp; mat.m[2][2] = 1.0f - 2.0f * q.x * q.x - 2.0f * q.y * q.y;<br>
+        &nbsp;&nbsp;&nbsp; mat.m[2][0] = 2.0 * q.x * q.z + 2.0 * q.w * q.y;<br>
+        &nbsp;&nbsp;&nbsp; mat.m[2][1] = 2.0 * q.y * q.z - 2.0 * q.w * q.x;<br>
+        &nbsp;&nbsp;&nbsp; mat.m[2][2] = 1.0 - 2.0 * q.x * q.x - 2.0 * q.y * q.y;<br>
         <br>
         &nbsp;&nbsp;&nbsp; return mat;<br>
         }<br>
         <br>
         // クオータニオンを角度(単位:ラジアン0～2π)へ<br>
-        inline VECTOR ToAngle(float x, Quaternion q)<br>
+        inline VECTOR ToAngle(double x, Quaternion q)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; double cosX = std::cos(x);<br>
         <br>
@@ -9400,16 +9400,16 @@
         &nbsp;&nbsp;&nbsp; double z = std::atan2(sinZ, cosZ);<br>
         <br>
         &nbsp;&nbsp;&nbsp; VECTOR angles;<br>
-        &nbsp;&nbsp;&nbsp; angles.x = std::fmodf((x &gt; 0.0f) ? x : 2.0f * DX_PI_F + x, 2.0f * DX_PI_F); //2π=360 [xを0.0～2πの範囲に] https://mathwords.net/razian<br>
-        &nbsp;&nbsp;&nbsp; angles.y = std::fmodf((y &gt; 0.0f) ? y : 2.0f * DX_PI_F + y, 2.0f * DX_PI_F);<br>
-        &nbsp;&nbsp;&nbsp; angles.z = std::fmodf((z &gt; 0.0f) ? z : 2.0f * DX_PI_F + z, 2.0f * DX_PI_F);<br>
+        &nbsp;&nbsp;&nbsp; angles.x = std::fmod((x &gt; 0.0) ? x : 2.0 * DX_PI + x, 2.0 * DX_PI); //2π=360 [xを0.0～2πの範囲に] https://mathwords.net/razian<br>
+        &nbsp;&nbsp;&nbsp; angles.y = std::fmod((y &gt; 0.0) ? y : 2.0 * DX_PI + y, 2.0 * DX_PI);<br>
+        &nbsp;&nbsp;&nbsp; angles.z = std::fmod((z &gt; 0.0) ? z : 2.0 * DX_PI + z, 2.0 * DX_PI);<br>
         &nbsp;&nbsp;&nbsp; return angles;<br>
         }<br>
         <br>
         // クオータニオンを角度へ(単位:ラジアン0～2π) [ジンバルロック状態のとき]https://qiita.com/yaegaki/items/7b6b1f487553def8e647<br>
-        inline VECTOR ToAngleZimbalLock(float x, float z, Quaternion q)<br>
+        inline VECTOR ToAngleZimbalLock(double x, double z, Quaternion q)<br>
         {<br>
-        &nbsp;&nbsp;&nbsp; float y;<br>
+        &nbsp;&nbsp;&nbsp; double y;<br>
         &nbsp;&nbsp;&nbsp; if (x &gt; 0)<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double yMinusZ = std::atan2(2 * q.x * q.y - 2 * q.z * q.w, 2 * std::pow(q.w, 2) + 2 * std::pow(q.x, 2) - 1);<br>
@@ -9422,9 +9422,9 @@
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; VECTOR angles;<br>
-        &nbsp;&nbsp;&nbsp; angles.x = std::fmodf((x &gt; 0.0f) ? x : 2.0f * DX_PI_F + x, 2.0f * DX_PI_F); //2π=360 [xを0.0～2πの範囲に] https://mathwords.net/razian<br>
-        &nbsp;&nbsp;&nbsp; angles.y = std::fmodf((y &gt; 0.0f) ? y : 2.0f * DX_PI_F + y, 2.0f * DX_PI_F);<br>
-        &nbsp;&nbsp;&nbsp; angles.z = std::fmodf((z &gt; 0.0f) ? z : 2.0f * DX_PI_F + z, 2.0f * DX_PI_F);<br>
+        &nbsp;&nbsp;&nbsp; angles.x = std::fmod((x &gt; 0.0) ? x : 2.0 * DX_PI + x, 2.0 * DX_PI); //2π=360 [xを0.0～2πの範囲に] https://mathwords.net/razian<br>
+        &nbsp;&nbsp;&nbsp; angles.y = std::fmod((y &gt; 0.0) ? y : 2.0 * DX_PI + y, 2.0 * DX_PI);<br>
+        &nbsp;&nbsp;&nbsp; angles.z = std::fmod((z &gt; 0.0) ? z : 2.0 * DX_PI + z, 2.0 * DX_PI);<br>
         &nbsp;&nbsp;&nbsp; return angles;<br>
         }<br>
         <br>
@@ -9450,19 +9450,19 @@
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sinX = 0.0;<br>
         <br>
         &nbsp;&nbsp;&nbsp; //[オイラー角とジンバルロック(±90度のとき無数に角度がありうる)]https://qiita.com/yaegaki/items/7b6b1f487553def8e647<br>
-        &nbsp;&nbsp;&nbsp; float x = (float)std::asin(-sinX);<br>
+        &nbsp;&nbsp;&nbsp; double x = std::asin(-sinX);<br>
         &nbsp;&nbsp;&nbsp; // X軸の回転が90度付近の場合はジンバルロック状態になっている<br>
-        &nbsp;&nbsp;&nbsp; if (std::isnan(x) || std::abs((std::abs(x) - DX_PI_F / 2)) &lt; threshold)<br>
+        &nbsp;&nbsp;&nbsp; if (std::isnan(x) || std::abs((std::abs(x) - DX_PI / 2)) &lt; threshold)<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float sign = (sinX &lt; 0) ? -1.0f : 1.0f;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; x = sign * (DX_PI_F / 2);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR result = ToAngleZimbalLock(x, 0.0f, q); // // Z = 0.0fの時の角度を求める<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double sign = (sinX &lt; 0) ? -1.0 : 1.0;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; x = sign * (DX_PI / 2);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR result = ToAngleZimbalLock(x, 0.0, q); // // Z = 0.0の時の角度を求める<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return { result, GetSameRotationAngle(result) }; //それと同じ回転を表す角度も候補として返す<br>
         &nbsp;&nbsp;&nbsp; }<br>
         &nbsp;&nbsp;&nbsp; else<br>
         &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // x 度と π-x 度の2種類の角度とそれらと同じ回転を表す角度も候補として返す<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR result1 = ToAngle(x, q);<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR result2 = ToAngle(DX_PI_F - x, q);<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR result2 = ToAngle(DX_PI - x, q);<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return { result1, result2, GetSameRotationAngle(result1),GetSameRotationAngle(result2) };<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
