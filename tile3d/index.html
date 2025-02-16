@@ -2846,6 +2846,168 @@
       #endif<br>
     </p>
     <br>
+    <p><code>World.hを変更</code>して、AddPlayerでシーンにプレイヤ追加する関数などを定義しましょう。</p>
+    <p class="source">#ifndef WORLD_H_<br>
+      #define WORLD_H_<br>
+      <br>
+      #include &lt;list&gt;<br>
+      #include &lt;memory&gt;<br>
+      #include &lt;unordered_map&gt;<br>
+      #include &lt;functional&gt; // std::functionのラムダ式 で 関数を Draw関数の引数にして、カメラすべてに対して描画処理を発動させる <br>
+      <br>
+      #include "MyHash.h" // ワールドのタグをhash32型で管理する<br>
+      <br>
+      <br>
+      // [前方宣言] 宣言だけして、#includeはしてないので、ポインタだけはこのファイル内でつかえる<br>
+      // #includeはしてないので、hpなどの変数には#include "～.h"しないとアクセスできないので循環インクルード防止のため.cppでインクルードしてください<br>
+      class GameScene;<br>
+      class Player;<br>
+      class PlayerBullet;<br>
+      class Enemy;<br>
+      class Camera;<br>
+      <br>
+      // プレイヤや敵や弾などの共有ポインタを管理し、EraseRemoveIfで消して参照カウンタが0になったらそれらを消滅させるクラス(C#のガベージコレクタの代わり)<br>
+      class World<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; inline World(GameScene* pScene, const std::string&amp; worldTag = "") : m_pScene{ pScene }, tag{ worldTag } {}<br>
+      &nbsp;&nbsp;&nbsp; inline ~World() {}<br>
+      protected: // public:にすると他で外部で後からタグやシーンを書き換えられると辞書での管理などの前提がおかしくなるのでprotected:する<br>
+      &nbsp;&nbsp;&nbsp; hash32 tag{ "" }; // ワールド名のタグ<br>
+      &nbsp;&nbsp;&nbsp; GameScene* m_pScene{ nullptr }; // ワールドを所有するシーン<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; hash32 Tag() const { return tag; }<br>
+      &nbsp;&nbsp;&nbsp; GameScene* scene() { return m_pScene; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// ワールドを所有するシーンにプレイヤを追加する<br>
+        &nbsp;&nbsp;&nbsp; void AddPlayer(const std::string&amp; playerTag, std::shared_ptr&lt;Player&gt; pPlayer);<br>
+        &nbsp;&nbsp;&nbsp; // ワールドにいるプレイヤを得る<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;std::weak_ptr&lt;Player&gt;&gt; GetPlayers();</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;Player&gt;&gt; players; // プレイヤのタグ辞書<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 削除処理を共通テンプレート関数にする<br>
+      &nbsp;&nbsp;&nbsp; // [共通テンプレート関数]https://programming-place.net/ppp/contents/cpp/language/009.html#function_template<br>
+      &nbsp;&nbsp;&nbsp; template &lt;typename TypeT, class T_if&gt;<br>
+      &nbsp;&nbsp;&nbsp; void EraseRemoveIf(std::list&lt;TypeT&gt;&amp; v, T_if if_condition)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 特定のタイプT↑&nbsp; ↑配列v&nbsp;&nbsp; ↑条件式if_condition<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; v.erase(<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::remove_if(v.begin(), v.end(), if_condition),<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; v.end() //&nbsp; ↓remove_ifの位置<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; );//例.[生][生][死][死][死]← v.end()の位置<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;Camera&gt;&gt; cameras; // このワールドに存在するカメラの辞書&lt;カメラにつけたタグ, カメラの共有ポインタ&gt;<br>
+      &nbsp;&nbsp;&nbsp; // 指定されたタグのカメラへの共有ポインタを得る　カメラ辞書に存在しないタグでアクセスしたときにunordered_mapの特性で勝手に意図しないカメラができるのを防ぐ関数<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Camera&gt; camera(const std::string&amp; cameraTag) { auto itr = cameras.find(cameraTag); return (itr != end(cameras)) ? itr-&gt;second : nullptr; }<br>
+      &nbsp;&nbsp;&nbsp; // このワールドに存在するカメラすべてに対して drawFuncで描きたい処理を渡して 全カメラのスクリーンに対して描画処理を走らせる<br>
+      &nbsp;&nbsp;&nbsp; void Draw(std::function&lt;void()&gt; drawFunc) noexcept;<br>
+      &nbsp;&nbsp;&nbsp; // カメラにタグをつけてワールドに追加 カメラにもワールドへのポインタリンクを張る<br>
+      &nbsp;&nbsp;&nbsp; inline bool AddCamera(const std::string&amp; cameraTag, std::shared_ptr&lt;Camera&gt; pCamera);<br>
+      &nbsp;&nbsp;&nbsp; // 指定したタグのカメラをこのワールドから削除する カメラ側の worldへのリンクのポインタも nullptr にする<br>
+      &nbsp;&nbsp;&nbsp; inline bool EraseCamera(const std::string&amp; cameraTag);<br>
+      &nbsp;&nbsp;&nbsp; // カメラを nowWorld から nextWorld に移動させる<br>
+      &nbsp;&nbsp;&nbsp; static bool MoveCamera(const std::string&amp; cameraTag, World* nowWorld, World* nextWorld);<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>World.cppを変更</code>して、シーンにプレイヤを追加するAddPlayer関数などを追加しましょう。</p>
+    <p class="source">#include "World.h"<br>
+      <br>
+      #include "Player.h"<br>
+      #include "Camera.h"<br>
+      #include "Screen.h"<br>
+      <br>
+      <br>
+      <em>void World::AddPlayer(const std::string&amp; playerTag, std::shared_ptr&lt;Player&gt; pPlayer)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; if (m_pScene != nullptr)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_pScene-&gt;players.emplace(playerTag, pPlayer); // シーンにプレイヤを追加する<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        }<br>
+        <br>
+        // このワールドにいるプレイヤを得る<br>
+        std::vector&lt;std::weak_ptr&lt;Player&gt;&gt; World::GetPlayers()<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;std::weak_ptr&lt;Player&gt;&gt; players;<br>
+        &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; pPlayer : players)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; players.emplace_back(pPlayer);<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; return players;<br>
+        }</em><br>
+      <br>
+      // カメラにタグをつけてワールドに追加 カメラにもワールドへの生ポインタリンクを渡す<br>
+      bool World::AddCamera(const std::string&amp; cameraTag, std::shared_ptr&lt;Camera&gt; pCamera)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (pCamera == nullptr) return false;<br>
+      &nbsp;&nbsp;&nbsp; if (cameras.count(cameraTag) &gt; 0) return false; // すでに同じタグのカメラがワールドにあったら false<br>
+      &nbsp;&nbsp;&nbsp; if (pCamera-&gt;world() != nullptr) pCamera-&gt;world()-&gt;EraseCamera(cameraTag); // すでにカメラが別ワールドに配置されていたら別ワールドから削除<br>
+      &nbsp;&nbsp;&nbsp; cameras.emplace(cameraTag, pCamera); // ワールドにカメラを追加する<br>
+      &nbsp;&nbsp;&nbsp; pCamera-&gt;world(this); // カメラにもワールドへのポインタリンクを張る<b>(カメラ側に渡すのは共有ポインタではない生ポインタだから共有デッドロックにはならない)</b><br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      // 指定したタグのカメラをこのワールドから削除する カメラ側の worldへのリンクのポインタも nullptr にする<br>
+      bool World::EraseCamera(const std::string&amp; cameraTag)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; auto itr = cameras.find(cameraTag); // 指定したタグのカメラを探す<br>
+      &nbsp;&nbsp;&nbsp; if (itr == end(cameras)) return false; // 指定したタグのカメラがワールドにない<br>
+      &nbsp;&nbsp;&nbsp; auto pCamera = itr-&gt;second;<br>
+      &nbsp;&nbsp;&nbsp; pCamera-&gt;world(nullptr); // カメラ側の worldへのリンクのポインタも nullptrに<br>
+      &nbsp;&nbsp;&nbsp; cameras.erase(cameraTag); // カメラを辞書から削除<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      // カメラを nowWorld から nextWorld に移動させる<br>
+      bool World::MoveCamera(const std::string&amp; cameraTag, World* nowWorld, World* nextWorld)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (nowWorld == nullptr) return false;<br>
+      &nbsp;&nbsp;&nbsp; auto itr = nowWorld-&gt;cameras.find(cameraTag); // タグでカメラを探す<br>
+      &nbsp;&nbsp;&nbsp; if (itr == end(nowWorld-&gt;cameras)) return false; // タグに関連づいたカメラがなかった<br>
+      &nbsp;&nbsp;&nbsp; auto targetCamera = itr-&gt;second; // カメラの共有ポインタをキープ(次の行でeraseしてもカメラの共有カウンタは0にはならずこのリンクのおかげでカメラはメモリに残存)<br>
+      &nbsp;&nbsp;&nbsp; targetCamera-&gt;world(nullptr); // カメラ側の worldへのリンクのポインタを一旦 nullptrに<br>
+      &nbsp;&nbsp;&nbsp; nowWorld-&gt;cameras.erase(cameraTag); // nowWorld からは カメラを消す<br>
+      &nbsp;&nbsp;&nbsp; if (nextWorld == nullptr) return false;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return nextWorld-&gt;AddCamera(cameraTag, targetCamera); // 次のワールドにカメラを追加する<br>
+      }<br>
+      <br>
+      // このワールドに存在するカメラすべてに対して funcで描きたい処理を渡して 全カメラのスクリーンに対して描画処理を走らせる<br>
+      void World::Draw(std::function&lt;void()&gt; drawFunc) noexcept<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : cameras)&nbsp;&nbsp;&nbsp; // このワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR_D beforeCamPos; // 設定変更前のカメラのパラメータを一旦、保管<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double beforeVRot, beforeHRot, beforeTRot, beforeNear, beforeFar, beforeFov;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Camera::GetCameraSettings(&amp;beforeCamPos, &amp;beforeVRot, &amp;beforeHRot, &amp;beforeTRot, &amp;beforeFov, &amp;beforeNear, &amp;beforeFar);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //camera-&gt;screenID<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::SetCameraPositionAndAngle(camera-&gt;pos, camera-&gt;rot.V, camera-&gt;rot.H, camera-&gt;rot.T); // 各カメラの位置、回転を設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Screen::Start(camera-&gt;screenHandle, true, camera-&gt;fovAngle); // カメラに関連付けられたスクリーンIDを描画先にする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; drawFunc(); // 渡された描画処理を実行<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Screen::End(true); // 描画先を元に戻す<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カメラの設定をもとに戻しておく<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Camera::SetCameraSettings(&amp;beforeCamPos, &amp;beforeVRot, &amp;beforeHRot, &amp;beforeTRot, &amp;beforeFov, &amp;beforeNear, &amp;beforeFar);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+    </p>
+    <br>
+    <br>
     <p><code>GameScene.cppを新規作成</code>して、ゲームをUpdateしたりDrawしたりする処理を実装しましょう。<br>
     </p>
     <p class="source">#include "GameScene.h"<br>
@@ -5522,6 +5684,1778 @@
     コンポーネントとは「this渡しによる親の変数アクセス」が本質であるという重要な勉強がすっとばされてしまうので、<br>
     ほぼプログラミングの設計サイドにふれあう機会なく、便利さのぬるま湯につかってしまいます。<br>
     ここまでの勉強によって「ゲームエンジンそのものとは何なのか？」の理解に少しは近づけたでしょうか？<br>
+    <br>
+    <br>
+    <a id="mozTocId0009" class="mozTocH1">
+      <h1>何もない空間をグリッド分割して隣接していない空間に所属するものとの当たり判定をスルーして高速化する</h1>
+    </a>
+    <p><code>Plane4.hとCollision3D.hは別記事を参考に作っておきます→</code>Vector3の記事の下のほうにPlane4.hとCollision3D.hがあります→<a
+
+        href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/polygon3d/index.html#mozTocId0013">Vector3に色々な関数を用意して3D空間の当たり判定をする</a><br>
+    </p>
+    <br>
+    さあAddComponentもできてあとは広大なマップを冒険だ！と思った人もおられるでしょう。<br>
+    しかし、まだ甘い、修業は続きます。<br>
+    マップが広がってからでは実感できないことを、この「何もない精神と時の部屋」にいるうちにやってしまったほうがよいでしょう。<br>
+    <br>
+    マップがなくても、空間は分割できるのです。<br>
+    なんだか空間とか言い出し始めたら「<a href="https://note.com/yakikoimo/n/n440612a79297">無量空処に適応する魔虚羅</a>」みたいな、わけわからん概念の世界に迷い込みそうですが、<br>
+    ようは、XYZの<b>位置を10ごとに区切れば</b>、<br>
+    <b>0～10のエリアにいる人と31～40のエリアにいる人のように離れたエリアにいる人どうしは当たり判定をスルーできる</b>ということです。<br>
+    これは、別にマップがなくても空間は区切れます。<br>
+    Unityなどゲームエンジンでは上位互換の「<a href="https://edom18.hateblo.jp/entry/2017/07/28/083153">8分木</a>」を使うことが多いですが、<br>
+    今回は入門として、単なる上記のような10とか64とか128の<a href="https://book.impress.co.jp/books/1114101121">倍数などで空間を区切るグリッド分割</a>をとりいれてみましょう。<br>
+    <br>
+    <br>
+    まずは所属する空間のマス目を表現するためのCellXYZクラスを準備します。(マス目はAIの経路探索などでも多用します)<br>
+    <p><code>CellXYZ.hを新規作成</code>して、将棋などのようなマス目位置をハッシュ値変換できて辞書で管理できるクラスを準備しましょう。</p>
+    <p class="source">#ifndef CELLXYZ_H_<br>
+      #define CELLXYZ_H_<br>
+      <br>
+      #include &lt;unordered_map&gt; // ハッシュ値計算 std::hashに必要<br>
+      <br>
+      #include &lt;cmath&gt;<br>
+      #include &lt;algorithm&gt; // std::maxに必要<br>
+      <br>
+      // マス目のXとYとZを保持するデータ型<br>
+      struct CellXYZ<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; int X = 0, Y = 0, Z = 0;<br>
+      &nbsp;&nbsp;&nbsp; CellXYZ() = default;<br>
+      &nbsp;&nbsp;&nbsp; inline ~CellXYZ() {};<br>
+      &nbsp;&nbsp;&nbsp; inline CellXYZ(int X, int Y, int Z = 0) : X{ X }, Y{ Y }, Z{ Z } {};<br>
+      &nbsp;&nbsp;&nbsp; // <b>連想配列mapのキーで使う</b>ため &lt; 比較演算子(連想配列並べ替えのため)をカスタム定義 http://programming-tips.info/use_struct_as_key_of_map/cpp/index.html<br>
+      &nbsp;&nbsp;&nbsp; inline bool operator &lt; (const CellXYZ&amp; other) const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;Z &lt; other.Z) return true; // Z優先並べ替え(std::map並び順ではZの大きいものが一番あとに[並び順]X行⇒Y列⇒Zのエクセル順)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (this-&gt;Z &gt; other.Z) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;Y &lt; other.Y) return true; // Zが同じ時はYを比較 Z Y の順に並べばCSVのように左上から列→行の順にならぶ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (this-&gt;Y &gt; other.Y) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;X &lt; other.X) return true; // Z,Yが同じ時はXを比較<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (this-&gt;X &gt; other.X) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // X と Y と Z がすべて等しい場合<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // == 比較演算子カスタム定義 https://sygh.hatenadiary.jp/entry/2014/02/13/222356<br>
+      &nbsp;&nbsp;&nbsp; inline bool operator == (const CellXYZ&amp; other) const {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return this-&gt;X == other.X &amp;&amp; this-&gt;Y == other.Y &amp;&amp; this-&gt;Z == other.Z;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline bool operator != (const CellXYZ&amp; other) const {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return !(this-&gt;operator==(other));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline size_t <b>GetHashCode</b>() const // <b>X,Y,Zの値からハッシュ値を計算</b> https://sygh.hatenadiary.jp/entry/2014/02/13/222356<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::hash&lt;decltype(X)&gt;()(this-&gt;X) ^<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::hash&lt;decltype(Y)&gt;()(this-&gt;Y) ^<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::hash&lt;decltype(Z)&gt;()(this-&gt;Z);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; struct <b>Hash</b> // ハッシュ値取得用の関数オブジェクト(<b>std::unordered_map のキーで使うため</b>) https://sygh.hatenadiary.jp/entry/2014/02/13/222356<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t operator ()(const CellXYZ&amp; cellXYZ) const<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return cellXYZ.<b>GetHashCode</b>();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline CellXYZ up() const { return CellXYZ(X, Y - 1, Z); }; // 上方向<br>
+      &nbsp;&nbsp;&nbsp; inline CellXYZ down() const { return CellXYZ(X, Y + 1, Z); }; // 下方向<br>
+      &nbsp;&nbsp;&nbsp; inline CellXYZ left() const { return CellXYZ(X - 1, Y, Z); }; // 左方向<br>
+      &nbsp;&nbsp;&nbsp; inline CellXYZ right() const { return CellXYZ(X + 1, Y, Z); }; // 右方向<br>
+      &nbsp;&nbsp;&nbsp; inline CellXYZ upZ() const { return CellXYZ(X, Y, Z - 1); }; // 上方向(Z方向)<br>
+      &nbsp;&nbsp;&nbsp; inline CellXYZ downZ() const { return CellXYZ(X, Y, Z + 1); }; // 下方向(Z方向)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 方向の種類:2D(4方向,8方向) 3D(6方向,26方向)<br>
+      &nbsp;&nbsp;&nbsp; enum class DirType : unsigned char { Direction4, Direction8, Direction6, Direction26 };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //[enum定義:4方向]上下左右(反時計回り順:上→左→下→右)<br>
+      &nbsp;&nbsp;&nbsp; enum class Direction4 : unsigned char { Up = 0, Left, Down, Right };<br>
+      &nbsp;&nbsp;&nbsp; //[enum定義:8方向] 反時計回り順:上→左上→左→左下→下→右下→右→右上<br>
+      &nbsp;&nbsp;&nbsp; enum class Direction8 : unsigned char { Up = 0, LeftUp, Left, LeftDown, Down, RightDown, Right, RightUp };<br>
+      &nbsp;&nbsp;&nbsp; //[enum定義:6方向] 反時計回り順:上→左→下→右→右上→3D上→3D下<br>
+      &nbsp;&nbsp;&nbsp; enum class Direction6 : unsigned char { Up = 0, Left, Down, Right, UpZ, DownZ };<br>
+      &nbsp;&nbsp;&nbsp; //[enum定義:26方向] 反時計回り順:上→左上→左→左下→下→右下→右→右上→3D下→..反時計回り..→3D上→..反時計回り<br>
+      &nbsp;&nbsp;&nbsp; enum class Direction26 : unsigned char {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Up = 0, LeftUp, Left, LeftDown, Down, RightDown, Right, RightUp,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DownZ, Up_DownZ, LeftUp_DownZ, Left_DownZ, LeftDown_DownZ, Down_DownZ, RightDown_DownZ, Right_DownZ, RightUp_DownZ,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; UpZ, Up_UpZ, LeftUp_UpZ, Left_UpZ, LeftDown_UpZ, Down_UpZ, RightDown_UpZ, Right_UpZ, RightUp_UpZ,<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //4方向[2D] [constexprで実行前に固定値化して高速化]<br>
+      &nbsp;&nbsp;&nbsp; static constexpr const std::tuple&lt;int, int, int&gt; dir4[4] = { {0,-1,0},{-1,0,0},{0,+1,0},{+1,0,0} };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // マス目の上下左右 4方向 をvector配列として返す ★配列順 と enum定義順 を合わせてある<br>
+      &nbsp;&nbsp;&nbsp; static inline std::vector&lt;CellXYZ&gt; directions4()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // moveで右辺値の所有権をそのまま { }の外へreturnで渡す https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::move(std::vector&lt;CellXYZ&gt; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, -1), // 上(0時方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, 0), // 左(9時方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, +1), // 下(6時方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, 0), // 右(3時方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // マス目の上下左右 4方向 をvector配列として返す ★配列順 と enum定義順 を合わせてある<br>
+      &nbsp;&nbsp;&nbsp; inline std::vector&lt;CellXYZ&gt; getDirections4() const<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // moveで右辺値の所有権をそのまま { }の外へreturnで渡す https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::move(std::vector&lt;CellXYZ&gt; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y - 1, Z), // 上(0時方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y, Z), // 左(9時方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y + 1, Z), // 下(6時方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y, Z) // 右(3時方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //8方向[2D] [constexprで実行前に固定値化して高速化]<br>
+      &nbsp;&nbsp;&nbsp; static constexpr const std::tuple&lt;int, int, int&gt; dir8[8] = { {0,-1,0},{-1,-1,0},{-1,0,0},{-1,+1,0},{0,+1,0},{+1,+1,0},{+1,0,0},{+1,-1,0} };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // マス目の上下左右斜め 8方向 をvector配列として返す ★配列順 と enum定義順 を合わせてある<br>
+      &nbsp;&nbsp;&nbsp; static inline std::vector&lt;CellXYZ&gt; directions8()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // moveで右辺値の所有権をそのまま { }の外へreturnで渡す https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::move(std::vector&lt;CellXYZ&gt; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, -1), //&nbsp; 上(12時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, -1), //左上(10時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, 0), //&nbsp; 左( 9時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, +1), //左下( 7時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, +1), //&nbsp; 下( 6時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, +1), //右下( 4時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, 0), //&nbsp; 右( 3時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, -1)&nbsp; //右上( 1時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // マス目の上下左右斜め 8方向 をvector配列として返す ★配列順 と enum定義順 を合わせてある<br>
+      &nbsp;&nbsp;&nbsp; inline std::vector&lt;CellXYZ&gt; getDirections8() const<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // moveで右辺値の所有権をそのまま { }の外へreturnで渡す https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::move(std::vector&lt;CellXYZ&gt; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y - 1, Z), //&nbsp; 上(12時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y - 1, Z), //左上(10時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y, Z), //&nbsp; 左( 9時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y + 1, Z), //左下( 7時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y + 1, Z), //&nbsp; 下( 6時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y + 1, Z), //右下( 4時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y, Z), //&nbsp; 右( 3時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y - 1, Z)&nbsp; //右上( 1時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //6方向[3D] [constexprで実行前に固定値化して高速化]<br>
+      &nbsp;&nbsp;&nbsp; static constexpr const std::tuple&lt;int, int, int&gt; dir6[6] = { {0,-1,0},{-1,0,0},{0,+1,0},{+1,0,0},{0,0,-1},{0,0,+1} };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // マス目の[2D]上下左右、[3D]上下 6方向 をvector配列として返す ★配列順 と enum定義順 を合わせてある<br>
+      &nbsp;&nbsp;&nbsp; static inline std::vector&lt;CellXYZ&gt; directions6()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // moveで右辺値の所有権をそのまま { }の外へreturnで渡す https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::move(std::vector&lt;CellXYZ&gt; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, -1), //&nbsp; 上(12時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, 0), //&nbsp; 左( 9時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, +1), //&nbsp; 下( 6時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, 0), //&nbsp; 右( 3時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, 0, -1), // 下方向(Z方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, 0, +1)&nbsp; // 上方向(Z方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // マス目の[2D]上下左右、[3D]上下 6方向 をvector配列として返す ★配列順 と enum定義順 を合わせてある<br>
+      &nbsp;&nbsp;&nbsp; inline std::vector&lt;CellXYZ&gt; getDirections6() const<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // moveで右辺値の所有権をそのまま { }の外へreturnで渡す https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::move(std::vector&lt;CellXYZ&gt; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y - 1, Z), //&nbsp; 上(12時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y, Z), //&nbsp; 左( 9時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y + 1, Z), //&nbsp; 下( 6時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y, Z), //&nbsp; 右( 3時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y, Z - 1), // 下方向(Z方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y, Z + 1)&nbsp; // 上方向(Z方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //26方向[3D] [constexprで実行前に固定値化して高速化]<br>
+      &nbsp;&nbsp;&nbsp; static constexpr const std::tuple&lt;int, int, int&gt; dir26[26] = {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {0,-1, 0},{-1,-1, 0},{-1,0, 0},{-1,+1, 0},{0,+1, 0},{+1,+1, 0},{+1,0, 0},{+1,-1, 0},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {0,0,-1},{0,-1,-1},{-1,-1,-1},{-1,0,-1},{-1,+1,-1},{0,+1,-1},{+1,+1,-1},{+1,0,-1},{+1,-1,-1},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {0,0,+1},{0,-1,+1},{-1,-1,+1},{-1,0,+1},{-1,+1,+1},{0,+1,+1},{+1,+1,+1},{+1,0,+1},{+1,-1,+1},<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // マス目の[2D]上下左右、[3D]上下 6方向 をvector配列として返す ★配列順 と enum定義順 を合わせてある<br>
+      &nbsp;&nbsp;&nbsp; static inline std::vector&lt;CellXYZ&gt; directions26()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // moveで右辺値の所有権をそのまま { }の外へreturnで渡す https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::move(std::vector&lt;CellXYZ&gt; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, -1, 0), //&nbsp; 上(12時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, -1, 0), //左上(10時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, 0, 0), //&nbsp; 左( 9時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, +1, 0), //左下( 7時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, +1, 0), //&nbsp; 下( 6時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, +1, 0), //右下( 4時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, 0, 0), //&nbsp; 右( 3時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, -1, 0), //右上( 1時半方向)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, 0, -1), //[3D下]下方向(Z方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, -1, -1), //[3D下]&nbsp; 上(12時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, -1, -1), //[3D下]左上(10時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, 0, -1), //[3D下]&nbsp; 左( 9時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, +1, -1), //[3D下]左下( 7時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, +1, -1), //[3D下]&nbsp; 下( 6時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, +1, -1), //[3D下]右下( 4時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, 0, -1), //[3D下]&nbsp; 右( 3時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, -1, -1), //[3D下]右上( 1時半方向)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, 0, +1), //[3D上]上方向(Z方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, -1, +1), //[3D上]&nbsp; 上(12時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, -1, +1), //[3D上]左上(10時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, 0, +1), //[3D上]&nbsp; 左( 9時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(-1, +1, +1), //[3D上]左下( 7時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(0, +1, +1), //[3D上]&nbsp; 下( 6時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, +1, +1), //[3D上]右下( 4時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, 0, +1), //[3D上]&nbsp; 右( 3時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(+1, -1, +1)&nbsp; //[3D上]右上( 1時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // マス目の[2D]上下左右、[3D]下反時計周り 上反時計回り 26方向 をvector配列として返す ★配列順 と enum定義順 を合わせてある<br>
+      &nbsp;&nbsp;&nbsp; inline std::vector&lt;CellXYZ&gt; getDirections26() const<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // moveで右辺値の所有権をそのまま { }の外へreturnで渡す https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::move(std::vector&lt;CellXYZ&gt; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y - 1, Z), //&nbsp; 上(12時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y - 1, Z), //左上(10時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y, Z), //&nbsp; 左( 9時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y + 1, Z), //左下( 7時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y + 1, Z), //&nbsp; 下( 6時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y + 1, Z), //右下( 4時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y, Z), //&nbsp; 右( 3時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y - 1, Z), //右上( 1時半方向)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y, Z - 1), //[3D下]下方向(Z方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y - 1, Z - 1), //[3D下]&nbsp; 上(12時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y - 1, Z - 1), //[3D下]左上(10時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y, Z - 1), //[3D下]&nbsp; 左( 9時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y + 1, Z - 1), //[3D下]左下( 7時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y + 1, Z - 1), //[3D下]&nbsp; 下( 6時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y + 1, Z - 1), //[3D下]右下( 4時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y, Z - 1), //[3D下]&nbsp; 右( 3時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y - 1, Z - 1), //[3D下]右上( 1時半方向)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y, Z + 1), //[3D上]上方向(Z方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y - 1, Z + 1), //[3D上]&nbsp; 上(12時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y - 1, Z + 1), //[3D上]左上(10時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y, Z + 1), //[3D上]&nbsp; 左( 9時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X - 1, Y + 1, Z + 1), //[3D上]左下( 7時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X, Y + 1, Z + 1), //[3D上]&nbsp; 下( 6時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y + 1, Z + 1), //[3D上]右下( 4時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y, Z + 1), //[3D上]&nbsp; 右( 3時&nbsp; 方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ(X + 1, Y - 1, Z + 1)&nbsp; //[3D上]右上( 1時半方向)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline CellXYZ&amp; operator += (const CellXYZ&amp; other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;X = this-&gt;X + other.X;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;Y = this-&gt;Y + other.Y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;Z = this-&gt;Z + other.Z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline CellXYZ operator -= (const CellXYZ&amp; other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;X = this-&gt;X - other.X;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;Y = this-&gt;Y - other.Y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;Z = this-&gt;Z - other.Z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; enum class DistType : unsigned char//[距離の種類] https://datachemeng.com/use_of_distance/<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; None = 0,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Manhattan, // マンハッタン距離(都市のブロック単位の距離、京都の碁盤の目の距離)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Euclidian, // ユークリッド距離(√直線距離:三平方の定理の距離)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Euclidian2, // ユークリッド距離(2乗直線距離:ルート計算を省いて高速化)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Chebyshev, // チェビシェフ距離(縦か横か高さの差のどれか一番大きい値)<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // マス目距離を求める Aスターアルゴリズムのヒューリスティックコストなどに使われる<br>
+      &nbsp;&nbsp;&nbsp; inline float distance(const CellXYZ&amp; cell, DistType type = DistType::Manhattan)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (type == DistType::Manhattan)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (float)(std::abs(cell.X - X) + std::abs(cell.Y - Y) + std::abs(cell.Z - Z));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (type == DistType::Euclidian || type == DistType::Euclidian2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float dist2 = (float)((cell.X - X) * (cell.X - X) + (cell.Y - Y) * (cell.Y - Y) + (cell.Z - Z) * (cell.Z - Z));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (type == DistType::Euclidian2)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return dist2; // 2乗のまま返す(√計算コスト省く)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::sqrt(dist2); // √距離<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // &lt;windows.h&gt;をインクルードするとmaxという名前の関数マクロが定義され、std::max()と衝突してしまうので(std::max)(a, b);のように関数名をカッコで囲んで使用 https://cpprefjp.github.io/reference/algorithm/max.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (float)(std::max)({ std::abs(cell.X - X), std::abs(cell.Y - Y), std::abs(cell.Z - Z) }); // チェビシェフ距離 3変数のmax https://moxtsuan.hatenablog.com/entry/2014/12/01/235957<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      inline CellXYZ operator + (const CellXYZ&amp; left, const CellXYZ&amp; right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; return std::move(CellXYZ{ left.X + right.X, left.Y + right.Y, left.Z + right.Z });<br>
+      }<br>
+      <br>
+      inline CellXYZ operator - (const CellXYZ&amp; left, const CellXYZ&amp; right)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; return std::move(CellXYZ{ left.X - right.X, left.Y - right.Y, left.Z - right.Z });<br>
+      }<br>
+      <br>
+      // CellXYZに追加機能として原点(0,0,0)からの距離を事前計算する機能を追加<br>
+      struct CellDistXYZ<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { int X, Y, Z; };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ XYZ;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; int distpow2{ 0 }; // 原点(0,0,0)からの距離の2乗<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; operator CellXYZ&amp; () { return XYZ; } // CellXYZ型への変換オペレータ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; CellDistXYZ() = default;<br>
+      &nbsp;&nbsp;&nbsp; inline ~CellDistXYZ() {};<br>
+      &nbsp;&nbsp;&nbsp; inline CellDistXYZ(int X, int Y, int Z = 0) : X{ X }, Y{ Y }, Z{ Z }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; distpow2 = X * X + Y * Y + Z * Z; // 原点(0,0,0)からの距離比較のため事前初期計算<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ★連想配列mapのキーで使うため &lt; 比較演算子(連想配列並べ替えのため)をカスタム定義 http://programming-tips.info/use_struct_as_key_of_map/cpp/index.html<br>
+      &nbsp;&nbsp;&nbsp; inline bool operator &lt; (const CellDistXYZ&amp; other) const {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★原点からの距離distpow2順になるようにするとstd::mapにいれれば自動で原点からの距離順にならぶ(敵の近い順に使える)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;distpow2 &lt; other.distpow2) return true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;Z &lt; other.Z) return true; // Z優先並べ替え(std::map並び順ではZの大きいものが一番あとに[並び順]X行⇒Y列⇒Zのエクセル順)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (this-&gt;Z &gt; other.Z) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;Y &lt; other.Y) return true; // Zが同じ時はYを比較 Z Y の順に並べばCSVのように左上から列→行の順にならぶ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (this-&gt;Y &gt; other.Y) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;X &lt; other.X) return true; // Z,Yが同じ時はXを比較<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (this-&gt;X &gt; other.X) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // X と Y と Z がすべて等しい場合<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 一致演算子 == std::unordered_map のキーで使うため == 比較演算子カスタム定義 https://sygh.hatenadiary.jp/entry/2014/02/13/222356<br>
+      &nbsp;&nbsp;&nbsp; inline bool operator == (const CellXYZ&amp; other) const {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return this-&gt;X == other.X &amp;&amp; this-&gt;Y == other.Y &amp;&amp; this-&gt;Z == other.Z;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // 不一致演算子 !=<br>
+      &nbsp;&nbsp;&nbsp; inline bool operator != (const CellXYZ&amp; other) const {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return !(this-&gt;operator==(other));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline size_t GetHashCode() const { return XYZ.GetHashCode(); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; struct Hash // ハッシュ値取得用の関数オブジェクト(std::unordered_map のキーで使うため) https://sygh.hatenadiary.jp/entry/2014/02/13/222356<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inline size_t operator ()(const CellDistXYZ&amp; cell) const { return cell.XYZ.GetHashCode(); }<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline CellDistXYZ&amp; operator += (const CellXYZ&amp; other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;XYZ += other;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;distpow2 = X * X + Y * Y + Z * Z; // 原点(0,0,0)からの距離比較のため<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline CellDistXYZ&amp; operator += (const CellDistXYZ&amp; other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;XYZ += other.XYZ;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;distpow2 = X * X + Y * Y + Z * Z; // 原点(0,0,0)からの距離比較のため<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline CellDistXYZ&amp; operator -= (const CellXYZ&amp; other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;XYZ -= other;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;distpow2 = X * X + Y * Y + Z * Z; // 原点(0,0,0)からの距離比較のため<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline CellDistXYZ&amp; operator -= (const CellDistXYZ&amp; other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;XYZ -= other.XYZ;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;distpow2 = X * X + Y * Y + Z * Z; // 原点(0,0,0)からの距離比較のため<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return *this;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ムーブコンストラクタ distpow2を再計算せずにそのまま代入 https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html<br>
+      &nbsp;&nbsp;&nbsp; inline CellDistXYZ(CellDistXYZ&amp;&amp; other) noexcept : XYZ{ other.XYZ }, distpow2{ other.distpow2 } {}<br>
+      };<br>
+      <br>
+      <br>
+      inline CellDistXYZ operator + (const CellDistXYZ&amp; left, const CellDistXYZ&amp; right)<br>
+      {&nbsp;&nbsp; // ムーブコンストラクタで { }内 の一時変数 を いちいち無駄にコピーせず { }外 へそのまま所有権ごと移動させるので { }内 のデータは消えずに { }外へ<br>
+      &nbsp;&nbsp;&nbsp; return std::move(CellDistXYZ{ left.X + right.X,left.Y + right.Y,left.Z + right.Z });<br>
+      }<br>
+      <br>
+      inline CellDistXYZ operator - (const CellDistXYZ&amp; left, const CellDistXYZ&amp; right)<br>
+      {&nbsp;&nbsp; // ムーブコンストラクタで { }内 の一時変数 を いちいち無駄にコピーせず { }外 へそのまま所有権ごと移動させるので { }内 のデータは消えずに { }外へ<br>
+      &nbsp;&nbsp;&nbsp; return std::move(CellDistXYZ{ left.X - right.X,left.Y - right.Y,left.Z - right.Z });<br>
+      }<br>
+      <br>
+      // 空間をグリッドでマス目として分割する<br>
+      template&lt;typename TypeT&gt;<br>
+      class <b>CellGrid</b><br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; int cellWidth, cellHeight, cellDepth; // マス目セルのサイズ(当たり判定の半径よりは大きくないとあかん)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // CellXYZをキーにそのマス目にあるTypeTを得る辞書配列<br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;CellXYZ, TypeT, CellXYZ::<b>Hash</b>&gt; <b>cellData</b>;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline CellGrid(int cellWidth = 64, int cellHeight = 64, int cellDepth = 64)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : cellWidth{ cellWidth }, cellHeight{ cellHeight }, cellDepth{ cellDepth }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clear();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual ~CellGrid()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clear();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual int cellX(float worldX)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マイナス方向にも対応<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (worldX &gt;= 0) ? (int)<b>worldX / cellWidth</b> : (int)worldX / cellWidth - 1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual int cellY(float worldY)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マイナス方向にも対応<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (worldY &gt;= 0) ? (int)worldY / cellHeight : (int)worldY / cellHeight - 1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual int cellZ(float worldZ)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マイナス方向にも対応<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (worldZ &gt;= 0) ? (int)worldZ / cellDepth : (int)worldZ / cellDepth - 1;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual float centerX(int cellX)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マイナス方向にも対応<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (cellX &gt;= 0) ? (float)cellX * cellWidth + cellWidth / 2 : (float)(cellX + 1) * cellWidth - cellWidth / 2;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual float centerY(int cellY)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マイナス方向にも対応<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (cellY &gt;= 0) ? (float)cellY * cellHeight + cellHeight / 2 : (float)(cellY + 1) * cellHeight - cellHeight / 2;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual float centerZ(int cellZ)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マイナス方向にも対応<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (cellZ &gt;= 0) ? (float)cellZ * cellDepth + cellDepth / 2 : (float)(cellZ + 1) * cellDepth - cellDepth / 2;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline TypeT top(float worldX, float worldY, float worldZ = 0) // マス目に入っている先頭の要素へのポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return top(cellX(worldX), cellY(worldY), cellZ(worldZ));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline TypeT top(int cellX, int cellY, int cellZ = 0) // マス目に入っている先頭の要素へのポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return top(CellXYZ(cellX, cellY, cellZ));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline TypeT top(const CellXYZ&amp; searchXYZ) { // マス目に入っている先頭の要素を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (cellData.count(searchXYZ) == 0) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto ret = cellData[searchXYZ]; //TypeTのデフォルトコンストラクタを走らせる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cellData.erase(searchXYZ); // 即消す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return ret;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return cellData[searchXYZ];<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline int cellID(int cellX, int cellY, int cellZ = 0) // マス目番号IDを返す(見つからない場合は-1が返る)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ searchXYZ(cellX, cellY, cellZ);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (cellData.count(searchXYZ) == 0) return -1; // 見つからない場合は-1が返る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return top(searchXYZ).posID;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline int cellID(const CellXYZ&amp; searchXYZ)&nbsp; // マス目番号IDを返す(見つからない場合は-1が返る)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (cellData.count(searchXYZ) == 0) return -1; // 見つからない場合は-1が返る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return top(searchXYZ).posID;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline TypeT&amp; operator()(float worldX, float worldY, float worldZ = 0) { // マス目に入っている先頭の参照を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return cellData[CellXYZ(cellX(worldX), cellY(worldY), cellZ(worldZ))];<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; inline TypeT&amp; operator()(int cellX, int cellY, int cellZ = 0) { // マス目に入っている先頭の参照を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return cellData[CellXYZ(cellX, cellY, cellZ)];<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline TypeT&amp; operator[](const CellXYZ&amp; searchXYZ) { // マス目に入っている先頭の参照を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return cellData[searchXYZ];<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; struct LineZ {//★ []オペレータの数珠つなぎで[][][]3つ四角で3次元配列のようにアクセスできるように<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellGrid* parent{ nullptr };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int X, Y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inline LineZ(int X, int Y, CellGrid* parent) : X{ X }, Y{ Y }, parent{ parent } {};<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inline TypeT&amp; operator[](int Z) { // マス目に入っている先頭の参照を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (*parent)[CellXYZ(X, Y, Z)];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inline operator TypeT&amp; () { // [][]の2つ[]のときはZ無し辞書にアクセスして返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (*parent)[CellXYZ(X, Y)];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inline TypeT&amp; operator = (TypeT other) { //　代入 [X][Y] = ～;の時の挙動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (*parent)[CellXYZ(X, Y)] = other;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; struct LineY {//★ []オペレータの数珠つなぎで[][][]3つ四角で3次元配列のようにアクセスできるように<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellGrid* parent{ nullptr };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int X;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inline LineY(int X, CellGrid* parent) : X{ X }, parent{ parent } {};<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inline LineZ operator[](int Y) { // []オペレータの数珠つなぎで[][][]3つ四角で3次元配列のようにアクセスできるように<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return LineZ(X, Y, parent);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; inline LineY operator[](int X) { // マス目に入っている要素へ[][][]3つ四角でアクセスできるように<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return LineY(X, this);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void clear(CellXYZ* targetXYZ = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (targetXYZ == nullptr) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;CellXYZ&gt; cells;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; cell : cellData)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cells.emplace_back(cell.first);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; cell : cells)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clear(&amp;cell);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cellData.clear(); //格子をクリア<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //std::unordered_map&lt;CellXYZ, TypeT, CellXYZ::Hash&gt;().swap(cellData); // 空のテンポラリオブジェクトでリセット https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory/42115076<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 継承してTypeTクラスがリンクリスト構造ならoverrideして数珠つなぎのリストをクリアしたほうがいい(そのままだと先頭しかclearされないから)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /*else if (targetXYZ != nullptr &amp;&amp; cellData.count(*targetXYZ) != 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cellData[*targetXYZ]-&gt;clearLinkList();*/<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() {}; // Update仮想関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() {}; // Draw仮想関数<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // マス目の上下左右4方向をvector配列として返す<br>
+      &nbsp;&nbsp;&nbsp; inline std::vector&lt;CellXYZ&gt; getDirections4(const CellXYZ&amp; center, bool ifExists = false) // ifExists = trueにすると存在しているときだけget<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;CellXYZ&gt; directions;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; cell : center.getDirections4())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (ifExists == true &amp;&amp; cellData.count(cell) &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; directions.emplace_back(cell);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return directions;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // マス目の上下左右斜め方向をvector配列として返す<br>
+      &nbsp;&nbsp;&nbsp; inline std::vector&lt;CellXYZ&gt; getDirections8(const CellXYZ&amp; center, bool ifExists = false) // ifExists = trueにすると存在しているときだけget<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;CellXYZ&gt; directions;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; cell : center.getDirections8())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (ifExists == true &amp;&amp; cellData.count(cell))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; directions.emplace_back(cell);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return directions;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; //[3D] マス目の上下左右 と 3D上下 方向をvector配列として返す<br>
+      &nbsp;&nbsp;&nbsp; inline std::vector&lt;CellXYZ&gt; getDirections6(const CellXYZ&amp; center, bool ifExists = false) // ifExists = trueにすると存在しているときだけget<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;CellXYZ&gt; directions;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; cell : center.getDirections6())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (ifExists == true &amp;&amp; cellData.count(cell))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; directions.emplace_back(cell);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return directions;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; //[3D] マス目の[2D]上下左右斜め 8方向 と [3D下]反時計回り9方向 と [3D上]反時計回り9方向 計26方向をvector配列として返す<br>
+      &nbsp;&nbsp;&nbsp; inline std::vector&lt;CellXYZ&gt; getDirections26(const CellXYZ&amp; center, bool ifExists = false) // ifExists = trueにすると存在しているときだけget<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;CellXYZ&gt; directions;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; cell : center.getDirections26())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (ifExists == true &amp;&amp; cellData.count(cell))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; directions.emplace_back(cell);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return directions;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    なかなか長いですが、<br>
+    ようは<b>「何もないマス目の情報をもたないためにはマス目のハッシュ値をキーにして辞書で管理したい」</b>ということです。<br>
+    例えば、普通の辞書を考えてみてください。<br>
+    辞書のア行にアイスという言葉は登録されていますが「あああああ」という言葉は登録されていませんよね。<br>
+    あたりまえのように聞こえるかもしれませんが、それをマス目に入れ替えるとどうでしょう。<br>
+    空間のほとんどにはキャラはおらず「マス目は空」ですよね。<br>
+    なのにこれをもしstd::vector&lt;std::vector&lt;std::vector&lt;Chara&gt;&gt;&gt;型の3次元配列で管理しようとするとどうでしょう。<br>
+    ほとんどの[2][3][6]の位置にだけキャラがいたとして、その他の[z][y][x]のマス目のほとんどは「キャラがいないのにデータとしてはメモリを食う」ことになります。<br>
+    これは「あああ」「ああい」「ああう」「ああえ」など意味のないキーのために辞書のページを無駄づかいしているようなものです。<br>
+    ハッシュ値をキーにした辞書なら、キャラのいないマス目はそもそも辞書にはのっていない = ページ無駄がない ということが実現できます。<br>
+    上記のCellXYZでは Hash を定義して、<br>
+    CellGridクラスのメンバのstd::unordered_map&lt;CellXYZ, TypeT, <b>CellXYZ::Hash</b>&gt; cellData;ではそのハッシュをキーとした辞書を持っています。<br>
+    そして、CellGridクラスの下記の関数<br>
+    &nbsp;&nbsp;&nbsp; virtual int cellX(float worldX)<br>
+    &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マイナス方向にも対応<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (worldX &gt;= 0) ? (int)<b>worldX / cellWidth</b> : (int)worldX / cellWidth - 1;<br>
+    &nbsp;&nbsp;&nbsp; }<br>
+    上記の<b>worldX / cellWidth</b> の割り算で例えば <b>cellWidthが10だとすると、x = 92.0の位置は 92 / 10 = 9番のマス目の位置に変換</b>されます。<br>
+    (マイナスのときは、x = -12.0の位置は -12 / 10 - 1 = -2番、x = -4.0の位置は -4 / 10 - 1 = -1番 の位置に変換されます←int型割り算の余り-4は切り捨て)<br>
+    マス目は、ようするに<b>float型のワールド位置をint型にキャストして、マス目のサイズで割って(余りは切り捨て)、int型のマス目番号に変換するというのがポイント</b>ですね。<br>
+    逆にいうと、<b>マス目のサイズ(縦と横と高さ)が確定しないと、ワールド位置をマス目の番号に変換することはできない</b>ということです。<br>
+    <br>
+    <br>
+    では、次はCellGridに入れるオブジェクト、GridObjectを作成していきましょう。<br>
+    <p><code>GridObject.hを新規作成</code>して、マス目にいれるオブジェクトのクラスを準備しましょう。</p>
+    <p class="source">#ifndef GRID_OBJECT_H_<br>
+      #define GRID_OBJECT_H_<br>
+      <br>
+      #include "CellXYZ.h"<br>
+      #include "GameObject.h"<br>
+      <br>
+      class GridObject; // 前方宣言<br>
+      <br>
+      // GridObjectに特化したGridをCellGridを継承して定義<br>
+      class <b>Grid</b> : public <b>CellGrid</b>&lt;GridObject*&gt;<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 継承overrideしてGridObjectのリンクリスト構造を頭から最後まで全部クリアする<br>
+      &nbsp;&nbsp;&nbsp; virtual void clear(CellXYZ* targetXYZ = nullptr) override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Grid(int cellWidth = 64, int cellHeight = 64, int cellDepth = 64)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : CellGrid(cellWidth, cellHeight, cellDepth)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clear();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Grid()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clear();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      <br>
+      // GameProgramingPatternsの第20章:空間分割を参考に独自実装(コンポーネント化、マイナス空間も対応)<br>
+      // https://www.amazon.co.jp/gp/offer-listing/4844338900/ref=tmm_pap_used_olp_0?ie=UTF8&amp;condition=used<br>
+      <br>
+      // グリッドに入れるオブジェクト、<b>前と後のオブジェクトへのリンクを数珠繋ぎリンクリスト構造で持つ</b>ことができる<br>
+      class GridObject<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; inline GridObject(Grid* <b>pGrid</b> = nullptr) : <b>m_pGrid</b>{ pGrid } {}<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GridObject() { erase(); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ beforeXYZ{ 0,0,0 }; // 1フレーム前のマス目位置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int X, Y, Z;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // <b>前と次への双方向のポインタ矢印を持つ数珠繋ぎリンクリスト構造</b><br>
+      &nbsp;&nbsp;&nbsp; GridObject* <b>m_pPrev</b>{ nullptr }; //<b>前の点ノードに戻る</b>矢印ポインタ<br>
+      &nbsp;&nbsp;&nbsp; GridObject* <b>m_pNext</b>{ nullptr }; //<b>次の点ノードに進む</b>矢印ポインタ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Grid* <b>m_pGrid</b>{ nullptr }; // GridObject自身が入っているグリッドへのリンク<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // override して グリッドの隣接グリッド探索などの処理を実装する<br>
+      &nbsp;&nbsp;&nbsp; virtual void checkCell()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // override して グリッドの隣接グリッド探索などの処理を実装してください<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // リンク構造のリセットとm_pGridへのリンクのクリア(<b>ドミノ倒し的に全部リセット</b>)<br>
+      &nbsp;&nbsp;&nbsp; virtual void clearLinkList()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GridObject* next = m_pNext; // eraseでpNextのリンクが消える前にリンクを一時退避<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; erase();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_pGrid = nullptr;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (next != nullptr) next-&gt;clearLinkList(); // 最初に取っておいた次のリンク先も連鎖的にクリアさせる(<b>ドミノ倒し的に全部リセット</b>)<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // グリッドにthisを追加 (m_pGridのnowXYZのマス目位置に追加)<br>
+      &nbsp;&nbsp;&nbsp; virtual void <b>add</b>(CellXYZ* nowXYZ)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (nowXYZ == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_pGrid == nullptr) return;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //↓<b>リンクリスト構造のリストを使って先頭に追加</b>する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_pPrev = nullptr; //先頭だから自分より前はない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_pNext = m_pGrid-&gt;top(*nowXYZ); // 次→grid配列の<b>先頭に元から入っていたもの</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (*m_pGrid)[*nowXYZ] = this; // grid配列の<b>先頭をthisにすげかえる</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_pNext != nullptr) // <b>先頭に元から入っていたものがnullptrじゃなかったら</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_pNext-&gt;m_pPrev = this; // this←元からの先頭(<b>先頭に割り込んだので元の先頭の人の前矢印をthisへリンク</b>)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //↑ここまでの処理で数珠つなぎのリンクリスト構造になる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; beforeXYZ = *nowXYZ; // 一つ前のx,y,zの位置を保存して次に備える<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // グリッドからthisを削除<br>
+      &nbsp;&nbsp;&nbsp; void <b>erase</b>(CellXYZ* nowXYZ = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // リンクリスト構造からのリンク削除処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_pPrev != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_pPrev-&gt;m_pNext = m_pNext; // <b>前要素とのリンク削除</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_pNext != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_pNext-&gt;m_pPrev = m_pPrev; // <b>次要素とのリンク削除</b><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // デバッグ表示<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (nowXYZ == nullptr) printfDx("(%d,%d,%d)\n", beforeXYZ.X, beforeXYZ.Y, beforeXYZ.Z);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (nowXYZ == nullptr) nowXYZ = &amp;beforeXYZ;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //printfDx("(%d,%d,%d)\n", fromXYZ-&gt;X, fromXYZ-&gt;Y, fromXYZ-&gt;Z); // デバッグ表示<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_pGrid == nullptr) return;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_pGrid-&gt;top(*nowXYZ) == this) // このグリッド<b>(this)がリンクリスト構造の一番最初(top)だった場合はtopの置き換えが必要</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_pNext != nullptr) // リンクリスト構造の<b>数珠つなぎの後ろ側(m_pNext)があるとき</b>には<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (*m_pGrid)[*nowXYZ] = m_pNext; // gridのマス目配列の<b>先頭を thisのかわりに pNextで上書きしてthisを上書きで消す</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // 数珠つなぎの後ろがいないときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (*m_pGrid).cellData.erase(*nowXYZ); // マス目辞書配列の目次から削除(辞書の目次数が多いと重くなりやすいから)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw(GameObject* obj = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      #ifdef _DEBUG<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_pGrid == nullptr) return;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int cellX = beforeXYZ.X; int cellY = beforeXYZ.Y; int cellZ = beforeXYZ.Z;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float leftX = (float)cellX * m_pGrid-&gt;cellWidth;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float topY = (float)cellY * m_pGrid-&gt;cellHeight;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float leftTopZ = (float)cellZ * m_pGrid-&gt;cellDepth;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float rightX = (float)(cellX + 1) * m_pGrid-&gt;cellWidth;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float bottomY = (float)(cellY + 1) * m_pGrid-&gt;cellHeight;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float rightBottomZ = (float)(cellZ + 1) * m_pGrid-&gt;cellDepth;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; unsigned int color = GetColor(0, 255, 255); // グリッドを 水色 で描画<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 四角Boxで GridObjectが存在するグリッド を描画<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawCube3D(VGet(leftX, topY, leftTopZ),<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VGet(rightX, bottomY, rightBottomZ),<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; color, color, FALSE);<br>
+      #endif<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    ここで、GridObjectの重要なデータ構造「<b>リンクリスト構造</b>」について触れなければなりません。<br>
+    &nbsp;&nbsp;&nbsp; // <b>前と次への双方向のポインタ矢印を持つ数珠繋ぎリンクリスト構造</b><br>
+    &nbsp;&nbsp;&nbsp; GridObject* <b>m_pPrev</b>{ nullptr }; //<b>前の点ノードに戻る</b>矢印ポインタ<br>
+    &nbsp;&nbsp;&nbsp; GridObject* <b>m_pNext</b>{ nullptr }; //<b>次の点ノードに進む</b>矢印ポインタ<br>
+    リンクリストは上記のように<b>2つ「数珠(じゅず)つなぎ用」ポインタ</b>を持ちます。<br>
+    <b>数珠つなぎをイメージするために「左手を前に右手を後ろに出してみてください」</b><br>
+    自分の後ろに人がいるときには、自分の右手(m_pNext) と 後ろの人の左手(m_pPrev) とをつなぎます。<br>
+    ポインタをつなぐとは、<br>
+    自分(this)の右手(m_pNext) <b>this-&gt;m_pNext = 後ろの人のデータへのポインタ;</b><br>
+    後ろの人(m_pNext)の左手(m_pPrev) <b>m_pNext-&gt;m_pPrev = this 自分;</b><br>
+    上記のように、2行で書きます。<b>2行必要なのは自分の手に相手をつなぐ1行だけでなく、相手側の手から自分へのポインタをつなぐ1行も必要だから</b>です。<br>
+    このように「リンクリスト構造とは自分の前と後ろのポインタの手をつなぐ構造」です。<br>
+    <br>
+    <b>リンクリスト構造はstd::vectorなどの配列を別途用意していないのに「前から後ろへの順番 = 数珠(じゅず)繋ぎ」を持てるという強力なテクニック</b>です。<br>
+    そして、驚くべきことに<b>リンクリスト構造なら「先頭の人を1人だけ辞書に登録してるだけなのに」「先頭の人からたどれば沢山の人を登録したのと実質同じ」である</b>ということです。<br>
+    さらに、<b>どんなに沢山データがあるときでも「列から離れるときには右手と左手を離せばよいだけ[計算速度O(1)] 」</b>です。<br>
+    <br>
+    つまり<b>「登録する辞書は全くかさばらないし、データ1つずつのつけ離しも高速」</b>なわけです。<br>
+    これは<b>空間をグリッドで区切ったマス目を辞書としたときに、キャラをマス目位置を目次とした辞書に頻繁に入れたり出したりする</b>のに非常に適しています。<br>
+    <b>敵キャラが一つのマス目に集中したとしても、辞書には先頭の敵キャラへのポインタリンクが1つ入っているだけで済みます</b>。<br>
+    <br>
+    上記の性質から、リンクリスト構造は「プログラマが自由に自作できるべき基礎データ構造」として知られています。<br>
+    つまり、<b>今回はGridObjectというクラス名で作成しましたが、必要な別件に出くわせば別のクラス名で別途、自分で自作できるようになるべきデータ構造</b>です。<br>
+    <br>
+    <p><code>GridObject.cppを新規作成</code>して、グリッドのマス目辞書から指定したターゲットとなるGridObjectのリンクリスト数珠つなぎをclearLinkList()でリセットできるようにしましょう。</p>
+    <p class="source">#include "GridObject.h"<br>
+      <br>
+      // 継承overrideしてGridObjectのリンクリスト構造を頭から最後まで全部クリアする<br>
+      void Grid::<b>clear(CellXYZ* targetXYZ)</b><br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (targetXYZ == nullptr) // ターゲットの指定がないときは辞書cellDataに入っているすべてをclearにかける<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;CellXYZ&gt; cells;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; cell : cellData) // 一旦辞書cellDataに入っているマス目をすべてcellsに移す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cells.emplace_back(cell.first);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; targetCell : cells) // 辞書のすべてのマス目をループ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>clear(&amp;targetCell)</b>; // 辞書のすべてのマス目をtargetXYZにすえて、clearをひとつひとつ実行(辞書を全部クリア)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cellData.clear(); //辞書をクリアして目次が一つもない状態にする<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (targetXYZ != nullptr &amp;&amp; cellData.count(*targetXYZ) != 0) // ターゲットが辞書の目次で見つかったら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cellData[*targetXYZ]-&gt;<b>clearLinkList()</b>; // 辞書に入っている<b>GridObjectのリンクリストの数珠つなぎをドミノ倒し的にクリア</b><br>
+      }<br>
+    </p>
+    グリッドをクリアするときは、中に入っているGridObject同士の数珠つなぎもclearLinkList()で解消する必要があるわけですね。<br>
+    なぜなら、辞書と数珠つなぎは形式としては別物のデータなので、上記clear関数のように連動させない限り、<br>
+    辞書にはないのに数珠つなぎだけ残っちゃう可能性が出てきてしまうので。<br>
+    <br>
+    <br>
+    続いては、コンポーネントとGridObjectを継承してGridComponentクラスを準備します。<br>
+    <p><code>GridComponent.hを新規作成</code>して、オーナーが今いるグリッドと隣接するグリッドのマス目辞書の先頭のGridObjectから数珠つなぎにチェックできるようにしましょう。</p>
+    <p class="source">#ifndef GRIDCOMPONENT_H_<br>
+      #define GRIDCOMPONENT_H_<br>
+      <br>
+      #include "Component.h"<br>
+      <br>
+      #include &lt;list&gt;<br>
+      #include &lt;memory&gt; // 共有ポインタ std::shared_ptr を使用する<br>
+      #include &lt;unordered_map&gt;<br>
+      #include &lt;string&gt;<br>
+      #include &lt;assert.h&gt; // OnCheck()を継承先でoverrideしていないことの警告用<br>
+      <br>
+      #include "CellXYZ.h"<br>
+      #include "GameObject.h"<br>
+      <br>
+      #include "Camera.h"<br>
+      <br>
+      #include "GridObject.h"<br>
+      #include "Collider.h"<br>
+      <br>
+      <br>
+      // GameProgramingPatternsの第20章:空間分割を参考に独自実装(コンポーネント化、マイナス空間も対応)<br>
+      // https://www.amazon.co.jp/gp/offer-listing/4844338900/ref=tmm_pap_used_olp_0?ie=UTF8&amp;condition=used<br>
+      <br>
+      // 空間分割の機能をコンポーネントとして継承。[弾×敵]や[プレイヤ×敵]などを作り分けられる設計に<br>
+      class GridComponent : public GridObject, public Component<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; GridComponent(std::shared_ptr&lt;GameObject&gt; pOwner, const std::string&amp; typeTag, CellXYZ::DirType dirType = CellXYZ::DirType::Direction8)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Component(pOwner), dirType{ dirType },<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GridObject((pOwner-&gt;world() == nullptr) ? nullptr : pOwner-&gt;world()-&gt;makeGrid()) // グリッドをmakeGridで初期生成<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = typeTag;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;baseTag = "GridComponent";<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;beforeXYZ = CellXYZ(m_pGrid-&gt;cellX(pOwner-&gt;x), m_pGrid-&gt;cellY(pOwner-&gt;y), m_pGrid-&gt;cellZ(pOwner-&gt;z));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; add(); // 初期化と同時にgridに追加<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GridComponent() { erase(); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //GridManager&amp; grids = GridManager::GetInstance();<br>
+      &nbsp;&nbsp;&nbsp; CellXYZ::DirType dirType; // 当たり判定でたどる周りのセルのタイプ: [2D]4方向,8方向,[3D]6方向,26方向<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 継承overrideしてコライダがあるときはそのリストを返す<br>
+      &nbsp;&nbsp;&nbsp; virtual std::list&lt;std::weak_ptr&lt;Collider&gt;&gt;* colliders() { return nullptr; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // グリッドにthisを追加<br>
+      &nbsp;&nbsp;&nbsp; virtual void add(CellXYZ* nowXYZ = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ nowCellXYZ(m_pGrid-&gt;cellX(pOwner-&gt;x), m_pGrid-&gt;cellY(pOwner-&gt;y), m_pGrid-&gt;cellZ(pOwner-&gt;z));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (nowXYZ == nullptr) nowXYZ = &amp;nowCellXYZ;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GridObject::add(nowXYZ); // 基底ベースクラスのaddを呼び出す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 移動時のグリッドのマス目の隣への移動処理<br>
+      &nbsp;&nbsp;&nbsp; void moveCell(CellXYZ* nowXYZ = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pOwner == nullptr) // オーナーがすでにメモリから解放済のときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; erase(); // オーナーがすでにメモリから解放済のときは リンクリストから削除して return<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //移動先のセル(マス目)の指定 nowXYZ がnullptrで指定がなかったら現在オーナーのいる位置を nowXYZに指定する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ nowCellXYZ(m_pGrid-&gt;cellX(pOwner-&gt;x), m_pGrid-&gt;cellY(pOwner-&gt;y), m_pGrid-&gt;cellZ(pOwner-&gt;z));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (nowXYZ == nullptr) nowXYZ = &amp;nowCellXYZ;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (beforeXYZ == *nowXYZ) return; // 移動しても同一のマス目なら即return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; erase(&amp;beforeXYZ); // 前のマス目の位置でのリンクリストから一旦削除<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; add(nowXYZ); // 今のマス目位置(nowXYZ)の先頭に thisを割り込みでaddで追加する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 隣接するグリッドのレンジ内にいてcheck関数がよばれたときに実行したい処理をoverrideして実装する<br>
+      &nbsp;&nbsp;&nbsp; virtual void <b>OnCheck</b>(GridComponent* other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert("OnCheckを継承したクラスでoverrideして独自の当たり判定処理などを実装しないと意味ないよ(例.GridCollisionComponent.hを見てください)" == "");<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // <b>リンクリストの数珠つなぎを順にたどってOnCheck関数を呼ぶ</b><br>
+      &nbsp;&nbsp;&nbsp; inline void checkLinkList(GridObject* other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; while (other != nullptr) // <b>while文で数珠つなぎのm_pNextを次々とたどって最後にたどり着くと次がなくてnullptrになる</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this != other) // otherが自分自身のときは自分自身どうしのチェックはしない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>OnCheck</b>((GridComponent*)other); // <b>OnCheckを継承したクラスで書き分ける</b>ことで[弾×敵]や[プレイヤ×敵]などを作り分けられる設計に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; other = other-&gt;m_pNext; // リンクリスト構造の次をwhileで次々とたどる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // グリッドのマス目内と隣接するマス目内に格納されている要素(敵や弾)のチェック<br>
+      &nbsp;&nbsp;&nbsp; // 実際のチェック処理はOnCheck関数でやる。隣接するマス目しか調べないので高速<br>
+      &nbsp;&nbsp;&nbsp; void checkCell() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pOwner == nullptr) // オーナーがすでにメモリから解放済のときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; erase(); // オーナーがすでにメモリから解放済のときは リンクリストから削除して return<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // オーナーのいるグリッドの<b>マス目辞書から先頭を取り出し、その同一グリッドにいるオブジェクトをチェック</b>する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto <b>center</b> = (GridComponent*)m_pGrid-&gt;<b>top</b>(pOwner-&gt;x, pOwner-&gt;y, pOwner-&gt;z);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (center == nullptr) return;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;checkLinkList(<b>center</b>); // 中心centerの<b>同一マスに他にもオブジェクトがある場合にそれらのオブジェクトをチェック</b>する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int cellX = m_pGrid-&gt;cellX(pOwner-&gt;x);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int cellY = m_pGrid-&gt;cellY(pOwner-&gt;y);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int cellZ = m_pGrid-&gt;cellZ(pOwner-&gt;z);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t iSize = 4;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto* dir = &amp;CellXYZ::dir4[0]; //[2D] 隣接 4方向グリッド調べる constexpr で高速化を狙う<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (dirType == CellXYZ::DirType::Direction8) { iSize = 8; dir = &amp;CellXYZ::dir8[0]; } //[2D] 隣接 8方向グリッド調べる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (dirType == CellXYZ::DirType::Direction6) { iSize = 6; dir = &amp;CellXYZ::dir6[0]; } //[3D] 隣接 6方向グリッド調べる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (dirType == CellXYZ::DirType::Direction26) { iSize = 26; dir = &amp;CellXYZ::dir26[0]; } //[3D] 隣接 26方向グリッド調べる<br>
+      <br>
+      #define DIR_X( i )&nbsp;&nbsp;&nbsp; std::get&lt;0&gt;(dir[i]) // std::get&lt;0&gt;(dir[i]) と書くより少し見やすく DIR_X(i) と書けるように<br>
+      #define DIR_Y( i )&nbsp;&nbsp;&nbsp; std::get&lt;1&gt;(dir[i])<br>
+      #define DIR_Z( i )&nbsp;&nbsp;&nbsp; std::get&lt;2&gt;(dir[i])<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (size_t i = 0; i &lt; iSize; ++i) //<b>隣接するグリッドを先頭から数珠つなぎにチェック</b>して調べる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;checkLinkList(m_pGrid-&gt;top(cellX + DIR_X(i), cellY + DIR_Z(i), cellZ + DIR_Y(i)));<br>
+      <br>
+      #undef DIR_X<br>
+      #undef DIR_Y<br>
+      #undef DIR_Z<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Update(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; colider : *colliders())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (auto pCollider = colider.lock())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCollider-&gt;UpdateIsCollision(); // 衝突情報を一旦リセット(m_isPrevCollisionとm_isCollisionなどをリセット)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; moveCell(); // 所属するマス目セルを更新する(現在のオーナーがいるマス目位置のグリッドに移動)<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pOwner-&gt;world() != nullptr) // コンポーネントを所有するオーナーのいるワールドのカメラすべてに描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pOwner-&gt;world()-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 四角Boxで GameObjectが存在するグリッド を描画<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GridObject::Draw(obj);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    隣接するグリッド(設定:[2D]4方向、8方向、[3D]6方向、26方向)に入っているGridObjectのOnCheck関数しか呼ばれなくなるので、<br>
+    広大なフィールドにぽつぽつと離れているキャラ同士の当たり判定などムダな判定はスキップして高速化が望めます。<br>
+    例えば、フィールドに離れて1万個キャラがいるとき、隣接グリッド以外を<b>スキップしないと、総当たりだと1万×1万=1億回の判定になってしまいます</b>。<br>
+    <br>
+    では次はOnCheck関数で呼ぶ当たり判定用のコライダーを準備しましょう。<br>
+    <p><code>Collider.hを新規作成</code>して、Collision3D.hのカプセルや球などの当たり判定を呼んで衝突を判定しましょう。</p>
+    <p class="source">#ifndef COLLIDER_H_<br>
+      #define COLLIDER_H_<br>
+      <br>
+      #include "Component.h"<br>
+      #include &lt;memory&gt; // 共有ポインタ std::shared_ptr を使用する<br>
+      #include &lt;unordered_set&gt; // std::unordered_setで衝突している他のコライダのIDを保管してかぶらないようにする<br>
+      <br>
+      #include "GameObject.h"<br>
+      #include "Collision3D.h"<br>
+      <br>
+      class Collider; // 前方宣言<br>
+      <br>
+      //[衝突情報:参考] https://docs.unity3d.com/jp/2018.4/ScriptReference/Collision.html<br>
+      class Collision<br>
+      {&nbsp;&nbsp;&nbsp; // 衝突はGameObjectに所有されているComponent同士の衝突により生成される 衝突後、発生元のGameObjectはCollisionと関係なく消えてしまうかもしれない <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;GameObject&gt; m_pGameObject; // 衝突を発生させたGameObjectへのリンクを保管する(GameObjectはすでに消えているかもしれないから弱リンクに)<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; Collision(std::weak_ptr&lt;GameObject&gt; pGameObject) : m_pGameObject{ pGameObject } {}<br>
+      &nbsp;&nbsp;&nbsp; class ContactPoint //[衝突点の情報] https://docs.unity3d.com/jp/2018.4/ScriptReference/ContactPoint.html<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; public:<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ContactPoint() = default;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ContactPoint(Vector3 point_, Vector3 normal_, float separation_, std::weak_ptr&lt;Collider&gt; thisCollider_, std::weak_ptr&lt;Collider&gt; otherCollider_)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : point{ point_ }, normal{ normal_ }, separation{ separation_ }, thisCollider{ thisCollider_ }, otherCollider{ otherCollider_ } {}<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; virtual ~ContactPoint() {}<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 point{ 0.0f,0.0f,0.0f }; // 接触点<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 normal{ 0.0f,0.0f,0.0f }; // 接触点の法線<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float separation{ 0.0f }; // 接触点でのコライダー間の距離<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;Collider&gt; thisCollider{ std::weak_ptr&lt;Collider&gt;() }; //[衝突元]接触したコライダー情報<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;Collider&gt; otherCollider{ std::weak_ptr&lt;Collider&gt;() }; //[衝突先] 接触している他のコライダー情報<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;ContactPoint&gt; contacts; // 全ての接触点の配列<br>
+      &nbsp;&nbsp;&nbsp; // 基本的にthis側のコライダーのオーナーのGameObjectを返す<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;GameObject&gt; gameObject() { return m_pGameObject; };<br>
+      };<br>
+      <br>
+      <br>
+      class Collider; // 前方宣言<br>
+      <br>
+      // 関数の前方宣言<br>
+      inline bool isCollisionColliders(std::shared_ptr&lt;Collider&gt; pThis, std::shared_ptr&lt;Collider&gt; pOther,<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt;* ppThisResult = nullptr, std::shared_ptr&lt;Collision&gt;* ppOtherResult = nullptr);<br>
+      <br>
+      class Collider : public Component<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // コライダの当たり判定のタイプ<br>
+      &nbsp;&nbsp;&nbsp; enum class Type : unsigned char<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //Point = 0, // 点<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Sphere, // 球<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Capsule, // カプセル<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //Box, // ボックス<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //Plane, // 平面<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline Collider(std::shared_ptr&lt;GameObject&gt; pOwner, Type type) : Component(pOwner), m_type{ type } {}<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Collider() {}<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; const Type m_type; // コライダのタイプ<br>
+      &nbsp;&nbsp;&nbsp; inline operator Type () { return m_type; }<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; bool m_isPrevCollision = false; // 前回衝突したか?<br>
+      &nbsp;&nbsp;&nbsp; bool m_isCollision = false; // 今回衝突したか?<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; bool isTrigger = false; // コライダーがトリガーですり抜けるかどうか?<br>
+      &nbsp;&nbsp;&nbsp; bool enabled = true; // コライダーが有効か?<br>
+      &nbsp;&nbsp;&nbsp; unsigned int hitColor = DxLib::GetColor(255, 255, 255); // 描画するときの色<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;Collision::ContactPoint&gt; m_contacts; // 全ての接触点の配列<br>
+      &nbsp;&nbsp;&nbsp; std::unordered_set&lt;unsigned int&gt; m_collisionIDs; // 接触している他のコライダのInstanceID<br>
+      &nbsp;&nbsp;&nbsp; bool IsPrevCollision() { return m_isPrevCollision; }<br>
+      &nbsp;&nbsp;&nbsp; void IsPrevCollision(bool isPrevCollision) { m_isPrevCollision = isPrevCollision; return; }<br>
+      &nbsp;&nbsp;&nbsp; bool IsCollision() { return m_isCollision; }<br>
+      &nbsp;&nbsp;&nbsp; //void IsCollision(bool isCollision) { m_isCollision = isCollision; return; }<br>
+      &nbsp;&nbsp;&nbsp; //&nbsp; コライダのワールド座標位置(ownerをたどったワールド座標値)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 worldPos(Vector3 localPosition) const { return owner()-&gt;position + localPosition; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コライダの含まれるワールド位置のx,y,z最小値を求める(8分木のエリア分別などに使うため)<br>
+      &nbsp;&nbsp;&nbsp; virtual Vector3 minXYZ() const = 0; // = 0で純粋仮想関数にして必ずoverride継承しないとエラーになるようにする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コライダの含まれるワールド位置のx,y,z最大値を求める(8分木のエリア分別などに使うため)<br>
+      &nbsp;&nbsp;&nbsp; virtual Vector3 maxXYZ() const = 0; // = 0で純粋仮想関数にして必ずoverride継承しないとエラーになるようにする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 継承override してカプセルや球やボックスなどのコライダの判定を実装する デフォルトは isCollisionColliders関数を呼び出す<br>
+      &nbsp;&nbsp;&nbsp; virtual inline bool isCollision(std::shared_ptr&lt;Collider&gt; pOther,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt;* ppThisResult = nullptr, std::shared_ptr&lt;Collision&gt;* ppOtherResult = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (m_collisionIDs.count(pOther-&gt;InstanceID()) &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // すでに調べたコライダのIDのペアだったらfalse<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 継承override してカプセルや球やボックスなどのコライダの判定を実装する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return isCollisionColliders(shared_from_this_as&lt;Collider&gt;(), pOther, ppThisResult, ppOtherResult);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 毎フレーム isPrev(=m_isCollision)とisCollision(=false)に更新してから当たり判定する<br>
+      &nbsp;&nbsp;&nbsp; virtual void UpdateIsCollision() // 前フレームで当たってなくて今当たっていればOnCollisionEnterに使える<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::vector&lt;Collision::ContactPoint&gt;().swap(m_contacts); // 衝突点情報の配列をクリア<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::unordered_set&lt;unsigned int&gt;().swap(m_collisionIDs);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_isPrevCollision = m_isCollision; // 前のフレームで衝突したかを保管<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_isCollision = false; // 一旦、今のフレームでは衝突していない状態として設定して後で当たり判定して書換<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      class SphereCollider : public Collider<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; SphereCollider(std::shared_ptr&lt;GameObject&gt; pOwner, Vector3 center, float radius, unsigned int hitColor_ = GetColor(255, 0, 0))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : Collider(pOwner, Type::Sphere), m_center{ center }, m_radius{ radius }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;hitColor = hitColor_;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual ~SphereCollider() {}<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; Vector3 m_center{ 0.0f,0.0f,0.0f }; // コライダのローカル座標での中心位置<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 球体の半径<br>
+      &nbsp;&nbsp;&nbsp; float m_radius{ 0.0f };<br>
+      &nbsp;&nbsp;&nbsp; // 球体のローカル座標での中心座標<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 center() const { return m_center; }<br>
+      &nbsp;&nbsp;&nbsp; //&nbsp; 球体のワールド座標での中心位置(ownerをたどったワールド座標値)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 worldCenter() const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return pOwner-&gt;position + center();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // 球体の含まれるワールド位置のx,y,z最小値を求める(8分木のエリア分別などに使うため)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 minXYZ() const override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 center = worldCenter();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector3{ (m_radius &lt; 0) ? center.x + m_radius : center.x - m_radius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (m_radius &lt; 0) ? center.y + m_radius : center.y - m_radius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (m_radius &lt; 0) ? center.z + m_radius : center.z - m_radius };<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // 球体の含まれるワールド位置のx,y,z最大値を求める(8分木のエリア分別などに使うため)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 maxXYZ() const override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 center = worldCenter();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector3{ (m_radius &lt; 0) ? center.x - m_radius : center.x + m_radius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (m_radius &lt; 0) ? center.y - m_radius : center.y + m_radius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (m_radius &lt; 0) ? center.z - m_radius : center.z + m_radius };<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // デバッグ用に球体コライダを描く<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      #ifdef _DEBUG<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (owner() == nullptr) return; // このコンポーネントを所有しているオーナーがすでにメモリから解放されていたら return<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 center = worldCenter();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(center, m_radius, 3, (m_isCollision) ? hitColor : GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (m_isCollision)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto&amp; contact : m_contacts) // 衝突点と法線を描く<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(contact.point, 1.0f, 3, hitColor, GetColor(255, 255, 255), TRUE);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(contact.point, contact.point + contact.normal, GetColor(255, 255, 0));<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      #endif<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      class CapsuleCollider : public Collider<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; CapsuleCollider(std::shared_ptr&lt;GameObject&gt; pOwner, Vector3 center, float radius, float height, Axis3D direction = Axis3D::Y, unsigned int hitColor_ = GetColor(255, 0, 0))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : Collider(pOwner, Type::Capsule), m_center{ center }, m_radius{ radius }, m_height{ height }, m_direction{ direction }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;hitColor = hitColor_;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual ~CapsuleCollider() {}<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; Vector3 m_center{ 0.0f,0.0f,0.0f }; // コライダのローカル座標での中心位置<br>
+      &nbsp;&nbsp;&nbsp; float m_height{ 1.0f }; // コライダの高さ<br>
+      &nbsp;&nbsp;&nbsp; Axis3D m_direction{ Axis3D::Y };<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // カプセルの半径<br>
+      &nbsp;&nbsp;&nbsp; float m_radius{ 0.0f };<br>
+      &nbsp;&nbsp;&nbsp; // カプセルのローカル座標での中心座標<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 center() const { return m_center; }<br>
+      &nbsp;&nbsp;&nbsp; //&nbsp; ワールド座標での中心位置(ownerをたどったワールド座標値)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 worldCenter() const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return pOwner-&gt;position + center();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // カプセルの高さ<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 height() const { return m_height; }<br>
+      &nbsp;&nbsp;&nbsp; // カプセルの向く方向軸(height高さの方向軸)<br>
+      &nbsp;&nbsp;&nbsp; inline Axis3D direction() const { return m_direction; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カプセルの始点(pOwnerから見たローカル座標値)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 start() const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return m_center - Vector3{ (m_direction == Axis3D::X) ? m_height / 2.0f : 0.0f,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; (m_direction == Axis3D::Y) ? m_height / 2.0f : 0.0f,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; (m_direction == Axis3D::Z) ? m_height / 2.0f : 0.0f };<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //&nbsp; カプセルの始点(ownerをたどったワールド座標値)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 worldStart() const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return pOwner-&gt;position + start();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //&nbsp; カプセルの終点(ownerをたどったワールド座標値)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 worldEnd() const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return pOwner-&gt;position + end();<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カプセルの終点(pOwnerから見たローカル座標値)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 end() const<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return m_center + Vector3{ (m_direction == Axis3D::X) ? m_height / 2.0f : 0.0f,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; (m_direction == Axis3D::Y) ? m_height / 2.0f : 0.0f,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; (m_direction == Axis3D::Z) ? m_height / 2.0f : 0.0f };<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カプセルの含まれるワールド位置のx,y,z最小値を求める(8分木のエリア分別などに使うため)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 minXYZ() const override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 start = worldStart();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 end = worldEnd();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector3{ (start.x &lt; end.x) ? start.x - m_radius : end.x - m_radius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (start.y &lt; end.y) ? start.y - m_radius : end.y - m_radius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (start.z &lt; end.z) ? start.z - m_radius : end.z - m_radius };<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // カプセルの含まれるワールド位置のx,y,z最大値を求める(8分木のエリア分別などに使うため)<br>
+      &nbsp;&nbsp;&nbsp; inline Vector3 maxXYZ() const override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 start = worldStart();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 end = worldEnd();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Vector3{ (start.x &gt; end.x) ? start.x + m_radius : end.x + m_radius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (start.y &gt; end.y) ? start.y + m_radius : end.y + m_radius,<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (start.z &gt; end.z) ? start.z + m_radius : end.z + m_radius };<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // デバッグ用にカプセルコライダを描く<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      #ifdef _DEBUG<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (owner() == nullptr) return; // このコンポーネントを所有しているオーナーがすでにメモリから解放されていたら return<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 start = worldStart();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Vector3 end = worldEnd();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawCapsule3D(start, end, m_radius, 16, (m_isCollision) ? hitColor : GetColor(255, 255, 255), GetColor(255, 255, 255), FALSE);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (m_isCollision)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for (auto&amp; contact : m_contacts) // 衝突点と法線を描く<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(contact.point, 0.1f, 8, hitColor, GetColor(255, 255, 255), TRUE);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::DrawLine3D(contact.point, contact.point + contact.normal, GetColor(255, 255, 0));<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      #endif<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      // カプセル同士が衝突しているかを判定する(ppThisResultとppOtherResult:衝突したら衝突情報が返される)<br>
+      inline bool isCollisionCapsule_Capsule(std::shared_ptr&lt;Collider&gt; pThis0, std::shared_ptr&lt;Collider&gt; pOther1,<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt;* ppThisResult = nullptr, std::shared_ptr&lt;Collision&gt;* ppOtherResult = nullptr)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; auto gameObject0 = pThis0-&gt;owner(), gameObject1 = pOther1-&gt;owner();<br>
+      &nbsp;&nbsp;&nbsp; if (gameObject0 == nullptr || gameObject1 == nullptr) return false;<br>
+      &nbsp;&nbsp;&nbsp; if (gameObject0-&gt;isStatic || gameObject1-&gt;isStatic) return false; // どちらも静的オブジェクト(isStatic)の場合は当たり判定しない<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float radius0 = 0, radius1 = 0;<br>
+      &nbsp;&nbsp;&nbsp; Vector3 start0, end0, start1, end1, result0, result1, center0, center1;<br>
+      &nbsp;&nbsp;&nbsp; // col0はthis<br>
+      &nbsp;&nbsp;&nbsp; if (*pThis0 == Collider::Type::Capsule)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto col0 = std::static_pointer_cast&lt;CapsuleCollider&gt;(pThis0);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; start0 = col0-&gt;worldStart(), end0 = col0-&gt;worldEnd(), center0 = col0-&gt;worldCenter();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; radius0 = col0-&gt;m_radius;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (*pThis0 == Collider::Type::Sphere)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 球体のときはstartとendが両方、球の中心にすればカプセルの当たり判定を使いまわせる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto col0 = std::static_pointer_cast&lt;SphereCollider&gt;(pThis0);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; start0 = col0-&gt;worldCenter(), end0 = col0-&gt;worldCenter(), center0 = col0-&gt;worldCenter();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; radius0 = col0-&gt;m_radius;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // col1はother<br>
+      &nbsp;&nbsp;&nbsp; if (*pOther1 == Collider::Type::Capsule)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto col1 = std::static_pointer_cast&lt;CapsuleCollider&gt;(pOther1);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; start1 = col1-&gt;worldStart(), end1 = col1-&gt;worldEnd(), center1 = col1-&gt;worldCenter();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; radius1 = col1-&gt;m_radius;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (*pOther1 == Collider::Type::Sphere)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 球体のときはstartとendが両方、球の中心にすればカプセルの当たり判定を使いまわせる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto col1 = std::static_pointer_cast&lt;SphereCollider&gt;(pOther1);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; start1 = col1-&gt;worldCenter(), end1 = col1-&gt;worldCenter(), center1 = col1-&gt;worldCenter();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; radius1 = col1-&gt;m_radius;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // Collision3D.hの当たり判定関数を使ってチェック<br>
+      &nbsp;&nbsp;&nbsp; bool isCollision = isCollisionCapsule_Capsule(start0, end0, radius0, start1, end1, radius1, &amp;result0, &amp;result1);<br>
+      &nbsp;&nbsp;&nbsp; if (!isCollision) return false;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // collisionの 法線ベクトル:norm と 距離:mag を求める<br>
+      &nbsp;&nbsp;&nbsp; Vector3 v01 = result1 - result0; // 最短距離の2点 result0 から result1 へ向かうベクトル<br>
+      &nbsp;&nbsp;&nbsp; float mag01 = v01.magnitude(); // result0とresult1の距離<br>
+      &nbsp;&nbsp;&nbsp; Vector3 norm01 = v01.normalized(); // 正規化normalizeする<br>
+      &nbsp;&nbsp;&nbsp; if (mag01 == 0.0f) // カプセルの軸が交差しているときはresult0とresult1が同じ点になっちゃう<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; norm01 = (center1 - center0).normalized(); // 中心同士の差ベクトルを法線に<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (center0 == center1) // 中心位置が完全一致するときは<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; norm01 = Vector3{ 1.0f,0.0f,0.0f }; // 仕方ないからx軸方向に引き離す(2DでもつじつまあうようにX軸で)<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; pThis0-&gt;m_collisionIDs.emplace(pOther1-&gt;InstanceID()); // 接触している other のIDを this側 に登録して同じペアの判定を2度しないようにする<br>
+      &nbsp;&nbsp;&nbsp; pOther1-&gt;m_collisionIDs.emplace(pThis0-&gt;InstanceID()); // 接触している this のIDを other側 に登録して同じペアの判定を2度しないようにする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 衝突点 pThisContactとpOtherContact を生成<br>
+      &nbsp;&nbsp;&nbsp; Collision::ContactPoint thisContact{ result0, -norm01, mag01, pThis0, pOther1 };<br>
+      &nbsp;&nbsp;&nbsp; Collision::ContactPoint otherContact{ result1,&nbsp; norm01, mag01, pOther1, pThis0 };<br>
+      &nbsp;&nbsp;&nbsp; pThis0-&gt;m_contacts.emplace_back(thisContact); // コライダ0のm_contactsにも情報登録<br>
+      &nbsp;&nbsp;&nbsp; pOther1-&gt;m_contacts.emplace_back(otherContact); // コライダ1のm_contactsにも情報登録<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (ppThisResult != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *ppThisResult = std::make_shared&lt;Collision&gt;(gameObject0); // this側の衝突点をpResultでreturnする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppThisResult)-&gt;contacts.emplace_back(thisContact); // this側の衝突点の情報をcontacts配列に格納<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppThisResult)-&gt;contacts.emplace_back(otherContact); // other側の衝突点の情報をcontacts配列に格納<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; if (ppOtherResult != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *ppOtherResult = std::make_shared&lt;Collision&gt;(gameObject1); // other側の衝突点をpResultでreturnする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppOtherResult)-&gt;contacts.emplace_back(otherContact); // other側の衝突点の情報をcontacts配列に格納<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppOtherResult)-&gt;contacts.emplace_back(thisContact); // this側の衝突点の情報をcontacts配列に格納<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      // コライダー同士の当たり判定 当たったら衝突情報が ppThisResult,ppOtherResult がnullptrじゃなければ代入されて返却<br>
+      inline bool isCollisionColliders(std::shared_ptr&lt;Collider&gt; pThis, std::shared_ptr&lt;Collider&gt; pOther,<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt;* ppThisResult, std::shared_ptr&lt;Collision&gt;* ppOtherResult)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 現状はカプセルと球だけの当たり判定しか実装していない<br>
+      &nbsp;&nbsp;&nbsp; if ((*pThis == Collider::Type::Sphere || *pThis == Collider::Type::Capsule)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &amp;&amp; (*pOther == Collider::Type::Sphere || *pOther == Collider::Type::Capsule))<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // カプセルの当たり判定で球の当たり判定も兼用する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return isCollisionCapsule_Capsule(pThis, pOther, ppThisResult, ppOtherResult);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ここにカプセルと球以外の当たり判定も追加<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return false;<br>
+      }<br>
+      <br>
+      // 衝突したカプセル同士が当たらないようにコライダがついているGameObjectを押し戻してずらして当たらない位置に移動<br>
+      inline bool resolveCollisionCapsule_Capsule(const Collision::ContactPoint&amp; thisContact, const Collision::ContactPoint&amp; otherContact)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; //[共有ポインタのキャスト] https://cpprefjp.github.io/reference/memory/shared_ptr/dynamic_pointer_cast.html<br>
+      &nbsp;&nbsp;&nbsp; auto thisCollider = std::dynamic_pointer_cast&lt;CapsuleCollider&gt;(thisContact.thisCollider.lock());<br>
+      &nbsp;&nbsp;&nbsp; auto otherCollider = std::dynamic_pointer_cast&lt;CapsuleCollider&gt;(otherContact.thisCollider.lock());<br>
+      &nbsp;&nbsp;&nbsp; auto thisGameObject = thisCollider-&gt;owner();<br>
+      &nbsp;&nbsp;&nbsp; auto otherGameObject = otherCollider-&gt;owner();<br>
+      &nbsp;&nbsp;&nbsp; if (!thisGameObject || !otherGameObject || !thisCollider || !otherCollider)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // どれかがnullptrのときはfalse<br>
+      &nbsp;&nbsp;&nbsp; if (thisGameObject-&gt;isStatic &amp;&amp; otherGameObject-&gt;isStatic)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // どちらも静的オブジェクト(isStatic)の場合は当たり判定を押し戻ししない<br>
+      &nbsp;&nbsp;&nbsp; Vector3 p0 = thisContact.point;<br>
+      &nbsp;&nbsp;&nbsp; Vector3 p1 = otherContact.point;<br>
+      &nbsp;&nbsp;&nbsp; if (p0 == p1) // カプセル0とカプセル1の軸が交差しているとき<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // カプセルの中心位置を使って引き離す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; p0 = thisCollider-&gt;worldPos(thisCollider-&gt;center());<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; p1 = otherCollider-&gt;worldPos(otherCollider-&gt;center());<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // 押し戻しの量を計算<br>
+      &nbsp;&nbsp;&nbsp; float overlap = (thisCollider-&gt;m_radius + otherCollider-&gt;m_radius) - (p1 - p0).magnitude() + 0.00001f;<br>
+      &nbsp;&nbsp;&nbsp; // 押し戻し方向に移動<br>
+      &nbsp;&nbsp;&nbsp; Vector3 correction = thisContact.normal * (overlap / 2.0f); // 2で割って両方±動いて当たらないようにする<br>
+      &nbsp;&nbsp;&nbsp; if (otherGameObject-&gt;isStatic) // 片方がisStaticなら↓2倍動かしてもう片方はそのまま<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; thisGameObject-&gt;position += correction * 2.0f;<br>
+      &nbsp;&nbsp;&nbsp; else if (thisGameObject-&gt;isStatic)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; otherGameObject-&gt;position += -correction * 2.0f;<br>
+      &nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // 両方isStaticじゃないときは * 2.0fせずに両方移動させる<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; thisGameObject-&gt;position += correction;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; otherGameObject-&gt;position += -correction;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    では次は同一グリッドにある他のコライダーと当たり判定するためのコンポーネントを準備しましょう。<br>
+    <p><code>GridCollidersComponent.hを新規作成</code>して、m_colliders変数に複数のコライダをLinkCollider関数でリンクして、OnCheck関数をoverrideしてコライダ同士の当たり判定をcppで実装できるようにしましょう。</p>
+    <p class="source">#ifndef GRID_COLLIDERS_COMPONENT_H_<br>
+      #define GRID_COLLIDERS_COMPONENT_H_<br>
+      <br>
+      #include "GridComponent.h"<br>
+      #include &lt;list&gt;<br>
+      #include &lt;memory&gt; // 共有ポインタ std::shared_ptr を使用する<br>
+      <br>
+      class Collider; // 前方宣言<br>
+      <br>
+      class GridCollidersComponent : public GridComponent<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; friend Component;<br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::weak_ptr&lt;Collider&gt;&gt; <b>m_colliders</b>; // GridComponentを所有するGameObjectが持つコライダーのリスト<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; GridCollidersComponent(std::shared_ptr&lt;GameObject&gt; pOwner, const std::string&amp; typeTag, CellXYZ::DirType dirType = CellXYZ::DirType::Direction8)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : GridComponent(pOwner, typeTag, dirType)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コライダのリスト(弱共有ポインタ)へのポインタを返す<br>
+      &nbsp;&nbsp;&nbsp; virtual std::list&lt;std::weak_ptr&lt;Collider&gt;&gt;* colliders() override { return <b>&amp;m_colliders</b>; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コライダの弱共有ポインタを グリッドで当たり判定する対象として リンクを リスト m_colliders に追加する<br>
+      &nbsp;&nbsp;&nbsp; virtual void <b>LinkCollider</b>(std::weak_ptr&lt;Collider&gt; pColliderLink) { <b>m_colliders.emplace_back</b>(pColliderLink); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // OnCheckを<b>overrideすることで[弾×敵]や[プレイヤ×敵]などの当たり判定処理をCollision3D.hの関数でする</b><br>
+      &nbsp;&nbsp;&nbsp; virtual void <b>OnCheck</b>(GridComponent* other) <b>override</b>;<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    ではcppファイルでOnCheck関数でCollision3D.hのisCollision関数で当たり判定をしてGameObjectのOnCollision関数に衝突結果を引き渡してコールバックしましょう。<br>
+    <p><code>GridCollidersComponent.cppを新規作成</code>して、Collider.hのisCollision関数経由でCollision3D.hの各種当たり判定を衝突結果をGameObjectのOnCollision関数に渡しましょう。</p>
+    <p class="source">#include "GridCollidersComponent.h"<br>
+      <br>
+      #include "Collider.h"<br>
+      <br>
+      void GridCollidersComponent::<b>OnCheck</b>(GridComponent* other)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンポーネントのオーナーが死んでたらスキップする<br>
+      &nbsp;&nbsp;&nbsp; //if (pOwner-&gt;isDead) return;<br>
+      &nbsp;&nbsp;&nbsp; //if (other-&gt;owner()-&gt;isDead) return;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp; pCollider : this-&gt;m_colliders) // this側のコライダすべてをループ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto collider = pCollider.lock(); // 弱共有ポインタをロックして共有ポインタに変換<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (collider == nullptr) continue; // 共有ポインタが削除されすでに解放済の場合<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; pOtherCollider : *(other-&gt;colliders()))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto otherCollider = pOtherCollider.lock(); // 弱共有ポインタをロックして共有ポインタに変換<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (otherCollider == nullptr) continue; // 共有ポインタが削除されすでに解放済の場合<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt; pThisResult{ nullptr }; // 衝突したら情報が入ってきてnullptrじゃなくなる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt; pOtherResult{ nullptr }; // 衝突したら情報が入ってきてnullptrじゃなくなる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (collider-&gt;<b>isCollision</b>(otherCollider, &amp;<b>pThisResult</b>, &amp;<b>pOtherResult</b>))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collider-&gt;owner()-&gt;<b>OnCollision(pThisResult);</b> // collider側の衝突したときの関数をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; otherCollider-&gt;owner()-&gt;<b>OnCollision(pOtherResult);</b> // other側の衝突したときの関数をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+    </p>
+    <br>
+    <p><code>GameObject.hを変更</code>して、OnCollisionなどの衝突判定のコールバック関数を準備しましょう。</p>
+    <p class="source">#ifndef GAMEOBJECT_H_<br>
+      #define GAMEOBJECT_H_<br>
+      <br>
+      #include &lt;memory&gt; // 共有ポインタの定義のため<br>
+      <br>
+      #include "Vector3.h"<br>
+      #include "Quaternion.h"<br>
+      <br>
+      #include "Object.h" // インスタンスIDや検索タグを持ち、shared_from_this_as&lt;継承先クラス名&gt;などができる<br>
+      <br>
+      class World; // 前方宣言<br>
+      <em>class Collision; // 前方宣言</em><br>
+      <br>
+      // ゲーム上に表示される物体の基底クラス。<br>
+      // プレイヤーや敵、アイテムなどはこのクラスを継承して作る。<br>
+      class GameObject : public Object<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタはprotected:にしてあるのでCreate関数経由で初期生成してください<br>
+      &nbsp;&nbsp;&nbsp; GameObject(World* world = nullptr, Vector3 position = { 0,0,0 }, Quaternion rotation = { 0,0,0,1 }, Vector3 velocity = { 0,0,0 }, Vector3 force = { 0,0,0 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Object(), m_world{ world }, position{ position }, rotation{ rotation }, velocity{ velocity }, force{ force }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GameObject() {}<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★下記3つはメモリ上で共用状態になる(position、x,y,z、xyzどの名前から数値を変えたり読出してもメモリ上は同じ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 同じデータに3種類の名前を付けたイメージ、しかもVector3の機能や配列としてのアクセスの仕方もできて便利<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float x, y, z; }; // XYZ座標&nbsp; [匿名共用体とは] https://code.i-harness.com/ja-jp/q/4d437c<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 position; // XYZ座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
+      &nbsp;&nbsp;&nbsp; }; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Quaternion rotation; // 回転クオータニオン<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vx, vy, vz; }; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 velocity; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyz;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vxForce, vyForce, vzForce; }; // XYZ方向にかかる力(Unityでいうと AddForce関数 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 force; // XYZ方向の力(物理的には加速度:1フレームごとにvelocityの増える=加速する量)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyzForce;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 重力を返す、重力を変えたいときはoverrideして処理を変えてください、重力を変えてない場合は 0.0f<br>
+      &nbsp;&nbsp;&nbsp; virtual inline float gravity() { return 0.0f; }<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; World* m_world; // GameObjectが配置されたワールドへのリンク<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドへのポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; virtual World* world() { return m_world; }<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドのポインタを変更する<br>
+      &nbsp;&nbsp;&nbsp; virtual void world(World* changeWorld) { m_world = changeWorld; }<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; bool isDead{ false }; // 死んだ（削除対象）フラグ<br>
+      &nbsp;&nbsp;&nbsp; bool isStatic{ false }; // 動かない(静的オブジェクトか?)<br>
+      &nbsp;&nbsp;&nbsp; bool isGround{ false }; // 地面についているか<br>
+      &nbsp;&nbsp;&nbsp; bool isFlying{ false }; // 空をとんでいるか<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; hash32 typeTag{ "" }; // 小カテゴリ Zako0など個別のタイプ<br>
+      &nbsp;&nbsp;&nbsp; hash32 baseTag{ "" }; // 大カテゴリ Enemyなど大まかなベースジャンル<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンポーネントの&lt;ハッシュID, 共有所有ポインタ&gt; の辞書でコンポーネントの共有カウンタ+1を保持する<br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;size_t, std::shared_ptr&lt;Component&gt;&gt; components;<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // コンポーネントを得る 例えば GetComponent&lt;BoxCollider&gt;でBoxColliderという名前のコンポーネントをcomponents辞書から得る<br>
+      &nbsp;&nbsp;&nbsp; template&lt;class ComponentT&gt;<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::weak_ptr&lt;ComponentT&gt;&gt; GetComponents()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★[ComponentTのハッシュコードを得るテク] https://cpprefjp.github.io/reference/typeindex/type_index/hash_code.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t hashID = typeid(ComponentT).hash_code(); //[まずハッシュでID化]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // equal_range 関数を使って、指定したキーの最初と終端の位置を示すイテレータを std::pair&lt;&gt; で取得します。<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto range = components.equal_range(hashID); //https://ez-net.jp/article/9E/DFLX8hNG/G5J8DPmsltz4/<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;std::weak_ptr&lt;ComponentT&gt;&gt; returnList; // "ComponentT" 例."CircleCollider"など をキーとするコンポーネント一覧<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto ite = range.first; ite != range.second; ++ite)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; returnList.emplace_back(ite-&gt;second); // 辞書で見つかったコンポーネントを返すリストに追加<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return returnList;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンポーネントを追加する .AddComponent&lt;BoxCollider&gt;(...)で追加できる<br>
+      &nbsp;&nbsp;&nbsp; template&lt;class ComponentT, typename ...ArgsT&gt;<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;ComponentT&gt; AddComponent(ArgsT&amp;&amp;...args)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★[ComponentTのハッシュコードを得るテク] https://cpprefjp.github.io/reference/typeindex/type_index/hash_code.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t hashID = typeid(ComponentT).hash_code(); //[まずハッシュでID化]<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // shared_from_this()を必ず渡してセットで初期化して、オーナーがリンク切れのコンポーネントができないように気をつける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;ComponentT&gt; newComponent = std::make_shared&lt;ComponentT&gt;(shared_from_this(), std::forward&lt;ArgsT&gt;(args)<b>...</b>);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://ez-net.jp/article/9E/DFLX8hNG/G5J8DPmsltz4/<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // std::unrodered_multimap&lt;&gt; と同型の値を取る std::pair&lt;&gt; を作って insert 関数でcomponents辞書に追加<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; components.insert(std::pair&lt;size_t, std::shared_ptr&lt;ComponentT&gt;&gt;(hashID, newComponent));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return newComponent;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンポーネントを削除する<br>
+      &nbsp;&nbsp;&nbsp; template&lt;typename ComponentT&gt;<br>
+      &nbsp;&nbsp;&nbsp; bool RemoveComponent(std::shared_ptr&lt;ComponentT&gt; removeComponent)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★[ComponentTのハッシュコードを得るテク] https://cpprefjp.github.io/reference/typeindex/type_index/hash_code.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t hashID = typeid(ComponentT).hash_code(); //[まずハッシュでID化]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // equal_range 関数を使って、指定したキーの最初と終端の位置を示すイテレータを std::pair&lt;&gt; で取得します。<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto range = components.equal_range(hashID); //https://ez-net.jp/article/9E/DFLX8hNG/G5J8DPmsltz4/<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[イテレート中に探しながら消す] https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/erase.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto ite = range.first; ite != range.second;)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (ite-&gt;second == removeComponent)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; components.erase(ite); // 削除された要素の次を指すイテレータが返される<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true; // 見つかって消せた場合は true<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ++ite; // 次の要素へイテレータを進める<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // 見つからずに消せなかった場合は false<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理[純粋仮想関数 = 0 なのでoverride必須の関数]<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() = 0; // 純粋仮想関数 = 0 にすると【絶対 Update()関数はoverrideしなきゃいけない義務を付与できる 】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理[純粋仮想関数 = 0 なのでoverride必須の関数]<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; // 純粋仮想関数 = 0 にすると【絶対 Draw()関数はoverrideしなきゃいけない義務を継承先クラスに付与 】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 衝突開始したときの関数 overrideして衝突したときの処理などをオブジェクトの種類ごとに実装する<br>
+        &nbsp;&nbsp;&nbsp; virtual void OnCollisionEnter(std::shared_ptr&lt;Collision&gt; pCollision)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして衝突開始したときの処理などをオブジェクトの種類ごとに実装する<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 衝突したときの関数 overrideして衝突したときの処理などをオブジェクトの種類ごとに実装する<br>
+        &nbsp;&nbsp;&nbsp; virtual void OnCollision(std::shared_ptr&lt;Collision&gt; pCollision)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして衝突したときの処理などをオブジェクトの種類ごとに実装する<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 衝突終了したときの関数 overrideして衝突したときの処理などをオブジェクトの種類ごとに実装する<br>
+        &nbsp;&nbsp;&nbsp; virtual void OnCollisionExit(std::shared_ptr&lt;Collision&gt; pCollision)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして衝突終了したときの処理などをオブジェクトの種類ごとに実装する<br>
+        &nbsp;&nbsp;&nbsp; };</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ジャンプ開始した直後に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnStartJump()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideしてジャンプした瞬間に音を鳴らしたりする処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 空中でジャンプの上昇中に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnJumping()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして空中でジャンプの上昇中にエフェクトを出したりする処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 空中で落ちている最中に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnFalling()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして空中で落ちている最中に音を鳴らしたり、エフェクトを出したりする処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    では次はOnCheck関数で呼ぶ当たり判定用のコライダーを準備しましょう。<br>
+    <p><code>GridComponent.hを新規作成</code>して、オーナーが今いるグリッドと隣接するグリッドのマス目辞書の先頭のGridObjectから数珠つなぎにチェックできるようにしましょう。</p>
+    <p class="source">#ifndef GRIDCOMPONENT_H_<br>
+      #define GRIDCOMPONENT_H_<br>
+      <br>
+      <br>
+    </p>
+    <br>
+    <br>
+    <p><code>World.hを変更</code>して、makeGridで世界にグリッド分割情報を持たせられるようにしましょう。</p>
+    <p class="source">#ifndef WORLD_H_<br>
+      #define WORLD_H_<br>
+      <br>
+      #include &lt;list&gt;<br>
+      #include &lt;memory&gt;<br>
+      #include &lt;unordered_map&gt;<br>
+      #include &lt;functional&gt; // std::functionのラムダ式 で 関数を Draw関数の引数にして、カメラすべてに対して描画処理を発動させる <br>
+      <br>
+      #include "MyHash.h" // ワールドのタグをhash32型で管理する<br>
+      <br>
+      <br>
+      // [前方宣言] 宣言だけして、#includeはしてないので、ポインタだけはこのファイル内でつかえる<br>
+      // #includeはしてないので、hpなどの変数には#include "～.h"しないとアクセスできないので循環インクルード防止のため.cppでインクルードしてください<br>
+      class GameScene;<br>
+      class Player;<br>
+      class PlayerBullet;<br>
+      class Enemy;<br>
+      class Camera;<br>
+      <em>class Grid;</em><br>
+      <br>
+      // プレイヤや敵や弾などの共有ポインタを管理し、EraseRemoveIfで消して参照カウンタが0になったらそれらを消滅させるクラス(C#のガベージコレクタの代わり)<br>
+      class World<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; inline World(GameScene* pScene, const std::string&amp; worldTag = "") : m_pScene{ pScene }, tag{ worldTag } {}<br>
+      &nbsp;&nbsp;&nbsp; inline ~World() {}<br>
+      protected: // public:にすると他で外部で後からタグやシーンを書き換えられると辞書での管理などの前提がおかしくなるのでprotected:する<br>
+      &nbsp;&nbsp;&nbsp; hash32 tag{ "" }; // ワールド名のタグ<br>
+      &nbsp;&nbsp;&nbsp; GameScene* m_pScene{ nullptr }; // ワールドを所有するシーン<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; hash32 Tag() const { return tag; }<br>
+      &nbsp;&nbsp;&nbsp; GameScene* scene() { return m_pScene; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //std::unordered_map&lt;hash32, std::shared_ptr&lt;Player&gt;&gt; players; // プレイヤのタグ辞書<br>
+      &nbsp;&nbsp;&nbsp; // ワールドを所有するシーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp; void AddPlayer(const std::string&amp; playerTag, std::shared_ptr&lt;Player&gt; pPlayer);<br>
+      &nbsp;&nbsp;&nbsp; // ワールドにいるプレイヤを得る<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::weak_ptr&lt;Player&gt;&gt; GetPlayers();<br>
+      <br>
+      <em>protected:<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Grid&gt; m_pGrid{ nullptr }; // 当たり判定を高速にするためグリッドで空間分割<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; Grid* grid() { return m_pGrid.get(); } // グリッドを返す<br>
+        &nbsp;&nbsp;&nbsp; Grid* makeGrid(int cellWidth = 128, int cellHeight = 128, int cellDepth = 128); // グリッドを生成する</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;Player&gt;&gt; players; // プレイヤのタグ辞書<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 削除処理を共通テンプレート関数にする<br>
+      &nbsp;&nbsp;&nbsp; // [共通テンプレート関数]https://programming-place.net/ppp/contents/cpp/language/009.html#function_template<br>
+      &nbsp;&nbsp;&nbsp; template &lt;typename TypeT, class T_if&gt;<br>
+      &nbsp;&nbsp;&nbsp; void EraseRemoveIf(std::list&lt;TypeT&gt;&amp; v, T_if if_condition)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 特定のタイプT↑&nbsp; ↑配列v&nbsp;&nbsp; ↑条件式if_condition<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; v.erase(<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::remove_if(v.begin(), v.end(), if_condition),<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; v.end() //&nbsp; ↓remove_ifの位置<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; );//例.[生][生][死][死][死]← v.end()の位置<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;Camera&gt;&gt; cameras; // このワールドに存在するカメラの辞書&lt;カメラにつけたタグ, カメラの共有ポインタ&gt;<br>
+      &nbsp;&nbsp;&nbsp; // 指定されたタグのカメラへの共有ポインタを得る　カメラ辞書に存在しないタグでアクセスしたときにunordered_mapの特性で勝手に意図しないカメラができるのを防ぐ関数<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Camera&gt; camera(const std::string&amp; cameraTag) { auto itr = cameras.find(cameraTag); return (itr != end(cameras)) ? itr-&gt;second : nullptr; }<br>
+      &nbsp;&nbsp;&nbsp; // このワールドに存在するカメラすべてに対して drawFuncで描きたい処理を渡して 全カメラのスクリーンに対して描画処理を走らせる<br>
+      &nbsp;&nbsp;&nbsp; void Draw(std::function&lt;void()&gt; drawFunc) noexcept;<br>
+      &nbsp;&nbsp;&nbsp; // カメラにタグをつけてワールドに追加 カメラにもワールドへのポインタリンクを張る<br>
+      &nbsp;&nbsp;&nbsp; inline bool AddCamera(const std::string&amp; cameraTag, std::shared_ptr&lt;Camera&gt; pCamera);<br>
+      &nbsp;&nbsp;&nbsp; // 指定したタグのカメラをこのワールドから削除する カメラ側の worldへのリンクのポインタも nullptr にする<br>
+      &nbsp;&nbsp;&nbsp; inline bool EraseCamera(const std::string&amp; cameraTag);<br>
+      &nbsp;&nbsp;&nbsp; // カメラを nowWorld から nextWorld に移動させる<br>
+      &nbsp;&nbsp;&nbsp; static bool MoveCamera(const std::string&amp; cameraTag, World* nowWorld, World* nextWorld);<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>World.cppを変更</code>して、makeGrid関数でGridをstd::make_sharedで生成する処理を記述しましょう。</p>
+    <p class="source">#include "World.h"<br>
+      <br>
+      #include "Player.h"<br>
+      #include "Camera.h"<br>
+      #include "Screen.h"<br>
+      <br>
+      <em>#include "GridObject.h" // Gridをmake_sharedで生成するため<br>
+        <br>
+        Grid* World::makeGrid(int cellWidth, int cellHeight, int cellDepth)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; if (this-&gt;m_pGrid == nullptr) // グリッドが未生成の場合は生成<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;m_pGrid = std::make_shared&lt;Grid&gt;(cellWidth, cellHeight, cellDepth);<br>
+        &nbsp;&nbsp;&nbsp; return this-&gt;m_pGrid.get();<br>
+        }</em><br>
+      <br>
+      void World::AddPlayer(const std::string&amp; playerTag, std::shared_ptr&lt;Player&gt; pPlayer)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (m_pScene != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_pScene-&gt;players.emplace(playerTag, pPlayer); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      // このワールドにいるプレイヤを得る<br>
+      std::vector&lt;std::weak_ptr&lt;Player&gt;&gt; World::GetPlayers()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::weak_ptr&lt;Player&gt;&gt; players;<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; pPlayer : players)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; players.emplace_back(pPlayer);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; return players;<br>
+      }<br>
+      <br>
+      // カメラにタグをつけてワールドに追加 カメラにもワールドへの生ポインタリンクを渡す<br>
+      bool World::AddCamera(const std::string&amp; cameraTag, std::shared_ptr&lt;Camera&gt; pCamera)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (pCamera == nullptr) return false;<br>
+      &nbsp;&nbsp;&nbsp; if (cameras.count(cameraTag) &gt; 0) return false; // すでに同じタグのカメラがワールドにあったら false<br>
+      &nbsp;&nbsp;&nbsp; if (pCamera-&gt;world() != nullptr) pCamera-&gt;world()-&gt;EraseCamera(cameraTag); // すでにカメラが別ワールドに配置されていたら別ワールドから削除<br>
+      &nbsp;&nbsp;&nbsp; cameras.emplace(cameraTag, pCamera); // ワールドにカメラを追加する<br>
+      &nbsp;&nbsp;&nbsp; pCamera-&gt;world(this); // カメラにもワールドへのポインタリンクを張る<b>(カメラ側に渡すのは共有ポインタではない生ポインタだから共有デッドロックにはならない)</b><br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      // 指定したタグのカメラをこのワールドから削除する カメラ側の worldへのリンクのポインタも nullptr にする<br>
+      bool World::EraseCamera(const std::string&amp; cameraTag)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; auto itr = cameras.find(cameraTag); // 指定したタグのカメラを探す<br>
+      &nbsp;&nbsp;&nbsp; if (itr == end(cameras)) return false; // 指定したタグのカメラがワールドにない<br>
+      &nbsp;&nbsp;&nbsp; auto pCamera = itr-&gt;second;<br>
+      &nbsp;&nbsp;&nbsp; pCamera-&gt;world(nullptr); // カメラ側の worldへのリンクのポインタも nullptrに<br>
+      &nbsp;&nbsp;&nbsp; cameras.erase(cameraTag); // カメラを辞書から削除<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      // カメラを nowWorld から nextWorld に移動させる<br>
+      bool World::MoveCamera(const std::string&amp; cameraTag, World* nowWorld, World* nextWorld)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (nowWorld == nullptr) return false;<br>
+      &nbsp;&nbsp;&nbsp; auto itr = nowWorld-&gt;cameras.find(cameraTag); // タグでカメラを探す<br>
+      &nbsp;&nbsp;&nbsp; if (itr == end(nowWorld-&gt;cameras)) return false; // タグに関連づいたカメラがなかった<br>
+      &nbsp;&nbsp;&nbsp; auto targetCamera = itr-&gt;second; // カメラの共有ポインタをキープ(次の行でeraseしてもカメラの共有カウンタは0にはならずこのリンクのおかげでカメラはメモリに残存)<br>
+      &nbsp;&nbsp;&nbsp; targetCamera-&gt;world(nullptr); // カメラ側の worldへのリンクのポインタを一旦 nullptrに<br>
+      &nbsp;&nbsp;&nbsp; nowWorld-&gt;cameras.erase(cameraTag); // nowWorld からは カメラを消す<br>
+      &nbsp;&nbsp;&nbsp; if (nextWorld == nullptr) return false;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; return nextWorld-&gt;AddCamera(cameraTag, targetCamera); // 次のワールドにカメラを追加する<br>
+      }<br>
+      <br>
+      // このワールドに存在するカメラすべてに対して funcで描きたい処理を渡して 全カメラのスクリーンに対して描画処理を走らせる<br>
+      void World::Draw(std::function&lt;void()&gt; drawFunc) noexcept<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : cameras)&nbsp;&nbsp;&nbsp; // このワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; VECTOR_D beforeCamPos; // 設定変更前のカメラのパラメータを一旦、保管<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; double beforeVRot, beforeHRot, beforeTRot, beforeNear, beforeFar, beforeFov;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Camera::GetCameraSettings(&amp;beforeCamPos, &amp;beforeVRot, &amp;beforeHRot, &amp;beforeTRot, &amp;beforeFov, &amp;beforeNear, &amp;beforeFar);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //camera-&gt;screenID<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::SetCameraPositionAndAngle(camera-&gt;pos, camera-&gt;rot.V, camera-&gt;rot.H, camera-&gt;rot.T); // 各カメラの位置、回転を設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Screen::Start(camera-&gt;screenHandle, true, camera-&gt;fovAngle); // カメラに関連付けられたスクリーンIDを描画先にする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; drawFunc(); // 渡された描画処理を実行<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Screen::End(true); // 描画先を元に戻す<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // カメラの設定をもとに戻しておく<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Camera::SetCameraSettings(&amp;beforeCamPos, &amp;beforeVRot, &amp;beforeHRot, &amp;beforeTRot, &amp;beforeFov, &amp;beforeNear, &amp;beforeFar);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+    </p>
     <br>
     <br>
   </body>
