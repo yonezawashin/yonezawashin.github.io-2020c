@@ -6495,7 +6495,7 @@
       public:<br>
       &nbsp;&nbsp;&nbsp; GridComponent(std::shared_ptr&lt;GameObject&gt; pOwner, const std::string&amp; typeTag, CellXYZ::DirType dirType = CellXYZ::DirType::Direction8)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Component(pOwner), dirType{ dirType },<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GridObject((pOwner-&gt;world() == nullptr) ? nullptr : pOwner-&gt;world()-&gt;makeGrid()) // グリッドをmakeGridで初期生成<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GridObject((pOwner-&gt;world() == nullptr) ? nullptr : pOwner-&gt;world()-&gt;<b>makeGrid()</b>) // <b>グリッドをmakeGridで初期生成</b><br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = typeTag;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;baseTag = "GridComponent";<br>
@@ -7167,6 +7167,8 @@
       &nbsp;&nbsp;&nbsp; bool isGround{ false }; // 地面についているか<br>
       &nbsp;&nbsp;&nbsp; bool isFlying{ false }; // 空をとんでいるか<br>
       <br>
+      &nbsp;&nbsp;&nbsp; <em>float pushPower{ 5.0f }; // コライダで接触したときに押し返す力(相手側が強いと押される)</em><br>
+      <br>
       &nbsp;&nbsp;&nbsp; hash32 typeTag{ "" }; // 小カテゴリ Zako0など個別のタイプ<br>
       &nbsp;&nbsp;&nbsp; hash32 baseTag{ "" }; // 大カテゴリ Enemyなど大まかなベースジャンル<br>
       <br>
@@ -7271,15 +7273,6 @@
     </p>
     <br>
     <br>
-    では次はOnCheck関数で呼ぶ当たり判定用のコライダーを準備しましょう。<br>
-    <p><code>GridComponent.hを新規作成</code>して、オーナーが今いるグリッドと隣接するグリッドのマス目辞書の先頭のGridObjectから数珠つなぎにチェックできるようにしましょう。</p>
-    <p class="source">#ifndef GRIDCOMPONENT_H_<br>
-      #define GRIDCOMPONENT_H_<br>
-      <br>
-      <br>
-    </p>
-    <br>
-    <br>
     <p><code>World.hを変更</code>して、makeGridで世界にグリッド分割情報を持たせられるようにしましょう。</p>
     <p class="source">#ifndef WORLD_H_<br>
       #define WORLD_H_<br>
@@ -7324,7 +7317,7 @@
         &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Grid&gt; m_pGrid{ nullptr }; // 当たり判定を高速にするためグリッドで空間分割<br>
         public:<br>
         &nbsp;&nbsp;&nbsp; Grid* grid() { return m_pGrid.get(); } // グリッドを返す<br>
-        &nbsp;&nbsp;&nbsp; Grid* makeGrid(int cellWidth = 128, int cellHeight = 128, int cellDepth = 128); // グリッドを生成する</em><br>
+        &nbsp;&nbsp;&nbsp; Grid* makeGrid(int cellWidth = <b>128</b>, int cellHeight = <b>128</b>, int cellDepth = <b>128</b>); // グリッドを生成する</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;Player&gt;&gt; players; // プレイヤのタグ辞書<br>
       <br>
@@ -7457,6 +7450,479 @@
       }<br>
     </p>
     <br>
+    <p><code>Player.hを変更</code>して、球体のコライダとグリッドのコンポーネントと押し返す力の設定を追加しましょう。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Resource.h"<br>
+      #include "GameObject.h"<br>
+      #include "PhysicsComponent.h"<br>
+      <em>#include "GridCollidersComponent.h"<br>
+        #include "Collider.h"</em><br>
+      <br>
+      class World; // 前方宣言<br>
+      class Camera; // 前方宣言<br>
+      <br>
+      class Player : public GameObject<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタはprotected:にしてあるので、Create関数経由で初期生成してください<br>
+      &nbsp;&nbsp;&nbsp; Player(World* world, Pad pad, Vector3 position, Quaternion rotation = { 0,0,0,1 }, Vector3 velocity = { 0,0,0 }, Vector3 force = { 0,0,0 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : pad{ pad }, GameObject(world, position, rotation, velocity, force)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "Player"; // タグは個別の"プレイヤ1"などに使い、タイプはtypeTagで判別する形にしてタイプのジャンルを区別<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>this-&gt;typeTag = "Player";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;pushPower = 5.0f; // コライダで衝突したときに押し返す力</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Player() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Pad pad; // 操作するコントローラー番号<br>
+      &nbsp;&nbsp;&nbsp; hash32 worldTag{ "" }; // 現在いるワールドのタグ<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeedMax = 6; // 移動速度Max値<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeed = 0;//移動速度<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float moveAngle = 0; // X軸→方向から何度か<br>
+      &nbsp;&nbsp;&nbsp; float deltaAngle = 0; // プレイヤの動く角度の変化率、ハンドルを切ったらだんだんもとに戻る<br>
+      &nbsp;&nbsp;&nbsp; int animCount = 0;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; image; // プレイヤの板ポリゴンで描くタイル分割画像への共有リンク<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Camera* camera{ nullptr }; // プレイヤを追随するカメラ<br>
+      &nbsp;&nbsp;&nbsp; void SetCamera(Camera* pCamera) { camera = pCamera; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // overrideして物理落下コンポーネントからの重力値を返す<br>
+      &nbsp;&nbsp;&nbsp; virtual float gravity() override { auto pGravityPhysics = gravityPhysics.lock(); return (pGravityPhysics != nullptr) ? pGravityPhysics-&gt;gravity() : 0.0f; }<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;JumpComponent&gt; jumpPhysics; // ジャンプの物理処理コンポーネント<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;GravityComponent&gt; gravityPhysics; // 落下の重力の物理処理コンポーネント<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>std::shared_ptr&lt;GridCollidersComponent&gt; gridCollision; // グリッドマス目分割コンポーネント<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;SphereCollider&gt; sphereCollider; // 球コライダのコンポーネント</em><br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; virtual void Init(std::shared_ptr&lt;InitParams&gt; initParams = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyJumpSpeed{ 13, 14, 15, 4 }; // ジャンプ開始の初期速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyForceJump{ 0.5f, 0.4f, 0.3f, 0.1f }; // ジャンプ上昇にかかる力の初期値<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyGravity{ 0.8f,0.8f,0.8f,0.8f }; // 重力の設定値<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyDownSpeedMax{ 16, 16, 16, 8 }; // 降下スピードのリミット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // AddComponent内部でshared_from_this()を必ず渡してセットで初期化して、オーナーがリンク切れのコンポーネントができないように気をつける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jumpPhysics = AddComponent&lt;JumpComponent&gt;(vyJumpSpeed, vyForceJump);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gravityPhysics = AddComponent&lt;GravityComponent&gt;(vyGravity, vyDownSpeedMax);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 半径16(直径32)の球体コライダ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sphereCollider = std::make_shared&lt;SphereCollider&gt;(shared_from_this_as&lt;Player&gt;(), Vector3(0, 0, 0), 16);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gridCollision = std::make_shared&lt;GridCollidersComponent&gt;(shared_from_this_as&lt;Player&gt;(), "Player");<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gridCollision-&gt;LinkCollider(sphereCollider); // コライダをリンクする</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ジャンプ開始した直後に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnStartJump() override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// コライダの衝突した際に呼ばれるコールバック関数<br>
+        &nbsp;&nbsp;&nbsp; virtual void OnCollision(std::shared_ptr&lt;Collision&gt; pCollision) override;</em><br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>Player.cppを変更</code>して、OnCollision関数のpCollisionから得た衝突した法線方向を使ってUpdate関数で力を加えましょう。</p>
+    <p class="source">#include "Player.h"<br>
+      <br>
+      #include &lt;cmath&gt; // 浮動小数点の余り%演算子がC++にないのでfmodを使うため<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "MyDraw.h"<br>
+      <br>
+      #include "Camera.h"<br>
+      #include "World.h"<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      void Player::HandleInput()<br>
+      {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_LEFT) <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_A)) )<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = - MoveSpeed; // 左<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle += 1; //ハンドルを左に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_RIGHT)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_D)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle -= 1; //ハンドルを右に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_UP)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_W)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = - MoveSpeed; // 上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed += 0.6f; //アクセルを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &gt; MoveSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = MoveSpeedMax;//Maxスピードで止める<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (Input::GetButton(pad, PAD_INPUT_DOWN)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_S)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed -= 0.6f; //ブレーキを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &lt; -0.9f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = -0.9f;//ちょっとだけバックできるように<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (pad == Pad::Key || pad == Pad::One) // コントローラ1またはキーボード操作のプレイヤのときだけ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGUP)) // キーボードのPageUp ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = 2.0f; // テスト用に空中の上方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGDN)) // キーボードのPageDown ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -2.0f; // テスト用に空中の下方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      }<br>
+      <br>
+      // ジャンプ開始した直後に呼ばれる関数<br>
+      void Player::OnStartJump()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; this-&gt;isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+      }<br>
+      <br>
+      <br>
+      // 更新処理<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; <em>vxForce *= 0.9f; // かかっている力の減衰率<br>
+        &nbsp;&nbsp;&nbsp; vzForce *= 0.9f; // かかっている力の減衰率</em><br>
+      &nbsp;&nbsp;&nbsp; deltaAngle *= 0.5F; // 車のハンドルの方向をだんだんニュートラルに戻す<br>
+      &nbsp;&nbsp;&nbsp; MoveSpeed *= 0.9F; // 移動速度も減速する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理 <br>
+      &nbsp;&nbsp;&nbsp; HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto pJumpPhysics = jumpPhysics.lock();<br>
+      &nbsp;&nbsp;&nbsp; if (pJumpPhysics != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(pad, PAD_INPUT_A) // Zキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonDown(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pJumpPhysics-&gt;JumpStart(); // ジャンプのスタート処理を発動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (vy &gt; 0 &amp;&amp; Input::GetButtonUp(pad, PAD_INPUT_A) // Zキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonUp(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pJumpPhysics-&gt;JumpCancel(); // ジャンプのキャンセル処理を発動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pJumpPhysics-&gt;Update(); // ジャンプのコンポーネントを更新する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; auto pGravityPhysics = gravityPhysics.lock();<br>
+      &nbsp;&nbsp;&nbsp; if (pGravityPhysics != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pGravityPhysics-&gt;Update(); // 重力落下のコンポーネントを更新する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; moveAngle += deltaAngle; // ハンドルを回したぶんプレイヤの進行方向を変える<br>
+      &nbsp;&nbsp;&nbsp; if (moveAngle &lt; -180) moveAngle = 360 + moveAngle; // -180以下の角度にならないようにマイナスになったら+180度にループさせる<br>
+      &nbsp;&nbsp;&nbsp; else if (moveAngle &gt; +180) moveAngle = -360 + moveAngle; // +180以下の角度にならないようにマイナスになったら-180度にループさせる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; rotation.SetRotation(VGet(0, (180 - moveAngle) * MyMath::Deg2Rad, 0)); // 前向きの3Dモデルなら180度回転させて奥方向の向きに設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ↓進行方向角度をX方向とZ方向の速度に変える<br>
+      &nbsp;&nbsp;&nbsp; vx = (float)std::cos((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      &nbsp;&nbsp;&nbsp; vz = (float)std::sin((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>vx += vxForce; // 力をかけて速度に加算する<br>
+        &nbsp;&nbsp;&nbsp; vz += vzForce; // 力をかけて速度に加算する</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 実際に位置を動かす<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // まず横に移動する<br>
+      &nbsp;&nbsp;&nbsp; x += vx;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次に縦に動かす<br>
+      &nbsp;&nbsp;&nbsp; y += vy;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次にZ奥行き方向に動かす<br>
+      &nbsp;&nbsp;&nbsp; z += vz;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; vy += vyForce; // 勢い(力・フォースを加算<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (y &lt;= 0.0f) // 0.0fを地面として 0.0f以下になったら地面に着地したと判定する<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; y = 0.0f; // 地面に沿わせる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -0.01f; // 下方向への速度をほぼ 0 にする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isGround = true;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>if (gridCollision != nullptr)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gridCollision-&gt;Update(); // 所属するマス目セルを更新する</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラのプレイヤ追尾<br>
+      &nbsp;&nbsp;&nbsp; float camDistance = 150; // プレイヤからカメラまでのY平面上の距離<br>
+      &nbsp;&nbsp;&nbsp; float camHeight = 100; // プレイヤからカメラまでのY方向上の高さ<br>
+      &nbsp;&nbsp;&nbsp; // moveAngleは2D画像のX方向右を0度とするから、-90度回すと画像を正面に捉える位置にカメラを置ける<br>
+      &nbsp;&nbsp;&nbsp; float camAngleX = (float)std::cos((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; float camAngleZ = (float)std::sin((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; if (camera != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // カメラの位置をプレイヤの進行方向と真逆に設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;SetPosition(position + Vector3(camAngleX, camHeight, camAngleZ));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;LookAt(position); //カメラはプレイヤの方を見る<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      <em>void Player::OnCollision(std::shared_ptr&lt;Collision&gt; pCollision)<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; if (isDead) return; // すでにisDeadなら return<br>
+        &nbsp;&nbsp;&nbsp; auto otherCollider = pCollision-&gt;contacts[0].otherCollider.lock(); // コライダの弱共有ポインタをロック<br>
+        &nbsp;&nbsp;&nbsp; if (otherCollider == nullptr) return; // すでにコライダが消去済だった<br>
+        &nbsp;&nbsp;&nbsp; auto other = otherCollider-&gt;owner();<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (other-&gt;isDead) return; // other側がisDeadだったら処理をスルー<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (other-&gt;baseTag == "Enemy" || other-&gt;baseTag == "Player")<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto norm = pCollision-&gt;contacts[0].normal * other-&gt;<b>pushPower</b>; // <b>pushPowerの力でotherに押し返される</b><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; force += -norm; // <b>衝突法線方向の力</b>を加える<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        }</em><br>
+      <br>
+      // 描画処理<br>
+      void Player::Draw()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; int animIndex = animCount / 20; // キャラのパラパラアニメの画像番号(最大3)<br>
+      &nbsp;&nbsp;&nbsp; float abs_vx = (vx &gt; 0) ? vx : -vx; // x方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; float abs_vz = (vz &gt; 0) ? vz : -vz; // y方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; if (abs_vx &gt; 1.00f || abs_vz &gt; 1.00f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animCount += 6; // キャラが地面のXとZ方向に少しでもスピードがあったらアニメを走らせる<br>
+      &nbsp;&nbsp;&nbsp; if (animCount &gt;= 60) animCount = 0; // アニメ時間を0へループ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ワールドに存在するすべてのカメラに関連づいたスクリーンに対して描画する<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : world()-&gt;cameras) // プレイヤのいるワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 常にカメラ方向を向くビルボード回転の角度を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D angle = MyDraw::GetAngle(DxLib::GetCameraBillboardMatrixD());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; angle.x = 0; angle.z = 0; // Y軸周りのビルボード回転だけ有効にする X軸,Z軸まわりの回転は 0 にする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imgIndex = 9; // キャラチップ画像の起点番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ビルボードの角度 と キャラの向いている向き の 差 によって、別のプレイヤのカメラから見たキャラチップの向きの画像を切り替える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // -180 ～ +180 : angle.y&nbsp; moveAngle : -180 ～ +180 ↓<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float difAngleY = angle.y * 180.0f / DX_PI_F + moveAngle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imgIndex = (difAngleY &lt; -135 || 135 &lt; difAngleY) ? 0 // カメラ向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &lt; -45) ? 6 // 右 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &gt; 45) ? 3&nbsp; // 左 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 9; // 奥向きの画像<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(MyDraw::Plane::Z, x, y, z, 1.0f, angle, *image, imgIndex + animIndex, TRUE);<br>
+      <br>
+      <em>#ifdef _DEBUG // デバッグのときだけ_DEBUGが定義され描かれる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (sphereCollider != nullptr) sphereCollider-&gt;Draw(); // コライダを描く<br>
+        #endif</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+    </p>
+    <br>
+    <p><code>GameScene.cppを新規作成</code>して、ゲームをUpdateしたりDrawしたりする処理を実装しましょう。<br>
+    </p>
+    <p class="source">#include "GameScene.h"<br>
+      <br>
+      #include "Player.h"<br>
+      <br>
+      GameSceneSetting GameScene::settings{ "Map/GameSceneSetting.csv" }; // ゲームシーンの設定情報<br>
+      <br>
+      // 指定したゲームシーンのタグに関連づいたファイル名に対応したワールドを初期化する<br>
+      bool GameScene::LoadWorlds(const std::string&amp; gameSceneTag)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (settings.info.count(gameSceneTag) == 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto&amp; info = settings[gameSceneTag];<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; tag_mapPath : info)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CreateWorld(tag_mapPath.second.tag); // ワールドをタグをつけて生成<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      void GameScene::ChangeWorld(const std::string&amp; worldTag, std::shared_ptr&lt;Player&gt; pPlayer)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (pPlayer == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp; if (worlds.count(worldTag) == 0) return; // 存在しないタグだった<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; pPlayer-&gt;world(worlds[worldTag].get()); // ワールドへのリンクをすげ替える<br>
+      }<br>
+      <br>
+      <br>
+      void GameScene::Initialize()<br>
+      {// Init処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // Ｚバッファを有効にする [Zの深度]<br>
+      &nbsp;&nbsp;&nbsp; //[参考]https://docs.google.com/presentation/d/1Z23t1yAS7uzPDVakgW_M02p20qt9DeTs4ku4IiMDLco/edit?usp=sharing<br>
+      &nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp; // Ｚバッファへの書き込みを有効にする<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWriteZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp; // 光の明暗計算を無効に<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // SetDrawScreen に引数として渡せる( 描画対象として使用できる )グラフィックハンドルを作成するかどうかを設定する<br>
+      &nbsp;&nbsp;&nbsp; // ( TRUE:描画可能グラフィックハンドルを作成する&nbsp; FLASE:通常のグラフィックハンドルを作成する( デフォルト ) )<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // サブのスクリーンを2つ生成 画面の全体の縦方向サイズの Height / 2 にして、上下分割で配置できるようにする<br>
+      &nbsp;&nbsp;&nbsp; screenHandle0 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; screenHandle1 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーンを作成したらデフォルト設定に戻しておかないと<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(FALSE);<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath, 8, 8, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath1, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath2, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // プレイヤの生成<br>
+      &nbsp;&nbsp;&nbsp; if (pWorld != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //pWorld-&gt;AddCamera("カメラ1", Camera::defaultCamera); // カメラ1というタグをデフォルトカメラにつけてワールドにデフォルトカメラを配置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("カメラ1", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera1 = pWorld-&gt;camera("カメラ1"); // カメラ1 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera1-&gt;SetScreenHandle(screenHandle0); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer1 = Object::Create&lt;Player&gt;(nullptr, pWorld, Pad::Key, Vector3(90 + 256, 32, 95 + 256));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ1", pPlayer1); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath1]);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;camera = pCamera1.get(); // カメラをプレイヤにリンクする<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("カメラ2", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera2 = pWorld-&gt;camera("カメラ2"); // プレイヤ2 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera2-&gt;SetScreenHandle(screenHandle1); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer2 = Object::Create&lt;Player&gt;(nullptr, pWorld, Pad::Two, Vector3(190, 32, 195));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ2", pPlayer2); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath2]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;camera = pCamera2.get(); // カメラをプレイヤにリンクする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      <br>
+      void GameScene::Update()<br>
+      {// 更新処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle0); // 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; for (const auto&amp; player : players)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; player.second-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// グリッドを更新して隣接するグリッドに含まれる敵や弾の当たり判定を行う<br>
+        &nbsp;&nbsp;&nbsp; for (const auto&amp; world : worlds)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (world.second-&gt;grid() != nullptr)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (const auto&amp; cell : world.second-&gt;grid()-&gt;cellData)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pGridObject = cell.second;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; while (pGridObject != nullptr)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // while文で数珠つなぎのm_pNextを次々とたどって最後にたどり着くと次がなくてnullptrになる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pGridObject-&gt;checkCell();<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pGridObject = pGridObject-&gt;m_pNext; // リンクリスト構造を次々とたどる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      }<br>
+      <br>
+      void GameScene::Draw()<br>
+      {// 描画処理<br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; for (const auto&amp; player : players)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; player.second-&gt;Draw(); // プレイヤの描画【忘れるとプレイヤ表示されない】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>auto world = player.second-&gt;world(); // プレイヤのいるワールド</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // プレイヤのいるワールドのカメラのみを描けば、プレイヤのいないワールドは描かずに済む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 複数のカメラを 範囲 for文 で回す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : player.second-&gt;world()-&gt;cameras)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ラムダ式[&amp;](){ ～ }で{}の外側の変数すべてを &amp; キャプチャで&amp;参照として「Draw関数の内側へ引き連れて」処理できる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera.second-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Draw関数() の 外側にある変数 mapChipPath も[&amp;]効果で { } の内側で問題なくアクセスできている↓<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(40, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 2);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 40, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 70, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 8);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (camera.first == "カメラ1")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらがプレイヤ1", GetColor(255, 0, 0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (camera.first == "カメラ2")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらはプレイヤ2", GetColor(0, 255, 0));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <em>#ifdef _DEBUG&nbsp; // デバッグのときだけ_DEBUGが定義され描画される<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (world-&gt;grid() != nullptr)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (const auto&amp; cell : world-&gt;grid()-&gt;cellData)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cell.second-&gt;Draw(); // グリッドの描画<br>
+        #endif</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーン0の内容を画面に描く<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, 0, screenHandle0, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, 0, Screen::Width, Screen::Height / 2, GetColor(255, 0, 0));<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーン1の内容を画面に描く<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, Screen::Height / 2, screenHandle1, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, Screen::Height / 2, Screen::Width, Screen::Height, GetColor(0, 255, 0));<br>
+      <br>
+      }<br>
+    </p>
+    <br>
+    いかがでしょう？プレイヤ1とプレイヤ2の球体コライダが表示され、プレイヤ1を操作してプレイヤ2にぶつかると跳ね返りましたでしょうか？<br>
+    水色のグリッドは128×128×128で大きめにとってあります。<br>
+    なぜなら、グリッドを2つ飛び越えるような大きなコライダだと、<br>
+    今のまわりの隣接するグリッドを探す形ではグリッドを飛び越える大きさになると機能しなくなる弱点があるからです。<br>
+    具体的に、256の半径のコライダが[●]にいたら[(][ ][●][ ][)] ←コライダの半径 ( ● ) の ) は2つ先のグリッドに及ぶので、<br>
+    ほんとは2つ先のグリッドにいるキャラのコライダとも当たり判定しなければなりませんが、<br>
+    今のグリッドの仕組みでは隣1つまでのグリッドしか調べません。<br>
+    なので、ボスなど大きいキャラでも、128+α ぐらいのサイズが今のグリッドの仕組みが正しく機能する限界となります。<br>
+    8分木などを使うと、このような制約はなくなるので、8分木のほうが上位互換ではあります。<br>
+    <br>
+    大変でしたが、これで一通りのゲームエンジンとしての基本機能がそろってきました。<br>
+    コライダは最小限、球体とカプセルのみ準備しました。球体の当たり判定はカプセルの芯を点として同じ計算を流用しています。<br>
+    これで球とカプセルのみではありますが、ある程度のゲームを作れる土台は整ってきたのではないかと思います。<br>
     <br>
   </body>
 </html>
