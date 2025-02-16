@@ -18,6 +18,9 @@
       <li><a href="#mozTocId0004">ワールドを定義して、複数プレイヤと複数カメラをワールドに保持する</a></li>
       <li><a href="#mozTocId0005">シーンを定義して、ゲームシーンの中に複数ワールドを保持する</a></li>
       <li><a href="#mozTocId0006">MyTimerクラスでchronoから得た時刻でゲームの描画のFPSを管理する</a></li>
+      <li><a href="#mozTocId0007">共通のベース基底となるGameObjectを定義して、プレイヤなどはそれを継承する形を設計する</a></li>
+      <li><a href="#mozTocId0008">Componentクラスを継承して、プレイヤなどに付け離し再利用可能なコンポーネント指向の機能を設計する</a></li>
+      <li><a href="#mozTocId0009">何もない空間をグリッド分割して隣接していない空間に所属するものとの当たり判定をスルーして高速化する</a></li>
     </ol>
     <br>
     <a id="mozTocId0001" class="mozTocH1">
@@ -1170,8 +1173,8 @@
       &nbsp;&nbsp;&nbsp; };<br>
       }<br>
       <br>
-      // "Zako0"hash32 などのように 文字列 "～" の後ろにhash32 をつけるとhash32型 -&gt; uint32_tに変換される オペレータ"" を定義<br>
-      <b>constexpr</b> uint32_t operator"" hash32(const char* str, std::size_t length) // [参考] https://cpprefjp.github.io/lang/cpp11/user_defined_literals.html<br>
+      // "Zako0"_hash32 などのように 文字列 "～" の後ろに_hash32 をつけるとhash32型 -&gt; uint32_tに変換される オペレータ""_hash32 を定義<br>
+      <b>constexpr</b> uint32_t operator""_hash32(const char* str, std::size_t length) // [参考] https://cpprefjp.github.io/lang/cpp11/user_defined_literals.html<br>
       {<br>
       &nbsp;&nbsp;&nbsp; return hash32::hashcode(str, length); // hash32型のハッシュルールで32ビットのuint型に変換して返す<br>
       }<br>
@@ -1432,7 +1435,7 @@
     このように、ようはstd::shared_ptr型のリンクがnullptrじゃないリンクされた数だけ共有ポインタのplayer内部の共有カウンタが+1され、<br>
     全リンクがnullptrにならない限り、playerは消えるのを免れられるということ。<br>
     <br>
-    例えるならば、メンヘラ系VTuberがいいねが完全に0になったら死ぬ(引退するする詐欺)みたいな状況をイメージすると、ワールドが最後の推し 1 カウントを保持していて、<br>
+    例えるならば、メンヘラ系VTuberがいいねが完全に0になったらやめる(引退するする詐欺)みたいな状況をイメージすると、ワールドが最後の推し 1 カウントを保持していて、<br>
     完全にどこからも気にされない状態(共有リンク切れ)ならばワールド消滅とともにさすがに消していいだろ。<br>
     という「この世界(ワールド)にいるうちは最後まで見捨てないよ設計」です。<br>
     なので、<b>デッドロック(互いにどっかのクラス同士で共有リンク張りあい状態)のときは<br>
@@ -2908,9 +2911,9 @@
       &nbsp;&nbsp;&nbsp; // プレイヤの生成<br>
       &nbsp;&nbsp;&nbsp; if (pWorld != nullptr)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //pWorld-&gt;AddCamera("プレイヤ1", Camera::defaultCamera); // プレイヤ1というタグをデフォルトカメラにつけてワールドにデフォルトカメラを配置<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("プレイヤ1", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera1 = pWorld-&gt;camera("プレイヤ1"); // プレイヤ1 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //pWorld-&gt;AddCamera("カメラ1", Camera::defaultCamera); // カメラ1というタグをデフォルトカメラにつけてワールドにデフォルトカメラを配置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("カメラ1", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera1 = pWorld-&gt;camera("カメラ1"); // カメラ1 というタグのついたカメラへの共有ポインタを得る<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera1-&gt;SetScreenHandle(screenHandle0); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer1 = std::make_shared&lt;Player&gt;(pWorld, Pad::Key, Vector3(90 + 256, 32, 95 + 256));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ1", pPlayer1); // シーンにプレイヤを追加する<br>
@@ -2919,8 +2922,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;camera = pCamera1.get(); // カメラをプレイヤにリンクする<br>
       <br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("プレイヤ2", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera2 = pWorld-&gt;camera("プレイヤ2"); // プレイヤ2 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("カメラ2", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera2 = pWorld-&gt;camera("カメラ2"); // プレイヤ2 というタグのついたカメラへの共有ポインタを得る<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera2-&gt;SetScreenHandle(screenHandle1); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer2 = std::make_shared&lt;Player&gt;(pWorld, Pad::Two, Vector3(190, 32, 195));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ2", pPlayer2); // シーンにプレイヤを追加する<br>
@@ -2938,8 +2941,6 @@
       <br>
       &nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle0); // 一旦キャンバスをきれいにまっさらに<br>
       &nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦キャンバスをきれいにまっさらに<br>
-      <br>
-      &nbsp;&nbsp;&nbsp; Input::Update(); // 入力状態を更新<br>
       <br>
       &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
       <br>
@@ -2972,9 +2973,9 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 3Dで6枚のタイル(12ポリゴン)でボックスを描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(0, 70, 40, 1.0, *std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[mapChipPath]), 8);<br>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (camera.first == "プレイヤ1")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (camera.first == "カメラ1")<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらがプレイヤ1", GetColor(255, 0, 0));<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (camera.first == "プレイヤ2")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (camera.first == "カメラ2")<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawString(0, 0, "こちらはプレイヤ2", GetColor(0, 255, 0));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
@@ -3140,9 +3141,9 @@
       &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>game.Update(); //ゲームの更新処理<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; game.Draw(); // パラパラ漫画の描画処理</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; game.Draw(); // パラパラ漫画の描画処理</em><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <u>DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
         <br>
@@ -3592,5 +3593,1936 @@
     いかがでしょう？game.Draw()の「あとにFPSを描画」しているので、<br>
     ゲーム本体の描画のレイヤの上を、必ず塗りつぶして画面右上に現在のFPSを表示させることができます。<br>
     今は快適なFPSで描画できていますが、今後、ゲームの描画を複雑化させたときにFPSの状況をモニタリングする必要もでてくるかもしれません。<br>
+    留意しなければいけないのが、Drawはスキップしていますが、Updateはスキップしていないということです。<br>
+    今後、Update文にAIの経路の探索など重い処理を入れた場合はFPSは当然落ちます。<br>
+    そのため、Unityなどでは <b>Update文(毎フレーム) と FixedUpdate文(固定フレームレート毎)</b> を分けているわけですね。<br>
+    とりあえずこのゲームでは初心者にもとっつきやすい「固定フレームレート」前提の仕組みで制作していきます。<br>
+    つまり、このゲームにおける Update文 = FixedUpdate文 の意味に読み替えて理解しておいたほうがいいです。<br>
+    <br>
+    <br>
+    <a id="mozTocId0007" class="mozTocH1">
+      <h1>共通のベース基底となるGameObjectを定義して、プレイヤなどはそれを継承する形を設計する</h1>
+    </a>
+    <p><code>前提としてクラスQuaternionを別記事から作成しておきます</code>←<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/polygon3d/index.html#mozTocId0015">クオータニオンで安定して回転できるようにする</a><br>
+    </p>
+    <br>
+    さて、次はゲームエンジンの基礎となる共通のベース基底となるGameObjectクラスを設計していきましょう。<br>
+    UnityではGameObjectという名前ですし、Unreal EngineではActor(アクター)と呼ばれる概念です。<br>
+    名前は好みの問題ですのでGameObjectという名前にしましょう。<br>
+    さて、GameObjectの使われ方を考えておきましょう。<br>
+    重大なのは、<b>シーンの配下にあり「シーンと道ずれに消えてリセットされるべき」</b>という要件です。<br>
+    これは、<b>最初から共有ポインタとしてstd::make_sharedされる前提で設計すべき</b>、ということです。<br>
+    そして、共有ポインタ前提で設計する際に厄介なのは GameObjectクラス内部の関数で this を使いたいときです。<br>
+    <b>this も「自分自身を指すポインタ」である</b>以上、その<b>thisポインタが共有されたときにも、カウント +1 しなければ、つじつまが崩れてしまいます</b>。<br>
+    <b>ただの this では共有カウンタは +1 されない</b>ので、代わりに <a href="https://cpprefjp.github.io/reference/memory/enable_shared_from_this/shared_from_this.html">shared_from_this</a> を使って<b>「共有カウントを +1 したthis」を使う必要</b>があります。<br>
+    shared_from_this を使う資格は「<a href="https://cpprefjp.github.io/reference/memory/enable_shared_from_this.html">std::enable_shared_from_this</a> を継承したクラスに与えられる」ので<b>GameObjectはstd::enable_shared_from_this を継承したクラスでないといけません</b>。<br>
+    そして、さらなる<b>「重大なる厄介さ」</b>が待ち構えています。<br>
+    <br>
+    <b>「shared_from_thisは初期化コンストラクタで呼んではならない」という制約</b>です。<br>
+    <br>
+    この「厄介な制約」により、<b>事実上「shared_from_thisを使いたいような処理は初期化コンストラクタではできない」</b>ことを回避せねばならなくなってしまいました。<br>
+    ゆえに、<b>代わりにInit()関数とか、UnityでいうStart()やAwake()関数のようなものを初期化の代替としてコンストラクタの後追いで一緒に呼ぶ、という回避策が必要</b>になります。<br>
+    逆にいうと、<b>GameObjectを継承するクラスは「使う側が自由にnew GameObject(～)やstd::make_sharedできてはいけない」設計が必要</b>となってきます。<br>
+    まあ、どのみちUnityでもシーンにGameObjectを生成するときにはInstatiate()関数を経由して生成していますよね。<br>
+    直接生成を封じるためには<b>「クラスの初期化コンストラクタをprotected:にして外部から直接コンストラクタ経由の初期化生成するのを封じる」対策が必要</b>です。<br>
+    上記までの事情を分かっているプログラマなら初期化コンストラクタとInit()関数をセットで呼んで初期生成するでしょうが、<br>
+    事情を知らないプログラマは普通に初期化コンストラクタ経由で初期生成をしようとするでしょう。それをprotected:で邪魔するのです。<br>
+    代わりに<b>コンストラクタのコメントに// Create関数経由で初期生成してください とただし書きをしておけば「空気読んでくれ」</b>は伝わります。<br>
+    関数の名前はMake()関数でもいいし、Create()関数でもいいですが、わりとwebに出てくる動画などではcreate()関数にしていることが多い感はありますね。<br>
+    なのでcreate()関数などが共有ポインタを返すような文脈で出てきているwebの動画などは「暗に上記事情の設計」をしている雰囲気がかもし出されている、と感じるべきです。<br>
+    <br>
+    さてと、上記事情をGameObjectが 直接std::enable_shared_from_thisを継承する 形でも設計はできるのですが、<br>
+    今後<b>「GameObjectじゃないものも上記事情をかかえる場合もありそう」</b>だと予測できますよね。<br>
+    ですので、さらに「ベース基底となるObjectクラス(std::enable_shared_from_thisを継承)」を間に入れるほうがよさそうです。<br>
+    GameObjectは上記のObjectクラスを継承して「間接的にstd::enable_shared_from_thisを孫として継承」する形にします。<br>
+    ついでにObjectクラスにはUnityにもあるように<br>
+    「通し番号インスタンスIDを初期化と同時にカウントアップして保持して == で同じインスタンスIDか判定」<br>
+    「タグを振ってFindWithTagで辞書からタグでオブジェクトを検索できる機能」<br>
+    なども組み入れてしまいましょう。<br>
+    <br>
+    <p><code>Object.hを新規作成</code>して、継承するとshared_from_this_asでき、<br>
+      Create関数経由で初期化とInitをセットでできて、インスタンスIDやタグを振って検索できるベース基底クラスを準備しましょう。</p>
+    <p class="source">#ifndef OBJECT_H_<br>
+      #define OBJECT_H_<br>
+      <br>
+      #include &lt;memory&gt; // 共有ポインタを使う<br>
+      #include &lt;unordered_map&gt;<br>
+      #include "MyHash.h" // hash32でタグ→オブジェクトを辞書検索できるようにする<br>
+      <br>
+      <br>
+      // <b>Objectクラスのコンストラクタでは shared_from_this を使えない</b>から<br>
+      // <b>Initをoverride継承</b>して<b> Initの中で shared_from_thisを必要</b>とする<b>初期化する際に渡すパラメタ</b>を<br>
+      // このベース基底クラスを継承して定義する<br>
+      struct <b>InitParams</b><br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; InitParams() = default;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <b>// このクラスを継承したクラスで、初期化に必要なパラメタを渡す(初期化に必要なパラメタはそれぞれ違うので)</b><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual ~InitParams() {}<br>
+      };<br>
+      <br>
+      <br>
+      // GameObjectなどをこの Object型を継承して新規生成することで シリアルIDを自動で振り、shared_from_this_as&lt;Player&gt;()などで 共有状態のthisを得られるようにする<br>
+      class Object <b>: public std::enable_shared_from_this</b>&lt;Object&gt;<br>
+      {&nbsp;&nbsp;&nbsp; // [std::shared_ptrでthisポインタをつかうためには]↑ https://www.kabuku.co.jp/developers/cpp_enable_shared_from_this<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 通し番号(シリアルID)をstaticで管理してインスタンスが生成されるたびにシリアル番号を++して返す<br>
+      &nbsp;&nbsp;&nbsp; static unsigned int <b>newID</b>() { <b>static unsigned int _serialID_ = 0;</b> return _serialID_<b>++</b>; }<br>
+      protected: // protected:にしてクラス外からの直接のアクセスを阻む<br>
+      &nbsp;&nbsp;&nbsp; const unsigned int m_InstanceID; // オブジェクトのインスタンスID (0 ～ 約42億までの番号)<br>
+      &nbsp;&nbsp;&nbsp; hash32 m_Tag{ "" }; // オブジェクトに振ったタグ デフォルトの空文字""の場合は検索可能な辞書に登録しない<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // <b>コンストラクタはprotected:にしてある</b>ので <b>Create関数経由で初期化</b>してください<br>
+      &nbsp;&nbsp;&nbsp; Object() : m_InstanceID{ Object::<b>newID</b>() } {&nbsp; };<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; unsigned int InstanceID() { return m_InstanceID; };<br>
+      &nbsp;&nbsp;&nbsp; inline hash32 Tag() const { return m_Tag; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ (辞書にタグが登録されていたら、そのタグを辞書からも消しておく)<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Object() { if (m_Tag != "") umTagObjects().erase(m_Tag); };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //[protectedなコンストラクタでもstd::make_sharedで呼ぶテク] https://gintenlabo.hatenablog.com/entry/20131211/1386771626<br>
+      &nbsp;&nbsp;&nbsp; template&lt;typename ObjectT&gt;<br>
+      &nbsp;&nbsp;&nbsp; struct ProtectedCall : public ObjectT<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // <b>ダミーとなる ProtectedCallクラスが public:だからそれを経由して間接的にコンストラクタがprotected:なクラスでもmake_sharedを呼ぶ</b>テク<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; template&lt;class... ArgsT&gt; // std::make_sharedはprotectedな継承クラスは呼べないのでそれを回避するテクニック<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; explicit ProtectedCall(ArgsT&amp;&amp;... args)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : ObjectT(std::forward&lt;ArgsT&gt;(args)...) { } //std::forwardで複数引数を完全転送で引き渡し https://proc-cpuinfo.fixstars.com/2016/03/c-html/<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // <b>コンストラクタでは shared_from_this を使えないから、Initをoverride継承</b>して Initの中で <b>shared_from_thisを必要とする初期化</b>をする<br>
+      &nbsp;&nbsp;&nbsp; virtual void Init(std::shared_ptr&lt;<b>InitParams</b>&gt; initParams = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>// overrideして shared_from_this_as が必要な パラメータの初期化を行ってください</b><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // <b>Objectを継承した型はこの create関数を経由して新規生成</b>する<br>
+      &nbsp;&nbsp;&nbsp; template &lt;typename DerivedT, typename OutTypeT = DerivedT, <b>typename ...ArgsT</b>&gt;<br>
+      &nbsp;&nbsp;&nbsp; static auto <b>Create</b>(std::shared_ptr&lt;InitParams&gt; initParams, ArgsT&amp;&amp;...args)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pObject = std::static_pointer_cast&lt;OutTypeT&gt;(<b>std::make_shared</b>&lt;ProtectedCall&lt;DerivedT&gt;&gt;(std::forward&lt;ArgsT&gt;(args)...));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pObject-&gt;<b>Init(initParams)</b>; // <b>コンストラクタでは shared_from_this_as できないものをmake_sharedが終わったタイミングで一緒に初期化</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return pObject;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // <b>shared_from_this() を DerivedT型にキャストして返す</b> [参考] https://qiita.com/terukazu/items/e4129105b12442e42651<br>
+      &nbsp;&nbsp;&nbsp; template &lt;typename DerivedT&gt;<br>
+      &nbsp;&nbsp;&nbsp; auto <b>shared_from_this_as()</b> noexcept {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::dynamic_pointer_cast&lt;DerivedT&gt;(<b>Object::shared_from_this()</b>);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // &lt;振ったタグ, オブジェクトへの弱共有リンク&gt; の辞書を関数内staticで保持して検索できるようにしてある<br>
+      &nbsp;&nbsp;&nbsp; static inline std::unordered_map&lt;hash32, std::weak_ptr&lt;Object&gt;&gt;&amp; umTagObjects()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 関数内staticで タグから オブジェクトへの弱共有ポインタを保持<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; static std::unordered_map&lt;hash32, std::weak_ptr&lt;Object&gt;&gt; _umTagObjects_;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return _umTagObjects_;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // オブジェクトにタグを振って検索できるようにしておく (空文字 "" のタグが指定されたら辞書から消す)<br>
+      &nbsp;&nbsp;&nbsp; template &lt;typename DerivedT&gt;<br>
+      &nbsp;&nbsp;&nbsp; inline auto SetTag(const std::string&amp; tag)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_Tag != "" &amp;&amp; tag == "") // 空文字 "" のタグが指定されたら辞書から消す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; umTagObjects().erase(m_Tag); // 既存のタグが辞書に登録されてたら辞書から消す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_Tag = ""; // タグを空文字へリセット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return shared_from_this_as&lt;DerivedT&gt;(); // メソッドチェーンで-&gt;で連鎖アクセスできるように thisを返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_Tag = tag; // タグを設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; umTagObjects().emplace(m_Tag, shared_from_this_as&lt;DerivedT&gt;()); // タグと弱共有リンクをペアで辞書に登録<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return shared_from_this_as&lt;DerivedT&gt;(); // メソッドチェーンで-&gt;で連鎖アクセスできるように thisを返す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // オブジェクトに振っておいたタグで検索する<br>
+      &nbsp;&nbsp;&nbsp; template &lt;typename DerivedT&gt;<br>
+      &nbsp;&nbsp;&nbsp; static std::weak_ptr&lt;DerivedT&gt; FindWithTag(const std::string&amp; tag)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto found = umTagObjects().find(tag); // 辞書からtagと一致するものを見つける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (found == end(umTagObjects())) // 結果がendのときは見つからなかった<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::weak_ptr&lt;DerivedT&gt;(); // 空の弱共有ポインタを返す(空の弱共有ポインタはlock()してもnullptrになる)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (found-&gt;second.lock() == nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 辞書には found が見つかったが lock()したら nullptr のときはすでにリンク先本体が消されているから辞書からもeraseで消す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; umTagObjects().erase(tag);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::weak_ptr&lt;DerivedT&gt;(); // 空の弱ポインタを返す(lock()してもnullptrになる)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::dynamic_pointer_cast&lt;DerivedT&gt;(found); // DerivedT型(継承先の型タイプ)に変換してreturn する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 比較演算子 == ではインスタンスIDを比較する<br>
+      &nbsp;&nbsp;&nbsp; inline bool operator == (const Object&amp; other) const { return this-&gt;m_InstanceID == other.m_InstanceID; }<br>
+      &nbsp;&nbsp;&nbsp; // 不一致演算子 != ではインスタンスIDを比較する<br>
+      &nbsp;&nbsp;&nbsp; inline bool operator != (const Object&amp; other) const { return !(*this == other); }<br>
+      };<br>
+      <br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    template &lt;typename DerivedT&gt;などテンプレートでかなり読みづらいとは思いますが、<br>
+    ようはCreate関数の中でstd::make_sharedで初期化して、それとセットでInit関数も呼び出しているということです。<br>
+    初期化コンストラクタでは例えば、World* worldやVector3 positionなど色々初期化で渡したい引数があるしクラスごとに引数の数も増えるとおもいますが、<br>
+    Create関数のテンプレートの <b>typename ...ArgsT</b>←これのおかげで魔法のように<b>引数が</b>ワールドやポジション以外に<b>何個増えても</b>、<br>
+    Create( world, position, ～その他いろんな引数が増えても...) のように呼び出しかたがテンプレで拡張可能になっています。<br>
+    <br>
+    あとはこのObjectクラスを継承すれば、GameObjectは<b>shared_from_this_as&lt;Player&gt;()</b>などで 「共有カウンタを+1できるthis」 を使える準備が整います。<br>
+    <br>
+    <p><code>GameObject.hを新規作成</code>して、PlayerやZakoなどの基底ベースとなるクラスを準備しましょう。</p>
+    <p class="source">#ifndef GAMEOBJECT_H_<br>
+      #define GAMEOBJECT_H_<br>
+      <br>
+      #include &lt;memory&gt; // 共有ポインタの定義のため<br>
+      <br>
+      #include "Vector3.h"<br>
+      #include "Quaternion.h"<br>
+      <br>
+      #include "Object.h" // インスタンスIDや検索タグを持ち、shared_from_this_as&lt;継承先クラス名&gt;などができる<br>
+      <br>
+      class World; // 前方宣言<br>
+      <br>
+      // ゲーム上に表示される物体の基底クラス。<br>
+      // プレイヤーや敵、アイテムなどはこのクラスを継承して作る。<br>
+      class GameObject : public Object<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタはprotected:にしてあるのでCreate関数経由で初期生成してください<br>
+      &nbsp;&nbsp;&nbsp; GameObject(World* world = nullptr, Vector3 position = { 0,0,0 }, Quaternion rotation = { 0,0,0,1 }, Vector3 velocity = { 0,0,0 }, Vector3 force = { 0,0,0 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Object(), m_world{ world }, position{ position }, rotation{ rotation }, velocity{ velocity }, force{ force }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GameObject() {}<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★下記3つはメモリ上で共用状態になる(position、x,y,z、xyzどの名前から数値を変えたり読出してもメモリ上は同じ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 同じデータに3種類の名前を付けたイメージ、しかもVector3の機能や配列としてのアクセスの仕方もできて便利<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float x, y, z; }; // XYZ座標&nbsp; [匿名共用体とは] https://code.i-harness.com/ja-jp/q/4d437c<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 position; // XYZ座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
+      &nbsp;&nbsp;&nbsp; }; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Quaternion rotation; // 回転クオータニオン<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vx, vy, vz; }; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 velocity; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyz;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vxForce, vyForce, vzForce; }; // XYZ方向にかかる力(Unityでいうと AddForce関数 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 force; // XYZ方向の力(物理的には加速度:1フレームごとにvelocityの増える=加速する量)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyzForce;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; World* m_world; // GameObjectが配置されたワールドへのリンク<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドへのポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; virtual World* world() { return m_world; }<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドのポインタを変更する<br>
+      &nbsp;&nbsp;&nbsp; virtual void world(World* changeWorld) { m_world = changeWorld; }<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; bool isDead{ false }; // 死んだ（削除対象）フラグ<br>
+      &nbsp;&nbsp;&nbsp; bool isStatic{ false }; // 動かない(静的オブジェクトか?)<br>
+      &nbsp;&nbsp;&nbsp; bool isGround{ false }; // 地面についているか<br>
+      &nbsp;&nbsp;&nbsp; bool isFlying{ false }; // 空をとんでいるか<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; hash32 typeTag{ "" }; // 小カテゴリ Zako0など個別のタイプ<br>
+      &nbsp;&nbsp;&nbsp; hash32 baseTag{ "" }; // 大カテゴリ Enemyなど大まかなベースジャンル<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理[純粋仮想関数 = 0 なのでoverride必須の関数]<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() = 0; // 純粋仮想関数 = 0 にすると【絶対 Update()関数はoverrideしなきゃいけない義務を付与できる 】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理[純粋仮想関数 = 0 なのでoverride必須の関数]<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; // 純粋仮想関数 = 0 にすると【絶対 Draw()関数はoverrideしなきゃいけない義務を継承先クラスに付与 】<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    とりあえずは位置positionなどは「親子構造をもたない形」で定義しました。<br>
+    親子構造を持つtransformなどを考え出すと、xを一つ変えるだけでもそのxの変化を子供に伝搬させる必要が出てきたりして、<br>
+    x = x + 1; したあとにいちいち UpdateChildX() などしないと子供に伝搬されず、忘れると「なぜだー状態」になり、<br>
+    非常に頭が混乱して、初心者にはとっつきにくいプログラミングになってしまうので、シンプル化して他に注力するため今回は導入を見送ります。<br>
+    <br>
+    <p><code>Player.hを変更</code>して、GameObjectを継承しましょう。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Resource.h"<br>
+      #include "GameObject.h"<br>
+      <u>#include "MyHash.h" // hash32型でプレイヤが現在いるワールドのタグを管理する<br>
+        #include "Vector3.h"</u><br>
+      <br>
+      class World; // 前方宣言<br>
+      class Camera; // 前方宣言<br>
+      <br>
+      class Player<em> : public GameObject</em><br>
+      {<br>
+      <em>protected:</em><br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<em>はprotected:にしてあるので、Create関数経由で初期生成してください</em><br>
+      &nbsp;&nbsp;&nbsp; Player(World* world, Pad pad, Vector3 position<em>, Quaternion rotation = { 0,0,0,1 }, Vector3 velocity = { 0,0,0 }, Vector3 force = { 0,0,0 }</em>)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : pad{ pad }, <em>GameObject(world, position, rotation, velocity, force)</em> <u>m_world{ world }, position{ position }, velocity{ 0,0,0 }, force{0,0,0}</u><br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;<em>typeTag</em> = "Player";<em> // タグは個別の"プレイヤ1"などに使い、タイプはtypeTagで判別する形にしてタイプのジャンルを区別</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      <em>public:</em><br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Player() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <u>union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★下記3つはメモリ上で共用状態になる(position、x,y,z、xyzどの名前から数値を変えたり読出してもメモリ上は同じ)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 同じデータに3種類の名前を付けたイメージ、しかもVector3の機能や配列としてのアクセスの仕方もできて便利<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float x, y, z; }; // XYZ座標&nbsp; [匿名共用体とは] https://code.i-harness.com/ja-jp/q/4d437c<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 position; // XYZ座標<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
+        &nbsp;&nbsp;&nbsp; };// unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; union {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vx, vy, vz; }; // XYZ方向の速度<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 velocity; // XYZ方向の速度<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyz;<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; union {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vxForce, vyForce, vzForce; }; // XYZ方向にかかる力(Unityでいうと AddForce関数 )<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 force; // XYZ方向の力(物理的には加速度:1フレームごとにvelocityの増える=加速する量)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyzForce;<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; hash32 tag{ "" }; // プレイヤにつけるタグ<br>
+        protected:<br>
+        &nbsp;&nbsp;&nbsp; World* m_world; // 配置されたワールドへのリンク<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; // 現在いるワールドへのポインタを得る<br>
+        &nbsp;&nbsp;&nbsp; virtual World* world() { return m_world; }<br>
+        &nbsp;&nbsp;&nbsp; // 現在いるワールドのポインタを変更する<br>
+        &nbsp;&nbsp;&nbsp; virtual void world(World* changeWorld) { m_world = changeWorld; }</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Pad pad; // 操作するコントローラー番号<br>
+      &nbsp;&nbsp;&nbsp; hash32 worldTag{ "" }; // 現在いるワールドのタグ<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeedMax = 6; // 移動速度Max値<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeed = 0;//移動速度<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float moveAngle = 0; // X軸→方向から何度か<br>
+      &nbsp;&nbsp;&nbsp; float deltaAngle = 0; // プレイヤの動く角度の変化率、ハンドルを切ったらだんだんもとに戻る<br>
+      &nbsp;&nbsp;&nbsp; int animCount = 0;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; image; // プレイヤの板ポリゴンで描くタイル分割画像への共有リンク<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Camera* camera{ nullptr }; // プレイヤを追随するカメラ<br>
+      &nbsp;&nbsp;&nbsp; void SetCamera(Camera* pCamera) { camera = pCamera; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update()<em> override</em>;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw()<em> override</em>;<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <p><code>Player.cppを変更</code>して、GameObjectを継承する記述にしましょう。</p>
+    <p class="source">#include "Player.h"<br>
+      <br>
+      #include &lt;cmath&gt; // 浮動小数点の余り%演算子がC++にないのでfmodを使うため<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "MyDraw.h"<br>
+      <br>
+      #include "Camera.h"<br>
+      #include "World.h"<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      void Player::HandleInput()<br>
+      {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_LEFT) <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_A)) )<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = - MoveSpeed; // 左<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle += 1; //ハンドルを左に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_RIGHT)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_D)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle -= 1; //ハンドルを右に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_UP)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_W)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = - MoveSpeed; // 上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed += 0.6f; //アクセルを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &gt; MoveSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = MoveSpeedMax;//Maxスピードで止める<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (Input::GetButton(pad, PAD_INPUT_DOWN)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_S)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed -= 0.6f; //ブレーキを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &lt; -0.9f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = -0.9f;//ちょっとだけバックできるように<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (pad == Pad::Key || pad == Pad::One) // コントローラ1またはキーボード操作のプレイヤのときだけ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGUP)) // キーボードのPageUp ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = 2.0f; // テスト用に空中の上方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGDN)) // キーボードのPageDown ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -2.0f; // テスト用に空中の下方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      }<br>
+      <br>
+      <br>
+      // 更新処理<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; deltaAngle *= 0.5F; // 車のハンドルの方向をだんだんニュートラルに戻す<br>
+      &nbsp;&nbsp;&nbsp; MoveSpeed *= 0.9F; // 移動速度も減速する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理 <br>
+      &nbsp;&nbsp;&nbsp; HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; moveAngle += deltaAngle; // ハンドルを回したぶんプレイヤの進行方向を変える<br>
+      &nbsp;&nbsp;&nbsp; if (moveAngle &lt; -180) moveAngle = 360 + moveAngle; // -180以下の角度にならないようにマイナスになったら+180度にループさせる<br>
+      &nbsp;&nbsp;&nbsp; else if (moveAngle &gt; +180) moveAngle = -360 + moveAngle; // +180以下の角度にならないようにマイナスになったら-180度にループさせる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>rotation.SetRotation(VGet(0, (180 - moveAngle) * MyMath::Deg2Rad, 0)); // 前向きの3Dモデルなら180度回転させて奥方向の向きに設定</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ↓進行方向角度をX方向とZ方向の速度に変える<br>
+      &nbsp;&nbsp;&nbsp; vx = (float)std::cos((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      &nbsp;&nbsp;&nbsp; vz = (float)std::sin((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 実際に位置を動かす<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // まず横に移動する<br>
+      &nbsp;&nbsp;&nbsp; x += vx;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次に縦に動かす<br>
+      &nbsp;&nbsp;&nbsp; y += vy;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次にZ奥行き方向に動かす<br>
+      &nbsp;&nbsp;&nbsp; z += vz;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; vy += vyForce; // 勢い(力・フォースを加算<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラのプレイヤ追尾<br>
+      &nbsp;&nbsp;&nbsp; float camDistance = 150; // プレイヤからカメラまでのY平面上の距離<br>
+      &nbsp;&nbsp;&nbsp; float camHeight = 100; // プレイヤからカメラまでのY方向上の高さ<br>
+      &nbsp;&nbsp;&nbsp; // moveAngleは2D画像のX方向右を0度とするから、-90度回すと画像を正面に捉える位置にカメラを置ける<br>
+      &nbsp;&nbsp;&nbsp; float camAngleX = (float)std::cos((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; float camAngleZ = (float)std::sin((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; if (camera != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // カメラの位置をプレイヤの進行方向と真逆に設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;SetPosition(position + Vector3(camAngleX, camHeight, camAngleZ));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;LookAt(position); //カメラはプレイヤの方を見る<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      // 描画処理<br>
+      void Player::Draw()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; int animIndex = animCount / 20; // キャラのパラパラアニメの画像番号(最大3)<br>
+      &nbsp;&nbsp;&nbsp; float abs_vx = (vx &gt; 0) ? vx : -vx; // x方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; float abs_vz = (vz &gt; 0) ? vz : -vz; // y方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; if (abs_vx &gt; 1.00f || abs_vz &gt; 1.00f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animCount += 6; // キャラが地面のXとZ方向に少しでもスピードがあったらアニメを走らせる<br>
+      &nbsp;&nbsp;&nbsp; if (animCount &gt;= 60) animCount = 0; // アニメ時間を0へループ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ワールドに存在するすべてのカメラに関連づいたスクリーンに対して描画する<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : world()-&gt;cameras) // プレイヤのいるワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 常にカメラ方向を向くビルボード回転の角度を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D angle = MyDraw::GetAngle(DxLib::GetCameraBillboardMatrixD());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; angle.x = 0; angle.z = 0; // Y軸周りのビルボード回転だけ有効にする X軸,Z軸まわりの回転は 0 にする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imgIndex = 9; // キャラチップ画像の起点番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ビルボードの角度 と キャラの向いている向き の 差 によって、別のプレイヤのカメラから見たキャラチップの向きの画像を切り替える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // -180 ～ +180 : angle.y&nbsp; moveAngle : -180 ～ +180 ↓<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float difAngleY = angle.y * 180.0f / DX_PI_F + moveAngle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imgIndex = (difAngleY &lt; -135 || 135 &lt; difAngleY) ? 0 // カメラ向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &lt; -45) ? 6 // 右 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &gt; 45) ? 3&nbsp; // 左 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 9; // 奥向きの画像<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(MyDraw::Plane::Z, x, y, z, 1.0f, angle, *image, imgIndex + animIndex, TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+    </p>
+    <br>
+    <br>
+    <p><code>GameScene.cppを変更</code>して、ObjectのCreate関数を呼び出す形でPlayerを新規生成する記述にしましょう。</p>
+    <p class="source">#include "GameScene.h"<br>
+      <br>
+      #include "Player.h"<br>
+      <br>
+      (中略).................<br>
+      <br>
+      <br>
+      void GameScene::Initialize()<br>
+      {// Init処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; (中略).................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // プレイヤの生成<br>
+      &nbsp;&nbsp;&nbsp; if (pWorld != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //pWorld-&gt;AddCamera("カメラ1", Camera::defaultCamera); // プレイヤ1というタグをカメラにつけてワールドにカメラを配置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("カメラ1", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera1 = pWorld-&gt;camera("カメラ1"); // カメラ1 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera1-&gt;SetScreenHandle(screenHandle0); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer1 = <em>Object::Create&lt;Player&gt;(nullptr, </em>pWorld, Pad::Key, Vector3(90 + 256, 32, 95 + 256));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ1", pPlayer1); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath1]);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;camera = pCamera1.get(); // カメラをプレイヤにリンクする<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("カメラ2", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera2 = pWorld-&gt;camera("カメラ2"); // カメラ2 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera2-&gt;SetScreenHandle(screenHandle1); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer2 = <em>Object::Create&lt;Player&gt;(nullptr, </em>pWorld, Pad::Two, Vector3(190, 32, 195));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ2", pPlayer2); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath2]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;camera = pCamera2.get(); // カメラをプレイヤにリンクする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      <br>
+      (以下、略)......<br>
+    </p>
+    <br>
+    いかがでしょう？カメラも今後必要あらば、ObjectやGameObjectを継承させることもできなくはありません。<br>
+    現状は、shared_from_this_as&lt;Player&gt;を使ってInitで初期化しなきゃいけないようなものはありません。<br>
+    次は、上記のshared_from_this_asを使ったInit初期化処理が必要になるような「コンポーネントの仕組み」を導入してみましょう。<br>
+    <br>
+    <a id="mozTocId0008" class="mozTocH1">
+      <h1>Componentクラスを継承して、プレイヤなどに付け離し再利用可能なコンポーネント指向の機能を設計する</h1>
+    </a> Unityなどのゲームエンジンの便利さを担保している仕組みとして「コンポーネント」があります。<br>
+    ベースとなるGameObjectに[AddComponentボタン]を押して機能を付けたり外したりできる仕組みです。<br>
+    では、そもそもコンポーネントとは何なのかを考えてみる必要がありそうです。<br>
+    コンポーネントはいろいろな機能を持ちますが、それらはしょせんは継承した先の追加の機能にすぎません。<br>
+    ですからコンポーネントそのものとは何なのか？ということに対する1つの重要な答えは、<br>
+    <br>
+    <b>「そのコンポーネントの所有者(オーナー)のパラメータにアクセスでき、オーナーに付着することができる」</b><br>
+    <br>
+    ゲームでいうところの装備みたいなイメージでしょうか？<br>
+    装備すると、装備したオーナーのHPを毎ターン回復、するとするなら、オーナーのHPのパラメータにアクセスして、書き換えられなきゃいけません。<br>
+    つまり、コンポーネントは<b>初期化するときに「所有者オーナーの this ポインタを受け取り、そのthis経由でオーナーのパラメタを書き換える」</b><br>
+    ことができれば、装備主にいろいろな影響を与えることができるわけです。<br>
+    すなわち<b>「コンストラクタでオーナーのthisを受け取り、オーナーに所有:共有ポインタで所持され、オーナーと道連れにリセットされる」</b>という<br>
+    shared_from_this_as と std::shared_ptrの組み合わせが、コンポーネントの設計の根幹であることが導かれます。<br>
+    <br>
+    では、下記のシンプル化したComponentの仕組みを見てみましょう。<br>
+    <p class="source">Componentの例<br>
+      struct Component<br>
+      {<br>
+      &nbsp;&nbsp; GameObject* m_owner{ nullptr }; // オーナーのパラメータへアクセスするためのポインタ<br>
+      &nbsp;&nbsp; Component(GameObject* owner) : m_owner{ owner } {}<br>
+      <br>
+      &nbsp;&nbsp; void Update()<br>
+      &nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; owner-&gt;x += 1; // ポインタ経由でオーナーの位置を+1ずつずらす<br>
+      &nbsp;&nbsp; }<br>
+      } </p>
+    そうです。コンストラクタの初期化のときに宿主である所有者オーナーのポインタ ownerさえ受け取ってリンクを取っておけば、<br>
+    毎回のUpdate()ごとに宿主オーナーのパラメタの x を +1 するなり、毒で宿主のHPを減らし続けるなり、<br>
+    オーナーのパラメタに影響を及ぼすことができます。<br>
+    <br>
+    オーナー側は下記のようになります。<br>
+    <p class="source">Playerの例<br>
+      struct Player<br>
+      {<br>
+      &nbsp;&nbsp; <b>std::shared_ptr&lt;Component&gt;</b> m_component{ nullptr }; // コンポーネントへの共有カウンタ +1をキープして消えないように所持する<br>
+      &nbsp;&nbsp; Player() : m_component{ this } {}<br>
+      <br>
+      &nbsp;&nbsp; void Update()<br>
+      &nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_component-&gt;Update(); // コンポーネントのUpdate経由でオーナーの位置を+1ずつずらす<br>
+      &nbsp;&nbsp; }<br>
+      } </p>
+    所有者のオーナー側はコンポーネントへの共有ポインタに最低限 +1 のカウンタをキープし続けることでコンポーネントが消えないようにキープします。<br>
+    そして、Playerクラス側のUpdate関数内でm_component-&gt;Update(); のように所有するコンポーネントのUpdateを経由して自分のx位置のパラメタを変化させます。<br>
+    これが一番シンプルな形のコンポーネントの仕組みです。<br>
+    <br>
+    ただし、コンポーネント側のポインタは生ポインタの this ではなく共有ポインタのほうがよいでしょう。<br>
+    一旦、生ポインタになってしまうと、例えば、コンポーネントを継承した当たり判定のコライダがあるとしましょう。<br>
+    コライダ同士が衝突した際に、どれとどれがぶつかったかの衝突情報にはぶつかったGameObjectの共有ポインタが必要になります。<br>
+    なぜ、生ポインタだとだめなの？と思うかもしれませんが、<br>
+    衝突した情報を見ている時点ですでにそのぶつかったGameObjectが消えてしまっているとしたら、<br>
+    <b>生ポインタでは、住所は空の番号(=nullptr) ではないけど、すでにその住所にあった データ本体は メモリから削除済 ということ</b>が起こりえます。<br>
+    例えるなら、<b>スマホに遠い昔の知人の電話番号はまだ登録されているが、電話をかけてみると「この番号は現在使われておりません」となる状態</b>です。<br>
+    この状態の生ポインタは、VisualStudioの環境ではデバッグでアクセスすると0xccccccccc.. という16進数のcで埋まった番号になっています。<br>
+    この<b>すでにメモリから削除済の0xcccccc...状態になっているポインタを「ダングリングポインタ」</b>と呼びます。<br>
+    <b>「ダングリング状態 = 0xcccccc....」で「ヌルポインタ状態 = 0x000000....」ですからダングリング状態は if (p == nullptr) では判定できません</b>。<br>
+    ですから、ダングリング状態が予想される状況では、共有ポインタを使うことになります。<br>
+    共有ポインタには std::shared_ptr だけではなく 弱共有ポインタ std::weak_ptr もあります。<br>
+    <b>弱共有ポインタ std::weak_ptr は 共有ポインタstd::shared_ptr と違って、リンクを張っただけでは 共有カウンタを +1 しません</b>。<br>
+    <br>
+    弱共有ポインタは使うときだけ、<br>
+    <b>std::shared_ptr&lt;Component&gt; pComponent = weak_pComponent.lock();</b> のように <br>
+    <b>.lock() でロックすることによって、ふつうの共有ポインタ std::shared_ptr型に戻すことができます</b>。<br>
+    当然、<b>戻した共有ポインタ pComponent が使われなくなれば、lock()も外れて、再び共有カウンタは -1 </b>されます。<br>
+    では、もし <b>弱共有ポインタstd::weak_ptrの指す先がすでに「この番号は現在使われておりません状態」のとき</b>はどうなるのでしょうか？<br>
+    この場合は<b>生ポインタと違って if (pComponent == nullptr) の判定で引っ掛けることができます</b>。<br>
+    <br>
+    このように<b>生ポインタではなくstd::weak_ptrの弱共有ポインタなら、使いたいときだけ.lockして共有ポインタに戻したり、ダングリング判定もできます</b>。<br>
+    なので、<b>やはり大元「おおもと」のGameObjectは生ポインタの this では心もとない</b>ので shared_from_this_as で 共有ポインタ状態で初期生成できる必要があります。<br>
+    <br>
+    <b>大元が生ポインタ発祥であると、衝突など「大元がすでに現在使われておりません状態」のダングリング判定が必要な状況で詰んでしまう</b>ことになるのです。<br>
+    <br>
+    では、下記のstd::weak_ptr化したComponentの例を見てみましょう。<br>
+    <p class="source">Componentの例<br>
+      struct Component<br>
+      {<br>
+      &nbsp;&nbsp; <em>std::weak_ptr&lt;GameObject&gt;</em> m_owner{ nullptr }; // オーナーのパラメータへアクセスするためのポインタ<br>
+      &nbsp;&nbsp; Component(<em>std::shared_ptr&lt;GameObject&gt;</em> owner) : m_owner{ owner } {}<br>
+      <br>
+      &nbsp;&nbsp; void Update()<br>
+      &nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>auto pPlayer = owner.lock(); // 共有ポインタに戻す<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(pPlayer != nullptr) // ダングリング状態じゃないか？<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pPlayer-</em>&gt;x += 1; // ポインタ経由でオーナーの位置を+1ずつずらす<br>
+      &nbsp;&nbsp; }<br>
+      } </p>
+    これでダングリング状態の心配もなくなりました。<br>
+    なぜ m_owner は std::shared_ptrじゃなくわざわざstd::weak_ptrにする必要があるのか？って？<br>
+    これは、<b>Componentが「所有される側だから」</b>です。<br>
+    オーナーであるPlayerは「共有カウンタが 0」にならない限りはメモリから削除されません。<br>
+    でも、もし<b>「所有しているコンポーネント内部にstd::shared_ptrのリンクがあるとずっと +1 が残ってしまう」</b>わけですね。<br>
+    「プレイヤと道連れにプレイヤの所有するコンポーネントも消えてほしい」はずなのに<b>逆に「コンポーネント側の +1」の呪いにかかって成仏できない</b>わけです。<br>
+    <b>コンポーネント内部の m_owner が 弱共有ポインタ std::weak_ptr ならば 共有カウンタは +1 されない</b>ので、呪われる心配はありません。<br>
+    <br>
+    この<b>「所有する側と所有される側が互いに std::shared_ptr のリンクを持ち続ける 呪い」はデッドロックの実例として注意が必要</b>です。<br>
+    なので、一時的に使ってすぐにリンクを捨てる場合以外は、できる限りstd::weak_ptrで使うときだけ.lock()して使うほうがデッドロックの心配は減ります。<br>
+    <b>使う側は「std::shared_ptrをメンバ変数などとして長期保持する際は、デッドロックしないかを気にする必要」</b>があります。<br>
+    std::shared_ptrが共有だけでなく「+1のキープ」を意味することを意識した上で「むやみにクラスのメンバ変数としてstd::shared_ptr型を持たず」に<br>
+    <b>どこが共有状態の「最低限の+1のキープ」のおおもとか</b>をプログラミングする人は明確に知っておかないと「メモリから成仏しない状態」に悩むことになるでしょう。<br>
+    <br>
+    共有ポインタの使い手はつねに「いかに道連れにしてやろうか」を考えながらプログラミングする必要があるのです。<br>
+    <br>
+    実はこれはC++だけじゃなくC#でも同じです。<br>
+    暗黙のリンクがあちこちに張られている限り「メモリから成仏されない」=「メモリもれ」=「メモリリーク」が起こっている可能性があります。<br>
+    「C#はポインタを意識しなくてすむ」=「すべてが暗黙の共有リンク状態」であるわけで、<br>
+    <b>実は「普通の共有ポインタ」と「弱共有ポインタ」を自分でちゃんと区別して使い分けられるC++のほうがまだ怖くない説</b>、すらあるわけです。<br>
+    <br>
+    <b>「その変数のリンク先、ほんとにメモリから消えてくれてますか？」(怪談調)のことばを意識しながらプログラムしてください</b>ね。<br>
+    <br>
+    ではPlayerに付着できるジャンプ上昇と重力落下のコンポーネントを設計していきましょう。<br>
+    設計を始める前に、まずはコンポーネント設計無しのPlayerクラスへの直打ちでのジャンプと重力落下のコードを書いてみましょう。<br>
+    ジャンプのコードはこちらの記事を参考に3D対応します→<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/practice.html#mozTocId0004">キャラをZキーでジャンプさせるプログラム</a> <br>
+    <p><code>Player.hを変更</code>して、ジャンプと重力落下の処理を直打ちで追加します。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Resource.h"<br>
+      #include "GameObject.h"<br>
+      <br>
+      class World; // 前方宣言<br>
+      class Camera; // 前方宣言<br>
+      <br>
+      class Player : public GameObject<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタはprotected:にしてあるので、Create関数経由で初期生成してください<br>
+      &nbsp;&nbsp;&nbsp; Player(World* world, Pad pad, Vector3 position, Quaternion rotation = { 0,0,0,1 }, Vector3 velocity = { 0,0,0 }, Vector3 force = { 0,0,0 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : pad{ pad }, GameObject(world, position, rotation, velocity, force)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "Player"; // タグは個別の"プレイヤ1"などに使い、タイプはtypeTagで判別する形にしてタイプのジャンルを区別<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Player() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Pad pad; // 操作するコントローラー番号<br>
+      &nbsp;&nbsp;&nbsp; hash32 worldTag{ "" }; // 現在いるワールドのタグ<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeedMax = 6; // 移動速度Max値<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeed = 0;//移動速度<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float moveAngle = 0; // X軸→方向から何度か<br>
+      &nbsp;&nbsp;&nbsp; float deltaAngle = 0; // プレイヤの動く角度の変化率、ハンドルを切ったらだんだんもとに戻る<br>
+      &nbsp;&nbsp;&nbsp; int animCount = 0;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; image; // プレイヤの板ポリゴンで描くタイル分割画像への共有リンク<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Camera* camera{ nullptr }; // プレイヤを追随するカメラ<br>
+      &nbsp;&nbsp;&nbsp; void SetCamera(Camera* pCamera) { camera = pCamera; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>float yJumpStart{ 0.0f };<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyJumpSpeed{ 13, 14, 15, 4 }; // ジャンプ開始の初期速度<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyForceJump{ 0.5f, 0.4f, 0.3f, 0.1f }; // ジャンプ上昇にかかる力の初期値<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyGravity{ 0.8f,0.8f,0.8f,0.8f }; // 重力の設定値<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyDownSpeedMax{ 16, 16, 16, 8 }; // 降下スピードのリミット</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() override;<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <p><code>Player.cppを変更</code>して、GameObjectを継承する記述にしましょう。</p>
+    <p class="source">#include "Player.h"<br>
+      <br>
+      #include &lt;cmath&gt; // 浮動小数点の余り%演算子がC++にないのでfmodを使うため<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "MyDraw.h"<br>
+      <br>
+      #include "Camera.h"<br>
+      #include "World.h"<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      void Player::HandleInput()<br>
+      {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_LEFT) <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_A)) )<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = - MoveSpeed; // 左<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle += 1; //ハンドルを左に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_RIGHT)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_D)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle -= 1; //ハンドルを右に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_UP)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_W)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = - MoveSpeed; // 上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed += 0.6f; //アクセルを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &gt; MoveSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = MoveSpeedMax;//Maxスピードで止める<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (Input::GetButton(pad, PAD_INPUT_DOWN)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_S)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed -= 0.6f; //ブレーキを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &lt; -0.9f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = -0.9f;//ちょっとだけバックできるように<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (pad == Pad::Key || pad == Pad::One) // コントローラ1またはキーボード操作のプレイヤのときだけ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGUP)) // キーボードのPageUp ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = 2.0f; // テスト用に空中の上方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGDN)) // キーボードのPageDown ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -2.0f; // テスト用に空中の下方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      }<br>
+      <br>
+      <br>
+      // 更新処理<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; deltaAngle *= 0.5F; // 車のハンドルの方向をだんだんニュートラルに戻す<br>
+      &nbsp;&nbsp;&nbsp; MoveSpeed *= 0.9F; // 移動速度も減速する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理 <br>
+      &nbsp;&nbsp;&nbsp; HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>if (isGround)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(pad, PAD_INPUT_A) // Zキーを押した瞬間<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonDown(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを押した瞬間<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = vyJumpSpeed[0]; // ジャンプ方向はY上方向<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vyForce = -vyForceJump[0];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; yJumpStart = y;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; else if (vy &lt;= 0) // 下落開始(vyが0未満のときはまだジャンプ中)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vyForce = -vyGravity[0]; // ジャンプ上昇力が0になって以降に初めて重力をオンにする<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; else if (Input::GetButtonUp(pad, PAD_INPUT_A) // Zキーを離した瞬間<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonUp(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを離した瞬間<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (y - yJumpStart &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけない<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vyForce = -vyGravity[0]; // ジャンプ上昇中(vy未満のとき)にボタンを離したら早めに重力をかけ始める<br>
+        &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; moveAngle += deltaAngle; // ハンドルを回したぶんプレイヤの進行方向を変える<br>
+      &nbsp;&nbsp;&nbsp; if (moveAngle &lt; -180) moveAngle = 360 + moveAngle; // -180以下の角度にならないようにマイナスになったら+180度にループさせる<br>
+      &nbsp;&nbsp;&nbsp; else if (moveAngle &gt; +180) moveAngle = -360 + moveAngle; // +180以下の角度にならないようにマイナスになったら-180度にループさせる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; rotation.SetRotation(VGet(0, (180 - moveAngle) * MyMath::Deg2Rad, 0)); // 前向きの3Dモデルなら180度回転させて奥方向の向きに設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ↓進行方向角度をX方向とZ方向の速度に変える<br>
+      &nbsp;&nbsp;&nbsp; vx = (float)std::cos((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      &nbsp;&nbsp;&nbsp; vz = (float)std::sin((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 実際に位置を動かす<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // まず横に移動する<br>
+      &nbsp;&nbsp;&nbsp; x += vx;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次に縦に動かす<br>
+      &nbsp;&nbsp;&nbsp; y += vy;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次にZ奥行き方向に動かす<br>
+      &nbsp;&nbsp;&nbsp; z += vz;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; vy += vyForce; // 勢い(力・フォースを加算<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>if (y &lt;= 0.0f) // 0.0fを地面として 0.0f以下になったら地面に着地したと判定する<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; y = 0.0f; // 地面に沿わせる<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -0.01f; // 下方向への速度をほぼ 0 にする<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isGround = true;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; if (vy &lt;= -vyDownSpeedMax[0]) // 無限に落下速度が加速しないようにリミット(空気抵抗みたいなもの)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -vyDownSpeedMax[0];</em><br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラのプレイヤ追尾<br>
+      &nbsp;&nbsp;&nbsp; float camDistance = 150; // プレイヤからカメラまでのY平面上の距離<br>
+      &nbsp;&nbsp;&nbsp; float camHeight = 100; // プレイヤからカメラまでのY方向上の高さ<br>
+      &nbsp;&nbsp;&nbsp; // moveAngleは2D画像のX方向右を0度とするから、-90度回すと画像を正面に捉える位置にカメラを置ける<br>
+      &nbsp;&nbsp;&nbsp; float camAngleX = (float)std::cos((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; float camAngleZ = (float)std::sin((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; if (camera != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // カメラの位置をプレイヤの進行方向と真逆に設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;SetPosition(position + Vector3(camAngleX, camHeight, camAngleZ));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;LookAt(position); //カメラはプレイヤの方を見る<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      // 描画処理<br>
+      void Player::Draw()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; int animIndex = animCount / 20; // キャラのパラパラアニメの画像番号(最大3)<br>
+      &nbsp;&nbsp;&nbsp; float abs_vx = (vx &gt; 0) ? vx : -vx; // x方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; float abs_vz = (vz &gt; 0) ? vz : -vz; // y方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; if (abs_vx &gt; 1.00f || abs_vz &gt; 1.00f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animCount += 6; // キャラが地面のXとZ方向に少しでもスピードがあったらアニメを走らせる<br>
+      &nbsp;&nbsp;&nbsp; if (animCount &gt;= 60) animCount = 0; // アニメ時間を0へループ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ワールドに存在するすべてのカメラに関連づいたスクリーンに対して描画する<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : world()-&gt;cameras) // プレイヤのいるワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 常にカメラ方向を向くビルボード回転の角度を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D angle = MyDraw::GetAngle(DxLib::GetCameraBillboardMatrixD());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; angle.x = 0; angle.z = 0; // Y軸周りのビルボード回転だけ有効にする X軸,Z軸まわりの回転は 0 にする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imgIndex = 9; // キャラチップ画像の起点番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ビルボードの角度 と キャラの向いている向き の 差 によって、別のプレイヤのカメラから見たキャラチップの向きの画像を切り替える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // -180 ～ +180 : angle.y&nbsp; moveAngle : -180 ～ +180 ↓<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float difAngleY = angle.y * 180.0f / DX_PI_F + moveAngle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imgIndex = (difAngleY &lt; -135 || 135 &lt; difAngleY) ? 0 // カメラ向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &lt; -45) ? 6 // 右 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &gt; 45) ? 3&nbsp; // 左 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 9; // 奥向きの画像<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(MyDraw::Plane::Z, x, y, z, 1.0f, angle, *image, imgIndex + animIndex, TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+    </p>
+    <br>
+    いかかでしょう？上のカメラの"プレイヤ1"は<b>キーボードのZキー(コントローラ1はA)を押したらジャンプ</b>しましたか？<br>
+    下のカメラの"プレイヤ2"は<b>キーボードのQキー(コントローラ2はA)を押したらジャンプ</b>しましたか？<br>
+    いちいち追加のコントローラをPCに用意しなくてもプレイヤ2もキーボードでデバッグできるようにしました。<br>
+    <br>
+    まあ、これで全然OKじゃん、と思う人もいますでしょうが、コンポーネントで着脱可能にすれば「アイテムを取ったらジャンプできるようになる」<br>
+    もしくは、プレイヤ以外の「敵にもジャンプや重力のコンポーネントを付着して再利用」することも可能になり、柔軟性があがるわけです。<br>
+    それがわざわざ頑張って「コンポーネント化」する意義なわけですね。<br>
+    <br>
+    ではここからはこの「ジャンプするコンポーネント」と「重力落下するコンポーネント」を作成していきましょう。<br>
+    <br>
+    まずはベース基底となるComponentクラスを準備します。<br>
+    <p><code>Component.hを新規作成</code>して、コンポーネントのベース基底となるクラスを作成しましょう。</p>
+    <p class="source">#ifndef COMPONENT_H_<br>
+      #define COMPONENT_H_<br>
+      <br>
+      #include &lt;unordered_map&gt; // コンポーネントの辞書配列に使う<br>
+      #include &lt;typeindex&gt; // intやComponentなどの「型」をsize_t型の IDの数値 へ typeid(int)などを使って変換する<br>
+      #include "MyHash.h" // MyHashクラスで 言語 C++ C# など や ビルドするコンパイラ VisualStudioやgccなどに関係なく同じハッシュを計算<br>
+      #include &lt;string&gt;<br>
+      #include &lt;memory&gt; // 共有ポインタを使う<br>
+      <br>
+      #include "Object.h" // コンポーネントもObjectクラスを継承してshared_from_thisできるようにする<br>
+      <br>
+      class GameObject; //前方宣言(循環インクルード防止)<br>
+      <br>
+      // 各コンポーネントのひな形<br>
+      class Component : public Object<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; std::<b>weak_ptr</b>&lt;GameObject&gt; <b>m_pOwner</b>; // このコンポーネントを所有するPlayerクラスなどへの弱共有ポインタ(弱なので所有権を主張しない)<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // このコンポーネントを所有するプレイヤなどのオーナーへの共有ポインタを得る (オーナーがすでにメモリから削除済の場合は nullptr になる)<br>
+      &nbsp;&nbsp;&nbsp; std::<b>shared_ptr</b>&lt;GameObject&gt; <b>owner()</b> const { auto pOwner = m_pOwner<b>.lock()</b>; return (pOwner != nullptr) ? pOwner : nullptr; }<br>
+      &nbsp;&nbsp;&nbsp; std::type_index typeID = typeid(Component);<br>
+      &nbsp;&nbsp;&nbsp; hash32 typeTag{ "" }; // 小カテゴリ コンポーネントの名前 TilemapColliderなどColliderを継承したコンポーネント本体の名前<br>
+      &nbsp;&nbsp;&nbsp; hash32 baseTag{ "" }; // 大カテゴリ コンポーネントの種類(Collider)など https://docs.unity3d.com/ja/current/ScriptReference/Collider.html<br>
+      &nbsp;&nbsp;&nbsp; hash32 statusTag{ "" }; // 自由に使えばよいタグ<br>
+      &nbsp;&nbsp;&nbsp; bool isEnabled{ true }; // コンポーネントが有効かどうか？<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // 初期化コンストラクタ : このコンポーネントの所有者ownerを内部に持つ<br>
+      &nbsp;&nbsp;&nbsp; Component(std::<b>weak_ptr</b>&lt;GameObject&gt; <b>pOwner</b>) : <b>m_pOwner{ pOwner }</b>, Object()<br>
+      &nbsp;&nbsp;&nbsp; {};<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 下記関数をoverrideして実装して【コンポーネント志向】を実現する<br>
+      &nbsp;&nbsp;&nbsp; //virtual void Initialize(GameObject* obj = nullptr) {}; // Init的な処理 BGMの変更とか<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update(GameObject* obj = nullptr) {}; // Update的な役<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw(GameObject* obj = nullptr) {}; // Draw的な役<br>
+      &nbsp;&nbsp;&nbsp; //virtual void Finalize(GameObject* obj = nullptr) {}; // Finalize的な役(ステートの終了時)<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual ~Component() {}; // 仮想デストラクタ(無いとstringなど配列を内包するもののデストラクタが暗黙で呼ばれずメモリリーク)<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    最初に解説したとおり、オーナーのGameObjectへのリンクは弱共有ポインタstd::weak_ptrで受け取っているのでオーナーが削除されるのを邪魔しません。<br>
+    一方で、owner()関数を呼んだときには、.lock()でロックをかけてstd::weak_ptrをstd::shared_ptrに変換して 一時的に共有カウンタを+1 しています。<br>
+    owner()関数によって、<b>普段はオーナーが削除されるのを邪魔せず、虎視眈々とstd::weak_ptrをかかえて潜伏し「必要なときだけ 一時的に共有カウンタを+1」して共有ロック状態へ復帰</b>もできます。<br>
+    <b>「弱い共有状態とは普段はリンク先が消えるのを邪魔せず、一時的に使ってる最中は消えないように +1 で削除を邪魔する」</b>使い方ができるということです。<br>
+    <br>
+    つぎにベース基底となるComponentクラスを継承して、派生(Derived)したジャンプや落下の物理系コンポーネントを作成しましょう。<br>
+    <p><code>PhysicsComponent.hを新規作成</code>して、物理系のPhysicsComponentクラスを継承してジャンプや落下のコンポーネント作成しましょう。</p>
+    <p class="source">#ifndef PHYSICS_COMPONENT_H_<br>
+      #define PHYSICS_COMPONENT_H_<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      #include "Component.h"<br>
+      #include "GameObject.h"<br>
+      <br>
+      // 物理系のコンポーネントはこのクラスを継承して実装する<br>
+      class PhysicsComponent <b>: public Component</b><br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; inline PhysicsComponent(std::shared_ptr&lt;GameObject&gt; <b>pOwner</b>) : Component(<b>pOwner</b>)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;baseTag = "PhysicsComponent"; // 大まかなカテゴリーとしては物理系コンポーネント<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; virtual ~PhysicsComponent() {};<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Update(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // なにか物理系のコンポーネントで共通して更新したいことがあればここに実装<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // なにか物理系のコンポーネントで共通して描画したいことがあればここに実装<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      class GravityComponent <b>: public PhysicsComponent</b><br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; inline GravityComponent(std::shared_ptr&lt;GameObject&gt; <b>pOwner</b>, const std::vector&lt;float&gt;&amp; vyGravity, const std::vector&lt;float&gt;&amp; vyDownSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : PhysicsComponent(<b>pOwner</b>), m_vyGravity{ vyGravity }, m_vyDownSpeedMax{ vyDownSpeedMax }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;typeID = typeid(GravityComponent); //[環境によって差が出るので↓が無難か] https://qiita.com/nil_gawa/items/1fece3eee7ca1f88c71d<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;typeTag = "GravityComponent"; // 個別のカテゴリーとしては重力落下コンポーネント<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GravityComponent() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; size_t m_idx{ 0 }; // 適用する設定配列の番号<br>
+      &nbsp;&nbsp;&nbsp; void SetIndex(size_t idx) { m_idx = idx; }<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; m_vyGravity; // 重力の設定値<br>
+      &nbsp;&nbsp;&nbsp; float gravity() { return (m_idx &lt; m_vyGravity.size()) ? m_vyGravity[m_idx] : 0.0f; }<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; m_vyDownSpeedMax; // 降下スピードのリミット<br>
+      &nbsp;&nbsp;&nbsp; float downSpeedMax() { return (m_idx &lt; m_vyDownSpeedMax.size()) ? m_vyDownSpeedMax[m_idx] : 0.0f; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Update(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isEnabled) return; // コンポーネントが有効状態じゃないときは何もせずreturn<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタをロックして得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;isGround == false &amp;&amp; pOwner-&gt;vy &lt;= 0) // 下落開始(vyが 0以上 のときはまだジャンプ中なので上昇を邪魔しないようにする)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;vyForce = -gravity(); // ジャンプ上昇力が0になって以降に初めて重力をオンにする(ジャンプの加速を邪魔しない工夫)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;OnFalling(); // 下落中の処理のコールバック関数を呼び返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;vy &lt;= -downSpeedMax()) // 無限に落下速度が加速しないようにリミットを働かせる(空気抵抗みたいなもの)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;vy = -downSpeedMax(); // downSpeedMax()以上の落下速度にならないようにする<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      class JumpComponent : public PhysicsComponent<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; inline JumpComponent(std::shared_ptr&lt;GameObject&gt; pOwner, const std::vector&lt;float&gt;&amp; vyJumpSpeed, const std::vector&lt;float&gt;&amp; vyForceJump)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : PhysicsComponent(pOwner), m_vyJumpSpeed{ vyJumpSpeed }, m_vyForceJump{ vyForceJump }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;typeID = typeid(JumpComponent); //[環境によって差が出るので↓が無難か] https://qiita.com/nil_gawa/items/1fece3eee7ca1f88c71d<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;typeTag = "JumpComponent"; // 個別のカテゴリーとしてはジャンプ上昇コンポーネント<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; virtual ~JumpComponent() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; size_t m_idx{ 0 }; // 適用する設定配列の番号<br>
+      &nbsp;&nbsp;&nbsp; void SetIndex(size_t idx) { m_idx = idx; }<br>
+      &nbsp;&nbsp;&nbsp; float yJumpStart{ 0 }; // ジャンプした瞬間のyの位置<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; m_vyJumpSpeed; // ジャンプの上昇スピードのリミット<br>
+      &nbsp;&nbsp;&nbsp; float jumpSpeed() { return (m_idx &lt; m_vyJumpSpeed.size()) ? m_vyJumpSpeed[m_idx] : 0.0f; }<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; m_vyForceJump; // ジャンプ中の下方向の勢いの減速する力<br>
+      &nbsp;&nbsp;&nbsp; float forceJump() { return (m_idx &lt; m_vyForceJump.size()) ? m_vyForceJump[m_idx] : 0.0f; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Update(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isEnabled) return; // コンポーネントが有効状態じゃないときは何もせずreturn<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;isGround == false &amp;&amp; pOwner-&gt;vy &gt; 0) // vyが0以上のときはまだジャンプ中<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;OnJumping(); // 空中でジャンプの上昇中に呼ばれるコールバック関数を呼び返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void JumpStart(GameObject* obj = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isEnabled) return; // コンポーネントが有効状態じゃないときは何もせずreturn<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;isGround)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;vy = jumpSpeed(); // ジャンプ方向はY上方向<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;vyForce = -forceJump(); // ジャンプの勢いが弱まる力<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; yJumpStart = pOwner-&gt;y;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;OnStartJump(); // ジャンプスタート時の処理をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void JumpCancel(GameObject* obj = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isEnabled) return; // コンポーネントが有効状態じゃないときは何もせずreturn<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!pOwner-&gt;isGround &amp;&amp; pOwner-&gt;vy &gt;= 0) // vyが0以上のときはまだジャンプ上昇中<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;y - yJumpStart &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけ始めない<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;vyForce = -pOwner-&gt;gravity(); // ジャンプボタンを離したときには重力をかけ始める<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>GameObject.hを変更</code>して、OnStartJump()やOnFalling()やgravity()などジャンプ中や落下中に呼ばれるoverride元の関数を準備しましょう。</p>
+    <p class="source">#ifndef GAMEOBJECT_H_<br>
+      #define GAMEOBJECT_H_<br>
+      <br>
+      #include &lt;memory&gt; // 共有ポインタの定義のため<br>
+      <br>
+      #include "Vector3.h"<br>
+      #include "Quaternion.h"<br>
+      <br>
+      #include "Object.h" // インスタンスIDや検索タグを持ち、shared_from_this_as&lt;継承先クラス名&gt;などができる<br>
+      <br>
+      class World; // 前方宣言<br>
+      <br>
+      // ゲーム上に表示される物体の基底クラス。<br>
+      // プレイヤーや敵、アイテムなどはこのクラスを継承して作る。<br>
+      class GameObject : public Object<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタはprotected:にしてあるのでCreate関数経由で初期生成してください<br>
+      &nbsp;&nbsp;&nbsp; GameObject(World* world = nullptr, Vector3 position = { 0,0,0 }, Quaternion rotation = { 0,0,0,1 }, Vector3 velocity = { 0,0,0 }, Vector3 force = { 0,0,0 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Object(), m_world{ world }, position{ position }, rotation{ rotation }, velocity{ velocity }, force{ force }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GameObject() {}<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★下記3つはメモリ上で共用状態になる(position、x,y,z、xyzどの名前から数値を変えたり読出してもメモリ上は同じ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 同じデータに3種類の名前を付けたイメージ、しかもVector3の機能や配列としてのアクセスの仕方もできて便利<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float x, y, z; }; // XYZ座標&nbsp; [匿名共用体とは] https://code.i-harness.com/ja-jp/q/4d437c<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 position; // XYZ座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
+      &nbsp;&nbsp;&nbsp; }; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Quaternion rotation; // 回転クオータニオン<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vx, vy, vz; }; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 velocity; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyz;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vxForce, vyForce, vzForce; }; // XYZ方向にかかる力(Unityでいうと AddForce関数 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 force; // XYZ方向の力(物理的には加速度:1フレームごとにvelocityの増える=加速する量)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyzForce;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 重力を返す、重力を変えたいときはoverrideして処理を変えてください、重力を変えてない場合は 0.0f<br>
+        &nbsp;&nbsp;&nbsp; virtual inline float gravity() { return 0.0f; }</em><br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; World* m_world; // GameObjectが配置されたワールドへのリンク<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドへのポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; virtual World* world() { return m_world; }<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドのポインタを変更する<br>
+      &nbsp;&nbsp;&nbsp; virtual void world(World* changeWorld) { m_world = changeWorld; }<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; bool isDead{ false }; // 死んだ（削除対象）フラグ<br>
+      &nbsp;&nbsp;&nbsp; bool isStatic{ false }; // 動かない(静的オブジェクトか?)<br>
+      &nbsp;&nbsp;&nbsp; bool isGround{ false }; // 地面についているか<br>
+      &nbsp;&nbsp;&nbsp; bool isFlying{ false }; // 空をとんでいるか<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; hash32 typeTag{ "" }; // 小カテゴリ Zako0など個別のタイプ<br>
+      &nbsp;&nbsp;&nbsp; hash32 baseTag{ "" }; // 大カテゴリ Enemyなど大まかなベースジャンル<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理[純粋仮想関数 = 0 なのでoverride必須の関数]<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() = 0; // 純粋仮想関数 = 0 にすると【絶対 Update()関数はoverrideしなきゃいけない義務を付与できる 】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理[純粋仮想関数 = 0 なのでoverride必須の関数]<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; // 純粋仮想関数 = 0 にすると【絶対 Draw()関数はoverrideしなきゃいけない義務を継承先クラスに付与 】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// ジャンプ開始した直後に呼ばれる関数<br>
+        &nbsp;&nbsp;&nbsp; virtual void OnStartJump()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideしてジャンプした瞬間に音を鳴らしたりする処理などをオブジェクトの種類ごとに実装する<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 空中でジャンプの上昇中に呼ばれる関数<br>
+        &nbsp;&nbsp;&nbsp; virtual void OnJumping()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして空中でジャンプの上昇中にエフェクトを出したりする処理などをオブジェクトの種類ごとに実装する<br>
+        &nbsp;&nbsp;&nbsp; };<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // 空中で落ちている最中に呼ばれる関数<br>
+        &nbsp;&nbsp;&nbsp; virtual void OnFalling()<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして空中で落ちている最中に音を鳴らしたり、エフェクトを出したりする処理などをオブジェクトの種類ごとに実装する<br>
+        &nbsp;&nbsp;&nbsp; };</em><br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    あとはこれらのコンポーネントの処理を、先ほどPlayerに直で書いたジャンプと落下の処理と置き換えます。<br>
+    <p><code>Player.hを変更</code>して、ジャンプと重力落下の初期化をコンポーネントへ置き換えます。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Resource.h"<br>
+      #include "GameObject.h"<br>
+      <em>#include "PhysicsComponent.h"</em><br>
+      <br>
+      class World; // 前方宣言<br>
+      class Camera; // 前方宣言<br>
+      <br>
+      class Player : public GameObject<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタはprotected:にしてあるので、Create関数経由で初期生成してください<br>
+      &nbsp;&nbsp;&nbsp; Player(World* world, Pad pad, Vector3 position, Quaternion rotation = { 0,0,0,1 }, Vector3 velocity = { 0,0,0 }, Vector3 force = { 0,0,0 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : pad{ pad }, GameObject(world, position, rotation, velocity, force)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "Player"; // タグは個別の"プレイヤ1"などに使い、タイプはtypeTagで判別する形にしてタイプのジャンルを区別<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Player() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Pad pad; // 操作するコントローラー番号<br>
+      &nbsp;&nbsp;&nbsp; hash32 worldTag{ "" }; // 現在いるワールドのタグ<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeedMax = 6; // 移動速度Max値<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeed = 0;//移動速度<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float moveAngle = 0; // X軸→方向から何度か<br>
+      &nbsp;&nbsp;&nbsp; float deltaAngle = 0; // プレイヤの動く角度の変化率、ハンドルを切ったらだんだんもとに戻る<br>
+      &nbsp;&nbsp;&nbsp; int animCount = 0;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; image; // プレイヤの板ポリゴンで描くタイル分割画像への共有リンク<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Camera* camera{ nullptr }; // プレイヤを追随するカメラ<br>
+      &nbsp;&nbsp;&nbsp; void SetCamera(Camera* pCamera) { camera = pCamera; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// overrideして物理落下コンポーネントからの重力値を返す<br>
+        &nbsp;&nbsp;&nbsp; virtual float gravity() <b>override</b> { return (gravityPhysics != nullptr) ? gravityPhysics-&gt;gravity() : 0.0f; }<br>
+        protected:<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;JumpComponent&gt; jumpPhysics{ nullptr }; // ジャンプの物理処理コンポーネント<br>
+        &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;GravityComponent&gt; gravityPhysics{ nullptr }; // 落下の重力の物理処理コンポーネント<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; virtual void Init(std::shared_ptr&lt;InitParams&gt; initParams = nullptr) override<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyJumpSpeed{ 13, 14, 15, 4 }; // ジャンプ開始の初期速度<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyForceJump{ 0.5f, 0.4f, 0.3f, 0.1f }; // ジャンプ上昇にかかる力の初期値<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyGravity{ 0.8f,0.8f,0.8f,0.8f }; // 重力の設定値<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyDownSpeedMax{ 16, 16, 16, 8 }; // 降下スピードのリミット<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // <b>shared_from_this()を必ず渡してセットで初期化</b>して、オーナーがリンク切れのコンポーネントができないように気をつける<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jumpPhysics = std::make_shared&lt;JumpComponent&gt;(<b>shared_from_this_as&lt;Player&gt;()</b>, vyJumpSpeed, vyForceJump);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gravityPhysics = std::make_shared&lt;GravityComponent&gt;(<b>shared_from_this_as&lt;Player&gt;()</b>, vyGravity, vyDownSpeedMax);<br>
+        &nbsp;&nbsp;&nbsp; }</em><br>
+      &nbsp;&nbsp;&nbsp; <u>float yJumpStart{ 0.0f };<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyJumpSpeed{ 13, 14, 15, 4 }; // ジャンプ開始の初期速度<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyForceJump{ 0.5f, 0.4f, 0.3f, 0.1f }; // ジャンプ上昇にかかる力の初期値<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyGravity{ 0.8f,0.8f,0.8f,0.8f }; // 重力の設定値<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyDownSpeedMax{ 16, 16, 16, 8 }; // 降下スピードのリミット</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// ジャンプ開始した直後に呼ばれる関数<br>
+        &nbsp;&nbsp;&nbsp; virtual void OnStartJump() <b>override</b>;</em><br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    着目すべきは、Init()関数やgravity()関数やOnStartJump()関数のoverrideです。<br>
+    gravity()関数のoverrideによりプレイヤはGravityComponentから得た重力を採用することができます。<br>
+    OnStartJump()関数のoverrideにより、ジャンプ開始時にisGroundのフラグをfalseにしたり、プレイヤごとの効果音を鳴らす処理もここでカスタムできます。<br>
+    Init()関数のoverrideにより、Create関数の初期化と連動して、上昇する力や落下の設定値をコンポーネントに渡し、<br>
+    もっとも重要なのは、プレイヤへのポインタ<b>shared_from_this_as&lt;Player&gt;()</b>をコンポーネントに初期化と同時に渡せていることです。<br>
+    これで、コンポーネント側はプレイヤ側の vy(縦方向の加速度) などに自由にアクセスできる構造を実現できるようになります。<br>
+    <br>
+    では、あとはプレイヤ側のジャンプや落下の処理をコンポーネントの呼び出しへと置き換えましょう。<br>
+    <p><code>Player.cppを変更</code>して、<b>コンポーネントにジャンプや落下の処理を任せましょう</b>。</p>
+    <p class="source">#include "Player.h"<br>
+      <br>
+      #include &lt;cmath&gt; // 浮動小数点の余り%演算子がC++にないのでfmodを使うため<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "MyDraw.h"<br>
+      <br>
+      #include "Camera.h"<br>
+      #include "World.h"<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      void Player::HandleInput()<br>
+      {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_LEFT) <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_A)) )<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = - MoveSpeed; // 左<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle += 1; //ハンドルを左に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_RIGHT)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_D)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle -= 1; //ハンドルを右に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_UP)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_W)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = - MoveSpeed; // 上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed += 0.6f; //アクセルを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &gt; MoveSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = MoveSpeedMax;//Maxスピードで止める<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (Input::GetButton(pad, PAD_INPUT_DOWN)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_S)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed -= 0.6f; //ブレーキを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &lt; -0.9f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = -0.9f;//ちょっとだけバックできるように<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (pad == Pad::Key || pad == Pad::One) // コントローラ1またはキーボード操作のプレイヤのときだけ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGUP)) // キーボードのPageUp ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = 2.0f; // テスト用に空中の上方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGDN)) // キーボードのPageDown ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -2.0f; // テスト用に空中の下方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      }<br>
+      <br>
+      <em>// ジャンプ開始した直後に呼ばれる関数<br>
+        void Player::OnStartJump()<br>
+        {<br>
+        &nbsp;&nbsp;&nbsp; this-&gt;isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+        }</em><br>
+      <br>
+      <br>
+      // 更新処理<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; deltaAngle *= 0.5F; // 車のハンドルの方向をだんだんニュートラルに戻す<br>
+      &nbsp;&nbsp;&nbsp; MoveSpeed *= 0.9F; // 移動速度も減速する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理 <br>
+      &nbsp;&nbsp;&nbsp; HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>if (jumpPhysics != nullptr)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isGround)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(pad, PAD_INPUT_A) // Zキーを押した瞬間<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonDown(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを押した瞬間<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jumpPhysics-&gt;JumpStart(); // ジャンプのスタート処理を発動<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (vy &gt; 0 &amp;&amp; Input::GetButtonUp(pad, PAD_INPUT_A) // Zキーを離した瞬間<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonUp(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを離した瞬間<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jumpPhysics-&gt;JumpCancel(); // ジャンプのキャンセル処理を発動<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jumpPhysics-&gt;Update(); // ジャンプのコンポーネントを更新する<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; if (gravityPhysics != nullptr)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gravityPhysics-&gt;Update(); // 重力落下のコンポーネントを更新する</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <u>if (isGround)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(pad, PAD_INPUT_A) // Zキーを押した瞬間<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonDown(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを押した瞬間<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = vyJumpSpeed[0]; // ジャンプ方向はY上方向<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vyForce = -vyForceJump[0];<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; yJumpStart = y;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; else if (vy &lt;= 0) // 下落開始(vyが0未満のときはまだジャンプ中)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vyForce = -vyGravity[0]; // ジャンプ上昇力が0になって以降に初めて重力をオンにする<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp; else if (Input::GetButtonUp(pad, PAD_INPUT_A) // Zキーを離した瞬間<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonUp(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを離した瞬間<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (y - yJumpStart &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけない<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vyForce = -vyGravity[0]; // ジャンプ上昇中(vy未満のとき)にボタンを離したら早めに重力をかけ始める<br>
+        &nbsp;&nbsp;&nbsp; }</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; moveAngle += deltaAngle; // ハンドルを回したぶんプレイヤの進行方向を変える<br>
+      &nbsp;&nbsp;&nbsp; if (moveAngle &lt; -180) moveAngle = 360 + moveAngle; // -180以下の角度にならないようにマイナスになったら+180度にループさせる<br>
+      &nbsp;&nbsp;&nbsp; else if (moveAngle &gt; +180) moveAngle = -360 + moveAngle; // +180以下の角度にならないようにマイナスになったら-180度にループさせる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; rotation.SetRotation(VGet(0, (180 - moveAngle) * MyMath::Deg2Rad, 0)); // 前向きの3Dモデルなら180度回転させて奥方向の向きに設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ↓進行方向角度をX方向とZ方向の速度に変える<br>
+      &nbsp;&nbsp;&nbsp; vx = (float)std::cos((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      &nbsp;&nbsp;&nbsp; vz = (float)std::sin((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 実際に位置を動かす<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // まず横に移動する<br>
+      &nbsp;&nbsp;&nbsp; x += vx;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次に縦に動かす<br>
+      &nbsp;&nbsp;&nbsp; y += vy;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次にZ奥行き方向に動かす<br>
+      &nbsp;&nbsp;&nbsp; z += vz;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; vy += vyForce; // 勢い(力・フォースを加算<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (y &lt;= 0.0f) // 0.0fを地面として 0.0f以下になったら地面に着地したと判定する<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; y = 0.0f; // 地面に沿わせる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -0.01f; // 下方向への速度をほぼ 0 にする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isGround = true;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <u>if (vy &lt;= -vyDownSpeedMax[0]) // 無限に落下速度が加速しないようにリミット(空気抵抗みたいなもの)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -vyDownSpeedMax[0];</u><br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラのプレイヤ追尾<br>
+      &nbsp;&nbsp;&nbsp; float camDistance = 150; // プレイヤからカメラまでのY平面上の距離<br>
+      &nbsp;&nbsp;&nbsp; float camHeight = 100; // プレイヤからカメラまでのY方向上の高さ<br>
+      &nbsp;&nbsp;&nbsp; // moveAngleは2D画像のX方向右を0度とするから、-90度回すと画像を正面に捉える位置にカメラを置ける<br>
+      &nbsp;&nbsp;&nbsp; float camAngleX = (float)std::cos((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; float camAngleZ = (float)std::sin((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; if (camera != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // カメラの位置をプレイヤの進行方向と真逆に設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;SetPosition(position + Vector3(camAngleX, camHeight, camAngleZ));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;LookAt(position); //カメラはプレイヤの方を見る<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      // 描画処理<br>
+      void Player::Draw()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; int animIndex = animCount / 20; // キャラのパラパラアニメの画像番号(最大3)<br>
+      &nbsp;&nbsp;&nbsp; float abs_vx = (vx &gt; 0) ? vx : -vx; // x方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; float abs_vz = (vz &gt; 0) ? vz : -vz; // y方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; if (abs_vx &gt; 1.00f || abs_vz &gt; 1.00f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animCount += 6; // キャラが地面のXとZ方向に少しでもスピードがあったらアニメを走らせる<br>
+      &nbsp;&nbsp;&nbsp; if (animCount &gt;= 60) animCount = 0; // アニメ時間を0へループ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ワールドに存在するすべてのカメラに関連づいたスクリーンに対して描画する<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : world()-&gt;cameras) // プレイヤのいるワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 常にカメラ方向を向くビルボード回転の角度を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D angle = MyDraw::GetAngle(DxLib::GetCameraBillboardMatrixD());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; angle.x = 0; angle.z = 0; // Y軸周りのビルボード回転だけ有効にする X軸,Z軸まわりの回転は 0 にする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imgIndex = 9; // キャラチップ画像の起点番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ビルボードの角度 と キャラの向いている向き の 差 によって、別のプレイヤのカメラから見たキャラチップの向きの画像を切り替える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // -180 ～ +180 : angle.y&nbsp; moveAngle : -180 ～ +180 ↓<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float difAngleY = angle.y * 180.0f / DX_PI_F + moveAngle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imgIndex = (difAngleY &lt; -135 || 135 &lt; difAngleY) ? 0 // カメラ向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &lt; -45) ? 6 // 右 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &gt; 45) ? 3&nbsp; // 左 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 9; // 奥向きの画像<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(MyDraw::Plane::Z, x, y, z, 1.0f, angle, *image, imgIndex + animIndex, TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+    </p>
+    <br>
+    いかがでしょう？無事キーボードのZキーとQキーでキャラをジャンプさせることができましたか？<br>
+    ここまでがゲームエンジンを形づくっているコンポーネント指向の仕組みの根幹であり、その仕組みを一通り自作したわけです。<br>
+    <br>
+    え、Unityみたいに「かっこよくAddComponent&lt;JumpComponent&gt;(..～..);」しないと気分が上がらないですって？<br>
+    お若いですね。。<b>「かっこつけるということは、柔軟にテンプレで可変引数...ArgsTを受け入れる」ってこと</b>ですからね。<br>
+    それは、つまり「引数のタイプ型や引数の個数などが 自分で定義したJumpComponentのコンストラクタ と合わないとテンプレの謎エラーが出る」ってことです。<br>
+    単なる自分の<b>勘違いで初期化コンストラクタの 〇〇Component(Vector3 pos1, int param2, ...)のパラメータparam2に間違ってVector3型を渡しちゃった</b>としましょう。<br>
+    そうすると当然、テンプレの謎エラーが出ます<b>「エラー:オーバーロードされた関数ですべての引数の型が変換できませんでした」</b>(ファイルはxutility←テンプレ関連ファイル)<br>
+    つまり、普通の初期化コンストラクタで「渡す引数まちがえちゃったケアレスミスの場合」は 〇〇Component.h などのコンストラクタのファイルが案内されるけれども、<br>
+    可変引数テンプレ...ArgsT に手を出すと、かっこよさと引き換えに「謎エラー案内」が出るわけですね。<br>
+    ゆえに、可変引数テンプレ...ArgsTは 中級者向けの機能とはなるわけです。<br>
+    が、しかし、すでにCreate関数で初期化に 可変引数テンプレ...ArgsT は使っておりますし、これなしにはやっていけませんので、<br>
+    上記の<b>「謎エラー案内」=「渡す引数まちがえちゃったケアレスミス」の場合が多い</b>ので、ちゃんと初期化で渡すパラメータをよく見て渡しましょう。<br>
+    <br>
+    では、Unityみたいに「かっこよくAddComponent&lt;JumpComponent&gt;(..～..);」するテンプレ処理を追加しましょう。<br>
+    <p><code>GameObject.hを変更</code>して、AddComponentやGetComponentsなどのテンプレ処理を準備しましょう。</p>
+    <p class="source">#ifndef GAMEOBJECT_H_<br>
+      #define GAMEOBJECT_H_<br>
+      <br>
+      #include &lt;memory&gt; // 共有ポインタの定義のため<br>
+      <br>
+      #include "Vector3.h"<br>
+      #include "Quaternion.h"<br>
+      <br>
+      #include "Object.h" // インスタンスIDや検索タグを持ち、shared_from_this_as&lt;継承先クラス名&gt;などができる<br>
+      <br>
+      class World; // 前方宣言<br>
+      <br>
+      // ゲーム上に表示される物体の基底クラス。<br>
+      // プレイヤーや敵、アイテムなどはこのクラスを継承して作る。<br>
+      class GameObject : public Object<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタはprotected:にしてあるのでCreate関数経由で初期生成してください<br>
+      &nbsp;&nbsp;&nbsp; GameObject(World* world = nullptr, Vector3 position = { 0,0,0 }, Quaternion rotation = { 0,0,0,1 }, Vector3 velocity = { 0,0,0 }, Vector3 force = { 0,0,0 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Object(), m_world{ world }, position{ position }, rotation{ rotation }, velocity{ velocity }, force{ force }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GameObject() {}<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★下記3つはメモリ上で共用状態になる(position、x,y,z、xyzどの名前から数値を変えたり読出してもメモリ上は同じ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 同じデータに3種類の名前を付けたイメージ、しかもVector3の機能や配列としてのアクセスの仕方もできて便利<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float x, y, z; }; // XYZ座標&nbsp; [匿名共用体とは] https://code.i-harness.com/ja-jp/q/4d437c<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 position; // XYZ座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
+      &nbsp;&nbsp;&nbsp; }; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Quaternion rotation; // 回転クオータニオン<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vx, vy, vz; }; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 velocity; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyz;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vxForce, vyForce, vzForce; }; // XYZ方向にかかる力(Unityでいうと AddForce関数 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 force; // XYZ方向の力(物理的には加速度:1フレームごとにvelocityの増える=加速する量)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyzForce;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 重力を返す、重力を変えたいときはoverrideして処理を変えてください、重力を変えてない場合は 0.0f<br>
+      &nbsp;&nbsp;&nbsp; virtual inline float gravity() { return 0.0f; }<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; World* m_world; // GameObjectが配置されたワールドへのリンク<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドへのポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; virtual World* world() { return m_world; }<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドのポインタを変更する<br>
+      &nbsp;&nbsp;&nbsp; virtual void world(World* changeWorld) { m_world = changeWorld; }<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; bool isDead{ false }; // 死んだ（削除対象）フラグ<br>
+      &nbsp;&nbsp;&nbsp; bool isStatic{ false }; // 動かない(静的オブジェクトか?)<br>
+      &nbsp;&nbsp;&nbsp; bool isGround{ false }; // 地面についているか<br>
+      &nbsp;&nbsp;&nbsp; bool isFlying{ false }; // 空をとんでいるか<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; hash32 typeTag{ "" }; // 小カテゴリ Zako0など個別のタイプ<br>
+      &nbsp;&nbsp;&nbsp; hash32 baseTag{ "" }; // 大カテゴリ Enemyなど大まかなベースジャンル<br>
+      <br>
+      <em>protected:<br>
+        &nbsp;&nbsp;&nbsp; // コンポーネントの&lt;ハッシュID, 共有所有ポインタ&gt; の辞書でコンポーネントの共有カウンタ+1を保持する<br>
+        &nbsp;&nbsp;&nbsp; std::unordered_map&lt;size_t, std::<b>shared_ptr</b>&lt;Component&gt;&gt; <b>components</b>;<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; // コンポーネントを得る 例えば GetComponent&lt;BoxCollider&gt;でBoxColliderという名前のコンポーネントをcomponents辞書から得る<br>
+        &nbsp;&nbsp;&nbsp; template&lt;class ComponentT&gt;<br>
+        &nbsp;&nbsp;&nbsp; std::vector&lt;std::weak_ptr&lt;ComponentT&gt;&gt; GetComponents()<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★[ComponentTのハッシュコードを得るテク] https://cpprefjp.github.io/reference/typeindex/type_index/hash_code.html<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t hashID = typeid(ComponentT).hash_code(); //[まずハッシュでID化]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // equal_range 関数を使って、指定したキーの最初と終端の位置を示すイテレータを std::pair&lt;&gt; で取得します。<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto range = components.equal_range(hashID); //https://ez-net.jp/article/9E/DFLX8hNG/G5J8DPmsltz4/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;std::weak_ptr&lt;ComponentT&gt;&gt; returnList; // "ComponentT" 例."CircleCollider"など をキーとするコンポーネント一覧<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto ite = range.first; ite != range.second; ++ite)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; returnList.emplace_back(ite-&gt;second); // 辞書で見つかったコンポーネントを返すリストに追加<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return returnList;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンポーネントを追加する .AddComponent&lt;BoxCollider&gt;(...)で追加できる<br>
+        &nbsp;&nbsp;&nbsp; template&lt;class ComponentT, <b>typename ...ArgsT</b>&gt;<br>
+        &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;ComponentT&gt; AddComponent(ArgsT&amp;&amp;...args)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★[ComponentTのハッシュコードを得るテク] https://cpprefjp.github.io/reference/typeindex/type_index/hash_code.html<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t hashID = typeid(ComponentT).hash_code(); //[まずハッシュでID化]<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // shared_from_this()を必ず渡してセットで初期化して、オーナーがリンク切れのコンポーネントができないように気をつける<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;ComponentT&gt; <b>newComponent</b> = std::<b>make_shared</b>&lt;ComponentT&gt;(shared_from_this(), <b>std::forward&lt;ArgsT&gt;(args)...</b>);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://ez-net.jp/article/9E/DFLX8hNG/G5J8DPmsltz4/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // std::unrodered_multimap&lt;&gt; と同型の値を取る std::pair&lt;&gt; を作って insert 関数でcomponents辞書に追加<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>components</b>.insert(std::pair&lt;size_t, std::shared_ptr&lt;ComponentT&gt;&gt;(hashID, <b>newComponent</b>));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return newComponent;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // コンポーネントを削除する<br>
+        &nbsp;&nbsp;&nbsp; template&lt;typename ComponentT&gt;<br>
+        &nbsp;&nbsp;&nbsp; bool RemoveComponent(std::shared_ptr&lt;ComponentT&gt; removeComponent)<br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★[ComponentTのハッシュコードを得るテク] https://cpprefjp.github.io/reference/typeindex/type_index/hash_code.html<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t hashID = typeid(ComponentT).hash_code(); //[まずハッシュでID化]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // equal_range 関数を使って、指定したキーの最初と終端の位置を示すイテレータを std::pair&lt;&gt; で取得します。<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto range = components.equal_range(hashID); //https://ez-net.jp/article/9E/DFLX8hNG/G5J8DPmsltz4/<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[イテレート中に探しながら消す] https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/erase.html<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto ite = range.first; ite != range.second;)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (ite-&gt;second == removeComponent)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; components.erase(ite); // 削除された要素の次を指すイテレータが返される<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true; // 見つかって消せた場合は true<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ++ite; // 次の要素へイテレータを進める<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // 見つからずに消せなかった場合は false<br>
+        &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理[純粋仮想関数 = 0 なのでoverride必須の関数]<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() = 0; // 純粋仮想関数 = 0 にすると【絶対 Update()関数はoverrideしなきゃいけない義務を付与できる 】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理[純粋仮想関数 = 0 なのでoverride必須の関数]<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; // 純粋仮想関数 = 0 にすると【絶対 Draw()関数はoverrideしなきゃいけない義務を継承先クラスに付与 】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ジャンプ開始した直後に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnStartJump()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideしてジャンプした瞬間に音を鳴らしたりする処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 空中でジャンプの上昇中に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnJumping()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして空中でジャンプの上昇中にエフェクトを出したりする処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 空中で落ちている最中に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnFalling()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして空中で落ちている最中に音を鳴らしたり、エフェクトを出したりする処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    コンポーネントが<b>最後まで消えないように「共有カウンタ+1をキープする役割」はcomponents辞書に移りました</b>。<br>
+    ですので、Playerクラス側のstd::shared_ptrはstd::weak_ptrに変えておきましょう。+1のキープ元はなるべく1か所に限定しておきたいですから。<br>
+    <p><code>Player.hを変更</code>して、UnityっぽくAddComponentでコンポーネントを追加し、プレイヤ側のstd::shared_ptrはstd::weak_ptrに変えておきましょう。</p>
+    <p class="source">#ifndef PLAYER_H_<br>
+      #define PLAYER_H_<br>
+      <br>
+      #include "DxLib.h"<br>
+      #include "Input.h"<br>
+      #include "Resource.h"<br>
+      #include "GameObject.h"<br>
+      #include "PhysicsComponent.h"<br>
+      <br>
+      class World; // 前方宣言<br>
+      class Camera; // 前方宣言<br>
+      <br>
+      class Player : public GameObject<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタはprotected:にしてあるので、Create関数経由で初期生成してください<br>
+      &nbsp;&nbsp;&nbsp; Player(World* world, Pad pad, Vector3 position, Quaternion rotation = { 0,0,0,1 }, Vector3 velocity = { 0,0,0 }, Vector3 force = { 0,0,0 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : pad{ pad }, GameObject(world, position, rotation, velocity, force)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "Player"; // タグは個別の"プレイヤ1"などに使い、タイプはtypeTagで判別する形にしてタイプのジャンルを区別<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~Player() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Pad pad; // 操作するコントローラー番号<br>
+      &nbsp;&nbsp;&nbsp; hash32 worldTag{ "" }; // 現在いるワールドのタグ<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeedMax = 6; // 移動速度Max値<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeed = 0;//移動速度<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float moveAngle = 0; // X軸→方向から何度か<br>
+      &nbsp;&nbsp;&nbsp; float deltaAngle = 0; // プレイヤの動く角度の変化率、ハンドルを切ったらだんだんもとに戻る<br>
+      &nbsp;&nbsp;&nbsp; int animCount = 0;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; image; // プレイヤの板ポリゴンで描くタイル分割画像への共有リンク<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Camera* camera{ nullptr }; // プレイヤを追随するカメラ<br>
+      &nbsp;&nbsp;&nbsp; void SetCamera(Camera* pCamera) { camera = pCamera; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // overrideして物理落下コンポーネントからの重力値を返す<br>
+      &nbsp;&nbsp;&nbsp; virtual float gravity() override { <em>auto pGravityPhysics = gravityPhysics.lock();</em> return (<em>pGravityPhysics</em> != nullptr) ? <em>pGravityPhysics</em>-&gt;gravity() : 0.0f; }<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; <em>std::weak_ptr</em>&lt;JumpComponent&gt; jumpPhysics<u>{ nullptr }</u>; // ジャンプの物理処理コンポーネント<br>
+      &nbsp;&nbsp;&nbsp; <em>std::weak_ptr</em>&lt;GravityComponent&gt; gravityPhysics<u>{ nullptr }</u>; // 落下の重力の物理処理コンポーネント<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; virtual void Init(std::shared_ptr&lt;InitParams&gt; initParams = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyJumpSpeed{ 13, 14, 15, 4 }; // ジャンプ開始の初期速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyForceJump{ 0.5f, 0.4f, 0.3f, 0.1f }; // ジャンプ上昇にかかる力の初期値<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyGravity{ 0.8f,0.8f,0.8f,0.8f }; // 重力の設定値<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyDownSpeedMax{ 16, 16, 16, 8 }; // 降下スピードのリミット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // <em>AddComponent内部で</em>shared_from_this()を必ず渡してセットで初期化して、オーナーがリンク切れのコンポーネントができないように気をつける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jumpPhysics = <em>AddComponent&lt;JumpComponent&gt;(</em>vyJumpSpeed, vyForceJump);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gravityPhysics = <em>AddComponent&lt;GravityComponent&gt;(</em>vyGravity, vyDownSpeedMax);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() override;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ジャンプ開始した直後に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnStartJump() override;<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>Player.cppを変更</code>して、std::shared_ptrからstd::weak_ptrに変えたので.lock()でロックして、<br>
+      コンポーネントを使っている間(Update関数()の {&nbsp; ～ }のカッコが閉じるまで )はコンポーネントが消えないように +1 キープしながら使うようにしましょう。</p>
+    <p class="source">#include "Player.h"<br>
+      <br>
+      #include &lt;cmath&gt; // 浮動小数点の余り%演算子がC++にないのでfmodを使うため<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "MyDraw.h"<br>
+      <br>
+      #include "Camera.h"<br>
+      #include "World.h"<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      void Player::HandleInput()<br>
+      {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_LEFT) <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_A)) )<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = - MoveSpeed; // 左<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle += 1; //ハンドルを左に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_RIGHT)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_D)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vx = MoveSpeed; // 右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle -= 1; //ハンドルを右に回す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (Input::GetButton(pad, PAD_INPUT_UP)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_W)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = - MoveSpeed; // 上<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed += 0.6f; //アクセルを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &gt; MoveSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = MoveSpeedMax;//Maxスピードで止める<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; else if (Input::GetButton(pad, PAD_INPUT_DOWN)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButton(Pad::Keyboard, KEY_INPUT_S)))<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //vy = MoveSpeed; // 下<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed -= 0.6f; //ブレーキを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &lt; -0.9f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed = -0.9f;//ちょっとだけバックできるように<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (pad == Pad::Key || pad == Pad::One) // コントローラ1またはキーボード操作のプレイヤのときだけ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGUP)) // キーボードのPageUp ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = 2.0f; // テスト用に空中の上方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButton(Pad::Keyboard, KEY_INPUT_PGDN)) // キーボードのPageDown ボタンを押したときは<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -2.0f; // テスト用に空中の下方向に移動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      }<br>
+      <br>
+      // ジャンプ開始した直後に呼ばれる関数<br>
+      void Player::OnStartJump()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; this-&gt;isGround = false; // ジャンプ中はisGroundフラグがfalse<br>
+      }<br>
+      <br>
+      <br>
+      // 更新処理<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; deltaAngle *= 0.5F; // 車のハンドルの方向をだんだんニュートラルに戻す<br>
+      &nbsp;&nbsp;&nbsp; MoveSpeed *= 0.9F; // 移動速度も減速する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理 <br>
+      &nbsp;&nbsp;&nbsp; HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>auto pJumpPhysics = jumpPhysics.lock();</em><br>
+      &nbsp;&nbsp;&nbsp; if (<em>pJumpPhysics</em> != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(pad, PAD_INPUT_A) // Zキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonDown(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>pJumpPhysics</em>-&gt;JumpStart(); // ジャンプのスタート処理を発動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (vy &gt; 0 &amp;&amp; Input::GetButtonUp(pad, PAD_INPUT_A) // Zキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonUp(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>pJumpPhysics</em>-&gt;JumpCancel(); // ジャンプのキャンセル処理を発動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>pJumpPhysics</em>-&gt;Update(); // ジャンプのコンポーネントを更新する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; <em>auto pGravityPhysics = gravityPhysics.lock();</em><br>
+      &nbsp;&nbsp;&nbsp; if (<em>pGravityPhysics</em> != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>pGravityPhysics</em>-&gt;Update(); // 重力落下のコンポーネントを更新する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; moveAngle += deltaAngle; // ハンドルを回したぶんプレイヤの進行方向を変える<br>
+      &nbsp;&nbsp;&nbsp; if (moveAngle &lt; -180) moveAngle = 360 + moveAngle; // -180以下の角度にならないようにマイナスになったら+180度にループさせる<br>
+      &nbsp;&nbsp;&nbsp; else if (moveAngle &gt; +180) moveAngle = -360 + moveAngle; // +180以下の角度にならないようにマイナスになったら-180度にループさせる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; rotation.SetRotation(VGet(0, (180 - moveAngle) * MyMath::Deg2Rad, 0)); // 前向きの3Dモデルなら180度回転させて奥方向の向きに設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ↓進行方向角度をX方向とZ方向の速度に変える<br>
+      &nbsp;&nbsp;&nbsp; vx = (float)std::cos((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      &nbsp;&nbsp;&nbsp; vz = (float)std::sin((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 実際に位置を動かす<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // まず横に移動する<br>
+      &nbsp;&nbsp;&nbsp; x += vx;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次に縦に動かす<br>
+      &nbsp;&nbsp;&nbsp; y += vy;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次にZ奥行き方向に動かす<br>
+      &nbsp;&nbsp;&nbsp; z += vz;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; vy += vyForce; // 勢い(力・フォースを加算<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (y &lt;= 0.0f) // 0.0fを地面として 0.0f以下になったら地面に着地したと判定する<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; y = 0.0f; // 地面に沿わせる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -0.01f; // 下方向への速度をほぼ 0 にする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isGround = true;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラのプレイヤ追尾<br>
+      &nbsp;&nbsp;&nbsp; float camDistance = 150; // プレイヤからカメラまでのY平面上の距離<br>
+      &nbsp;&nbsp;&nbsp; float camHeight = 100; // プレイヤからカメラまでのY方向上の高さ<br>
+      &nbsp;&nbsp;&nbsp; // moveAngleは2D画像のX方向右を0度とするから、-90度回すと画像を正面に捉える位置にカメラを置ける<br>
+      &nbsp;&nbsp;&nbsp; float camAngleX = (float)std::cos((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; float camAngleZ = (float)std::sin((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; if (camera != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // カメラの位置をプレイヤの進行方向と真逆に設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;SetPosition(position + Vector3(camAngleX, camHeight, camAngleZ));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;LookAt(position); //カメラはプレイヤの方を見る<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      // 描画処理<br>
+      void Player::Draw()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; int animIndex = animCount / 20; // キャラのパラパラアニメの画像番号(最大3)<br>
+      &nbsp;&nbsp;&nbsp; float abs_vx = (vx &gt; 0) ? vx : -vx; // x方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; float abs_vz = (vz &gt; 0) ? vz : -vz; // y方向絶対値<br>
+      &nbsp;&nbsp;&nbsp; if (abs_vx &gt; 1.00f || abs_vz &gt; 1.00f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animCount += 6; // キャラが地面のXとZ方向に少しでもスピードがあったらアニメを走らせる<br>
+      &nbsp;&nbsp;&nbsp; if (animCount &gt;= 60) animCount = 0; // アニメ時間を0へループ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ワールドに存在するすべてのカメラに関連づいたスクリーンに対して描画する<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : world()-&gt;cameras) // プレイヤのいるワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 常にカメラ方向を向くビルボード回転の角度を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D angle = MyDraw::GetAngle(DxLib::GetCameraBillboardMatrixD());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; angle.x = 0; angle.z = 0; // Y軸周りのビルボード回転だけ有効にする X軸,Z軸まわりの回転は 0 にする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imgIndex = 9; // キャラチップ画像の起点番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ビルボードの角度 と キャラの向いている向き の 差 によって、別のプレイヤのカメラから見たキャラチップの向きの画像を切り替える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // -180 ～ +180 : angle.y&nbsp; moveAngle : -180 ～ +180 ↓<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float difAngleY = angle.y * 180.0f / DX_PI_F + moveAngle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imgIndex = (difAngleY &lt; -135 || 135 &lt; difAngleY) ? 0 // カメラ向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &lt; -45) ? 6 // 右 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &gt; 45) ? 3&nbsp; // 左 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 9; // 奥向きの画像<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(MyDraw::Plane::Z, x, y, z, 1.0f, angle, *image, imgIndex + animIndex, TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+    </p>
+    <br>
+    いかがでしょう？結局、AddComponentはしましたが、Player側でジャンプや重力などのstd::weak_ptrを保持して、GetComponentsはわざわざしないようにしました。<br>
+    GetComponentsは辞書を探す処理が走るので、無駄な計算時間がかかるので避けたかったのも理由の一つです。<br>
+    UnityでもGetComponentsなどはなるべくStart()関数でするほうが、処理は高速になります。<br>
+    どのみちPlayerなどのメンバ変数としてstd::weak_ptr&lt;JumpComponent&gt; jumpPhysics;などのコンポーネントへの弱リンクを保管するほうが、<br>
+    辞書をいちいち探すコストはかからなくなるわけですので、同じようなコードのままになるのは必然なわけです。<br>
+    <br>
+    では、AddComponentやGetComponentsなどの必要性はどこにあるかというと、<br>
+    Unityではインスペクタの[Add Component]ボタンなど画面のUI経由でAddComponentできちゃいますから、<br>
+    必ずしもInit経由からAddComponentされるものだけとは限らないわけです。<br>
+    または、ジャンプできるようになるアイテムを取った瞬間にAddComponentされるケースもありえます。<br>
+    そういう場合、つまりUIから多種多様なコンポーネントが来たり、アイテムの種類が多種多様な場合は、<br>
+    メンバ変数のコンポーネントのタイプ型を事前に想定することができにくいわけですね。<br>
+    そうなってくるとGetComponentの&lt;～&gt;の中で引き受けたいタイプをそのつど受け取るほうが良いケースもでてくるわけです。<br>
+    まあでも、InitでAddComponentしたあと、即 isEnabled = false; で無効にしてジャンプ能力を眠らせておいて、<br>
+    アイテムを取ったときだけisEnabled = true; で有効にしてGetComponentsの辞書サーチは走らせないほうが回避策としては優秀ですがね。<br>
+    ということで、なるべくUpdateなど毎フレーム繰り返す文脈の中で毎度GetComponentsしないのが、プログラマとしては有能なわけです。<br>
+    (まあ、それだとUI経由のコンポーネント追加は検知できないわけで、ゲームエンジンのUIの便利さは計算コストとのトレードオフ ではあるわけです)<br>
+    想定可能なコンポーネントはInit()すなわち UnityではStart()関数であらかじめGetComponentsでメンバ変数に保持しておきましょうということですね。<br>
+    Update関数の中でGetComponentsするならまだしも、for文のループの中でGetComponentsしている人はいませんか？ 完全アウトです。<br>
+    (UnityでFPSを60に保てる限度において、<a href="https://qiita.com/uminohiyoko/items/1dfeae592402697be025">GetComponentは5万回</a>だそうです。。)<br>
+    <br>
+    <br>
+    以上、共有ポインタや可変引数テンプレやoverrideなど、もろもろの基礎の積み上げによりAddComponentにたどりつけました。<br>
+    Unityで何気なくつかっているAddComponentのままでは、thisポインタ渡し は完全ブラックボックス化されていて、<br>
+    コンポーネントとは「this渡しによる親の変数アクセス」が本質であるという重要な勉強がすっとばされてしまうので、<br>
+    ほぼプログラミングの設計サイドにふれあう機会なく、便利さのぬるま湯につかってしまいます。<br>
+    ここまでの勉強によって「ゲームエンジンそのものとは何なのか？」の理解に少しは近づけたでしょうか？<br>
+    <br>
+    <br>
   </body>
 </html>
