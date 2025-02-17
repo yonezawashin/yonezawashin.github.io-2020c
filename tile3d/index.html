@@ -1295,8 +1295,8 @@
       &nbsp;&nbsp;&nbsp; cameras.emplace<em>("カメラ0", </em>std::make_shared&lt;Camera&gt;(Vector3{ 20,40,-50 })); // カメラ0<br>
       &nbsp;&nbsp;&nbsp; cameras.emplace<em>("カメラ1", </em>std::make_shared&lt;Camera&gt;(Vector3{ 80,30,-50 })); // カメラ1<br>
       <br>
-      &nbsp;&nbsp;&nbsp; cameras["カメラ0"]-&gt;screenHandle = screenHandle0; // カメラ0 と スクリーン0 を関連付ける<br>
-      &nbsp;&nbsp;&nbsp; cameras["カメラ1"]-&gt;screenHandle = screenHandle1; // カメラ1 と スクリーン1 を関連付ける<br>
+      &nbsp;&nbsp;&nbsp; cameras<em>["カメラ0"]</em>-&gt;screenHandle = screenHandle0; // カメラ0 と スクリーン0 を関連付ける<br>
+      &nbsp;&nbsp;&nbsp; cameras<em>["カメラ1"]</em>-&gt;screenHandle = screenHandle1; // カメラ1 と スクリーン1 を関連付ける<br>
       &nbsp;&nbsp; &nbsp;<br>
       <br>
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
@@ -1319,7 +1319,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 複数のカメラを 範囲 for文 で回す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : cameras)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ラムダ式[&amp;](){ ～ }で{}の外側の変数すべてを &amp; キャプチャで&amp;参照として「Draw関数の内側へ引き連れて」処理できる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera.second-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera<em>.second</em>-&gt;Draw([&amp;]()<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Draw関数() の 外側にある変数 mapChipPath も[&amp;]効果で { } の内側で問題なくアクセスできている↓<br>
       <br>
