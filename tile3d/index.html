@@ -2817,7 +2817,10 @@
       &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
       &nbsp;&nbsp;&nbsp; SceneManager&amp; sm = SceneManager::Instance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
       <br>
-      &nbsp;&nbsp;&nbsp; <em>// タイルマップを読み込む 縦8マス、横8マス、縦32ピクセル、横32ピクセル<br>
+      &nbsp;&nbsp;&nbsp; <em>int screenHandle0{ -1 }; // 上画面スクリーンのハンドル<br>
+        &nbsp;&nbsp;&nbsp; int screenHandle1{ -1 }; // 下画面スクリーンのハンドル<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; // タイルマップを読み込む 縦8マス、横8マス、縦32ピクセル、横32ピクセル<br>
         &nbsp;&nbsp;&nbsp; std::string mapChipPath{ "Map/mapchip.png" };<br>
         &nbsp;&nbsp;&nbsp; std::string playerImgPath1{ "Image/pikkoron.png" };<br>
         &nbsp;&nbsp;&nbsp; std::string playerImgPath2{ "Image/satan.png" };</em><br>
@@ -7965,6 +7968,5 @@
     <br>
     <br>
     <br>
-    
   </body>
 </html>
