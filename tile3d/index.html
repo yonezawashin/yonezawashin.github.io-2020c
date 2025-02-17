@@ -392,6 +392,21 @@
       <br>
       #endif<br>
     </p>
+    <p><code>MyDraw.cppを新規作成</code>して、staticに関する定義をします。</p>
+    <p class="source"> #include "MyDraw.h"<br>
+      <br>
+      //int MyDraw::farClipPlane = 1000; // 仮にZ=1000までの遠さのものを描く設定で<br>
+      <br>
+      // ★デフォルトではDXライブラリ2D座標系に合わせて右手系&amp;Yの矢印を画面下方向に設定<br>
+      // http://www.f.waseda.jp/moriya/PUBLIC_HTML/education/classes/infomath6/applet/fractal/coord/<br>
+      //bool MyDraw::isLeftHanded = false;<br>
+      VECTOR MyDraw::XYZ_ARROW = DxLib::VGet(1, -1, 1);<br>
+      <br>
+      bool MyDraw::IsReverseX_Texture = false;<br>
+      bool MyDraw::IsReverseY_Texture = true;<br>
+      bool MyDraw::IsReverseZ_Texture = false;<br>
+    </p>
+    <br>
     <p><code>main.cpp</code>にプログラムを追加し、MyDrawクラスを通して、ポリゴンでサイコロ状のボックスを描いてみましょう。</p>
     <p class="source"> #include "DxLib.h"<br>
       <br>
@@ -1368,9 +1383,9 @@
     <a id="mozTocId0004" class="mozTocH1">
       <h1>ワールドを定義して、複数プレイヤと複数カメラをワールドに保持する</h1>
     </a>
-    <p><code>別記事でImageフォルダにImage/<a href="image/pikkoron.png">pikkoron.png</a>と新たに別に自作したImage/<a href="image/satan.png">satan.png</a>を保存しておいてください</code><a
+    <p><code>別記事でImageフォルダにImage/<a href="image/pikkoron.png">pikkoron.png</a>と新たに別に自作したImage/<a
 
-        href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/practice.html#mozTocId0008">→CharaMELで自作のキャラのタイル分割画像を作る</a></p>
+          href="image/satan.png">satan.png</a>を保存しておいてください</code><a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/practice.html#mozTocId0008">→CharaMELで自作のキャラのタイル分割画像を作る</a></p>
     <br>
     Unityなどゲームエンジンには「シーン」などの概念がある。<br>
     「シーン」の下に複数のカメラや複数のゲームオブジェクトがヒエラルキーとしてぶら下がっている。<br>
