@@ -7112,7 +7112,12 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt; pOtherResult{ nullptr }; // 衝突したら情報が入ってきてnullptrじゃなくなる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (collider-&gt;<b>isCollision</b>(otherCollider, &amp;<b>pThisResult</b>, &amp;<b>pOtherResult</b>))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (collider-&gt;IsPrevCollision() == false) // 前のフレームで衝突してなかったら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; collider-&gt;owner()-&gt;OnCollision<b>Enter</b>(pThisResult); // collider側の衝突<b>開始したとき</b>の関数をコールバックで呼び返す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collider-&gt;owner()-&gt;<b>OnCollision(pThisResult);</b> // collider側の衝突したときの関数をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (otherCollider-&gt;IsPrevCollision() == false) // 前のフレームで衝突してなかったら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; otherCollider-&gt;owner()-&gt;OnCollision<b>Enter</b>(pOtherResult); // other側の衝突<b>開始したとき</b>の関数をコールバックで呼び返す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; otherCollider-&gt;owner()-&gt;<b>OnCollision(pOtherResult);</b> // other側の衝突したときの関数をコールバックで呼び返す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
@@ -7956,5 +7961,10 @@
     <b>1秒ごとに 速度velocity += 5</b>。実は<b>「力」とは速度に毎秒(毎フレーム)いくつ足し算されるか</b>なのです。<br>
     物理の色んな公式がわからなくても、これなら少しわかるぞ。と思ってもらえばラッキーです。<br>
     <b>Unityの AddForce の「force」とは実はこの「力」</b>なのです。<br>
+    <br>
+    <br>
+    <br>
+    <br>
+    
   </body>
 </html>
