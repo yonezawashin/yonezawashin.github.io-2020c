@@ -1641,6 +1641,7 @@
       #include "Screen.h"<br>
       #include "MyDraw.h"<br>
       #include "Vector3.h"<br>
+      <em>#include "World.h"</em><br>
       <br>
       <br>
       class Camera<br>
@@ -2001,7 +2002,8 @@
       #include "MyHash.h"<br>
       #include "Resource.h"<br>
       #include "MyDraw.h"<br>
-      <em>#include "Player.h"</em><br>
+      <em>#include "Player.h"<br>
+      #include "World.h"</em><br>
       <br>
       // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
       int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
@@ -2050,8 +2052,8 @@
       <br>
       &nbsp;&nbsp;&nbsp; // カメラを2つ生成して、2つのカメラ視点を2つのスクリーンにそれぞれ関連付ける<br>
       &nbsp;&nbsp;&nbsp; <u>std::unordered_map&lt;hash32, std::shared_ptr&lt;Camera&gt;&gt; cameras; // 複数のカメラへのポインタを格納するタグを振った辞書配列</u><br>
-      &nbsp;&nbsp;&nbsp; <em>world1-&gt;</em>cameras.emplace<em>(</em>"カメラ0", std::make_shared&lt;Camera&gt;(<em>world1.get(), </em>Vector3{ 20,40,-50 })); // カメラ0<br>
-      &nbsp;&nbsp;&nbsp; <em>world1-&gt;</em>cameras.emplace<em>(</em>"カメラ1", std::make_shared&lt;Camera&gt;(<em>world1.get(), </em>Vector3{ 80,30,-50 })); // カメラ1<br>
+      &nbsp;&nbsp;&nbsp; <em>world1-&gt;</em>cameras.emplace("カメラ0", std::make_shared&lt;Camera&gt;(<em>world1.get(), </em>Vector3{ 20,40,-50 })); // カメラ0<br>
+      &nbsp;&nbsp;&nbsp; <em>world1-&gt;</em>cameras.emplace("カメラ1", std::make_shared&lt;Camera&gt;(<em>world1.get(), </em>Vector3{ 80,30,-50 })); // カメラ1<br>
       <br>
       &nbsp;&nbsp;&nbsp; <em>world1-&gt;</em>cameras["カメラ0"]-&gt;screenHandle = screenHandle0; // カメラ0 と スクリーン0 を関連付ける<br>
       &nbsp;&nbsp;&nbsp; <em>world1-&gt;</em>cameras["カメラ1"]-&gt;screenHandle = screenHandle1; // カメラ1 と スクリーン1 を関連付ける<br>
@@ -2102,7 +2104,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 複数のカメラを 範囲 for文 で回す<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : cameras)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : <em>world1-></em>cameras)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ラムダ式[&amp;](){ ～ }で{}の外側の変数すべてを &amp; キャプチャで&amp;参照として「Draw関数の内側へ引き連れて」処理できる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera.second-&gt;Draw([&amp;]()<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
