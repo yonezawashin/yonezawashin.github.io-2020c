@@ -1994,7 +1994,7 @@
     </p>
     <br>
     <br>
-    <p><code>main.cppを変更</code>して、hash32でカメラをstd::vectorではなくstd::unordered_mapの辞書にhash32タグを振って管理してみましょう。</p>
+    <p><code>main.cppを変更</code>して、Worldクラスに移したカメラとプレイヤをworld1経由で描画してみましょう。</p>
     <p class="source">#include "DxLib.h"<br>
       <br>
       #include "Screen.h"<br>
@@ -2003,7 +2003,7 @@
       #include "Resource.h"<br>
       #include "MyDraw.h"<br>
       <em>#include "Player.h"<br>
-      #include "World.h"</em><br>
+        #include "World.h"</em><br>
       <br>
       // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
       int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
@@ -2104,7 +2104,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 複数のカメラを 範囲 for文 で回す<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : <em>world1-></em>cameras)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : <em>world1-&gt;</em>cameras)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ラムダ式[&amp;](){ ～ }で{}の外側の変数すべてを &amp; キャプチャで&amp;参照として「Draw関数の内側へ引き連れて」処理できる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera.second-&gt;Draw([&amp;]()<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
@@ -2171,7 +2171,7 @@
       class Scene<br>
       {<br>
       public:<br>
-      &nbsp;&nbsp;&nbsp; std::string tag{ "" }; // シーンの判別に使う<br>
+      &nbsp;&nbsp;&nbsp; std::string tag{ "" }; // シーンでロードするファイル名などに使う<br>
       &nbsp;&nbsp;&nbsp; hash32 typeTag{ "" }; // シーンのタイプの判別に使う<br>
       <br>
       &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
@@ -2490,7 +2490,7 @@
     さて、今回の本題のGameSceneを作成する前に、シーンに関するセッティングをCSVファイルから読みだせるようにすれば、<br>
     ゲームシーンに関する情報、例えば、ステージのマップのファイルの場所一覧、などをプランナがエクセルで管理でき、それをCSVに吐き出して、<br>
     そのセッティングに合わせて、ゲームのシーンの初期化と同時に、ワールドのマップ読出しに必要な情報をCSVファイルから柔軟に得ることができます。<br>
-    <p><code>DaraCsv.hを新規作成</code>して、CSV形式のファイルをロードできるようにします。<br>
+    <p><code>DataCsv.hを新規作成</code>して、CSV形式のファイルをロードできるようにします。<br>
     </p>
     <p class="source">#ifndef DATACSV_H_<br>
       #define DATACSV_H_<br>
@@ -2719,7 +2719,7 @@
       #endif<br>
     </p>
     <br>
-    <p><code>Mapフォルダの中にGameSceneSetting.csvを新規作成</code>して、下記内容のcsvのデータで、シーン1というタグでGameSceneを初期生成するとき、<br>
+    <p><code>Mapフォルダの中に<a href="image/GameSceneSetting.csv">GameSceneSetting.csv</a>を新規作成</code>して、下記内容のcsvのデータで、シーン1というタグでGameSceneを初期生成するとき、<br>
       ステージ1というタグのついたワールドにMap/stage1.jsonから読みだしたマップを読み出し生成する、という情報を記述し保存しておきましょう。(マップのjson読み出しはのちの章でやる予定です)<br>
     </p>
     <p class="source">"//","GameSceneでシーン名を指定するとその行以降をそのシーンで使うworldsとしてロードする",,,,<br>
@@ -2816,6 +2816,11 @@
       <br>
       &nbsp;&nbsp;&nbsp; //★【仲介者パターン】ゲーム内のもの同士はマネージャを通して一元化してやり取り<br>
       &nbsp;&nbsp;&nbsp; SceneManager&amp; sm = SceneManager::Instance(); //唯一のシーンマネージャへの参照(&amp;)を得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// タイルマップを読み込む 縦8マス、横8マス、縦32ピクセル、横32ピクセル<br>
+        &nbsp;&nbsp;&nbsp; std::string mapChipPath{ "Map/mapchip.png" };<br>
+        &nbsp;&nbsp;&nbsp; std::string playerImgPath1{ "Image/pikkoron.png" };<br>
+        &nbsp;&nbsp;&nbsp; std::string playerImgPath2{ "Image/satan.png" };</em><br>
       <br>
       protected:<br>
       &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;World&gt;&gt; worlds; // 複数ワールドの共有ポインタ辞書<br>
@@ -3245,7 +3250,8 @@
         #include "MyHash.h"<br>
         #include "Resource.h"<br>
         #include "MyDraw.h"<br>
-        #include "Player.h"</u><br>
+        #include "Player.h"<br>
+        #include "World.h"</u><br>
       <br>
       // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMainからプログラムが開始する<br>
       int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
@@ -3355,7 +3361,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 複数のカメラを 範囲 for文 で回す<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : cameras)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; camera : world1-&gt;cameras)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ラムダ式[&amp;](){ ～ }で{}の外側の変数すべてを &amp; キャプチャで&amp;参照として「Draw関数の内側へ引き連れて」処理できる<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera.second-&gt;Draw([&amp;]()<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
