@@ -7554,7 +7554,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 半径16(直径32)の球体コライダ<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sphereCollider = AddComponent&lt;SphereCollider&gt;(Vector3(0, 0, 0), 16);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gridCollision = AddComponent&lt;GridCollidersComponent&gt;("Player"); //とりあえずわかりやすいように"Player"というタグをつけておく(別に何でもいい)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gridCollision-&gt;LinkCollider(sphereCollider); // コライダをリンクする</em><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gridCollision.lock()-&gt;LinkCollider(sphereCollider); // コライダをリンクする</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 入力を受けての処理<br>
