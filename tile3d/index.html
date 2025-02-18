@@ -6730,7 +6730,8 @@
       &nbsp;&nbsp;&nbsp; bool enabled = true; // コライダーが有効か?<br>
       &nbsp;&nbsp;&nbsp; unsigned int hitColor = DxLib::GetColor(255, 255, 255); // 描画するときの色<br>
       &nbsp;&nbsp;&nbsp; std::vector&lt;Collision::ContactPoint&gt; m_contacts; // 全ての接触点の配列<br>
-      &nbsp;&nbsp;&nbsp; std::unordered_set&lt;unsigned int&gt; m_collisionIDs; // 接触している他のコライダのInstanceID<br>
+      &nbsp;&nbsp;&nbsp; std::unordered_set&lt;unsigned int&gt; <b>m_prevCollisionIDs</b>; // <b>前のフレームで衝突した他のコライダのInstanceID</b><br>
+      &nbsp;&nbsp;&nbsp; std::unordered_set&lt;unsigned int&gt; <b>m_collisionIDs</b>; // <b>接触している他のコライダのInstanceID</b><br>
       &nbsp;&nbsp;&nbsp; bool IsPrevCollision() { return m_isPrevCollision; }<br>
       &nbsp;&nbsp;&nbsp; void IsPrevCollision(bool isPrevCollision) { m_isPrevCollision = isPrevCollision; return; }<br>
       &nbsp;&nbsp;&nbsp; bool IsCollision() { return m_isCollision; }<br>
@@ -6748,8 +6749,8 @@
       &nbsp;&nbsp;&nbsp; virtual inline bool isCollision(std::shared_ptr&lt;Collider&gt; pOther,<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt;* ppThisResult = nullptr, std::shared_ptr&lt;Collision&gt;* ppOtherResult = nullptr)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (m_collisionIDs.count(pOther-&gt;InstanceID()) &gt; 0)<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // すでに調べたコライダのIDのペアだったらfalse<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<b>m_collisionIDs</b>.count(pOther-&gt;InstanceID()) &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false; // <b>すでに調べたコライダのIDのペアだったらfalse</b><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 継承override してカプセルや球やボックスなどのコライダの判定を実装する<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return isCollisionColliders(shared_from_this_as&lt;Collider&gt;(), pOther, ppThisResult, ppOtherResult);<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -6758,7 +6759,9 @@
       &nbsp;&nbsp;&nbsp; virtual void UpdateIsCollision() // 前フレームで当たってなくて今当たっていればOnCollisionEnterに使える<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::vector&lt;Collision::ContactPoint&gt;().swap(m_contacts); // 衝突点情報の配列をクリア<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::unordered_set&lt;unsigned int&gt;().swap(m_collisionIDs);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 今のフレームで衝突しているIDを↓prevに移しておけば次のフレームでのOnCollision<b>Enter</b>やOnCollision<b>Exitを呼ぶタイミングの判定</b>に使える<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_collisionIDs.<b>swap(m_prevCollisionIDs)</b>;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; std::unordered_set&lt;unsigned int&gt;<b>()</b>.swap(m_collisionIDs); // 衝突していたID一覧は、一旦空<b>()と入れ替え</b>て今フレームの衝突検査に備える<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_isPrevCollision = m_isCollision; // 前のフレームで衝突したかを保管<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_isCollision = false; // 一旦、今のフレームでは衝突していない状態として設定して後で当たり判定して書換<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -6924,7 +6927,7 @@
       };<br>
       <br>
       // カプセル同士が衝突しているかを判定する(ppThisResultとppOtherResult:衝突したら衝突情報が返される)<br>
-      inline bool isCollisionCapsule_Capsule(std::shared_ptr&lt;Collider&gt; pThis0, std::shared_ptr&lt;Collider&gt; pOther1,<br>
+      inline bool <b>isCollisionCapsule_Capsule</b>(std::shared_ptr&lt;Collider&gt; pThis0, std::shared_ptr&lt;Collider&gt; pOther1,<br>
       &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt;* ppThisResult = nullptr, std::shared_ptr&lt;Collision&gt;* ppOtherResult = nullptr)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; auto gameObject0 = pThis0-&gt;owner(), gameObject1 = pOther1-&gt;owner();<br>
@@ -6960,11 +6963,11 @@
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; radius1 = col1-&gt;m_radius;<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
-      &nbsp;&nbsp;&nbsp; // Collision3D.hの当たり判定関数を使ってチェック<br>
-      &nbsp;&nbsp;&nbsp; bool isCollision = isCollisionCapsule_Capsule(start0, end0, radius0, start1, end1, radius1, &amp;result0, &amp;result1);<br>
+      &nbsp;&nbsp;&nbsp; // <b>Collision3D.hの当たり判定関数を使ってチェック</b><br>
+      &nbsp;&nbsp;&nbsp; bool isCollision = <b>isCollisionCapsule_Capsule</b>(start0, end0, radius0, start1, end1, radius1, &amp;result0, &amp;result1);<br>
       &nbsp;&nbsp;&nbsp; if (!isCollision) return false;<br>
       <br>
-      &nbsp;&nbsp;&nbsp; // collisionの 法線ベクトル:norm と 距離:mag を求める<br>
+      &nbsp;&nbsp;&nbsp; // collisionの <b>法線ベクトル:norm</b> と <b>距離:mag</b> を求める<br>
       &nbsp;&nbsp;&nbsp; Vector3 v01 = result1 - result0; // 最短距離の2点 result0 から result1 へ向かうベクトル<br>
       &nbsp;&nbsp;&nbsp; float mag01 = v01.magnitude(); // result0とresult1の距離<br>
       &nbsp;&nbsp;&nbsp; Vector3 norm01 = v01.normalized(); // 正規化normalizeする<br>
@@ -6975,43 +6978,43 @@
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; norm01 = Vector3{ 1.0f,0.0f,0.0f }; // 仕方ないからx軸方向に引き離す(2DでもつじつまあうようにX軸で)<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
-      &nbsp;&nbsp;&nbsp; pThis0-&gt;m_collisionIDs.emplace(pOther1-&gt;InstanceID()); // 接触している other のIDを this側 に登録して同じペアの判定を2度しないようにする<br>
-      &nbsp;&nbsp;&nbsp; pOther1-&gt;m_collisionIDs.emplace(pThis0-&gt;InstanceID()); // 接触している this のIDを other側 に登録して同じペアの判定を2度しないようにする<br>
+      &nbsp;&nbsp;&nbsp; pThis0-&gt;<b>m_collisionIDs</b>.emplace(pOther1-&gt;InstanceID()); // 接触している other のIDを this側 に登録して同じペアの判定を2度しないようにする<br>
+      &nbsp;&nbsp;&nbsp; pOther1-&gt;<b>m_collisionIDs</b>.emplace(pThis0-&gt;InstanceID()); // 接触している this のIDを other側 に登録して同じペアの判定を2度しないようにする<br>
       <br>
       &nbsp;&nbsp;&nbsp; // 衝突点 pThisContactとpOtherContact を生成<br>
-      &nbsp;&nbsp;&nbsp; Collision::ContactPoint thisContact{ result0, -norm01, mag01, pThis0, pOther1 };<br>
-      &nbsp;&nbsp;&nbsp; Collision::ContactPoint otherContact{ result1,&nbsp; norm01, mag01, pOther1, pThis0 };<br>
-      &nbsp;&nbsp;&nbsp; pThis0-&gt;m_contacts.emplace_back(thisContact); // コライダ0のm_contactsにも情報登録<br>
-      &nbsp;&nbsp;&nbsp; pOther1-&gt;m_contacts.emplace_back(otherContact); // コライダ1のm_contactsにも情報登録<br>
+      &nbsp;&nbsp;&nbsp; Collision::ContactPoint <b>thisContact</b>{ result0, <b>-norm01</b>, <b>mag01</b>, pThis0, pOther1 };<br>
+      &nbsp;&nbsp;&nbsp; Collision::ContactPoint <b>otherContact</b>{ result1,&nbsp; <b>norm01</b>, <b>mag01</b>, pOther1, pThis0 };<br>
+      &nbsp;&nbsp;&nbsp; pThis0-&gt;<b>m_contacts</b>.emplace_back(<b>thisContact</b>); // コライダ0のm_contactsにも情報登録<br>
+      &nbsp;&nbsp;&nbsp; pOther1-&gt;<b>m_contacts</b>.emplace_back(<b>otherContact</b>); // コライダ1のm_contactsにも情報登録<br>
       <br>
       &nbsp;&nbsp;&nbsp; if (ppThisResult != nullptr)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *ppThisResult = std::make_shared&lt;Collision&gt;(gameObject0); // this側の衝突点をpResultでreturnする<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppThisResult)-&gt;contacts.emplace_back(thisContact); // this側の衝突点の情報をcontacts配列に格納<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppThisResult)-&gt;contacts.emplace_back(otherContact); // other側の衝突点の情報をcontacts配列に格納<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *ppThisResult = <b>std::make_shared&lt;Collision&gt;</b>(gameObject0); // this側の衝突点をpResultでreturnする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppThisResult)-&gt;contacts.emplace_back(<b>thisContact</b>); //[0] this側の衝突点の情報をcontacts配列に格納<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppThisResult)-&gt;contacts.emplace_back(<b>otherContact</b>); //[1] other側の衝突点の情報をcontacts配列に格納<br>
       &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; if (ppOtherResult != nullptr)<br>
       &nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *ppOtherResult = std::make_shared&lt;Collision&gt;(gameObject1); // other側の衝突点をpResultでreturnする<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppOtherResult)-&gt;contacts.emplace_back(otherContact); // other側の衝突点の情報をcontacts配列に格納<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppOtherResult)-&gt;contacts.emplace_back(thisContact); // this側の衝突点の情報をcontacts配列に格納<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; *ppOtherResult = <b>std::make_shared&lt;Collision&gt;</b>(gameObject1); // other側の衝突点をpResultでreturnする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppOtherResult)-&gt;contacts.emplace_back(<b>otherContact</b>); //[0] other側の衝突点の情報をcontacts配列に格納<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (*ppOtherResult)-&gt;contacts.emplace_back(<b>thisContact</b>); //[1] this側の衝突点の情報をcontacts配列に格納<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; return true;<br>
       }<br>
       <br>
       // コライダー同士の当たり判定 当たったら衝突情報が ppThisResult,ppOtherResult がnullptrじゃなければ代入されて返却<br>
-      inline bool isCollisionColliders(std::shared_ptr&lt;Collider&gt; pThis, std::shared_ptr&lt;Collider&gt; pOther,<br>
+      inline bool <b>isCollisionColliders</b>(std::shared_ptr&lt;Collider&gt; pThis, std::shared_ptr&lt;Collider&gt; pOther,<br>
       &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt;* ppThisResult, std::shared_ptr&lt;Collision&gt;* ppOtherResult)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; // 現状はカプセルと球だけの当たり判定しか実装していない<br>
       &nbsp;&nbsp;&nbsp; if ((*pThis == Collider::Type::Sphere || *pThis == Collider::Type::Capsule)<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &amp;&amp; (*pOther == Collider::Type::Sphere || *pOther == Collider::Type::Capsule))<br>
       &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // カプセルの当たり判定で球の当たり判定も兼用する<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return isCollisionCapsule_Capsule(pThis, pOther, ppThisResult, ppOtherResult);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return <b>isCollisionCapsule_Capsule</b>(pThis, pOther, ppThisResult, ppOtherResult);<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
-      &nbsp;&nbsp;&nbsp; // ここにカプセルと球以外の当たり判定も追加<br>
+      &nbsp;&nbsp;&nbsp; // ここに<b>カプセルと球以外の当たり判定も追加すればボックスなどとの当たり判定もできるようになる</b><br>
       <br>
       &nbsp;&nbsp;&nbsp; return false;<br>
       }<br>
@@ -7056,7 +7059,7 @@
     </p>
     <br>
     では次は同一グリッドにある他のコライダーと当たり判定するためのコンポーネントを準備しましょう。<br>
-    <p><code>GridCollidersComponent.hを新規作成</code>して、m_colliders変数に複数のコライダをLinkCollider関数でリンクして、OnCheck関数をoverrideしてコライダ同士の当たり判定をcppで実装できるようにしましょう。</p>
+    <p><code>GridCollidersComponent.hを新規作成</code>して、<b>m_colliders</b>変数に複数のコライダを<b>LinkCollider</b>関数でリンクして、OnCheck関数をoverrideしてコライダ同士の当たり判定をcppで実装できるようにしましょう。</p>
     <p class="source">#ifndef GRID_COLLIDERS_COMPONENT_H_<br>
       #define GRID_COLLIDERS_COMPONENT_H_<br>
       <br>
@@ -7090,7 +7093,7 @@
     </p>
     <br>
     <br>
-    ではcppファイルでOnCheck関数でCollision3D.hのisCollision関数で当たり判定をしてGameObjectのOnCollision関数に衝突結果を引き渡してコールバックしましょう。<br>
+    ではcppファイルの<b>OnCheck関数</b>でCollision3D.hのisCollision関数で当たり判定をしてGameObjectのOnCollision関数に衝突結果を引き渡してコールバックしましょう。<br>
     <p><code>GridCollidersComponent.cppを新規作成</code>して、Collider.hのisCollision関数経由でCollision3D.hの各種当たり判定を衝突結果をGameObjectのOnCollision関数に渡しましょう。</p>
     <p class="source">#include "GridCollidersComponent.h"<br>
       <br>
@@ -7118,13 +7121,21 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Collision&gt; pOtherResult{ nullptr }; // 衝突したら情報が入ってきてnullptrじゃなくなる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (collider-&gt;<b>isCollision</b>(otherCollider, &amp;<b>pThisResult</b>, &amp;<b>pOtherResult</b>))<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (collider-&gt;IsPrevCollision() == false) // 前のフレームで衝突してなかったら<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; collider-&gt;owner()-&gt;OnCollision<b>Enter</b>(pThisResult); // collider側の衝突<b>開始したとき</b>の関数をコールバックで呼び返す<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collider-&gt;owner()-&gt;<b>OnCollision(pThisResult);</b> // collider側の衝突したときの関数をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (collider-&gt;<b>m_prevCollisionIDs</b>.count(otherCollider-&gt;InstanceID()) == 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //[<b>OnEnter</b>]前のフレームでcolliderがotherと衝突してなくて、<b>今フレームで衝突開始したらOnEnter</b>を呼ぶ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collider-&gt;owner()-&gt;OnCollision<b>Enter(pThisResult)</b>; // collider側の衝突開始したときの関数をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; otherCollider-&gt;owner()-&gt;OnCollision<b>Enter(pOtherResult)</b>; // other側の衝突開始したときの関数をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (otherCollider-&gt;IsPrevCollision() == false) // 前のフレームで衝突してなかったら<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; otherCollider-&gt;owner()-&gt;OnCollision<b>Enter</b>(pOtherResult); // other側の衝突<b>開始したとき</b>の関数をコールバックで呼び返す<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; otherCollider-&gt;owner()-&gt;<b>OnCollision(pOtherResult);</b> // other側の衝突したときの関数をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[<b>OnCollision</b>] <b>衝突していたらコールバックを呼び続ける</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collider-&gt;owner()-&gt;OnCollision(<b>pThisResult</b>); // collider側の衝突したときの関数をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; otherCollider-&gt;owner()-&gt;OnCollision(<b>pOtherResult</b>); // other側の衝突したときの関数をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // 衝突していなかったら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[<b>OnExit</b>]前のフレームでcolliderがotherと衝突していて<b>今フレームで衝突しなくなったらOnExit</b>を呼ぶ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (collider-&gt;<b>m_prevCollisionIDs</b>.count(otherCollider-&gt;InstanceID()) &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collider-&gt;owner()-&gt;OnCollisionExit(<b>pThisResult</b>); // collider側の衝突終了したときの関数をコールバックで呼び返す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; }<br>
