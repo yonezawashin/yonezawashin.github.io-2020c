@@ -5288,6 +5288,7 @@
       #include "Object.h" // インスタンスIDや検索タグを持ち、shared_from_this_as&lt;継承先クラス名&gt;などができる<br>
       <br>
       class World; // 前方宣言<br>
+      <em>class Component; // 前方宣言</em><br>
       <br>
       // ゲーム上に表示される物体の基底クラス。<br>
       // プレイヤーや敵、アイテムなどはこのクラスを継承して作る。<br>
@@ -5372,7 +5373,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t hashID = typeid(ComponentT).hash_code(); //[まずハッシュでID化]<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // shared_from_this()を必ず渡してセットで初期化して、オーナーがリンク切れのコンポーネントができないように気をつける<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;ComponentT&gt; <b>newComponent</b> = std::<b>make_shared</b>&lt;ComponentT&gt;(shared_from_this_as&lt;GameObject&gt;(), <b>std::forward&lt;ArgsT&gt;(args)...</b>);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;ComponentT&gt; <b>newComponent</b> = std::<b>make_shared</b>&lt;ComponentT&gt;(shared_from_this(), <b>std::forward&lt;ArgsT&gt;(args)...</b>);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://ez-net.jp/article/9E/DFLX8hNG/G5J8DPmsltz4/<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // std::unrodered_multimap&lt;&gt; と同型の値を取る std::pair&lt;&gt; を作って insert 関数でcomponents辞書に追加<br>
@@ -7142,6 +7143,7 @@
       #include "Object.h" // インスタンスIDや検索タグを持ち、shared_from_this_as&lt;継承先クラス名&gt;などができる<br>
       <br>
       class World; // 前方宣言<br>
+      class Component; // 前方宣言<br>
       <em>class Collision; // 前方宣言</em><br>
       <br>
       // ゲーム上に表示される物体の基底クラス。<br>
