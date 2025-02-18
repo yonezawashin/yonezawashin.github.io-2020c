@@ -7510,7 +7510,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : pad{ pad }, GameObject(world, position, rotation, velocity, force)<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "Player"; // タグは個別の"プレイヤ1"などに使い、タイプはtypeTagで判別する形にしてタイプのジャンルを区別<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>this-&gt;typeTag = "Player";<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>this-&gt;baseTag = "Player";<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;pushPower = 5.0f; // コライダで衝突したときに押し返す力</em><br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
