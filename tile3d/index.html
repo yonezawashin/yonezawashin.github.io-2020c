@@ -6354,7 +6354,7 @@
       <br>
       &nbsp;&nbsp;&nbsp; union {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CellXYZ beforeXYZ{ 0,0,0 }; // 1フレーム前のマス目位置<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int X, Y, Z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { int X, Y, Z; };<br>
       &nbsp;&nbsp;&nbsp; };<br>
       <br>
       &nbsp;&nbsp;&nbsp; // <b>前と次への双方向のポインタ矢印を持つ数珠繋ぎリンクリスト構造</b><br>
@@ -7211,9 +7211,11 @@
       &nbsp;&nbsp;&nbsp; bool isDead{ false }; // 死んだ（削除対象）フラグ<br>
       &nbsp;&nbsp;&nbsp; bool isStatic{ false }; // 動かない(静的オブジェクトか?)<br>
       &nbsp;&nbsp;&nbsp; bool isGround{ false }; // 地面についているか<br>
+      &nbsp;&nbsp;&nbsp; <em>bool isJumping{ false }; // ジャンプ中か</em><br>
       &nbsp;&nbsp;&nbsp; bool isFlying{ false }; // 空をとんでいるか<br>
       <br>
-      &nbsp;&nbsp;&nbsp; <em>float pushPower{ 5.0f }; // コライダで接触したときに押し返す力(相手側が強いと押される)</em><br>
+      &nbsp;&nbsp;&nbsp; <em>float pushPower{ 5.0f }; // コライダで接触したときに押し返す力(相手側が強いと押される)<br>
+        &nbsp;&nbsp;&nbsp; float mass{ 1.0f }; // 質量(重さ)コライダで接触したときに重さでforceを割り算すると動きにくくなる</em><br>
       <br>
       &nbsp;&nbsp;&nbsp; hash32 typeTag{ "" }; // 小カテゴリ Zako0など個別のタイプ<br>
       &nbsp;&nbsp;&nbsp; hash32 baseTag{ "" }; // 大カテゴリ Enemyなど大まかなベースジャンル<br>
@@ -7980,10 +7982,639 @@
     <b>毎秒 5の力 で自転車をこぐ人</b>がいるとします。<br>
     <b>1秒ごとに 速度velocity += 5</b>。実は<b>「力」とは速度に毎秒(毎フレーム)いくつ足し算されるか</b>なのです。<br>
     物理の色んな公式がわからなくても、これなら少しわかるぞ。と思ってもらえばラッキーです。<br>
+    何のことはない、<b>ブランコをこいでる人がいて、もう一人が後ろから来るたびに押すと段々ブランコが高くまで上がる</b>アレと同じです。<br>
+    <b>ブランコを押す瞬間に += 5してるから、速度が大きくなって、当然ブランコも上に上がるようになる</b>わけです。<br>
     <b>Unityの AddForce の「force」とは実はこの「力」</b>なのです。<br>
     <br>
     <br>
     <br>
+    <br>
+    以上が、中二学派(厨二学派)向けの物理学です。<br>
+    <br>
+    中二学派(厨二学派)の物理学では不安だという方に向けて、<br>
+    念のため<a href="https://ja.wikipedia.org/wiki/%E3%83%8B%E3%83%A5%E3%83%BC%E3%83%88%E3%83%B3%E5%8A%9B%E5%AD%A6">ニュートン学派</a>(欧米か)のほうの式も以下に解説しておきましょう。<br>
+    <br>
+    <b>運動の第2法則 : F = m × v × Δt [つまり Force(力) = m(重さ) × velocitiy(速度) × Δt(時間の変化) ]</b><br>
+    <br>
+    先ほどの中二学派の式と<b>対応関係を取るために、Δt(時間の変化) = 1(フレーム) に固定</b>しましょう。<br>
+    そうすると、 <b>ΔF(力の変化) = m(重さ) × Δv(速度の変化)</b> になりますよね。 今度は、<b>両辺を m(重さ)で割りましょう</b>。<br>
+    m(重さ)で割ると <b>ΔF(力の変化) / m(重さ) = Δv(速度の変化)</b>になりました。中二学派と<b>合わせるために右辺と左辺をひっくり返しましょう</b>。<br>
+    右辺⇔左辺すると <b>Δv(速度の変化) = ΔF(力の変化) / m(重さ)</b>になりました。これであとは <b>m(重さ) = 1に固定</b>してみましょう。<br>
+    m(重さ) = 1なら <b>Δv(速度の変化) = ΔF(力の変化)</b>になりましたね。これで += 5 で中二学派の式と同じにできます。<br>
+    <b>ΔF(力の変化) = 5なら、Δv(速度の変化) += 5</b> になりました。<br>
+    これで<b>「中二のアイザック・ニュートン」(ニュータイプ)が誕生</b>しましたね。この物理の式なら<a href="https://www.pixiv.net/tags/%E9%80%A3%E9%82%A6%E3%81%AE%E3%83%A2%E3%83%93%E3%83%AB%E3%82%B9%E3%83%BC%E3%83%84%E3%81%AF%E5%8C%96%E3%81%91%E7%89%A9%E3%81%8B/illustrations">ガンダムのモビルスーツ</a>も動かせそうです。<br>
+    <br>
+    じゃあ、m(重さ) = 1に固定しなかった場合、つまり、マリオカートのドンキーコングやクッパみたいに重いキャラはどうなるのでしょうか？<br>
+    <b>m(重さ) = 2</b> にしたとき、<br>
+    <b>Δv(速度の変化) = ΔF(力の変化) / m(重さ) なので当然、m(重さ) = 2 なら</b><br>
+    <b>Δv(速度の変化) += 5 / 2</b>になりますね。<br>
+    つまり、5 / 2 = 2.5 ずつしか速度が加速しないので、当然あんまりふっとばないようになりますね。<br>
+    ニュートン風に<b>まじめに計算したい人は、変数 m(質量) を定義して、v(速度) += 5 / m(重さ) で計算すればいい</b>ですし、<br>
+    中二風に<b>シンプルに 計算したい人は、v(速度) += 2 とかにして F = 5 を 2 に変えてキャラをふっとばないようにしてもいい</b>わけです。<br>
+    <br>
+    <br>
+    <br>
+    <br>
+    さらについでに、ニュートンの上位互換の<a href="https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AA%E3%83%BC%E3%83%89%E3%83%AA%E3%83%92%E3%83%BB%E3%83%8F%E3%83%BC%E3%82%BC%E3%83%8E%E3%83%BC%E3%83%AB">アインシュタインっぽいユダヤ物理学の式の解説</a>にも踏み込んでおきましょう。<br>
+    時は19世紀、パリ万国博覧会に渋沢栄一と徳川昭武公が送られ、<a href="https://www.youtube.com/watch?v=aUVafZzLCHY">ブルーウォーターとピカチュウをめぐって抗争</a>が繰り広げられていた頃、<br>
+    「<a href="https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%A4%E3%82%B1%E3%83%AB%E3%82%BD%E3%83%B3%E3%83%BB%E3%83%A2%E3%83%BC%E3%83%AA%E3%83%BC%E3%81%AE%E5%AE%9F%E9%A8%93">光は粒なのか？波なのか？</a>」という「水は個体なのか？液体なのか？」「<a
+
+      href="https://ja.wikipedia.org/wiki/%E7%8C%AB%E3%81%AF%E6%B6%B2%E4%BD%93#:%7E:text=%E7%8C%AB%E3%81%8C%E5%9B%BA%E4%BD%93%E3%81%A7%E3%81%82%E3%82%8B,%E9%AB%98%E3%81%84%E3%81%93%E3%81%A8%E3%82%92%E7%99%BA%E8%A6%8B%E3%81%97%E3%81%9F%E3%80%82">ネコは液体なのか？</a>」という人類にとって重要な実験が行われ、<br>
+    <b>宇宙空間全体を満たす「エーテルの風」など吹いていない</b>ことが証明されてしまったため、<br>
+    <b>超高速で加速した状態で悟空がレーザーを宇宙空間に放った場合</b>でも、<br>
+    そのレーザー(光)が加速することはなく「<b>光は完全固定速度</b>」(定額料金制)であることを認めざる負えなくなってしまったため、<br>
+    物理学者は従来の法則とつじつまを合わせるためには「光の代わりに<a href="https://ja.wikipedia.org/wiki/%E9%95%B7%E3%81%95%E3%81%AE%E5%8F%8E%E7%B8%AE">物体のほうが収縮してないとつじつまがあわん</a>」状態に追い込まれていた。<br>
+    <br>
+    <b>ローレンツ因子の式: L = L0 × √(1 - vの2乗 / cの2乗)</b> ↓<br>
+    <b>ローレンツ因子の式: L(縮んだ長さ) = L0(縮む前の長さ) × √(1 - 悟空の速度vの2乗 / 光速cの2乗)</b> が苦肉の式として爆誕してしまった。<br>
+    <br>
+    この式に沿ってしまうと、悟空が地球を1秒間に7.5周する光の速度に近づいたときに、<br>
+    地上から見た悟空は進行方向の長さLがほぼ0になってバグった長さになるという式である。<br>
+    <b>光の1/2 つまり0.5倍の速度の場合</b>は√(1 - 0.5×0.5 / 1×1) = √(1 - 0.25) = √( 0.75 ) = √( 75 / 100 ) = √( 3×5×5 / 100 ) = 5√3 / 10 = √3 / 2<br>
+    つまり、<b>L(縮んだ長さ) = L0 × √3 / 2倍 、√3 / 2 = 1.73 / 2 = 0.86倍に縮んでしまうという式</b>になるということです。 われわれが<b>普段使っている<a
+
+        href="https://global.canon/ja/technology/kids/mystery/m_01_03.html#:%7E:text=%E7%A7%92%E9%80%9F29%E4%B8%879792.458%E3%82%AD%E3%83%AD%E3%83%A1%E3%83%BC%E3%83%88%E3%83%AB%E3%81%AF%E3%80%81%E5%9C%B0%E7%90%83%E3%82%921%E7%A7%92%E9%96%93,7.5%E5%91%A8%E3%81%99%E3%82%8B%E9%80%9F%E3%81%95%E3%80%82">メートル自体、光の速度を基準に逆算して「1メートル＝光が真空中を2億9979万2458分の1秒の間に進む距離」</a>決められています</b>。<br>
+    ああ、仕方ない、じゃあおとなしく縮むしかないか..とあきらめムードのなか、<br>
+    しかし、<b><a href="https://ja.wikipedia.org/wiki/%E3%83%AD%E3%83%BC%E3%83%AC%E3%83%B3%E3%83%84%E5%A4%89%E6%8F%9B">ローレンツ収縮は実験結果と矛盾</a>してしまった</b>、、つまりわれわれは高速でも縮むことはないらしいのだ。<br>
+    では、どうやってつじつまを合わせればいいのか、、<br>
+    そこにアインシュタインは<b>「悟空自身はゆがんでいるつもりはない、他人(他の速度の観測者)から見ると縮んで見えてるだけ」</b>という「相対性でつじつまをあわせた」。<br>
+    そうなのです、<b>結局「他の人から見て超高速で動いている人は縮んで見えてる」というバグっぽい見え方はホント</b>なのであった。<br>
+    そして、中二学派、ニュートン学派の F = m × v × Δt にもつじつま合わせの影響はおよぶ。<br>
+    「相対性」ではつじつま合わせとして、<b>他人から見て「長さだけじゃなく、時間をゆがませてつじつま合わせるのもアリ」</b>なのだ。<br>
+    じゃあ時間をゆがませず、ニュートンのときのように「時間を1に固定」してしまうとどうなるか？を見てみよう。<br>
+    <br>
+    <b><a href="https://ja.wikipedia.org/wiki/%E7%89%B9%E6%AE%8A%E7%9B%B8%E5%AF%BE%E6%80%A7%E7%90%86%E8%AB%96#4%E5%85%83%E9%81%8B%E5%8B%95%E9%87%8F%E3%81%AE%E7%A9%BA%E9%96%93%E6%88%90%E5%88%86">相対性理論の力の式</a> : F(力) = m(重さ) × v(速度) / √(1 - vの2乗 / cの2乗)</b><br>
+    <br>
+    さあ、上の式で<b>「長さも固定=ゆがませない」→速度は長さ、どれだかの距離進むか に関係してるから、<br>
+      v(速度)もゆがませられない</b>とすると..<br>
+    もう、<b>m(重さ)がいけにえとしてゆがんで √(1 - vの2乗 / cの2乗) で割り算されるしかない</b>ことになってしまう。<br>
+    そうすると、<b>光速に近づいている人の「自称の体重はそのままだが、他人から見た見かけ上の体重は∞になっていく」</b>ということなのだろうか。<br>
+    あ、ブラックホールって他人から見た見かけ上の体重が∞にみえるんじゃ、、という感覚？。<br>
+    太陽は動いてるようには見えず <a href="https://eman-physics.net/relativity/increase.html">v(速度固定) だけど、内部で超重いものが超高速に行ったり来たり震えることで、力→エネルギーを発している</a>という感覚だろうか。<br>
+    <br>
+    <br>
+    「時間をいけにえにして時間がゆがむのを許すとどうなるか」<br>
+    t(自分時間)の代わりに、<b>τ(タウ)を絶対時間とすると、(絶対時間とはどんな人からも光速のように、共通の不変の時間)</b><br>
+    <b>速度の変化 Δv = Δx(位置の変化) / Δτ(絶対時間)</b> →この式を t(自分時間) にするために、<b>分子と分母でつじつまをあわせる</b>と<br>
+    速度の変化 Δv = Δx(位置の変化) / Δt(分母) × <b>Δt(分子) / Δτ(絶対時間)</b> －①<br>
+    <br>
+    <b>Δt(分子) / Δτ(絶対時間) = 1 / √(1 - vの2乗 / cの2乗)</b> －② ←時間の伸縮の式<br>
+    ①と②の式を 速度の変化 Δv = v(速度) ×Δtとして ニュートンの F(力) = m(重さ) × v(速度) × Δtに入れると<br>
+    <br>
+    相対性理論の力の式 : F(力) = m(重さ) × Δx(位置の変化) / Δt(分母) × <b>Δt(分子) / Δτ(絶対時間)</b><br>
+    相対性理論の力の式 : F(力) = m(重さ) × v(速度) × <b>1 / √(1 - vの2乗 / cの2乗)</b> －③<br>
+    <br>
+    はい、「時間をいけにえ」にしたら、先ほどの「相対性理論の力の式」になりましたね。<br>
+    <br>
+    そして、有名なE = mc2 [E(エネルギー) = m(重さ) × 光速c の2乗] の式も実は上の式からできあがります。<br>
+    <br>
+    実は、前提として、<b>E(エネルギー) = F(力) × (速度)</b> です。<br>
+    これは、雑巾で床を強く押しながら走ると、エネルギーを消耗するので実感できますよね(車を相撲力士が押して動かすのも同じ)。<br>
+    なので、光速c を③の式の両辺に掛け算して速度も v(速度) = c(光速)にします。<br>
+    <br>
+    <br>
+    F(力) <b>× c(光速)</b> = m(重さ) × <b>c</b>(速度) <b>× c(光速)</b> × 1 / √(1 - vの2乗 / cの2乗) －③<br>
+    <b>E(エネルギー) = m(重さ) × c(光速)の2乗</b> / √(1 - vの2乗 / cの2乗)<br>
+    <br>
+    でてきましたね、これで <b>v = 0 にして、分母を√1 = 1にすれば、E = mc2</b>になります。 <br>
+    つまり、<b>速度がゼロでも E(エネルギー) = m(体重) × c(光速)の2乗 のエネルギーを皆さんは持っている</b>わけです。<br>
+    そう、<b>体重が光速の2乗倍のエネルギーに変えられる</b>という「ライザップの減量の法則」が爆誕したわけですね。<br>
+    つまり、<b>脂肪を燃焼して体重を 1kg 減量するためには、光速の2乗倍のエネルギーぶんの努力が必要</b>だということです。<br>
+    <br>
+    ということは、本来、プレイヤが光るエネルギー弾を撃つためには、MP ではなく 体重を減らさなきゃ物理的にはおかしいわけですね。<br>
+    その証拠にサイヤ人の悟空は大量のメシを喰ってますよね。<br>
+    一方、幽遊白書は霊力というおかしい概念がでてきますので「幽遊白書の<a href="https://youtu.be/q7UR5BXaBI8?t=550">霊丸(れいがん)</a>は物理的におかしい」という結論になります。<br>
+    前提として、幽霊には体重がない、霊の質量 = 0 ゼロなわけですからエネルギーが発生するはずがないのです。<br>
+    <br>
+    [エネルギーと時間スケールを実感するには]<br>
+    植物の人生観からしたら、人間は超高速で動いて見えるわけで、<br>
+    ノコギリでギコギコ木を切っている時間は、植物の時間感覚からすると超高速な振動(波の震え)に見えてるわけだし、<br>
+    人間の時間のスケールから見ると電子レンジのマイクロ波の波もノコギリのように水分子を押したり引いたりしてお弁当を温めているのは見えない。<br>
+    直感的に体重とその内部の超高速な分子レベルの震えの速度とエネルギー(太陽のように一見止まって見えるけど内部で重いものが超高速で震えている)は関係しているのです。<br>
+    <br>
+    一応、これで基本的な物理の、<br>
+    <b>位置(x,y,z)、速度(vx,vy,vz)、力(F:vxForce,vyForce,vzForce)、エネルギー(E = F × [速度] = m×c2乗)</b><br>
+    を押さえることができたかと思います。<br>
+    位置がエネルギーまでつながる実感がない人は水力発電のダムをイメージしてください。<br>
+    湯気が冬に山に雪として降り、重たい位置エネルギーに変わりダムの放水で発電で電気エネルギーの振動(震え)に変わります。<br>
+    雪国で雪かきしている人は雪をスコップで持ち上げながら実感しているはずです。「何と無益な位置エネルギーの移動作業なのだ」と。<br>
+    体重がエネルギーに変わる実感がない人は、体温計で自分の体温を測ってみましょう。<br>
+    あなたの身体の体温の源はどこにあるのでしょう？体内で細胞などが分子レベルの化学反応で震えて熱エネルギーに変わっているのです。<br>
+    <br>
+    <br>
+    <br>
+    <b>【練習物理実験1】</b>プレイヤ1とプレイヤ2でぶつかったときの force += 5 をいじって、衝突の物理現象をカスタマイズする。<br>
+    <p><code>GameScene.cppを変更</code>して、<b>プレイヤ1とプレイヤ2に質量 mass (重さ)を設定</b>しましょう。<br>
+    </p>
+    <p class="source">#include "GameScene.h"<br>
+      <br>
+      #include "Player.h"<br>
+      <br>
+      (中略).........<br>
+      <br>
+      void GameScene::Initialize()<br>
+      {// Init処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // Ｚバッファを有効にする [Zの深度]<br>
+      &nbsp;&nbsp;&nbsp; //[参考]https://docs.google.com/presentation/d/1Z23t1yAS7uzPDVakgW_M02p20qt9DeTs4ku4IiMDLco/edit?usp=sharing<br>
+      &nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp; // Ｚバッファへの書き込みを有効にする<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWriteZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp; // 光の明暗計算を無効に<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // SetDrawScreen に引数として渡せる( 描画対象として使用できる )グラフィックハンドルを作成するかどうかを設定する<br>
+      &nbsp;&nbsp;&nbsp; // ( TRUE:描画可能グラフィックハンドルを作成する&nbsp; FLASE:通常のグラフィックハンドルを作成する( デフォルト ) )<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // サブのスクリーンを2つ生成 画面の全体の縦方向サイズの Height / 2 にして、上下分割で配置できるようにする<br>
+      &nbsp;&nbsp;&nbsp; screenHandle0 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; screenHandle1 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーンを作成したらデフォルト設定に戻しておかないと<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(FALSE);<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(mapChipPath, 8, 8, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath1, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath2, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // プレイヤの生成<br>
+      &nbsp;&nbsp;&nbsp; if (pWorld != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //pWorld-&gt;AddCamera("カメラ1", Camera::defaultCamera); // カメラ1というタグをデフォルトカメラにつけてワールドにデフォルトカメラを配置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("カメラ1", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera1 = pWorld-&gt;camera("カメラ1"); // カメラ1 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera1-&gt;SetScreenHandle(screenHandle0); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer1 = Object::Create&lt;Player&gt;(nullptr, pWorld, Pad::Key, Vector3(90 + 256, 32, 95 + 256));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ1", pPlayer1); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath1]);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;camera = pCamera1.get(); // カメラをプレイヤにリンクする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>pPlayer1-&gt;mass = 100.0f; // 体重を100にして衝突されてもびくともしないようにする</em><br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("カメラ2", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera2 = pWorld-&gt;camera("カメラ2"); // プレイヤ2 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera2-&gt;SetScreenHandle(screenHandle1); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer2 = Object::Create&lt;Player&gt;(nullptr, pWorld, Pad::Two, Vector3(190, 32, 195));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ2", pPlayer2); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath2]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;camera = pCamera2.get(); // カメラをプレイヤにリンクする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>pPlayer2-&gt;mass = 1.0f; // 体重を1にして普通にふっとぶようにする</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      (以下略)....<br>
+    </p>
+    <br>
+    <p><code>Player.cppを変更</code>して、<b>力 force の計算式を体重 mass で割り算してぶつかったときのふっとび具合</b>に差をつけてみましょう。</p>
+    <p class="source">#include "Player.h"<br>
+      <br>
+      #include &lt;cmath&gt; // 浮動小数点の余り%演算子がC++にないのでfmodを使うため<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "MyDraw.h"<br>
+      <br>
+      #include "Camera.h"<br>
+      #include "World.h"<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      (中略)........................<br>
+      <br>
+      void Player::OnCollision(std::shared_ptr&lt;Collision&gt; pCollision)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (isDead) return; // すでにisDeadなら return<br>
+      &nbsp;&nbsp;&nbsp; auto otherCollider = pCollision-&gt;contacts[0].otherCollider.lock(); // コライダの弱共有ポインタをロック<br>
+      &nbsp;&nbsp;&nbsp; if (otherCollider == nullptr) return; // すでにコライダが消去済だった<br>
+      &nbsp;&nbsp;&nbsp; auto other = otherCollider-&gt;owner();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (other-&gt;isDead) return; // other側がisDeadだったら処理をスルー<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (other-&gt;baseTag == "Enemy" || other-&gt;baseTag == "Player")<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto norm = pCollision-&gt;contacts[0].normal* other-&gt;pushPower; // pushPowerの力でotherに押し返される<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; force += -norm<em> / mass</em>; // 衝突法線方向の力を加える<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      (以下略).............<br>
+    </p>
+    <br>
+    いかがでしょう？操作してプレイヤ1とプレイヤ2をぶつけると、<b>プレイヤ2を操作してプレイヤ1にぶつけてもほぼ動じない</b>ようになりましたか？<br>
+    ちょっと<b> forceの式を mass (体重) で割り算しただけなのに、キャラの重たさ(強さ)を表現</b>できるようになりました。<br>
+    <b>難しい式を使わなくても、物理の仕組みの割り算と掛け算、つまり分母と分子がわかれば、ゲームのキャラの表現につながる</b>実感がわきましたか？<br>
+    <b>デフォルトのpushPower = 5 と キャラごとの体重 mass の割り算だけの「なんちゃって中二物理学」でも十分にゲームとして遊べる衝突は表現可能</b>なのです。<br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <b>【練習物理実験2】超本格派の物理計算式「離散要素法(Discrete Element Method :DEM)」</b>を使って本格的な物理衝突計算をしてみる。<br>
+    <br>
+    <p><code>Player.cppを変更</code>して、<b>力 force の計算式を「離散要素法:DEM」の計算式に変えて</b>みましょう。</p>
+    <p class="source">#include "Player.h"<br>
+      <br>
+      #include &lt;cmath&gt; // 浮動小数点の余り%演算子がC++にないのでfmodを使うため<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "MyDraw.h"<br>
+      <br>
+      #include "Camera.h"<br>
+      #include "World.h"<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      (中略)........................<br>
+      <br>
+      void Player::OnCollision(std::shared_ptr&lt;Collision&gt; pCollision)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (isDead) return; // すでにisDeadなら return<br>
+      &nbsp;&nbsp;&nbsp; auto otherCollider = pCollision-&gt;contacts[0].otherCollider.lock(); // コライダの弱共有ポインタをロック<br>
+      &nbsp;&nbsp;&nbsp; if (otherCollider == nullptr) return; // すでにコライダが消去済だった<br>
+      &nbsp;&nbsp;&nbsp; auto other = otherCollider-&gt;owner();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (other-&gt;isDead) return; // other側がisDeadだったら処理をスルー<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (other-&gt;baseTag == "Enemy" || other-&gt;baseTag == "Player")<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>//[離散要素法:DEM] https://qiita.com/konbraphat51/items/157e5803c514c60264d2<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constexpr float k = 1.0f; // バネ係数(めり込みに対するバネ反発の掛け率)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constexpr float e = 0.1f; // はね返り係数(直前と比べどれくらいの速さで離れるか0.5だと半分の速さではね返る)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float log_e = std::log(e); // はね返り係数の自然対数log<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constexpr float pi_2 = DX_PI_F * DX_PI_F; // πの2乗<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float eta = -2.0f * log_e * std::sqrt(k * mass / (log_e * log_e + pi_2)); // 粘性係数η(イータ)</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto norm = pCollision-&gt;contacts[0].normal<em>; // 衝突の法線</em> <u>* other-&gt;pushPower; // pushPowerの力でotherに押し返される</u><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>auto v_norm = dot(other-&gt;velocity - velocity, norm) * norm; // [相対速度v] 法線norm方向のv = (v1 - v0)・norm [ドット積]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto sep = pCollision-&gt;contacts[0].separation; // 衝突点どうしの距離(めりこみ距離)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto F = -k * sep * norm - eta * v_norm; // <b>F (法線方向の力) = -k × sep - η × v</b> (相対速度:自分から見た相手otherの速度)</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; force += <em>F</em> / mass; // 衝突法線方向の力を加える<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      (以下略).............<br>
+    </p>
+    <br>
+    いかがでしょう？プレイヤ1とプレイヤ2を衝突させたら「<b>助走つけて加速してぶつかるとよりふっとぶ</b>」ようになりましたか？<br>
+    たったこれだけのコードの追加で「工業のシュミーションにつかわれるプロ仕様の物理計算」ができるようになりました。<br>
+    「離散要素法:DEM」自体を理解するのは物理学者ではないので必要はありません。<br>
+    <b>プログラマの仕事は物理の式のパラメータの掛け算や割り算のからみあい方を把握して動かして計算式に破綻がないようにすること</b>で、<br>
+    <b>ゲームの作り手の仕事はパラメータをいじって はね返り係数 eを変えてみたり、バネ係数 kをいじったり「いじってもよい数字を調整」</b>することです。<br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <b>【パラメーター演習】質量 mass や バネ係数 k や はね返り係数 e をいじって、プレイヤどうしぶつかりながら実験し、パラメータを使いこなせるようになろう</b>。<br>
+    いかがでしょう？実際に自分でパラメータを変えて実験しないことにはゲームを作りこむことはできません。<br>
+    <br>
+    <br>
+    特に、<b>反発係数 eを0～0.5～1.0まで変えてはね返り具合を実感</b>してください。<br>
+    auto F = -k * sep * norm - eta * v_norm; ← v_norm = dot(<em>other</em>-&gt;velocity - velocity, norm) * norm;<br>
+    上記の式を見ればわかるのですが、<br>
+    実は<b>「ぶつかった相手のother側の影響は自分との速度の差のみ」</b>になっています。<br>
+    そう、<b>どんなに相手の体重が重くても、ぶつかる瞬間の速度の差[相対速度]が大きくなければ、こちら側はふっとびません</b>。<br>
+    となると現状のイメージは<b>「ゴムのスーパーボール」のはね返りの感じ</b>がすると思います。<br>
+    スーパーボールがはずむのはスーパーボール自身の表面がゴムで伸縮するからです。<br>
+    ですから、スーパーボールはぶつかる側など気にせず<b>「自分のゴムパラメータではね返っている感じ」が出ている</b>と感じませんか？<br>
+    ただ、相手の<b>other側の影響がないとなると、ぶよぶよのお腹にスーパーボールを落としてもスーパーボールははね返ってしまいます</b>。<br>
+    なので、本来は <b>if (otherがおデブキャラ) e = はね返らない数値;</b> のように<br>
+    反発係数 e をif文で場合分けする必要がありますし、<b>物理的解釈でも「反発係数e はぶつかったペアにより変わる」</b>とされています。<br>
+    <br>
+    次に、バネ係数 k の式は : F = <em>-k * sep * norm</em> ...のように<b>「ぶつかる速度と無関係で、めり込み具合と法線に関係する」</b>ようになっています。<br>
+    実際のバネを思い浮かべてください<b>「速度ではなく、バネをどれだけ縮めたか、で反発が決まる」イメージ</b>がしませんか？<br>
+    ですので、eをはね返らない数値にして、代わりに バネ係数 k の数値の影響を大きくすれば、バネを表現できるはずです。<br>
+    例えば、if (sep &gt; 3) k = 大きな数字; にすれば、バネのめり込みが 3を超えると派手にはね返る、という風に<br>
+    自分が指でバネを縮めてバウンドの手ごたえが出てくるところを確かめる、みたいな工夫もできるかもしれません。<br>
+    <br>
+    <br>
+    さて、実は現状は縦方向 上下 y 方向の物理の反発処理は封印されています。<br>
+    プレイヤ2でジャンプして、プレイヤ1をマリオのように踏みつけてみてください。<br>
+    きっと、横方向にしかプレイヤははね返らないはずです。<br>
+    <br>
+    あえて、縦方向は封印してあります。<br>
+    なぜなら、縦方向は、<b>パラシュートなどで感じるような「空気抵抗」の物理式が必要</b>になりますし、<br>
+    現状 <b>y方向は、JumpComponentとGravityComponentに処理を任せている</b>から一緒にするとややこしいからです。<br>
+    <code>PhysicsComponent.hを開いてみて</code>ください。<br>
+    <p class="source">#ifndef PHYSICS_COMPONENT_H_<br>
+      #define PHYSICS_COMPONENT_H_<br>
+      <br>
+      (中略)..................<br>
+      <br>
+      class GravityComponent <b>: </b>public PhysicsComponent<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; (中略)..................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Update(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; (中略)..................<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;isGround == false &amp;&amp; pOwner-&gt;vy &lt;= 0) // 下落開始(vyが 0以上 のときはまだジャンプ中なので上昇を邪魔しないようにする)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>pOwner-&gt;vyForce = -gravity()</b>; // ジャンプ上昇力が0になって以降に初めて重力をオンにする(ジャンプの加速を邪魔しない工夫)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;OnFalling(); // 下落中の処理のコールバック関数を呼び返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;vy &lt;= -downSpeedMax()) // 無限に落下速度が加速しないようにリミットを働かせる(空気抵抗みたいなもの)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;vy = -downSpeedMax(); // downSpeedMax()以上の落下速度にならないようにする<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+    </p>
+    見てください、致命的なのが、<b>pOwner-&gt;vyForce = -gravity()</b>;の部分です。<br>
+    せっかく先ほどの「離散要素法:DEM」で<b>force += F / mass;</b> して加えたforceの力の数値が <b>vyForce = -gravity();</b> の <b>= イコールで上書きされて無効化</b>されています。<br>
+    ですので、現状の設計のままだと「離散要素法:DEM」のforce と 重力 gravityの vyForce の<b>共存が難しい状況</b>になっています。<br>
+    この状況を打開する方法は1つ<b>「コンポーネントごとに別管理の個別の vyForce を持てるようにすればいい」</b>です。<br>
+    別管理の<b>個別の vyForce を持てるように設計</b>しなおせば、DEMのほうで<b>頑張った forceを上書きせずに済みます</b>。<br>
+    個別にコンポーネントごとに分離してforceを管理して、<br>
+    <b>あとから Player.cppで vy += vyForce + vyJumpForce + vyGravityForce;のようにまとめて合算して速度に影響を与えればいい</b>のです。<br>
+    <br>
+    <p><code>PhysicsComponent.hを変更</code>して、変数m_vyForceと関数vyForce()を定義してコンポーネントごとに力を分離管理できるようにしましょう。</p>
+    <p class="source">#ifndef PHYSICS_COMPONENT_H_<br>
+      #define PHYSICS_COMPONENT_H_<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      #include "Component.h"<br>
+      #include "GameObject.h"<br>
+      <br>
+      // 物理系のコンポーネントはこのクラスを継承して実装する<br>
+      class PhysicsComponent <b>: </b>public Component<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; inline PhysicsComponent(std::shared_ptr&lt;GameObject&gt; pOwner) : Component(pOwner)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;baseTag = "PhysicsComponent"; // 大まかなカテゴリーとしては物理系コンポーネント<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; virtual ~PhysicsComponent() {};<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Update(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // なにか物理系のコンポーネントで共通して更新したいことがあればここに実装<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // なにか物理系のコンポーネントで共通して描画したいことがあればここに実装<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      class GravityComponent <b>: </b>public PhysicsComponent<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; inline GravityComponent(std::shared_ptr&lt;GameObject&gt; pOwner, const std::vector&lt;float&gt;&amp; vyGravity, const std::vector&lt;float&gt;&amp; vyDownSpeedMax)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : PhysicsComponent(pOwner), m_vyGravity{ vyGravity }, m_vyDownSpeedMax{ vyDownSpeedMax }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;typeID = typeid(GravityComponent); //[環境によって差が出るので↓が無難か] https://qiita.com/nil_gawa/items/1fece3eee7ca1f88c71d<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;typeTag = "GravityComponent"; // 個別のカテゴリーとしては重力落下コンポーネント<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GravityComponent() {}<br>
+      <em>protected:<br>
+        &nbsp;&nbsp;&nbsp; float m_vyForce{ 0.0f }; // オーナーのvyForceとは独立した「このコンポーネントのy方向の力」<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; float vyForce() { return m_vyForce; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; size_t m_idx{ 0 }; // 適用する設定配列の番号<br>
+      &nbsp;&nbsp;&nbsp; void SetIndex(size_t idx) { m_idx = idx; }<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; m_vyGravity; // 重力の設定値<br>
+      &nbsp;&nbsp;&nbsp; float gravity() { return (m_idx &lt; m_vyGravity.size()) ? m_vyGravity[m_idx] : 0.0f; }<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; m_vyDownSpeedMax; // 降下スピードのリミット<br>
+      &nbsp;&nbsp;&nbsp; float downSpeedMax() { return (m_idx &lt; m_vyDownSpeedMax.size()) ? m_vyDownSpeedMax[m_idx] : 0.0f; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Update(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isEnabled) return; // コンポーネントが有効状態じゃないときは何もせずreturn<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタをロックして得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;isGround == false &amp;&amp; pOwner-&gt;vy &lt;= 0<u>) </u>// 下落開始(vyが 0以上 のときはまだジャンプ中なので上昇を邪魔しないようにする)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<em>|| pOwner-&gt;isJumping == false &amp;&amp; pOwner-&gt;vy &gt; 0)// 上方向にぶっ飛ばされたとき</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>float vyMax_2 = downSpeedMax() * downSpeedMax(); // 最大スピードの2乗 を空気抵抗 kに使う<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //[空気抵抗の物理] https://hunikablog.com/2020/02/02/equation-of-motion-resistance-proportional-to-the-square-of-speed/<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 空気抵抗係数 k https://www.natural-science.or.jp/article/20100829232938.php<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>float k = pOwner-&gt;mass * gravity() / vyMax_2; // k = m * g / vmaxの2乗 にすれば vmaxが収束速度</b>になる</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ジャンプ上昇力が0になって以降に初めて重力をオンにする(ジャンプの加速を邪魔しない工夫)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>m_vyForce</em> = -gravity()<em> <b>- k / pOwner-&gt;mass * pOwner-&gt;vy * pOwner-&gt;vy</b>; // 空気抵抗は - k / m * vyの2乗<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;vy &gt; 0) pOwner-&gt;isGround = false; // ふっ飛ばされた場合はisGroundがtrueなのにvy &gt; 0の状態になったりするから</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;OnFalling(); // 下落中の処理のコールバック関数を呼び返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>if (pOwner-&gt;isGround)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_vyForce = 0.0f; // 着地したらm_vyForceを0にリセットしないと次回ジャンプ時にJump側と重力がダブっちゃう</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <u>if (pOwner-&gt;vy &lt;= -downSpeedMax()) // 無限に落下速度が加速しないようにリミットを働かせる(空気抵抗みたいなもの)<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;vy = -downSpeedMax(); // downSpeedMax()以上の落下速度にならないようにする</u><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      class JumpComponent : public PhysicsComponent<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; inline JumpComponent(std::shared_ptr&lt;GameObject&gt; pOwner, const std::vector&lt;float&gt;&amp; vyJumpSpeed, const std::vector&lt;float&gt;&amp; vyForceJump)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; : PhysicsComponent(pOwner), m_vyJumpSpeed{ vyJumpSpeed }, m_vyForceJump{ vyForceJump }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;typeID = typeid(JumpComponent); //[環境によって差が出るので↓が無難か] https://qiita.com/nil_gawa/items/1fece3eee7ca1f88c71d<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this-&gt;typeTag = "JumpComponent"; // 個別のカテゴリーとしてはジャンプ上昇コンポーネント<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      &nbsp;&nbsp;&nbsp; virtual ~JumpComponent() {}<br>
+      <em>protected:<br>
+        &nbsp;&nbsp;&nbsp; float m_vyForce{ 0.0f }; // オーナーのvyForceとは独立したこのコンポーネントのy方向の力<br>
+        public:<br>
+        &nbsp;&nbsp;&nbsp; float vyForce() { return m_vyForce; }</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; size_t m_idx{ 0 }; // 適用する設定配列の番号<br>
+      &nbsp;&nbsp;&nbsp; void SetIndex(size_t idx) { m_idx = idx; }<br>
+      &nbsp;&nbsp;&nbsp; float yJumpStart{ 0 }; // ジャンプした瞬間のyの位置<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; m_vyJumpSpeed; // ジャンプの上昇スピードのリミット<br>
+      &nbsp;&nbsp;&nbsp; float jumpSpeed() { return (m_idx &lt; m_vyJumpSpeed.size()) ? m_vyJumpSpeed[m_idx] : 0.0f; }<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; m_vyForceJump; // ジャンプ中の下方向の勢いの減速する力<br>
+      &nbsp;&nbsp;&nbsp; float forceJump() { return (m_idx &lt; m_vyForceJump.size()) ? m_vyForceJump[m_idx] : 0.0f; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Update(GameObject* obj = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isEnabled) return; // コンポーネントが有効状態じゃないときは何もせずreturn<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (<em>pOwner-&gt;isJumping &amp;&amp; pOwner-&gt;vy &lt;= jumpSpeed() // jumpSpeedを超える場合はふっとばされている状態<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &amp;&amp; </em><u>pOwner-&gt;isGround == false &amp;&amp;</u> pOwner-&gt;vy &gt; 0) // vyが0以上のときはまだジャンプ中<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;OnJumping(); // 空中でジャンプの上昇中に呼ばれるコールバック関数を呼び返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>// ジャンプ上昇中にも空気抵抗を効かせるとき<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float vyMax_2 = jumpSpeed() * jumpSpeed(); // jumpSpeed()の2乗を収束速度にする<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; float vyGravity = forceJump(); // ジャンプ中はforceJump()のゆるい重力でジャンプにふわっと感を出す<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>float k = pOwner-&gt;mass * vyGravity / vyMax_2; // k = m * g / vmaxの2乗 にすれば vmaxが収束速度</b>になる<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>// 空気抵抗は - k / m * vyの2乗</b><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>m_vyForce = -vyGravity - k / pOwner-&gt;mass * pOwner-&gt;vy * pOwner-&gt;vy;</b></em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>else // vy &lt; 0になってジャンプ中じゃなくなり、落下状況になった<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_vyForce = 0.0f;<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;isJumping = false; // ジャンプ状態フラグをfalseにする<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }</em><br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void JumpStart(GameObject* obj = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isEnabled) return; // コンポーネントが有効状態じゃないときは何もせずreturn<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;isGround)<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;vy = jumpSpeed(); // ジャンプ方向はY上方向<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>m_vyForce</em> = -forceJump(); // ジャンプの勢いが弱まる力<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; yJumpStart = pOwner-&gt;y;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>pOwner-&gt;isJumping = true; // isJumpingフラグがtrueになるのはJumpStart()関数経由が正規ルート</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pOwner-&gt;OnStartJump(); // ジャンプスタート時の処理をコールバックで呼び返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void JumpCancel(GameObject* obj = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isEnabled) return; // コンポーネントが有効状態じゃないときは何もせずreturn<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pOwner = owner(); // コンポーネントを所有するオーナーへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner == nullptr) return; // オーナーがすでにメモリから解放済のときは return<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!pOwner-&gt;isGround &amp;&amp; pOwner-&gt;vy &gt;= 0) // vyが0以上のときはまだジャンプ上昇中<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;y - yJumpStart &gt;= 1) // ジャンプ位置から1ピクセルを超えないタイミングでボタンを離しても重力はかけ始めない<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>m_vyForce</em> = -pOwner-&gt;gravity(); // ジャンプボタンを離したときには重力をかけ始める<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>pOwner-&gt;isJumping = false; // falseにしてジャンプ状態フラグをオフにする</em><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    物理の<a href="https://hunikablog.com/2020/02/02/equation-of-motion-resistance-proportional-to-the-square-of-speed/">落下の数式</a>を読み解くと <b>空気抵抗の係数 k = m(体重) * g(重力加速度) / v_max(落下の限界速度)</b> にすれば、<br>
+    少し時間が経つと<b>「落下の速度は空気の抵抗と均衡収束して v_maxに落ち着く」</b>ようにうまく意図的に設定できます。<br>
+    <a href="https://ushitora.net/archives/5656">空中の空気の抵抗</a>は「チャリのように<b>低速では速度の1乗倍</b>になり、飛行機のように<b>超高速では乱気流が発生し速度の2乗倍</b>」に比例します。<br>
+    <b>float k = pOwner-&gt;mass * vyGravity / vyMax_2; // k = m * g / vmaxの2乗<br>
+    m_vyForce = -gravity()- k / pOwner-&gt;mass * pOwner-&gt;vy * pOwner-&gt;vy; // 空気抵抗は - k / m * vyの2乗</b><br>
+    大事な式です↑y方向だけでなく、x,z方向にも空気抵抗をいれることもできます。<b>1乗倍にして特定の方向だけ抵抗を入れればチャリにのって風の抵抗を表現</b>することもできます。<br>
+    <br>
+    <p><code>Player.cppを変更</code>して、OnCollision関数のpCollisionから得た衝突した法線方向を使ってUpdate関数で力を加えましょう。</p>
+    <p class="source">#include "Player.h"<br>
+      <br>
+      #include &lt;cmath&gt; // 浮動小数点の余り%演算子がC++にないのでfmodを使うため<br>
+      #include "MyMath.h"<br>
+      <br>
+      #include "MyDraw.h"<br>
+      <br>
+      #include "Camera.h"<br>
+      #include "World.h"<br>
+      <br>
+      #include &lt;vector&gt;<br>
+      <br>
+      (中略).......................<br>
+      <br>
+      // 更新処理<br>
+      void Player::Update()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; vxForce *= 0.9f; // かかっている力の減衰率<br>
+      &nbsp;&nbsp;&nbsp; <em>vyForce *= 0.9f; // かかっている力の減衰率</em><br>
+      &nbsp;&nbsp;&nbsp; vzForce *= 0.9f; // かかっている力の減衰率<br>
+      &nbsp;&nbsp;&nbsp; deltaAngle *= 0.5F; // 車のハンドルの方向をだんだんニュートラルに戻す<br>
+      &nbsp;&nbsp;&nbsp; MoveSpeed *= 0.9F; // 移動速度も減速する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 入力を受けての処理 <br>
+      &nbsp;&nbsp;&nbsp; HandleInput();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto pJumpPhysics = jumpPhysics.lock();<br>
+      &nbsp;&nbsp;&nbsp; if (pJumpPhysics != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isGround)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Input::GetButtonDown(pad, PAD_INPUT_A) // Zキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonDown(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを押した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pJumpPhysics-&gt;JumpStart(); // ジャンプのスタート処理を発動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (vy &gt; 0 &amp;&amp; Input::GetButtonUp(pad, PAD_INPUT_A) // Zキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; || (pad == Pad::Two &amp;&amp; Input::GetButtonUp(Pad::Keyboard, KEY_INPUT_Q))) // プレイヤ2がQキーを離した瞬間<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pJumpPhysics-&gt;JumpCancel(); // ジャンプのキャンセル処理を発動<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pJumpPhysics-&gt;Update(); // ジャンプのコンポーネントを更新する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; auto pGravityPhysics = gravityPhysics.lock();<br>
+      &nbsp;&nbsp;&nbsp; if (pGravityPhysics != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pGravityPhysics-&gt;Update(); // 重力落下のコンポーネントを更新する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; moveAngle += deltaAngle; // ハンドルを回したぶんプレイヤの進行方向を変える<br>
+      &nbsp;&nbsp;&nbsp; if (moveAngle &lt; -180) moveAngle = 360 + moveAngle; // -180以下の角度にならないようにマイナスになったら+180度にループさせる<br>
+      &nbsp;&nbsp;&nbsp; else if (moveAngle &gt; +180) moveAngle = -360 + moveAngle; // +180以下の角度にならないようにマイナスになったら-180度にループさせる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; rotation.SetRotation(VGet(0, (180 - moveAngle) * MyMath::Deg2Rad, 0)); // 前向きの3Dモデルなら180度回転させて奥方向の向きに設定<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ↓進行方向角度をX方向とZ方向の速度に変える<br>
+      &nbsp;&nbsp;&nbsp; vx = (float)std::cos((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      &nbsp;&nbsp;&nbsp; vz = (float)std::sin((moveAngle + 90) * MyMath::Deg2Rad) * MoveSpeed;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>float vyForceJump = (pJumpPhysics != nullptr) ? pJumpPhysics-&gt;vyForce() : 0.0f;<br>
+        &nbsp;&nbsp;&nbsp; float vyForceGravity = (pGravityPhysics != nullptr) ? pGravityPhysics-&gt;vyForce() : 0.0f;</em><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; vx += vxForce; // 力をかけて速度に加算する<br>
+      &nbsp;&nbsp;&nbsp; <em>vy += vyForce + vyForceJump + vyForceGravity; // 勢い(力・フォースを加算</em><br>
+      &nbsp;&nbsp;&nbsp; vz += vzForce; // 力をかけて速度に加算する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 実際に位置を動かす<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // まず横に移動する<br>
+      &nbsp;&nbsp;&nbsp; x += vx;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次に縦に動かす<br>
+      &nbsp;&nbsp;&nbsp; y += vy;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 次にZ奥行き方向に動かす<br>
+      &nbsp;&nbsp;&nbsp; z += vz;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <u>vy += vyForce; // 勢い(力・フォースを加算</u><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (y &lt;= 0.0f) // 0.0fを地面として 0.0f以下になったら地面に着地したと判定する<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; y = 0.0f; // 地面に沿わせる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy = -0.01f; // 下方向への速度をほぼ 0 にする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isGround = true;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; if (auto pGridCollision = gridCollision.lock()) // lock()してnullptrじゃなければ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pGridCollision-&gt;Update(); // 所属するマス目セルを更新する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // カメラのプレイヤ追尾<br>
+      &nbsp;&nbsp;&nbsp; float camDistance = 150; // プレイヤからカメラまでのY平面上の距離<br>
+      &nbsp;&nbsp;&nbsp; float camHeight = 100; // プレイヤからカメラまでのY方向上の高さ<br>
+      &nbsp;&nbsp;&nbsp; // moveAngleは2D画像のX方向右を0度とするから、-90度回すと画像を正面に捉える位置にカメラを置ける<br>
+      &nbsp;&nbsp;&nbsp; float camAngleX = (float)std::cos((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; float camAngleZ = (float)std::sin((moveAngle - 90) * MyMath::Deg2Rad) * camDistance;<br>
+      &nbsp;&nbsp;&nbsp; if (camera != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // カメラの位置をプレイヤの進行方向と真逆に設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;SetPosition(position + Vector3(camAngleX, camHeight, camAngleZ));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;LookAt(position); //カメラはプレイヤの方を見る<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      (中略).......................<br>
+      <br>
+    </p>
+    <br>
+    いかがでしょう？<b>体重の軽いプレイヤ2がジャンプして、プレイヤ1をマリオのように上から踏みつけると、反発で大ジャンプ</b>できたでしょうか？<br>
+    このように、数式単位で意味をわかれば、Unityのデフォルトの物理現象以外に、自作の物理現象をAddForceでできる可能性もでてきます。<br>
+    これが、<b>現代ゲームプログラマの仕事「<a href="https://www.portal.e2r.jp/fixurl/nintendo_career_job/id/4/2?ki=job00149">グラフィック、フレームワーク、AI、ダイナミクス</a>..」</b>などの一角<b>「ダイナミクス=物理プログラミング」の仕事の実例</b>です。<br>
     <br>
   </body>
 </html>
