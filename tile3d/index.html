@@ -23,6 +23,7 @@
       <li><a href="#mozTocId0009">何もない空間をグリッド分割して隣接していない空間に所属するものとの当たり判定をスルーして高速化する</a></li>
       <li><a href="#mozTocId0010">タイル情報を.tsxや.jsonや.csvから読み取りタイルマップを表示する</a></li>
       <li><a href="#mozTocId0011">Map/MapSetting.csvの設定に合わせてタイルとの当たり判定をする</a></li>
+      <li><a href="#mozTocId0012">Factory.cppにZako生成などの#includeを集約(依存性の逆転)させてMapでZakoなどの敵を出現スポーンさせる</a></li>
     </ol>
     <br>
     <a id="mozTocId0001" class="mozTocH1">
@@ -9744,6 +9745,13 @@
       &nbsp;&nbsp;&nbsp; TMXobjects enemies; //[敵のスポーン] CellGridを継承して辞書配列ベースで 空白 -1 を保管せずにデータを管理<br>
       &nbsp;&nbsp;&nbsp; TMXobjects items; //[アイテムのスポーン] CellGridを継承して辞書配列ベースで 空白 -1 を保管せずにデータを管理<br>
       &nbsp;&nbsp;&nbsp; TMXobjects objects; //[その他のスポーン] CellGridを継承して辞書配列ベースで 空白 -1 を保管せずにデータを管理<br>
+      &nbsp;&nbsp;&nbsp; void SetGridSize(Vector3 gridSize)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lights.cellWidth = gridSize.x; lights.cellHeight = gridSize.y; lights.cellDepth = gridSize.z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enemies.cellWidth = gridSize.x; enemies.cellHeight = gridSize.y; enemies.cellDepth = gridSize.z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; items.cellWidth = gridSize.x; items.cellHeight = gridSize.y; items.cellDepth = gridSize.z;;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; objects.cellWidth = gridSize.x; objects.cellHeight = gridSize.y; objects.cellDepth = gridSize.z;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; std::size_t size() { return terrains.size(); }<br>
       <br>
@@ -9771,6 +9779,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tilesets.LoadTsx(&amp;Data, &amp;folderPath); // .tsxからタイル情報を取得<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmxInfo &lt;&lt; Data; // データの中身を事前読み取り<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SetGridSize({ (float)tmxInfo.tilewidth,(float)tmxInfo.tileheight,(float)tmxInfo.tilewidth });<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(Data.count("layers") != 0 &amp;&amp; "jsonにlayers情報が見つからない");<br>
       <br>
@@ -9864,6 +9873,65 @@
       <br>
       #endif<br>
     </p>
+    <br>
+    <br>
+    <p><code>CollisionParams.hを新規作成</code>して、jsonから衝突関連のパラメータを読み取れるようにしましょう。</p>
+    <p class="source">#ifndef COLLISIONPARAMS_H_<br>
+      #define COLLISIONPARAMS_H_<br>
+      <br>
+      #include "TMXJson.h"<br>
+      #include "Object.h"<br>
+      <br>
+      struct CollisionParams : public InitParams<br>
+      {&nbsp;&nbsp;&nbsp; //[離散要素法] https://qiita.com/konbraphat51/items/157e5803c514c60264d2<br>
+      &nbsp;&nbsp;&nbsp; float k = 10.0f; // バネ係数(めり込みに対するバネ反発の掛け率)<br>
+      &nbsp;&nbsp;&nbsp; float e = 0.3f; // 跳ね返り係数(直前と比べどれくらいの速さで離れるか 0)<br>
+      &nbsp;&nbsp;&nbsp; inline float log_e() { return std::log(e); };<br>
+      &nbsp;&nbsp;&nbsp; const float pi_2 = DX_PI_F * DX_PI_F;<br>
+      &nbsp;&nbsp;&nbsp; // 粘性係数<br>
+      &nbsp;&nbsp;&nbsp; inline float eta(float mass) { return -2.0f * log_e() * std::sqrt(k * mass / (log_e() * log_e() + pi_2)); }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float pushPower{ 5.0f }; // kやeの設定がなかった場合はデフォルトのpushPowerで法線方向に押し返す<br>
+      &nbsp;&nbsp;&nbsp; bool isDEMcollision = false; //[離散要素法:DEM]のパラメータを使用するか(falseのときはpushPowerで単純な押し戻し) <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline CollisionParams(std::shared_ptr&lt;InitParams&gt; initParams = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (initParams == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto tmxParams = std::static_pointer_cast&lt;InitTMXProperty&gt;(initParams);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (tmxParams-&gt;properties == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto tmxProperties = tmxParams-&gt;properties;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // tmxのjsonの追加プロパティからデータを読み取る<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto itr = tmxProperties-&gt;find("collision_e");<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の collision_e のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; e = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isDEMcollision = true;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("collision_k");<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の collision_k のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; k = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isDEMcollision = true;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("pushPower");<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の pushPower のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; pushPower = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; ~CollisionParams() {}<br>
+      };<br>
+      <br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
     <br>
     いかがでしょう？ここまでで、一旦ビルドしてエラーがでないか確かめておきましょう。<br>
     コード量が多いのでここまでで一旦エラー原因を絞り込むためです。<br>
@@ -10419,7 +10487,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spawnRange.InitRange(MapRange::Type::Ellipse, 10, 10);// 敵の新規出現レンジをプレイヤから半径X,Yの楕円にする<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (info.CellSize != 1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SetCellSize(info.CellSize); // csvに書かれているCellSizeを設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmxData.SetGridSize({(float)info.CellSize ,(float)info.CellSize ,(float)info.CellSize });<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // if (info.CellSize == 1)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SetCellSize(tmxData.tmxInfo.tilewidth); // tmxのタイルの幅を取得<br>
       &nbsp;&nbsp;&nbsp; }<br>
@@ -12699,6 +12770,8 @@
     泥臭いアナログなやり方ではありますが、すり抜け防止の機能は実現できるようになりました。<br>
     Unityなどのゲームエンジンの内部では高速の移動直線と交わるかの難しい数学ですり抜けない当たり判定をしているでしょうが、<br>
     今回のように、タイルの大きさがほぼ固定の 32 、キャラの大きさも だいたい32 という限定的な条件設定であれば、細切れステップのすり抜け防止も有効策となるわけです。<br>
+    <br>
+    <br>
     <br>
     <br>
     <br>
