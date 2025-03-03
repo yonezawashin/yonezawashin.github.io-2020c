@@ -1942,7 +1942,7 @@
                         {
                          "name":"bulletImagePath",
                          "type":"string",
-                         "value":"Image\/player_bullet.png"
+                         "value":"Image\/bullet.png"
                         }, 
                         {
                          "name":"bulletRadius",
@@ -1972,7 +1972,7 @@
                         {
                          "name":"iconImagePath",
                          "type":"string",
-                         "value":"Image\/player_bullet.png"
+                         "value":"Image\/bullet.png"
                         }, 
                         {
                          "name":"imageIndex",
@@ -1982,7 +1982,7 @@
                         {
                          "name":"imagePath",
                          "type":"string",
-                         "value":"Image\/player_bullet.png"
+                         "value":"Image\/bullet.png"
                         }, 
                         {
                          "name":"itemTag",
@@ -2020,7 +2020,7 @@
                         {
                          "name":"bulletImagePath",
                          "type":"string",
-                         "value":"Image\/player_bullet.png"
+                         "value":"Image\/bullet.png"
                         }, 
                         {
                          "name":"bulletRadius",
@@ -2060,7 +2060,7 @@
                         {
                          "name":"iconImagePath",
                          "type":"string",
-                         "value":"Image\/player_bullet.png"
+                         "value":"Image\/bullet.png"
                         }, 
                         {
                          "name":"imageIndex",
@@ -2070,7 +2070,7 @@
                         {
                          "name":"imagePath",
                          "type":"string",
-                         "value":"Image\/player_bullet.png"
+                         "value":"Image\/bullet.png"
                         }, 
                         {
                          "name":"itemTag",
