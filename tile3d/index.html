@@ -10677,6 +10677,16 @@
       #endif<br>
     </p>
     <br>
+    <p><code>Map.cppを新規作成</code>して、static変数の初期化でcsvなどをロードしましょう。</p>
+    <p class="source">#include "Map.h"<br>
+      <br>
+      MapSetting Map::settings{ "Map/MapSetting.csv" }; // マップ一覧情報<br>
+      <br>
+      TileSetting Map::tileSettings{ "Map/MapSetting.csv" }; // タイル情報<br>
+    </p>
+    <br>
+    <br>
+    <br>
     <p><code>World.hを変更</code>して、Mapの前方宣言と共有ポインタとマップをロードする関数を宣言しましょう。</p>
     <p class="source">#ifndef WORLD_H_<br>
       #define WORLD_H_<br>
