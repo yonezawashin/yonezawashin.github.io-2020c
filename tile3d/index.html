@@ -24,7 +24,7 @@
       <li><a href="#mozTocId0010">タイル情報を.tsxや.jsonや.csvから読み取りタイルマップを表示する</a></li>
       <li><a href="#mozTocId0011">Map/MapSetting.csvの設定に合わせてタイルとの当たり判定をする</a></li>
       <li><a href="#mozTocId0012">Factory.cppにZako生成などの#includeを集約(依存性の逆転)させてMapでZakoなどの敵を出現スポーンさせる</a></li>
-      <li><a href="#mozTocId0013">ItemクラスとItemActionクラスを作成してアイテムを取って使用できるようにする</a></li>
+      <li><a href="#mozTocId0013">ItemクラスとItemActionクラスを作成し継承して弾やブロックなどのアイテムを取って使用できるようにする</a></li>
     </ol>
     <br>
     <a id="mozTocId0001" class="mozTocH1">
@@ -8405,7 +8405,8 @@
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>float vyMax_2 = downSpeedMax() * downSpeedMax(); // 最大スピードの2乗 を空気抵抗 kに使う<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //[空気抵抗の物理] https://hunikablog.com/2020/02/02/equation-of-motion-resistance-proportional-to-the-square-of-speed/<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // 空気抵抗係数 k https://www.natural-science.or.jp/article/20100829232938.php<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>float k = pOwner-&gt;mass * gravity() / vyMax_2; // k = m * g / vmaxの2乗 にすれば vmaxが収束速度</b>になる</em><br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>float k = pOwner-&gt;mass * gravity() / vyMax_2; // k = m * g / vmaxの2乗 にすれば vmaxが収束速度</b>になる<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;vy &lt;= 0) k = <b>-k</b>; // <b>下方向への空気抵抗は逆</b>になる</em><br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // ジャンプ上昇力が0になって以降に初めて重力をオンにする(ジャンプの加速を邪魔しない工夫)<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>m_vyForce</em> = -gravity()<em> <b>- k / pOwner-&gt;mass * pOwner-&gt;vy * pOwner-&gt;vy</b>; // 空気抵抗は - k / m * vyの2乗<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pOwner-&gt;vy &gt; 0) pOwner-&gt;isGround = false; // ふっ飛ばされた場合はisGroundがtrueなのにvy &gt; 0の状態になったりするから</em><br>
@@ -12481,14 +12482,11 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float vxMod = std::fmod(vxAbs, xGridSize); // グリッドのサイズで速度を割った余りmod<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float vyMod = (yGridSize == 0) ? 0 : std::fmod(vyAbs, yGridSize);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float vzMod = (zGridSize == 0) ? 0 : std::fmod(vzAbs, zGridSize);<br>
-      #if 0<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (vxMod &gt; xGridSize || vxMod == std::numeric_limits&lt;float&gt;::infinity())<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vxMod = 0;<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (vyMod &gt; yGridSize || vyMod == std::numeric_limits&lt;float&gt;::infinity())<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vyMod = 0; // 速度が∞に近づくと余りも∞になるので 0 にする<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (vzMod &gt; zGridSize || vzMod == std::numeric_limits&lt;float&gt;::infinity())<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vzMod = 0;<br>
-      #endif<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // <b>∞=infや計算不能 nan を !isfiniteで 検出</b>したら 0 にする https://qiita.com/N700A/items/36b9383eaf923f4bf6ae<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (vxMod &gt; xGridSize || <b>!isfinite</b>(vxMod)) vxMod = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (vyMod &gt; yGridSize || <b>!isfinite</b>(vyMod)) vyMod = 0; // 速度が∞に近づくと余りも∞になるので 0 にする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (vzMod &gt; zGridSize || <b>!isfinite</b>(vzMod)) vzMod = 0;<br>
+      <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int maxDiv; // 通過する区切りの回数が一番多いもの(= maxDiv)に合わせて進むx,y,zの1回のステップを決める<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float xStep = xGridSize, yStep = yGridSize, zStep = zGridSize;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (vxDiv &gt;= vyDiv &amp;&amp; vxDiv &gt;= vzDiv) // 1番割り算したDivの区切りの多いものにあわせて他はその区切りで割るので<br>
@@ -12633,6 +12631,14 @@
         &nbsp;&nbsp;&nbsp; // 速すぎて当たり判定がすり抜けないように細切れのステップのグリッドで移動させつつ当たり判定する<br>
         &nbsp;&nbsp;&nbsp; Vector3 gridStepSize = (pMapHitBox == nullptr) ? Vector3{ cellHalf, cellHalf, cellHalf } : pMapHitBox-&gt;m_BoxSize / 2;<br>
         &nbsp;&nbsp;&nbsp; GridSteps vSteps{ velocity, gridStepSize }; // 細切れのステップの数値を計算<br>
+        #ifdef _DEBUG<br>
+        &nbsp;&nbsp;&nbsp; if (vSteps.div &gt;= 1000) // <b>分割が1000を超える場合は物理式かどこかで∞=inf や 計算不可能数=nanが発生してそう</b><br>
+        &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // vx,vy,vzに原因がありそうなのでデバッグ表示<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!isfinite(vx)) printfDx(("vx:∞かnan x:" + std::to_string(x) + "\n").c_str());<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!isfinite(vy)) printfDx(("vy:∞かnan y:" + std::to_string(y) + "\n").c_str());<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!isfinite(vz)) printfDx(("vz:∞かnan z:" + std::to_string(z) + "\n").c_str());<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        #endif<br>
         <br>
         &nbsp;&nbsp;&nbsp; bool isCollisionX{ false }, isCollisionY{ false }, isCollisionZ{ false }, isCollisionCollider{ false };<br>
         &nbsp;&nbsp;&nbsp; for (int i = 1, iSize = vSteps.div + 1; i &lt;= iSize; ++i)<br>
@@ -13830,8 +13836,6 @@
     <br>
     <br>
     <br>
-    <br>
-    <br>
     <p><code>Map.hを変更</code>して、Factoryから敵を生成する処理を追加します。</p>
     <p class="source">#ifndef MAP_H_<br>
       #define MAP_H_<br>
@@ -14427,7 +14431,15 @@
       &nbsp;&nbsp;&nbsp; // 速すぎて当たり判定がすり抜けないように細切れのステップのグリッドで移動させつつ当たり判定する<br>
       &nbsp;&nbsp;&nbsp; Vector3 gridStepSize = (pMapHitBox == nullptr) ? Vector3{ cellHalf, cellHalf, cellHalf } : pMapHitBox-&gt;m_BoxSize / 2;<br>
       &nbsp;&nbsp;&nbsp; GridSteps vSteps{ velocity, gridStepSize }; // 細切れのステップの数値を計算<br>
-      <br>
+      #ifdef _DEBUG<br>
+      &nbsp;&nbsp;&nbsp; if (vSteps.div &gt;= 1000) // 分割が1000を超える場合は物理式かどこかで∞=inf や 計算不可能数=nanが発生してそう<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // vx,vy,vzに原因がありそうなのでデバッグ表示<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!isfinite(vx)) printfDx(("vx:∞かnan x:" + std::to_string(x) + "\n").c_str());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!isfinite(vy)) printfDx(("vy:∞かnan y:" + std::to_string(y) + "\n").c_str());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!isfinite(vz)) printfDx(("vz:∞かnan z:" + std::to_string(z) + "\n").c_str());<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      #endif<br>
+      &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; bool isCollisionX{ false }, isCollisionY{ false }, isCollisionZ{ false }, isCollisionCollider{ false };<br>
       &nbsp;&nbsp;&nbsp; for (int i = 1, iSize = vSteps.div + 1; i &lt;= iSize; ++i)<br>
       &nbsp;&nbsp;&nbsp; {<br>
@@ -14560,7 +14572,7 @@
     <br>
     <br>
     <a id="mozTocId0013" class="mozTocH1">
-      <h1>ItemクラスとItemActionクラスを作成してアイテムを取って使用できるようにする</h1>
+      <h1>ItemクラスとItemActionクラスを作成し継承して弾やブロックなどのアイテムを取って使用できるようにする</h1>
     </a>
     <p><code>Item.hを新規作成</code>して、アイテムのベース基底クラスを定義しましょう。</p>
     <p class="source">#ifndef ITEM_H_<br>
@@ -14851,6 +14863,7 @@
       &nbsp;&nbsp;&nbsp; virtual std::shared_ptr&lt;ItemAction&gt; SelectNext()<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pSelecting = Selecting();<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pSelecting == nullptr) return pSelecting;<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pNext = pSelecting-&gt;Next();<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (pNext == nullptr) pNext = Top(); // リンクリスト構造の次がないときはループして一番最初のTopを返す<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_selecting = pNext; // 現在選択中のアイテムを更新する<br>
@@ -16538,7 +16551,15 @@
       &nbsp;&nbsp;&nbsp; // 速すぎて当たり判定がすり抜けないように細切れのステップのグリッドで移動させつつ当たり判定する<br>
       &nbsp;&nbsp;&nbsp; Vector3 gridStepSize = (pMapHitBox == nullptr) ? Vector3{ cellHalf, cellHalf, cellHalf } : pMapHitBox-&gt;m_BoxSize / 2;<br>
       &nbsp;&nbsp;&nbsp; GridSteps vSteps{ velocity, gridStepSize }; // 細切れのステップの数値を計算<br>
-      <br>
+      #ifdef _DEBUG<br>
+      &nbsp;&nbsp;&nbsp; if (vSteps.div &gt;= 1000) // 分割が1000を超える場合は物理式かどこかで∞=inf や 計算不可能数=nanが発生してそう<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // vx,vy,vzに原因がありそうなのでデバッグ表示<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!isfinite(vx)) printfDx(("vx:∞かnan x:" + std::to_string(x) + "\n").c_str());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!isfinite(vy)) printfDx(("vy:∞かnan y:" + std::to_string(y) + "\n").c_str());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!isfinite(vz)) printfDx(("vz:∞かnan z:" + std::to_string(z) + "\n").c_str());<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      #endif<br>
+      &nbsp;&nbsp;&nbsp; <br>
       &nbsp;&nbsp;&nbsp; bool isCollisionX{ false }, isCollisionY{ false }, isCollisionZ{ false }, isCollisionCollider{ false };<br>
       &nbsp;&nbsp;&nbsp; for (int i = 1, iSize = vSteps.div + 1; i &lt;= iSize; ++i)<br>
       &nbsp;&nbsp;&nbsp; {<br>
