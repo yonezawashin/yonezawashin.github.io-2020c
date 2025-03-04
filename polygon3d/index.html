@@ -4640,11 +4640,10 @@
         <br>
         &nbsp;&nbsp;&nbsp; virtual int LoadDivGraph(const std::string&amp; filePath = "", int XNum = -1, int YNum = -1, int XSize = -1, int YSize = -1)<br>
         &nbsp;&nbsp;&nbsp; {<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (files.count(filePath) &gt; 0 &amp;&amp; m_handles.size() &gt; 0) return files[filePath]-&gt;m_handles[0]; // すでに辞書にロード済みのファイルのとき<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (filePath == "") return -1;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (filePath == "" &amp;&amp; m_FilePath == "") return -1;<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; else if (filePath != "" &amp;&amp; m_FilePath == "") m_FilePath = filePath; // 読み出しファイルパスを記録<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (XNum &gt; 0) m_XNum = XNum; // 数値を設定<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (filePath == "" &amp;&amp; m_FilePath == "") return -1;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (files.count(filePath) &gt; 0 &amp;&amp; m_handles.size() &gt; 0) return files[filePath]-&gt;m_handles[0]; // すでに辞書にロード済みのファイルのとき<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (filePath != "" &amp;&amp; m_FilePath == "") m_FilePath = filePath; // 読み出しファイルパスを記録<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (XNum &gt; 0) m_XNum = XNum; // 数値を設定<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (YNum &gt; 0) m_YNum = YNum;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (XSize &gt; 0) m_XSize = XSize;<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (YSize &gt; 0) m_YSize = YSize;<br>
@@ -12086,7 +12085,9 @@
     このように、数式レベルでどういった計算がされるかを知った上で、3D空間のライティングをイメージすることが大事です。<br>
     <br>
     これを機に、<a href="https://qiita.com/YukiMiyatake/items/f71aa766de336fbc6781">計算方式には名前があるので勉強</a>しておきましょう。<br>
-    まず、ライトの<b>光源の逆ベクトルとポリゴンの面からの法線</b>の<a href="https://someiyoshino.info/entry/20171231/1514692823">内積dotを計算</a>している計算部分、これは<b>ランバート(Lambert)の反射</b>モデル(<a href="https://ja.wikipedia.org/wiki/%E3%83%A9%E3%83%B3%E3%83%90%E3%83%BC%E3%83%88%E5%8F%8D%E5%B0%84">wiki</a>)だ。<br>
+    まず、ライトの<b>光源の逆ベクトルとポリゴンの面からの法線</b>の<a href="https://someiyoshino.info/entry/20171231/1514692823">内積dotを計算</a>している計算部分、これは<b>ランバート(Lambert)の反射</b>モデル(<a
+
+      href="https://ja.wikipedia.org/wiki/%E3%83%A9%E3%83%B3%E3%83%90%E3%83%BC%E3%83%88%E5%8F%8D%E5%B0%84">wiki</a>)だ。<br>
     つぎに、Power値を設定して鏡面反射を計算している部分、こちらは<b>フォン(Phong)のライティング</b>(<a href="https://ja.wikipedia.org/wiki/Phong%E3%81%AE%E5%8F%8D%E5%B0%84%E3%83%A2%E3%83%87%E3%83%AB">wiki</a>)だ。<br>
     よく出てくるこの2つの言葉ぐらいは基礎として覚えておいた方がいい。<a href="https://qiita.com/YukiMiyatake/items/f71aa766de336fbc6781">古典的シェーディング</a>の用語だ。<br>
     そして、古典的シェーディングと違う、最近のシェーディング方式は、物理ベースシェーディング(PBS:Physically-Based Shading:<a
@@ -12498,7 +12499,9 @@
     <b>フォールオフ(FallOff)の値</b>の設定でその<b>外側と内側の間の部分を鋭くしたりぼやかしたり</b>できます。<br>
     その減衰を決める計算のメインとなっているのが、上記のコードの <b>pow( falloff, ( ( Cos a - Cos f ) / ( Cos q - Cos f ) ) )</b>のCosを使った式だということがわかります。<br>
     その 外側の円錐の角度 や 内側の円錐の角度 の設定をしているのは、<br>
-    以下のmain.cppのスポットライトを生成している部分のコードになります。0.7fが外側の円錐の角度,0.6fが内側の円錐の角度です。<a href="https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N23">1000.0fはライトの有効距離、0.391586fと0.001662fと0.0fは距離減衰パラメータAtten0,1,2</a><br>
+    以下のmain.cppのスポットライトを生成している部分のコードになります。0.7fが外側の円錐の角度,0.6fが内側の円錐の角度です。<a
+
+      href="https://dxlib.xsrv.jp/function/dxfunc_3d_light.html#R13N23">1000.0fはライトの有効距離、0.391586fと0.001662fと0.0fは距離減衰パラメータAtten0,1,2</a><br>
     ( FallOffはDX内部的には1.0fになっているものと思われる )<br>
     <p class="source"> <br>
       (前略).........<br>
