@@ -10686,7 +10686,6 @@
     </p>
     <br>
     <br>
-    <br>
     <p><code>World.hを変更</code>して、Mapの前方宣言と共有ポインタとマップをロードする関数を宣言しましょう。</p>
     <p class="source">#ifndef WORLD_H_<br>
       #define WORLD_H_<br>
@@ -12783,6 +12782,1272 @@
     <br>
     <br>
     <br>
+    <a id="mozTocId0012" class="mozTocH1">
+      <h1>Factory.cppにZako生成などの#includeを集約(依存性の逆転)させてMapでZakoなどの敵を出現スポーンさせる</h1>
+    </a> さて、次はマップの出現レンジをスクロールさせてザコなどの敵を出現スポーンさせましょう。<br>
+    ただ、ちゃんと設計しないとザコ0、ザコ1,2,3.... と種類が増えるとZako0.h Zako1.h Zako2.h... とファイルはどんどん増え#includeもどんどん増えます。<br>
+    #includeの機会が増えるということは循環インクルードする可能性も増えますし、<br>
+    何よりどこで#include してたっけ？とかいちいちあちこちで#include書きたくないよ、とかの問題もでます。<br>
+    さらに<b>「あちこちで new や std::make_shared やObject::Create で実体を生成する処理を書くと引数など仕様が変わった際にコードを直す作業がちらばってて苦痛」</b>です。<br>
+    ですので、こういった「生成の処理を一括代行する工場(Factory)パターン」がコードのデザインパターンとしてあります。<br>
+    <a href="https://blog.ecbeing.tech/entry/2021/01/20/114000">ファクトリーパターン</a>の書き方は人それぞれ違っては来ますが、大事なポイントは「依存性の逆転」です。<br>
+    <b>あるコードが別のコードやクラスを#includeして使用するということは「依存している」</b>ということです。<br>
+    MapでZako0を生成するということはMapがZako0.hを#include するということなので<b>「MapはZako0.hに依存している」</b>ことになります。<br>
+    今回はFactoryクラスを導入して<b>MapクラスではZako0を直接#includeする必要がない形</b>にします。<br>
+    そうすると<b>Mapの立場はどうなるか？MapクラスはZako0に「依存する形」からFactoryを「使用する立場」に変わります</b>。<br>
+    「立場が[依存者]から[使用者]に逆転して変わります」Mapクラスの#includeはFactoryだけになります。<br>
+    Mapクラス以外でも#includeはFactoryだけになり、#includeを書く数は格段に減ります。<br>
+    なるほど、#includeがcppに集中するという点では仲介者Managerのパターンと似てはいますね。<br>
+    仲介者Managerが「連絡先の窓口」のニュアンスが強いのに対して、ファクトリーパターンは「新規生成工場」のニュアンスが強いです。<br>
+    ですので、以前作成したObject.hクラスのCreate関数でいろいろなGameObjectを新規生成するのもファクトリーパターンの一種といえます。<br>
+    今回作成するFactoryクラスではそれに加えて、"Zako0"などの文字列からZako0というクラスを新規生成できる機能も追加します。<br>
+    文字列"Zako0"からクラスを新規生成できれば、.jsonのステージに配置したオブジェクトのプロパティに"Zako0"などの文字列を指定すれば、<br>
+    jsonのファイルの配置内容の文字列"Zako0"を判別してゲーム上に敵キャラを新規スポーン生成で出現させることができるようになります。<br>
+    <br>
+    文字列"Zako0"からクラスを新規生成するには<b>「文字列 → newやmake_sharedやCreateなどの新規生成手段の辞書があれば可能」</b>です。<br>
+    ですが、本来「プログラム上のクラス名はビルドされた後は機械語のビットに変わりプログラム上で見えているクラス名とは別物に翻訳」されてしまいます。<br>
+    本来は無理な話のはずなのですよね。<b>ただし、#マクロ を使うとビルド時に プログラム上のクラス名が文字列に変わるマジック</b>があります。<br>
+    <p><code>Factory.hを新規作成</code>して、ザコやアイテムなど「生成する処理を集約して呼び出す工場の窓口」を準備しましょう。</p>
+    <p class="source">#ifndef FACTORY_H_<br>
+      #define FACTORY_H_<br>
+      <br>
+      #include &lt;string&gt;<br>
+      #include &lt;memory&gt; // 共有ポインタを使う<br>
+      #include &lt;unordered_map&gt;<br>
+      #include "Vector3.h"<br>
+      #include "Quaternion.h"<br>
+      #include &lt;assert.h&gt;<br>
+      #include &lt;list&gt;<br>
+      <br>
+      #include "Object.h"<br>
+      <br>
+      class GameObject; // 前方宣言でクラス宣言だけしてインクルードしない(.hではポインタしか使ってないから)<br>
+      class World;<br>
+      class Enemy;<br>
+      class Bullet;<br>
+      class Light;<br>
+      class Item;<br>
+      <br>
+      // 無名名前空間で区切ることで関数名など被らないように(★constructorとかよくある関数名で不安なので)<br>
+      namespace // 無名名前空間(他ファイルから参照できない変数や関数を宣言) https://marycore.jp/prog/cpp/unnamed-namespace/<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; //template &lt;class classT&gt;<br>
+      &nbsp;&nbsp;&nbsp; //void* Constructor(World* world, Vector3 position, Quaternion rotation)<br>
+      &nbsp;&nbsp;&nbsp; //{&nbsp;&nbsp;&nbsp; // ★classTをZako1とすると new classT(.. は初期化コンストラクタへの住所ポインタ(void*)型を返す<br>
+      &nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; return (void*) new classT(world, position, rotation); // newの生成コンストラクタへのポインタを辞書に入れる場合<br>
+      &nbsp;&nbsp;&nbsp; //}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; template &lt;class classT&gt;<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Object&gt; Constructor(std::shared_ptr&lt;InitParams&gt; initParams, World* world, Vector3 position, Quaternion rotation)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return Object::Create&lt;classT&gt;(initParams, world, position, rotation);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //return std::make_shared&lt;classT&gt;(world, position, rotation); // make_sharedの生成コンストラクタへのポインタを辞書に入れる場合<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //[関数へのポインタの応用:コンストラクタも関数の一種なので] https://blog.cryolite.net/entry/01000226/p1<br>
+      &nbsp;&nbsp;&nbsp; //typedef void* (*constructorT)(World*, Vector3, Quaternion);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; typedef std::shared_ptr&lt;Object&gt;(*constructorT)(std::shared_ptr&lt;InitParams&gt;, World*, Vector3, Quaternion);<br>
+      &nbsp;&nbsp;&nbsp; typedef std::unordered_map&lt;std::string, constructorT&gt; ConstructorDictionary;//クラス名⇒初期化コンストラクタへの辞書<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //★&lt;クラス名→コンストラクタ&gt;を呼び出す辞書★★★★★★★★★★<br>
+      &nbsp;&nbsp;&nbsp; ConstructorDictionary g_Constructors; // クラス名⇒コンストラクタへの辞書配列<br>
+      &nbsp;&nbsp;&nbsp; //★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // クラス辞書に任意のclassTの初期化コンストラクタを登録する<br>
+      &nbsp;&nbsp;&nbsp; template &lt;class classT&gt;<br>
+      &nbsp;&nbsp;&nbsp; void RegisterConstructor(std::string const&amp; className)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // insertでクラス辞書配列にクラス名とその初期化コンストラクタのアドレスのペアを登録する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; g_Constructors.insert(std::make_pair(className, &amp;Constructor&lt;classT&gt;));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Object&gt; Construct(std::string const&amp; className, std::shared_ptr&lt;InitParams&gt; initParams, World* world, Vector3 position, Quaternion rotation = { 0,0,0,1 })<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // classNameでクラス辞書をfind検索する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ConstructorDictionary::iterator ite = g_Constructors.find(className);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (ite == g_Constructors.end()) // .end()なら辞書の最後なので見つからなかったってこと<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert("登録されていないクラスを初期化しようとしました！ちゃんと Factory.cpp で REGISTER_CONSTRUCTORしてください" == "");<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return 0;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //辞書のsecondには初期化コンストラクタが入っているのでそれを返す⇒returnと同時に初期化コンストラクタが駆動する<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return ite-&gt;second(initParams, world, position, rotation); // _VSTD::forward&lt;_Args&gt;(__args)...));<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      }<br>
+      <br>
+      <br>
+      // ★工場ファクトリーパターン(プレイヤーや敵、アイテムなどのメモリ上の実体の初期化コンストラクトやmake_sharedを作成を一手に任せる)<br>
+      // 【効果】新規生成処理の経路を共通の窓口にすることで色んなとこに散らばった生成処理の経路を一本にまとめる<br>
+      class Factory<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; //friend Object; // フレンド宣言でObjectクラスのprivateな関数にもアクセスできるようにする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初回だけ Zako0 などのクラスのコンストラクタを辞書に登録を1回だけする<br>
+      &nbsp;&nbsp;&nbsp; // class_name に対応するコンストラクタが辞書登録済かもチェック<br>
+      &nbsp;&nbsp;&nbsp; static void Init(const std::string&amp; class_name);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // class_nameに応じて敵などのオブジェクトを生成してreturnで返す<br>
+      &nbsp;&nbsp;&nbsp; template &lt;typename TypeT&gt; //[templateを.hと.cppに分けて書くのが難しい] https://qiita.com/i153/items/38f9688a9c80b2cb7da7<br>
+      &nbsp;&nbsp;&nbsp; static std::shared_ptr&lt;TypeT&gt; <b>ConstructByClassName</b>(const std::string&amp; <b>class_name</b>, std::shared_ptr&lt;InitParams&gt; initParams, World* world, Vector3 position, Quaternion rotation = { 0,0,0,1 });<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //IDに応じて作り分ける役目を工場でMapなどの代わりに請け負う<br>
+      &nbsp;&nbsp;&nbsp; template&lt;typename TypeT&gt;<br>
+      &nbsp;&nbsp;&nbsp; static std::shared_ptr&lt;TypeT&gt; <b>MakeSharedObject</b>(const std::string&amp; <b>class_name</b>, std::shared_ptr&lt;InitParams&gt; initParams, World* world, Vector3 position, Quaternion rotation = { 0,0,0,1 })<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // class_nameの名前のコンストラクタがあるかチェックし、初回だけ Zako0 などのクラスのコンストラクタを辞書に登録を1回だけする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Init(class_name);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // class_name に応じて敵などのオブジェクトを生成してreturnで返す<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; auto pObject = <b>ConstructByClassName</b>&lt;TypeT&gt;(<b>class_name</b>, initParams, world, position, rotation);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return pObject; // 共有ポインタに変換して回し読み状態で返す<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    Factory.hをみればわかるようにZako0.hやItem.hなどの実際のインクルードはなく代わりにclass Zako0; など前方宣言にしてあります。<br>
+    そして、<b>MakeSharedObject</b>関数を窓口にして<b>ConstructByClassName</b>で <b>class_name</b>からZako0などをTypeTとして初期生成する処理の窓口が用意されてます。<br>
+    実際のZako0などの初期化には#include が必須なので <b>ConstructByClassName関数は.hでは定義だけして.cppに初期生成の処理を逃がせるようにしています。</b><br>
+    <br>
+    <p><code>Factory.cppを新規作成</code>して、Zako0やItemなどの「文字列 → Zako0などのコンストラクタへの辞書」でZako0などの実体を生成できるようにしましょう。</p>
+    <p class="source">#include "Factory.h"<br>
+      <br>
+      #include &lt;unordered_map&gt; //★ #文字列 マクロで&lt;クラス名→コンストラクタ&gt;をビルドする瞬間に 辞書に登録<br>
+      <br>
+      // new や std::make_shared1 や Createで初期生成するには<br>
+      // #includeしてコンストラクタを呼び出せる必要が出てくる<br>
+      #include "Enemy.h"<br>
+      #include "Zako0.h"<br>
+      //#include "Zako1.h"<br>
+      //#include "Zako2.h"<br>
+      //#include "Zako3.h"<br>
+      //#include "Boss.h"<br>
+      <br>
+      //#include "Item.h"<br>
+      //#include "ItemBlock.h"<br>
+      //#include "ItemBullet.h"<br>
+      //#include "ItemMoney.h"<br>
+      <br>
+      //#include "Bullet.h"<br>
+      <br>
+      #include "World.h"<br>
+      <br>
+      //【上級1】★以下サイトを参考に【文字列"Zako1"とかからクラスを初期化するテクニック】<br>
+      // https://stackoverflow.com/questions/5447675/how-to-convert-a-string-to-a-class-name/5447776<br>
+      // <br>
+      // 以下のようにクラスの型タイプを書かずに初期化できるので★if else文をいちいちコピーして増やさずに済む<br>
+      // 例. いちいち書く例<br>
+      // if (gid == 0)&nbsp;&nbsp;&nbsp;&nbsp; return Factory::make_shared&lt;Zako0&gt;(x + 32, y + 32);<br>
+      // else if(gid == 1) return Factory::make_shared&lt;Zako1&gt;(x + 32, y + 32);<br>
+      //&nbsp; .......(敵の種類が増えるたびにいちいちif elseコピペで書かないと..)<br>
+      // ↓<br>
+      // ↓★"Zako1"の文字列で初期化できれば1行で書けるようになる余地が出てくる！(CSVのクラス名の文字から初期化も目指せる)<br>
+      // ↓<br>
+      // 例. 初期化に&lt;Zako1&gt;を使わずに済むようになる "Zako1"で書ける<br>
+      // auto enemy = g_ClassFactory.Construct("Zako1", x + 32, y + 32);//←"Zako1"で初期化 &lt;Zako1&gt;だとコードに書くしかない<br>
+      <br>
+      <br>
+      // クラス名 classTypeName 例. Zako0 のコンストラクタを s_umConstructors 辞書に登録するための↓<b>#文字取得マクロ</b><br>
+      #define <b>REGISTER_CONSTRUCTOR</b>(classTypeName) RegisterConstructor&lt;classTypeName&gt;( <b>#classTypeName</b> )<br>
+      <br>
+      // Factoryクラスの「依存性の逆転」を引き起こすには.hでは★#includeしたくない https://blog.ecbeing.tech/entry/2021/01/20/114000<br>
+      // だが、テンプレート関数は普通.hに実装までする必要があるが、それを回避する方法もある https://qiita.com/i153/items/38f9688a9c80b2cb7da7<br>
+      // .cppでtemplate関数の実体を.hと分けて定義するには「★最小限下記の定義をオブジェクトごとにする必要」がある<br>
+      template std::shared_ptr&lt;Object&gt; Factory::ConstructByClassName&lt;Object&gt;(const std::string&amp;, std::shared_ptr&lt;InitParams&gt;, World*, Vector3, Quaternion);<br>
+      template std::shared_ptr&lt;Enemy&gt; Factory::ConstructByClassName&lt;Enemy&gt;(const std::string&amp;, std::shared_ptr&lt;InitParams&gt;, World*, Vector3, Quaternion);<br>
+      <br>
+      <br>
+      namespace // 無名名前空間(他ファイルから参照できない変数や関数を宣言)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; bool isConstructorRegistered{ false }; // 初回だけクラスのコンストラクタ登録を1回だけするためのフラグ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 初回だけ Zako0 などのクラスのコンストラクタを辞書に登録を1回だけする<br>
+      &nbsp;&nbsp;&nbsp; inline void InitConstructors()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!isConstructorRegistered) // 初回だけクラスのコンストラクタ登録を1回だけする<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; //クラス登録されていないなら初回登録して "文字列"→コンストラクタ を呼び出せるようにしておく<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <b>REGISTER_CONSTRUCTOR(Zako0); // Zako0のコンストラクタを辞書に登録</b>しておく<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //REGISTER_CONSTRUCTOR(Zako1);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //REGISTER_CONSTRUCTOR(Zako2);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //REGISTER_CONSTRUCTOR(Zako3);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //REGISTER_CONSTRUCTOR(Boss);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //REGISTER_CONSTRUCTOR(ItemBullet);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //REGISTER_CONSTRUCTOR(ItemBlock);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //REGISTER_CONSTRUCTOR(ItemMoney);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //REGISTER_CONSTRUCTOR(Bullet);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; isConstructorRegistered = true;<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      }<br>
+      <br>
+      void Factory::Init(const std::string&amp; class_name)//int id)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // 初回だけ Zako0 などのクラスのコンストラクタを辞書に登録を1回だけする<br>
+      &nbsp;&nbsp;&nbsp; InitConstructors();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 辞書に class_name が登録されているかチェック<br>
+      &nbsp;&nbsp;&nbsp; assert(g_Constructors.count(class_name) != 0 &amp;&amp; "まだ登録してない クラス名 が Factory.cpp にありました。");<br>
+      }<br>
+      <br>
+      // class_name に応じて敵などのオブジェクトを生成してreturnで返す<br>
+      template &lt;typename TypeT&gt; //[templateを.hと.cppに分けて書くのが難しい] https://qiita.com/i153/items/38f9688a9c80b2cb7da7<br>
+      std::shared_ptr&lt;TypeT&gt; Factory::ConstructByClassName(const std::string&amp; class_name, std::shared_ptr&lt;InitParams&gt; initParams, World* world, Vector3 position, Quaternion rotation)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; // class_nameに応じて敵などのオブジェクトを生成してreturnで返す<br>
+      &nbsp;&nbsp;&nbsp; // ★Zako1*でもBoss*でもOK、ベース基底のObject型であいまいな状態で受け取る<br>
+      &nbsp;&nbsp;&nbsp; auto pObject = Construct(class_name, initParams, world, position, rotation);<br>
+      &nbsp;&nbsp;&nbsp; return std::dynamic_pointer_cast&lt;TypeT&gt;(pObject); // タイプをキャストでTypeTで指定した型に変換して返す<br>
+      }<br>
+    </p>
+    <br>
+    <p><code>GameObject.hを変更</code>して、OnDamageなどダメージ系の処理のベースを準備しましょう。</p>
+    <p class="source">#ifndef GAMEOBJECT_H_<br>
+      #define GAMEOBJECT_H_<br>
+      <br>
+      #include &lt;memory&gt; // 共有ポインタの定義のため<br>
+      <br>
+      #include "Vector3.h"<br>
+      #include "Quaternion.h"<br>
+      #include "Tile.h" // OnHitTileのコールバックに必要<br>
+      <br>
+      #include "Object.h" // インスタンスIDや検索タグを持ち、shared_from_this_as&lt;継承先クラス名&gt;などができる<br>
+      #include "World.h"<br>
+      <br>
+      class Map; // 前方宣言<br>
+      class Component; // 前方宣言<br>
+      class Collision; // 前方宣言<br>
+      <em>class CollisionParams; // 前方宣言</em><br>
+      <br>
+      // ゲーム上に表示される物体の基底クラス。<br>
+      // プレイヤーや敵、アイテムなどはこのクラスを継承して作る。<br>
+      class GameObject : public Object<br>
+      {<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタはprotected:にしてあるのでCreate関数経由で初期生成してください<br>
+      &nbsp;&nbsp;&nbsp; GameObject(World* world = nullptr, Vector3 position = { 0,0,0 }, Quaternion rotation = { 0,0,0,1 }, Vector3 velocity = { 0,0,0 }, Vector3 force = { 0,0,0 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Object(), m_world{ world }, position{ position }, rotation{ rotation }, velocity{ velocity }, force{ force }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 仮想デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; virtual ~GameObject() {}<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union { // ★共用体unionテクニック https://inemaru.hatenablog.com/entry/2016/03/02/005408<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //★下記3つはメモリ上で共用状態になる(position、x,y,z、xyzどの名前から数値を変えたり読出してもメモリ上は同じ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 同じデータに3種類の名前を付けたイメージ、しかもVector3の機能や配列としてのアクセスの仕方もできて便利<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float x, y, z; }; // XYZ座標&nbsp; [匿名共用体とは] https://code.i-harness.com/ja-jp/q/4d437c<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 position; // XYZ座標<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; xyz; // float xyz[3];と同じ意味 float 3個ぶんのデータサイズでx,y,z 3個ぶんと一致するので★unionで共用<br>
+      &nbsp;&nbsp;&nbsp; }; // unionは異なる複数のものをメモリ上の同一の番地に割り当てられる⇒x,y,z分けて記述するの面倒なとき配列xyz[3]をfor文i=0～3で回せる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Quaternion rotation; // 回転クオータニオン<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vx, vy, vz; }; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 velocity; // XYZ方向の速度<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyz;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; union {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct { float vxForce, vyForce, vzForce; }; // XYZ方向にかかる力(Unityでいうと AddForce関数 )<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 force; // XYZ方向の力(物理的には加速度:1フレームごとにvelocityの増える=加速する量)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::array&lt;float, 3&gt; vxyzForce;<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 重力を返す、重力を変えたいときはoverrideして処理を変えてください、重力を変えてない場合は 0.0f<br>
+      &nbsp;&nbsp;&nbsp; virtual inline float gravity() { return 0.0f; }<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; World* m_world; // GameObjectが配置されたワールドへのリンク<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドへのポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; virtual World* world() { return m_world; }<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドのポインタを変更する<br>
+      &nbsp;&nbsp;&nbsp; virtual void world(World* changeWorld) { m_world = changeWorld; }<br>
+      &nbsp;&nbsp;&nbsp; // GameObjectが現在いるマップへのポインタを返す<br>
+      &nbsp;&nbsp;&nbsp; Map* map() { return m_world-&gt;map.get(); }<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; bool isDead{ false }; // 死んだ（削除対象）フラグ<br>
+      &nbsp;&nbsp;&nbsp; bool isStatic{ false }; // 動かない(静的オブジェクトか?)<br>
+      &nbsp;&nbsp;&nbsp; bool isGround{ false }; // 地面についているか<br>
+      &nbsp;&nbsp;&nbsp; bool isJumping{ false }; // ジャンプ中か<br>
+      &nbsp;&nbsp;&nbsp; bool isFlying{ false }; // 空をとんでいるか<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float pushPower{ 5.0f }; // コライダで接触したときに押し返す力(相手側が強いと押される)<br>
+      &nbsp;&nbsp;&nbsp; float mass{ 1.0f }; // 質量(重さ)コライダで接触したときに重さでforceを割り算すると動きにくくなる<br>
+      &nbsp;&nbsp;&nbsp; <em>std::shared_ptr&lt;CollisionParams&gt; collisionParams; // 衝突関係の物理パラメータ<br>
+        <br>
+      </em> &nbsp;&nbsp;&nbsp; hash32 typeTag{ "" }; // 小カテゴリ Zako0など個別のタイプ<br>
+      &nbsp;&nbsp;&nbsp; hash32 baseTag{ "" }; // 大カテゴリ Enemyなど大まかなベースジャンル<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // コンポーネントの&lt;ハッシュID, 共有所有ポインタ&gt; の辞書でコンポーネントの共有カウンタ+1を保持する<br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;size_t, std::shared_ptr&lt;Component&gt;&gt; components;<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // コンポーネントを得る 例えば GetComponent&lt;BoxCollider&gt;でBoxColliderという名前のコンポーネントをcomponents辞書から得る<br>
+      &nbsp;&nbsp;&nbsp; template&lt;class ComponentT&gt;<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;std::weak_ptr&lt;ComponentT&gt;&gt; GetComponents()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★[ComponentTのハッシュコードを得るテク] https://cpprefjp.github.io/reference/typeindex/type_index/hash_code.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t hashID = typeid(ComponentT).hash_code(); //[まずハッシュでID化]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // equal_range 関数を使って、指定したキーの最初と終端の位置を示すイテレータを std::pair&lt;&gt; で取得します。<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto range = components.equal_range(hashID); //https://ez-net.jp/article/9E/DFLX8hNG/G5J8DPmsltz4/<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;std::weak_ptr&lt;ComponentT&gt;&gt; returnList; // "ComponentT" 例."CircleCollider"など をキーとするコンポーネント一覧<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto ite = range.first; ite != range.second; ++ite)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; returnList.emplace_back(ite-&gt;second); // 辞書で見つかったコンポーネントを返すリストに追加<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return returnList;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンポーネントを追加する .AddComponent&lt;BoxCollider&gt;(...)で追加できる<br>
+      &nbsp;&nbsp;&nbsp; template&lt;class ComponentT, typename ...ArgsT&gt;<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;ComponentT&gt; AddComponent(ArgsT&amp;&amp;...args)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★[ComponentTのハッシュコードを得るテク] https://cpprefjp.github.io/reference/typeindex/type_index/hash_code.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t hashID = typeid(ComponentT).hash_code(); //[まずハッシュでID化]<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // shared_from_this()を必ず渡してセットで初期化して、オーナーがリンク切れのコンポーネントができないように気をつける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::shared_ptr&lt;ComponentT&gt; newComponent = std::make_shared&lt;ComponentT&gt;(shared_from_this_as&lt;GameObject&gt;(), std::forward&lt;ArgsT&gt;(args)<b>...</b>);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // https://ez-net.jp/article/9E/DFLX8hNG/G5J8DPmsltz4/<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // std::unrodered_multimap&lt;&gt; と同型の値を取る std::pair&lt;&gt; を作って insert 関数でcomponents辞書に追加<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; components.insert(std::pair&lt;size_t, std::shared_ptr&lt;ComponentT&gt;&gt;(hashID, newComponent));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return newComponent;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // コンポーネントを削除する<br>
+      &nbsp;&nbsp;&nbsp; template&lt;typename ComponentT&gt;<br>
+      &nbsp;&nbsp;&nbsp; bool RemoveComponent(std::shared_ptr&lt;ComponentT&gt; removeComponent)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //★[ComponentTのハッシュコードを得るテク] https://cpprefjp.github.io/reference/typeindex/type_index/hash_code.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t hashID = typeid(ComponentT).hash_code(); //[まずハッシュでID化]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // equal_range 関数を使って、指定したキーの最初と終端の位置を示すイテレータを std::pair&lt;&gt; で取得します。<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto range = components.equal_range(hashID); //https://ez-net.jp/article/9E/DFLX8hNG/G5J8DPmsltz4/<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //[イテレート中に探しながら消す] https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/erase.html<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto ite = range.first; ite != range.second;)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (ite-&gt;second == removeComponent)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; components.erase(ite); // 削除された要素の次を指すイテレータが返される<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true; // 見つかって消せた場合は true<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ++ite; // 次の要素へイテレータを進める<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false; // 見つからずに消せなかった場合は false<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理[純粋仮想関数 = 0 なのでoverride必須の関数]<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() = 0; // 純粋仮想関数 = 0 にすると【絶対 Update()関数はoverrideしなきゃいけない義務を付与できる 】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理[純粋仮想関数 = 0 なのでoverride必須の関数]<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; // 純粋仮想関数 = 0 にすると【絶対 Draw()関数はoverrideしなきゃいけない義務を継承先クラスに付与 】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 衝突開始したときの関数 overrideして衝突したときの処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnCollisionEnter(std::shared_ptr&lt;Collision&gt; pCollision)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして衝突開始したときの処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 衝突したときの関数 overrideして衝突したときの処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnCollision(std::shared_ptr&lt;Collision&gt; pCollision)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして衝突したときの処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 衝突終了したときの関数 overrideして衝突したときの処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnCollisionExit(std::shared_ptr&lt;Collision&gt; pCollision)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして衝突終了したときの処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // ジャンプ開始した直後に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnStartJump()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideしてジャンプした瞬間に音を鳴らしたりする処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 空中でジャンプの上昇中に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnJumping()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして空中でジャンプの上昇中にエフェクトを出したりする処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 空中で落ちている最中に呼ばれる関数<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnFalling()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideして空中で落ちている最中に音を鳴らしたり、エフェクトを出したりする処理などをオブジェクトの種類ごとに実装する<br>
+      &nbsp;&nbsp;&nbsp; };<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // タイルに当たったときのコールバック<br>
+      &nbsp;&nbsp;&nbsp; virtual void OnHitTile(HitPart hitPart, HitBit hitPartBit, TileBit checkBit, float xLeft, float xMiddle, float xRight,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float yBottom, float yMiddle, float yTop, float zBack, float zMiddle, float zForward,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; unsigned int* pTerrainID = nullptr, int* pMapX = nullptr, int* pMapY = nullptr, int* pMapZ = nullptr, TileBit* pMatchBits = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 継承 overrideしてタイルに当たったときの処理を実装する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 継承 overrideしてGameObjectのもつ個別のダメージの値を返す( otherの種類などでダメージ計算式をカスタムできる )<br>
+        &nbsp;&nbsp;&nbsp; virtual float Damage(std::shared_ptr&lt;GameObject&gt; other) { return 0.0f; }<br>
+        &nbsp;&nbsp;&nbsp; // 継承 overrideして個別のダメージの値を返す<br>
+        &nbsp;&nbsp;&nbsp; virtual float Damage() { return 0.0f; }<br>
+        &nbsp;&nbsp;&nbsp; <br>
+        &nbsp;&nbsp;&nbsp; virtual void OnDamage(std::shared_ptr&lt;GameObject&gt; other)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overrideしてダメージを受けた時の処理を個別に実装<br>
+        &nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>Enemy.hを新規作成</code>して、Zako0などの敵を表現するベース基底クラスを準備しましょう。</p>
+    <p class="source">#ifndef ENEMY_H_<br>
+      #define ENEMY_H_<br>
+      <br>
+      #include "GameObject.h"<br>
+      #include "Collider.h"<br>
+      #include "CollisionParams.h"<br>
+      <br>
+      class World; //前方宣言<br>
+      <br>
+      // アイテムの情報のベース基底クラス 継承override してアイテム情報をjsonなどから受け取る<br>
+      struct EnemyInfo : public InitParams<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; float life{ 1.0f }; // HP lifeが0になったらisDeadになる<br>
+      &nbsp;&nbsp;&nbsp; float damage{ 0.0f }; // プレイヤが当たったときに受けるダメージ<br>
+      &nbsp;&nbsp;&nbsp; float speedMax{ 3.0f }; // 敵の移動スピードのMAX値<br>
+      &nbsp;&nbsp;&nbsp; float colliderRadius{ 8.0f }; // アイテムとしてのコライダの半径<br>
+      &nbsp;&nbsp;&nbsp; float bulletRadius{ 16.0f }; // 敵が弾を撃つ際の弾としてのコライダの半径<br>
+      &nbsp;&nbsp;&nbsp; int bulletCount{ -1 }; // 弾を撃てる数のカウント値( -1のときは無限に撃てるタイプの敵 )<br>
+      &nbsp;&nbsp;&nbsp; float bulletDamage{ 1 }; // 弾の与えるダメージ<br>
+      &nbsp;&nbsp;&nbsp; float bulletSpeed{ 10.0f }; // 弾のスピード<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;CollisionParams&gt; collisionParams; // 衝突関係の物理パラメータ<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;GameObject&gt; shooter; // 弾を撃った後に弾の撃ち手の弱共有ポインタのリンクをBulletに渡す<br>
+      &nbsp;&nbsp;&nbsp; float shooterAngleY{ 0.0f }; // 撃ち手の撃った際の角度<br>
+      &nbsp;&nbsp;&nbsp; int imageIndex{ -1 }; // 敵の画像が分割画像だったらどの位置のIDの画像か<br>
+      &nbsp;&nbsp;&nbsp; int bulletImageIndex{ -1 }; // 弾の画像が分割画像だったらどの位置のIDの画像か<br>
+      &nbsp;&nbsp;&nbsp; std::string imagePath{ "" }; // 敵の画像のパス<br>
+      &nbsp;&nbsp;&nbsp; std::string bulletImagePath{ "" }; // 敵の撃つ弾の画像のパス<br>
+      &nbsp;&nbsp;&nbsp; inline EnemyInfo(std::shared_ptr&lt;InitParams&gt; initParams = nullptr) : InitParams{}<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto tmxParams = std::static_pointer_cast&lt;InitTMXProperty&gt;(initParams);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (tmxParams-&gt;properties == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto tmxProperties = tmxParams-&gt;properties;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // tmxのjsonの追加プロパティからデータを読み取る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (tmxProperties-&gt;count("pushPower") &gt; 0 || tmxProperties-&gt;count("collision_e") &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collisionParams = std::make_shared&lt;CollisionParams&gt;(initParams); // 物理パラメータを読み取り<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto itr = tmxProperties-&gt;find("life");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の imagePath のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("damage");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の damage のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; damage = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("imagePath");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::String &amp;&amp; "json の imagePath のタイプが Stringでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imagePath = itr-&gt;second.stringValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("imageIndex");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Int &amp;&amp; "json の imageIndex のタイプが Intでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imageIndex = itr-&gt;second.intValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletImagePath");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::String &amp;&amp; "json の bulletImagePath のタイプが Stringでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletImagePath = itr-&gt;second.stringValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletImageIndex");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Int &amp;&amp; "json の bulletImageIndex のタイプが Intでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletImageIndex = itr-&gt;second.intValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("colliderRadius");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の colliderRadius のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; colliderRadius = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletRadius");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の bulletRadius のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletRadius = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletSpeed");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の bulletSpeed のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletSpeed = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletCount");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Int &amp;&amp; "json の bulletCount のタイプが Intでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletCount = itr-&gt;second.intValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletDamage");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の bulletDamage のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletDamage = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual ~EnemyInfo() {}<br>
+      };<br>
+      <br>
+      <br>
+      // 敵の基底クラス。<br>
+      // 全ての敵は、このクラスを継承して作る。<br>
+      // ★【勉強】abstract型はC++にない!!【純粋仮想関数】=0を使って作る<br>
+      class Enemy : public GameObject<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Enemy(World* world, Vector3 position, Quaternion rotation = { 0,0,0,1 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; Enemy(const Object::ID&amp; stopper, World* world, Vector3 position)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : GameObject(world, position, rotation)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;baseTag = "Enemy";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; float speedMax{ 1.0f };<br>
+      &nbsp;&nbsp;&nbsp; float life{ 1.0f }; // 耐久力<br>
+      &nbsp;&nbsp;&nbsp; float m_Damage{ 0 }; // 敵に当たった時に与えるダメージ<br>
+      &nbsp;&nbsp;&nbsp; float Damage() override { return m_Damage; }<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Resource&gt; m_pImage; // 画像や3Dモデルなどのパス<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;EnemyInfo&gt; m_enemyInfo; // 敵のjsonから読み取った情報<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Init(std::shared_ptr&lt;InitParams&gt; initParams = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (initParams == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_enemyInfo = std::make_shared&lt;EnemyInfo&gt;(initParams); // アイテム情報を受け取る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collisionParams = m_enemyInfo-&gt;collisionParams; // 物理衝突パラメータを受け取る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (Resource::TypeByExt(params-&gt;imagePath) == Resource::Type::Texture)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_pImage = Resource::MakeShared&lt;Texture&gt;(m_enemyInfo-&gt;imagePath);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_Damage = m_enemyInfo-&gt;damage;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = m_enemyInfo-&gt;life;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; speedMax = m_enemyInfo-&gt;speedMax;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual ~Enemy() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理。派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() = 0;//virtual ～ = 0;で【純粋仮想関数に】これで【C#のabstract型に】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理。派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void OnCollision(std::shared_ptr&lt;Collision&gt; pCollision) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isDead) return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto otherCollider = pCollision-&gt;contacts[0].otherCollider.lock();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (otherCollider == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto other = otherCollider-&gt;owner();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (other-&gt;isDead) return; // other側がisDeadだったら処理をスルー<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (other-&gt;typeTag == "PlayerBullet" || other-&gt;baseTag == "Enemy" || other-&gt;baseTag == "Player")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 相手方がPlayerBulletの場合は相手側の物理パラメータを使用する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto colObj = (other-&gt;typeTag == "PlayerBullet") ? other : shared_from_this_as&lt;GameObject&gt;();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float objPushPower = (colObj-&gt;collisionParams != nullptr) ? colObj-&gt;collisionParams-&gt;pushPower : other-&gt;pushPower;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (colObj-&gt;collisionParams != nullptr &amp;&amp; colObj-&gt;collisionParams-&gt;isDEMcollision)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //[離散要素法] https://qiita.com/konbraphat51/items/157e5803c514c60264d2<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float k = colObj-&gt;collisionParams-&gt;k; // バネ係数(めり込みに対するバネ反発の掛け率)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float e = colObj-&gt;collisionParams-&gt;e; // 跳ね返り係数(直前と比べどれくらいの速さで離れるか 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float log_e = colObj-&gt;collisionParams-&gt;log_e();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float eta = colObj-&gt;collisionParams-&gt;eta(mass); // 粘性係数 の mass は自分側を使う?<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto norm = pCollision-&gt;contacts[0].normal;// *other-&gt;pushPower; // pushPowerの力でotherに押し返される<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto v_norm = dot(other-&gt;velocity - velocity, norm) * norm; // 法線norm方向のv = (v1 - v0)・norm [ドット積]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto sep = pCollision-&gt;contacts[0].separation; // 衝突点どうしのはなれ具合<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto F = -k * sep * norm - eta * v_norm;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; force += F / mass; // 衝突法線方向の力を加える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto norm = pCollision-&gt;contacts[0].normal * objPushPower;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; force += -norm;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 継承overrideしてダメージ計算式で値を返す<br>
+      &nbsp;&nbsp;&nbsp; virtual float Damage(std::shared_ptr&lt;GameObject&gt; other) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return other-&gt;Damage(); // 弾の側のダメージ値をそのまま採用(防御力とかで式をカスタムもできる)<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void OnDamage(std::shared_ptr&lt;GameObject&gt; other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (other-&gt;baseTag == "Bullet")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life -= Damage(other); // ライフを減らす&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ライフが無くなったら、死亡<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (life &lt;= 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isDead = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <br>
+    <p><code>Enemy.hを新規作成</code>して、Zako0などの敵を表現するベース基底クラスを準備しましょう。</p>
+    <p class="source">#ifndef ENEMY_H_<br>
+      #define ENEMY_H_<br>
+      <br>
+      #include "GameObject.h"<br>
+      #include "Collider.h"<br>
+      #include "CollisionParams.h"<br>
+      <br>
+      class World; //前方宣言<br>
+      <br>
+      // アイテムの情報のベース基底クラス 継承override してアイテム情報をjsonなどから受け取る<br>
+      struct EnemyInfo : public InitParams<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; float life{ 1.0f }; // HP lifeが0になったらisDeadになる<br>
+      &nbsp;&nbsp;&nbsp; float damage{ 0.0f }; // プレイヤが当たったときに受けるダメージ<br>
+      &nbsp;&nbsp;&nbsp; float speedMax{ 3.0f }; // 敵の移動スピードのMAX値<br>
+      &nbsp;&nbsp;&nbsp; float colliderRadius{ 8.0f }; // アイテムとしてのコライダの半径<br>
+      &nbsp;&nbsp;&nbsp; float bulletRadius{ 16.0f }; // 敵が弾を撃つ際の弾としてのコライダの半径<br>
+      &nbsp;&nbsp;&nbsp; int bulletCount{ -1 }; // 弾を撃てる数のカウント値( -1のときは無限に撃てるタイプの敵 )<br>
+      &nbsp;&nbsp;&nbsp; float bulletDamage{ 1 }; // 弾の与えるダメージ<br>
+      &nbsp;&nbsp;&nbsp; float bulletSpeed{ 10.0f }; // 弾のスピード<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;CollisionParams&gt; collisionParams; // 衝突関係の物理パラメータ<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;GameObject&gt; shooter; // 弾を撃った後に弾の撃ち手の弱共有ポインタのリンクをBulletに渡す<br>
+      &nbsp;&nbsp;&nbsp; float shooterAngleY{ 0.0f }; // 撃ち手の撃った際の角度<br>
+      &nbsp;&nbsp;&nbsp; int imageIndex{ -1 }; // 敵の画像が分割画像だったらどの位置のIDの画像か<br>
+      &nbsp;&nbsp;&nbsp; int bulletImageIndex{ -1 }; // 弾の画像が分割画像だったらどの位置のIDの画像か<br>
+      &nbsp;&nbsp;&nbsp; std::string imagePath{ "" }; // 敵の画像のパス<br>
+      &nbsp;&nbsp;&nbsp; std::string bulletImagePath{ "" }; // 敵の撃つ弾の画像のパス<br>
+      &nbsp;&nbsp;&nbsp; inline EnemyInfo(std::shared_ptr&lt;InitParams&gt; initParams = nullptr) : InitParams{}<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto tmxParams = std::static_pointer_cast&lt;InitTMXProperty&gt;(initParams);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (tmxParams-&gt;properties == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto tmxProperties = tmxParams-&gt;properties;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // tmxのjsonの追加プロパティからデータを読み取る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (tmxProperties-&gt;count("pushPower") &gt; 0 || tmxProperties-&gt;count("collision_e") &gt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collisionParams = std::make_shared&lt;CollisionParams&gt;(initParams); // 物理パラメータを読み取り<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto itr = tmxProperties-&gt;find("life");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の imagePath のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("damage");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の damage のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; damage = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("imageIndex");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Int &amp;&amp; "json の imageIndex のタイプが Intでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imageIndex = itr-&gt;second.intValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("imagePath");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::String &amp;&amp; "json の imagePath のタイプが Stringでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imagePath = itr-&gt;second.stringValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletImageIndex");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Int &amp;&amp; "json の bulletImageIndex のタイプが Intでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletImageIndex = itr-&gt;second.intValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletImagePath");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::String &amp;&amp; "json の bulletImagePath のタイプが Stringでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletImagePath = itr-&gt;second.stringValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("colliderRadius");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の colliderRadius のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; colliderRadius = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletRadius");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の bulletRadius のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletRadius = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletSpeed");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の bulletSpeed のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletSpeed = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletCount");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Int &amp;&amp; "json の bulletCount のタイプが Intでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletCount = itr-&gt;second.intValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itr = tmxProperties-&gt;find("bulletDamage");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (itr != end(*tmxProperties))<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(itr-&gt;second == TMXProperty::Type::Float &amp;&amp; "json の bulletDamage のタイプが Floatでない！jsonのプロパティを見直してください");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletDamage = itr-&gt;second.floatValue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; virtual ~EnemyInfo() {}<br>
+      };<br>
+      <br>
+      <br>
+      // 敵の基底クラス。<br>
+      // 全ての敵は、このクラスを継承して作る。<br>
+      // ★【勉強】abstract型はC++にない!!【純粋仮想関数】=0を使って作る<br>
+      class Enemy : public GameObject<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Enemy(World* world, Vector3 position, Quaternion rotation = { 0,0,0,1 })<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; Enemy(const Object::ID&amp; stopper, World* world, Vector3 position)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : GameObject(world, position, rotation)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;baseTag = "Enemy";<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; float speedMax{ 1.0f };<br>
+      &nbsp;&nbsp;&nbsp; float life{ 1.0f }; // 耐久力<br>
+      &nbsp;&nbsp;&nbsp; float m_Damage{ 0 }; // 敵に当たった時に与えるダメージ<br>
+      &nbsp;&nbsp;&nbsp; float Damage() override { return m_Damage; }<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Resource&gt; m_pImage; // 画像や3Dモデルなどのパス<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;EnemyInfo&gt; m_enemyInfo; // 敵のjsonから読み取った情報<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void Init(std::shared_ptr&lt;InitParams&gt; initParams = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (initParams == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_enemyInfo = std::make_shared&lt;EnemyInfo&gt;(initParams); // アイテム情報を受け取る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collisionParams = m_enemyInfo-&gt;collisionParams; // 物理衝突パラメータを受け取る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (Resource::TypeByExt(params-&gt;imagePath) == Resource::Type::Texture)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_enemyInfo-&gt;imagePath != "")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_pImage = Resource::MakeShared&lt;Texture&gt;(m_enemyInfo-&gt;imagePath);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_Damage = m_enemyInfo-&gt;damage;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life = m_enemyInfo-&gt;life;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; speedMax = m_enemyInfo-&gt;speedMax;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual ~Enemy() {}<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理。派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp;&nbsp; virtual void Update() = 0;//virtual ～ = 0;で【純粋仮想関数に】これで【C#のabstract型に】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理。派生クラスでオーバーライドして使う<br>
+      &nbsp;&nbsp;&nbsp; virtual void Draw() = 0; //virtual ～ = 0;で【純粋仮想関数に】【関数 = 0で未定義状態を表現】<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void OnCollision(std::shared_ptr&lt;Collision&gt; pCollision) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isDead) return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto otherCollider = pCollision-&gt;contacts[0].otherCollider.lock();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (otherCollider == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto other = otherCollider-&gt;owner();<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (other-&gt;isDead) return; // other側がisDeadだったら処理をスルー<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (other-&gt;typeTag == "PlayerBullet" || other-&gt;baseTag == "Enemy" || other-&gt;baseTag == "Player")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 相手方がPlayerBulletの場合は相手側の物理パラメータを使用する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto colObj = (other-&gt;typeTag == "PlayerBullet") ? other : shared_from_this_as&lt;GameObject&gt;();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float objPushPower = (colObj-&gt;collisionParams != nullptr) ? colObj-&gt;collisionParams-&gt;pushPower : other-&gt;pushPower;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (colObj-&gt;collisionParams != nullptr &amp;&amp; colObj-&gt;collisionParams-&gt;isDEMcollision)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //[離散要素法] https://qiita.com/konbraphat51/items/157e5803c514c60264d2<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float k = colObj-&gt;collisionParams-&gt;k; // バネ係数(めり込みに対するバネ反発の掛け率)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float e = colObj-&gt;collisionParams-&gt;e; // 跳ね返り係数(直前と比べどれくらいの速さで離れるか 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float log_e = colObj-&gt;collisionParams-&gt;log_e();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float eta = colObj-&gt;collisionParams-&gt;eta(mass); // 粘性係数 の mass は自分側を使う?<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto norm = pCollision-&gt;contacts[0].normal;// *other-&gt;pushPower; // pushPowerの力でotherに押し返される<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto v_norm = dot(other-&gt;velocity - velocity, norm) * norm; // 法線norm方向のv = (v1 - v0)・norm [ドット積]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto sep = pCollision-&gt;contacts[0].separation; // 衝突点どうしのはなれ具合<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto F = -k * sep * norm - eta * v_norm;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; force += F / mass; // 衝突法線方向の力を加える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto norm = pCollision-&gt;contacts[0].normal * objPushPower;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; force += -norm;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 継承overrideしてダメージ計算式で値を返す<br>
+      &nbsp;&nbsp;&nbsp; virtual float Damage(std::shared_ptr&lt;GameObject&gt; other) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return other-&gt;Damage(); // 弾の側のダメージ値をそのまま採用(防御力とかで式をカスタムもできる)<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; virtual void OnDamage(std::shared_ptr&lt;GameObject&gt; other)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (other-&gt;baseTag == "Bullet")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; life -= Damage(other); // ライフを減らす&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ライフが無くなったら、死亡<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (life &lt;= 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isDead = true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>Zako0.hを新規作成</code>して、Enemyを継承overrideして敵の実体を定義しましょう。</p>
+    <p class="source">#ifndef ZAKO_0_H_<br>
+      #define ZAKO_0_H_<br>
+      <br>
+      #include "Enemy.h"<br>
+      <br>
+      #include "MyRandom.h"<br>
+      #include "Resource.h"<br>
+      <br>
+      #include "MapHitBoxComponent.h"<br>
+      <br>
+      #include "Collider.h"<br>
+      #include "GridCollidersComponent.h"<br>
+      #include "GridSteps.h"<br>
+      <br>
+      #include "PhysicsComponent.h" // 重力落下などの物理処理コンポーネントを使う<br>
+      <br>
+      class World; // 前方宣言<br>
+      <br>
+      // ザコ0クラス<br>
+      class Zako0 : public Enemy<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;Texture&gt; Image()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return std::static_pointer_cast&lt;Texture&gt;(m_pImage);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; float MoveSpeed = 0;//移動速度<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; float moveAngle = 0; // X軸→方向から何度か<br>
+      &nbsp;&nbsp;&nbsp; float deltaAngle = 0; // 動く角度の変化率、ハンドルを切ったらだんだんもとに戻る<br>
+      &nbsp;&nbsp;&nbsp; int animCount = 0;<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;GravityComponent&gt; gravityPhysics; // 落下の重力の物理処理コンポーネント<br>
+      &nbsp;&nbsp;&nbsp; // マップ地形に対するヒットボックスの当たり判定と押し戻しをするコンポーネント<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;MapHitBoxComponent&gt; mapHitBox;<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;GridCollidersComponent&gt; gridCollision;<br>
+      &nbsp;&nbsp;&nbsp; std::weak_ptr&lt;SphereCollider&gt; sphereCollider;<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; virtual void Init(std::shared_ptr&lt;InitParams&gt; initParams = nullptr) override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Enemy::Init(initParams); // 基底ベースで共通パラメータを読み取り<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_enemyInfo-&gt;imagePath == "" &amp;&amp; m_pImage == nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_pImage = Resource::MakeShared&lt;Texture&gt;("Image/zako0.png");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyGravity{ 0.8f,0.8f,0.8f,0.8f }; // 重力の設定値<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;float&gt; vyDownSpeedMax{ 16, 16, 16, 8 }; // 降下スピードのリミット<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // AddComponent内部でshared_from_this()を必ず渡してセットで初期化して、オーナーがリンク切れのコンポーネントができないように気をつける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gravityPhysics = AddComponent&lt;GravityComponent&gt;(vyGravity, vyDownSpeedMax);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 半径16(直径32)の球体コライダ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sphereCollider = AddComponent&lt;SphereCollider&gt;(Vector3(0, 0, 0), 16);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gridCollision = AddComponent&lt;GridCollidersComponent&gt;("Enemy");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gridCollision.lock()-&gt;LinkCollider(sphereCollider); // コライダをリンクする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float mapHitBoxSize = sphereCollider.lock()-&gt;m_radius * 2.0f; // 球体コライダの直径に合わす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 boxSize{ mapHitBoxSize,mapHitBoxSize,mapHitBoxSize };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 offsetLeftBottomBack{ 3, 0, 3 }; // ボックスの端を内側にどれだけ削るか(キャラの画像に合わせて小さくできる)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 offsetRightTopForward{ 3, 4, 3 }; // ボックスの端を内側にどれだけ削るか(頭を4削る)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mapHitBox = AddComponent&lt;MapHitBoxComponent&gt;(boxSize, offsetLeftBottomBack, offsetRightTopForward);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // overrideして物理落下コンポーネントからの重力値を返す<br>
+      &nbsp;&nbsp;&nbsp; virtual float gravity() override { auto pGravityPhysics = gravityPhysics.lock(); return (pGravityPhysics != nullptr) ? pGravityPhysics-&gt;gravity() : 0.0f; }<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Zako0(World* world, Vector3 position, Quaternion rotation = { 0,0,0,1 }) : Enemy(world, position, rotation)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;typeTag = "Zako0";<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;pushPower = 5.0f;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 更新処理<br>
+      &nbsp;&nbsp;&nbsp; void Update() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vxForce *= 0.9f; // かかっている力の減衰率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vyForce *= 0.9f; // かかっている力の減衰率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vzForce *= 0.9f; // かかっている力の減衰率<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle *= 0.5F; // 車のハンドルの方向をだんだんニュートラルに戻す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //MoveSpeed *= 0.9F; // 移動速度も減速する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MoveSpeed += MyRandom::Range(-0.07f, 0.1f); //アクセルを踏む<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &gt; speedMax) MoveSpeed = speedMax;//Maxスピードで止める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (MoveSpeed &lt; -0.7f) MoveSpeed = -0.7f;//ちょっとだけバックできるように<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ランダムAI動作処理<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; deltaAngle += MyRandom::PlusMinus(0.3f); // プレイヤがみつからないときはランダム(同じフロアにいないとき)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; moveAngle += deltaAngle; // ハンドルを回したぶんプレイヤの進行方向を変える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (moveAngle &lt; -180) moveAngle = 360 + moveAngle; // -180以下の角度にならないようにマイナスになったら+180度にループさせる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (moveAngle &gt; +180) moveAngle = -360 + moveAngle; // +180以下の角度にならないようにマイナスになったら-180度にループさせる<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pGravityPhysics = gravityPhysics.lock();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pGravityPhysics != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pGravityPhysics-&gt;Update(); // 重力落下のコンポーネントを更新する<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ↓進行方向角度をX方向とZ方向の速度に変える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vx = (float)std::cos(moveAngle) * MoveSpeed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vz = (float)std::sin(moveAngle) * MoveSpeed;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float vyForceGravity = (pGravityPhysics != nullptr) ? pGravityPhysics-&gt;vyForce() : 0.0f;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vx += vxForce;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy += vyForce + vyForceGravity; // 勢い(力・フォースを加算<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vz += vzForce;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vy += vyForce; // 勢い(力・フォースを加算<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pMapHitBox = mapHitBox.lock();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float cellHalf = (map() != nullptr) ? (float)map()-&gt;CellSize() / 2.0f : 16.0f; // マップのセルのサイズの半分<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 速すぎて当たり判定がすり抜けないように細切れのステップのグリッドで移動させつつ当たり判定する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vector3 gridStepSize = (pMapHitBox == nullptr) ? Vector3{ cellHalf, cellHalf, cellHalf } : pMapHitBox-&gt;m_BoxSize / 2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GridSteps vSteps{ velocity, gridStepSize }; // 細切れのステップの数値を計算<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCollisionX{ false }, isCollisionY{ false }, isCollisionZ{ false }, isCollisionCollider{ false };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 1, iSize = vSteps.div + 1; i &lt;= iSize; ++i)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; vStep = (i &lt; iSize) ? vSteps.step : vSteps.mod;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // まず横に移動する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pMapHitBox == nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x += vx;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (isCollisionX == false) // まだ前のステップでX方向の衝突がないなら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x += vStep.x;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isCollisionX = pMapHitBox-&gt;hitCheckX((TileBit)TileType::Wall);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 次に縦に動かす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pMapHitBox == nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; y += vy;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (isCollisionY == false) // まだ前のステップでY方向の衝突がないなら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; y += vStep.y;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isCollisionY = pMapHitBox-&gt;hitCheckY((TileBit)TileType::Wall | (TileBit)TileType::Floor);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 次にZ奥行き方向に動かす<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pMapHitBox == nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; z += vz;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (isCollisionZ == false) // まだ前のステップでZ方向の衝突がないなら<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; z += vStep.z;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isCollisionZ = pMapHitBox-&gt;hitCheckZ((TileBit)TileType::Wall);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (auto pGridCollision = gridCollision.lock())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pGridCollision-&gt;Update(); // 所属するマス目セルを更新する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; collider : *pGridCollision-&gt;colliders())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isCollisionCollider |= collider.lock()-&gt;IsCollision();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 衝突があったら、速すぎてすり抜けちゃう前に今のステップでbreakで抜ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCollisionCollider)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break; // ぶつかっているのにさらに次のステップの速度も足すとすり抜けちゃう<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 描画処理<br>
+      &nbsp;&nbsp;&nbsp; void Draw() override<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (world() == nullptr) return;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto image = Image();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int animIndex = animCount / 20;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (image-&gt;m_handles.size() &gt; 8)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float abs_vx = (vx &gt; 0) ? vx : -vx; // x方向絶対値<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float abs_vz = (vz &gt; 0) ? vz : -vz; // y方向絶対値<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (abs_vx &gt; 0.01f || abs_vz &gt; 0.01f)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; animCount += 6;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (animCount &gt;= 60) animCount = 0; // アニメ時間を0へループ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ワールドに存在するすべてのカメラに関連づいたスクリーンに対して描画する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : world()-&gt;cameras) // GameObjectのいるワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 常にカメラ方向を向くビルボード回転の角度を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D angle = MyDraw::GetAngle(DxLib::GetCameraBillboardMatrixD());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; angle.x = 0; angle.z = 0; // Y軸周りのビルボード回転だけ有効にする X軸,Z軸まわりの回転は 0 にする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int imgIndex = 0; // キャラチップ画像の起点番号<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (image-&gt;m_handles.size() &gt; 8)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // ビルボードの角度 と キャラの向いている向き の 差 によって、別のプレイヤのカメラから見たキャラチップの向きの画像を切り替える<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // -180 ～ +180 : angle.y&nbsp; moveAngle : -180 ～ +180 ↓<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float difAngleY = angle.y * 180.0f / DX_PI_F + moveAngle;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imgIndex = (difAngleY &lt; -135 || 135 &lt; difAngleY) ? 0 // 奥向きの画僧<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &lt; -45) ? 6 // 右 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : (difAngleY &gt; 45) ? 3&nbsp; // 左 向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 9; // 前向きの画像<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt;= imgIndex &amp;&amp; imgIndex &lt; image-&gt;m_handles.size())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int handleWidth, handleHeight; // 描画するサイズを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::GetGraphSize(image-&gt;m_handles[imgIndex], &amp;handleWidth, &amp;handleHeight);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float ExRate = 32.0f / handleWidth;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaGraphF3D(MyDraw::Plane::Z, x, y, z, ExRate, angle, *image, imgIndex + animIndex, TRUE);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; imgIndex = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      #ifdef _DEBUG<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (auto pSphereCollider = sphereCollider.lock()) pSphereCollider-&gt;Draw(); // コライダを描く<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (auto pMapHitBox = mapHitBox.lock()) pMapHitBox-&gt;Draw(); // ヒットボックスを描く<br>
+      #endif<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      <br>
+      #endif<br>
+    </p>
+    <br>
+    <p><code>GameScene.cppを変更</code>して、タイルマップ読み込む処理と3D表示で描く処理を実装しましょう。<br>
+    </p>
+    <p class="source">#include "GameScene.h"<br>
+      <br>
+      #include "Player.h"<br>
+      <em>#include "Enemy.h"</em><br>
+      #include "Map.h"<br>
+      <br>
+      GameSceneSetting GameScene::settings{ "Map/GameSceneSetting.csv" }; // ゲームシーンの設定情報<br>
+      <br>
+      // 指定したゲームシーンのタグに関連づいたファイル名に対応したワールドを初期化する<br>
+      bool GameScene::LoadWorlds(const std::string&amp; gameSceneTag)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (settings.info.count(gameSceneTag) == 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto&amp; info = settings[gameSceneTag];<br>
+      &nbsp;&nbsp;&nbsp; for (auto&amp;&amp; tag_mapPath : info)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CreateWorld(tag_mapPath.second.tag); // ワールドをタグをつけて生成<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ワールドのマップをロード<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; worlds[tag_mapPath.second.tag]-&gt;LoadMap(tag_mapPath.second.mapFilePath);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; return true;<br>
+      }<br>
+      <br>
+      void GameScene::ChangeWorld(const std::string&amp; worldTag, std::shared_ptr&lt;Player&gt; pPlayer)<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; if (pPlayer == nullptr) return;<br>
+      &nbsp;&nbsp;&nbsp; if (worlds.count(worldTag) == 0) return; // 存在しないタグだった<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; pPlayer-&gt;world(worlds[worldTag].get()); // ワールドへのリンクをすげ替える<br>
+      }<br>
+      <br>
+      <br>
+      void GameScene::Initialize()<br>
+      {// Init処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // Ｚバッファを有効にする [Zの深度]<br>
+      &nbsp;&nbsp;&nbsp; //[参考]https://docs.google.com/presentation/d/1Z23t1yAS7uzPDVakgW_M02p20qt9DeTs4ku4IiMDLco/edit?usp=sharing<br>
+      &nbsp;&nbsp;&nbsp; //[参考] https://dxlib.xsrv.jp/function/dxfunc_3d_draw.html#R14N12<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetUseZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp; // Ｚバッファへの書き込みを有効にする<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWriteZBuffer3D(TRUE);<br>
+      &nbsp;&nbsp;&nbsp; // 光の明暗計算を無効に<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetUseLighting(FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // SetDrawScreen に引数として渡せる( 描画対象として使用できる )グラフィックハンドルを作成するかどうかを設定する<br>
+      &nbsp;&nbsp;&nbsp; // ( TRUE:描画可能グラフィックハンドルを作成する&nbsp; FLASE:通常のグラフィックハンドルを作成する( デフォルト ) )<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(TRUE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // サブのスクリーンを2つ生成 画面の全体の縦方向サイズの Height / 2 にして、上下分割で配置できるようにする<br>
+      &nbsp;&nbsp;&nbsp; screenHandle0 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; screenHandle1 = DxLib::MakeScreen(Screen::Width, Screen::Height / 2, FALSE);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーンを作成したらデフォルト設定に戻しておかないと<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawValidGraphCreateFlag(FALSE);<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath1, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;(playerImgPath2, 3, 4, 32, 32)-&gt;Load(); // メソッドチェーン -&gt; でMakeShared読込後にLoadもする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>Resource::MakeShared&lt;Texture&gt;("Image/zako0.png")-&gt;Load(); // 敵画像を読込<br>
+        &nbsp;&nbsp;&nbsp; Resource::MakeShared&lt;Texture&gt;("Image/skullman.png", 3, 4, 32, 32)-&gt;LoadDivGraph(); // 敵画像を読込</em><br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // プレイヤの生成<br>
+      &nbsp;&nbsp;&nbsp; if (pWorld != nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //pWorld-&gt;AddCamera("カメラ1", Camera::defaultCamera); // カメラ1というタグをデフォルトカメラにつけてワールドにデフォルトカメラを配置<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("カメラ1", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera1 = pWorld-&gt;camera("カメラ1"); // カメラ1 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera1-&gt;SetScreenHandle(screenHandle0); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer1 = Object::Create&lt;Player&gt;(nullptr, pWorld, Pad::Key, Vector3(90 + 256, 32, 95 + 256));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ1", pPlayer1); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath1]);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;camera = pCamera1.get(); // カメラをプレイヤにリンクする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer1-&gt;mass = 100.0f; // 体重を100にして衝突されてもびくともしないようにする<br>
+      <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddCamera("カメラ2", std::make_shared&lt;Camera&gt;(pWorld, Vector3{ 0,0,0 }));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pCamera2 = pWorld-&gt;camera("カメラ2"); // プレイヤ2 というタグのついたカメラへの共有ポインタを得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pCamera2-&gt;SetScreenHandle(screenHandle1); // カメラから見える3Dを描く スクリーンのハンドル を関連付ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pPlayer2 = Object::Create&lt;Player&gt;(nullptr, pWorld, Pad::Two, Vector3(190, 32, 195));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;AddPlayer("プレイヤ2", pPlayer2); // シーンにプレイヤを追加する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;image = std::dynamic_pointer_cast&lt;Texture&gt;(Resource::files[playerImgPath2]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;camera = pCamera2.get(); // カメラをプレイヤにリンクする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pPlayer2-&gt;mass = 1.0f; // 体重を1にして普通にふっとぶようにする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      };<br>
+      <br>
+      <br>
+      void GameScene::Update()<br>
+      {// 更新処理<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle0); // 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp; Screen::ClearDrawScreen(screenHandle1); // 一旦キャンバスをきれいにまっさらに<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; for (const auto&amp; player : players)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; player.second-&gt;Update(); // プレイヤの更新【忘れるとプレイヤが動かない】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <em>// 敵の更新処理<br>
+        &nbsp;&nbsp;&nbsp; for (const auto&amp; world : worlds)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (const auto&amp; e : world.second-&gt;enemies)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e-&gt;Update();</em><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // グリッドを更新して隣接するグリッドに含まれる敵や弾の当たり判定を行う<br>
+      &nbsp;&nbsp;&nbsp; for (const auto&amp; world : worlds)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (world.second-&gt;grid() != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (const auto&amp; cell : world.second-&gt;grid()-&gt;cellData)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pGridObject = cell.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; while (pGridObject != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // while文で数珠つなぎのm_pNextを次々とたどって最後にたどり着くと次がなくてnullptrになる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pGridObject-&gt;checkCell();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pGridObject = pGridObject-&gt;m_pNext; // リンクリスト構造を次々とたどる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      }<br>
+      <br>
+      void GameScene::Draw()<br>
+      {// 描画処理<br>
+      &nbsp;&nbsp;&nbsp; auto pWorld = world("ステージ1"); // ワールドへのリンクを得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::unordered_set&lt;World*&gt; drawEndSet; // すでに描いたWorldをポインタのsetでかぶらないように判定する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; for (const auto&amp; player : players)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; player.second-&gt;Draw(); // プレイヤの描画【忘れるとプレイヤ表示されない】<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto world = player.second-&gt;world(); // プレイヤのいるワールド<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (drawEndSet.count(world) &gt; 0) continue; // すでに描いたWorldは描かずスキップする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; drawEndSet.emplace(world); // 描いたWorldのポインタ住所をsetに登録する<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; world-&gt;map-&gt;DrawTerrain(); // マップの描画<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>// 敵の描画<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (const auto&amp; enemy : world-&gt;enemies)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enemy-&gt;Draw();<br>
+        #ifdef _DEBUG<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //enemy-&gt;DrawHitBox(); // 当たり判定の描画<br>
+        #endif<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</em><br>
+      <br>
+      #ifdef _DEBUG&nbsp; // デバッグのときだけ_DEBUGが定義され描画される<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (world-&gt;grid() != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (const auto&amp; cell : world-&gt;grid()-&gt;cellData)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cell.second-&gt;Draw(); // グリッドの描画<br>
+      #endif<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーン0の内容を画面に描く<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, 0, screenHandle0, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, 0, Screen::Width, Screen::Height / 2, GetColor(255, 0, 0));<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // スクリーン1の内容を画面に描く<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawGraph(0, Screen::Height / 2, screenHandle1, FALSE);<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DrawLineBox(0, Screen::Height / 2, Screen::Width, Screen::Height, GetColor(0, 255, 0));<br>
+      <br>
+      }<br>
+    </p>
+    <br>
+    いかがでしょう？敵キャラが表示されたでしょうか？<br>
     <br>
     <br>
   </body>
