@@ -1513,7 +1513,7 @@
       // #includeはしてないので、hpなどの変数には#include "～.h"しないとアクセスできないので循環インクルード防止のため.cppでインクルードしてください<br>
       class GameScene;<br>
       class Player;<br>
-      class PlayerBullet;<br>
+      class Bullet;<br>
       class Enemy;<br>
       class Camera;<br>
       <br>
@@ -1532,7 +1532,7 @@
       <br>
       &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::<b>shared_ptr</b>&lt;Player&gt;&gt; players; // プレイヤのタグ辞書<br>
       <br>
-      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Bullet&gt;&gt; bullets; // 弾のリスト <br>
       <br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       <br>
@@ -2891,7 +2891,7 @@
       // #includeはしてないので、hpなどの変数には#include "～.h"しないとアクセスできないので循環インクルード防止のため.cppでインクルードしてください<br>
       class GameScene;<br>
       class Player;<br>
-      class PlayerBullet;<br>
+      class Bullet;<br>
       class Enemy;<br>
       class Camera;<br>
       <br>
@@ -2915,7 +2915,7 @@
       <br>
       &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;Player&gt;&gt; players; // プレイヤのタグ辞書<br>
       <br>
-      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Bullet&gt;&gt; bullets; // 弾のリスト <br>
       <br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       <br>
@@ -7341,7 +7341,7 @@
       // #includeはしてないので、hpなどの変数には#include "～.h"しないとアクセスできないので循環インクルード防止のため.cppでインクルードしてください<br>
       class GameScene;<br>
       class Player;<br>
-      class PlayerBullet;<br>
+      class Bullet;<br>
       class Enemy;<br>
       class Camera;<br>
       <em>class Grid;</em><br>
@@ -7373,7 +7373,7 @@
       <br>
       &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;Player&gt;&gt; players; // プレイヤのタグ辞書<br>
       <br>
-      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Bullet&gt;&gt; bullets; // 弾のリスト <br>
       <br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       <br>
@@ -10704,7 +10704,7 @@
       // #includeはしてないので、hpなどの変数には#include "～.h"しないとアクセスできないので循環インクルード防止のため.cppでインクルードしてください<br>
       class GameScene;<br>
       class Player;<br>
-      class PlayerBullet;<br>
+      class Bullet;<br>
       class Enemy;<br>
       class Camera;<br>
       class Grid;<br>
@@ -10741,7 +10741,7 @@
       <br>
       &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;Player&gt;&gt; players; // プレイヤのタグ辞書<br>
       <br>
-      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;PlayerBullet&gt;&gt; playerBullets; // 自機弾のリスト <br>
+      &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Bullet&gt;&gt; bullets; // 自機弾のリスト <br>
       <br>
       &nbsp;&nbsp;&nbsp; std::list&lt;std::shared_ptr&lt;Enemy&gt;&gt; enemies; // 敵のリスト<br>
       <br>
@@ -15362,7 +15362,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto bulletInfo = std::static_pointer_cast&lt;ItemBulletInfo&gt;(m_ItemInfo);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletInfo-&gt;shooter = pPlayer; // 撃ち手の弱共有ポインタをInfoに設定してBulletに渡す<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulletInfo-&gt;shooterAngleY = pPlayer-&gt;moveAngle + 90; // 撃ち手の角度をInfoに渡す<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;playerBullets.emplace_back(Factory::MakeSharedObject&lt;Bullet&gt;("Bullet", bulletInfo, pWorld, pPlayer-&gt;position));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pWorld-&gt;bullets.emplace_back(Factory::MakeSharedObject&lt;Bullet&gt;("Bullet", bulletInfo, pWorld, pPlayer-&gt;position));<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_count != -1) // -1のときは∞なので減らさない<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --m_count; // 弾の数を減らす<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
@@ -16081,8 +16081,6 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ワールドに存在するすべてのカメラに関連づいたスクリーンに対して描画する<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; world()-&gt;Draw([&amp;]()<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //DrawRotaGraphF(x, y, 1, 0, Image::playerBullet, TRUE);<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //MyDraw::DrawRotaGraphF3D(Plane::Z, x, -y, z, 1, 0, Image::playerBullet, TRUE);<br>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 常にカメラ方向を向くビルボード回転の角度を得る<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VECTOR_D angle = MyDraw::GetAngle(DxLib::GetCameraBillboardMatrixD());<br>
@@ -16648,7 +16646,6 @@
         <br>
         &nbsp;&nbsp;&nbsp; if (pItem-&gt;hasAction())<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; itemList.lock()-&gt;Add(pItem);<br>
-        &nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; OnItemPlayerBullet()<br>
         <br>
         }<br>
         <br>
@@ -16739,6 +16736,476 @@
       <br>
       &nbsp;&nbsp;&nbsp; }<br>
       }<br>
+    </p>
+    <br>
+    <br>
+    <p><code>Map.hを変更</code>して、アイテムをフィールドにFactoryで生成する処理を追加しましょう。</p>
+    <p class="source">#ifndef MAP_H_<br>
+      #define MAP_H_<br>
+      <br>
+      #include &lt;vector&gt; // C#におけるListリストの機能<br>
+      #include &lt;unordered_map&gt;&nbsp;&nbsp;&nbsp; // 辞書型連想配列に必要<br>
+      #include &lt;memory&gt; // メモリを扱う【共有ポインタに必要】<br>
+      #include &lt;limits&gt; //intやfloatなどの無限大∞に使う&nbsp; https://cpprefjp.github.io/reference/limits/numeric_limits/max.html<br>
+      <br>
+      #include &lt;fstream&gt; // ファイル読み出しifstreamに必要<br>
+      #include &lt;string&gt; //文字列に必要<br>
+      #include &lt;sstream&gt; // 文字列ストリームに必要<br>
+      <br>
+      #include &lt;assert.h&gt; // マップ読込み失敗表示用<br>
+      <br>
+      #include "Screen.h"<br>
+      #include "MyMath.h"<br>
+      #include "MyHash.h"<br>
+      #include "MyDraw.h"<br>
+      #include "DataCsv.h"<br>
+      #include "TMXJson.h"<br>
+      <br>
+      #include "Singleton.h"<br>
+      #include "GameObject.h"<br>
+      #include "World.h"<br>
+      #include "Camera.h"<br>
+      #include "Factory.h"<br>
+      <br>
+      #include "MapRange.h" // マス目のレンジ表現するクラス<br>
+      <br>
+      #include "Tile.h"<br>
+      <br>
+      #include "Vector3.h"<br>
+      <br>
+      class AI_Map; // 前方宣言<br>
+      <br>
+      // csvから読み取るマップの基本情報<br>
+      struct MapInfo<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; MapInfo() = default;<br>
+      &nbsp;&nbsp;&nbsp; inline MapInfo(unsigned int CellSize, int SpawnRangeX, int SpawnRangeY, MapRange::Type type = MapRange::Type::Rect)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : CellSize{ CellSize }, spawnRange{ MapRange(SpawnRangeX,SpawnRangeY,type) } {};<br>
+      &nbsp;&nbsp;&nbsp; ~MapInfo() {};<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; unsigned int CellSize{ 1 }; // マップの1マスのピクセル数<br>
+      &nbsp;&nbsp;&nbsp; MapRange spawnRange; // 敵の新規出現レンジ<br>
+      };<br>
+      <br>
+      struct MapSetting // マップ情報をMapSetting.csvなどから読みだす<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp; MapSetting(const std::string&amp; csvFileName = "")<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (csvFileName != "")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Load(csvFileName);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; ~MapSetting() {}; //デストラクタ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::string FilePath{ "" }; // csvのファイルパス<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::unordered_map&lt;hash32, std::shared_ptr&lt;MapInfo&gt;&gt; info; //[辞書]stageファイル名→マップ情報<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; MapInfo&amp; operator[](const std::string&amp; stageFilePath) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(info.count(stageFilePath) != 0 &amp;&amp; "マップのステージ情報が読み取れていません Map/MapSettings.csv にステージ情報があるか確認！");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return *info[stageFilePath]; // 読み書き<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; void Load(const std::string&amp; csvFileName = "")<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (csvFileName != "") this-&gt;FilePath = csvFileName;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this-&gt;FilePath == "") return;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // マップ情報のデータ CSVファイルからデータをロード<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DataCsv Data{ this-&gt;FilePath, DataCsv::CsvType::CsvValue };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string stageFile; //ステージファイル名<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int j = 0; j &lt; Data.size(); ++j)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if ((std::string)Data[j][0] == "//")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; continue; // 一番左の列が//なら読み飛ばしのコメント行<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if ((std::string)Data[j][0] == "File")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stageFile = Data[j][1]; //ステージファイル名<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; info.emplace(stageFile, std::make_shared&lt;MapInfo&gt;());<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; continue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (stageFile == "") continue; //ステージファイル名が未確定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if ((std::string)Data[j][0] == "CellSize")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; info[stageFile]-&gt;CellSize = (int)Data[j][1]; //マス目サイズ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if ((std::string)Data[j][0] == "SpawnRange")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 敵出現レンジ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MapRange::Type rangeType = ((std::string)Data[j][3] == "Ellipse") ? MapRange::Type::Ellipse : MapRange::Type::Rect; //敵出現のタイプ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; info[stageFile]-&gt;spawnRange.InitRange(rangeType, Data[j][1].intFromString(), Data[j][2].intFromString()); //敵出現のタイプを初期化設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      // ステージのタイルマップのクラス<br>
+      class Map<br>
+      {<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // コンストラクタ<br>
+      &nbsp;&nbsp;&nbsp; Map(World* world, const std::string&amp; filePath = "")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : m_world{ world }<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (filePath == "") return;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Load(filePath);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // デストラクタ<br>
+      &nbsp;&nbsp;&nbsp; ~Map()<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // マップデータのお掃除<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enemyData.clear();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //terrains.clear(); //★地形のお掃除<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; static MapSetting settings; // マップに関する設定 Map.cpp で初期読込み デフォルトは"Map/MapSetting.csv" を読み込む<br>
+      &nbsp;&nbsp;&nbsp; static TileSetting tileSettings; // タイルに関する設定 Map.cpp で初期読込み デフォルトは"Map/MapSetting.csv" を読み込む<br>
+      &nbsp;&nbsp;&nbsp; // タイルのチップ画像のパスとidからTileの情報とタイルのgid情報を得る<br>
+      &nbsp;&nbsp;&nbsp; static Tile GetTile(const std::string&amp; mapChipPath, int id, unsigned int&amp; gid)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pos = mapChipPath.find(".", 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::string tsxPath{ "" };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pos != std::string::npos) tsxPath = mapChipPath.substr(0, pos) + ".tsx";<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto found = Tilesets::umTsxInfo.find(tsxPath);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (found != end(Tilesets::umTsxInfo) &amp;&amp; found-&gt;second.gid.size() &gt; id)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gid = found-&gt;second.gid[id]; // 辞書で id から gidに変換しておく<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else return Tile(); // id が-1のときは見つからなかったとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pos = tsxPath.find("/", 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pos != std::string::npos) tsxPath = tsxPath.substr(pos + 1, tsxPath.size() - 1);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Map::tileSettings.info[tsxPath]-&gt;tiles[id];<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; World* m_world{ nullptr }; // マップに配置する敵などのポインタを保持するワールド<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドへのポインタを得る<br>
+      &nbsp;&nbsp;&nbsp; World* world() { return m_world; }<br>
+      &nbsp;&nbsp;&nbsp; // 現在いるワールドのポインタを変更する<br>
+      &nbsp;&nbsp;&nbsp; void world(World* changeWorld) { m_world = changeWorld; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; std::shared_ptr&lt;AI_Map&gt; aiMap{ nullptr }; // AIの経路探索に使うAIマップ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 読込んだデータファイルの情報<br>
+      &nbsp;&nbsp;&nbsp; std::string FilePath{ "" };<br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; unsigned int m_CellSize{ 1 }; // マップの1マスのピクセル数 1のときはtmxに設定されたサイズが採用される<br>
+      &nbsp;&nbsp;&nbsp; unsigned int m_HalfCellSize{ 1 }; // マス目サイズの 1/2<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; inline unsigned int CellSize() { return m_CellSize; }<br>
+      &nbsp;&nbsp;&nbsp; inline unsigned int HalfCellSize() { return m_HalfCellSize; }<br>
+      &nbsp;&nbsp;&nbsp; inline void SetCellSize(unsigned int cellSize) { m_CellSize = cellSize; m_HalfCellSize = m_CellSize / 2; }<br>
+      &nbsp;&nbsp;&nbsp; MapRange spawnRange; // 敵の新規出現レンジをプレイヤから半径X,Yの楕円にする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; inline float centerX(int cellX) const { return (cellX &gt;= 0) ? (float)((cellX * m_CellSize) + m_HalfCellSize) : (float)((cellX + 1) * m_CellSize) - m_HalfCellSize; } //マス目サイズ/2ずらし<br>
+      &nbsp;&nbsp;&nbsp; inline float centerY(int cellY) const { return (cellY &gt;= 0) ? (float)((cellY * m_CellSize) + m_HalfCellSize) : (float)((cellY + 1) * m_CellSize) - m_HalfCellSize; } //マス目サイズ/2ずらし<br>
+      &nbsp;&nbsp;&nbsp; inline float centerZ(int cellZ) const { return (cellZ &gt;= 0) ? (float)((cellZ * m_CellSize) + m_HalfCellSize) : (float)((cellZ + 1) * m_CellSize) - m_HalfCellSize; } //マス目サイズ/2ずらし<br>
+      &nbsp;&nbsp;&nbsp; inline int cellX(float worldX) const { return (worldX &gt;= 0) ? (int)worldX / m_CellSize : (int)worldX / m_CellSize - 1; } // マイナス方向にも対応<br>
+      &nbsp;&nbsp;&nbsp; inline int cellY(float worldY) const { return (worldY &gt;= 0) ? (int)worldY / m_CellSize : (int)worldY / m_CellSize - 1; } // マイナス方向にも対応<br>
+      &nbsp;&nbsp;&nbsp; inline int cellZ(float worldZ) const { return (worldZ &gt;= 0) ? (int)worldZ / m_CellSize : (int)worldZ / m_CellSize - 1; } // マイナス方向にも対応<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; TMXCsv enemyData;// 敵配置データ<br>
+      &nbsp;&nbsp;&nbsp; TMXJson tmxData; // タイルマップエディタのjsonデータ<br>
+      <br>
+      protected:<br>
+      &nbsp;&nbsp;&nbsp; // &lt;gid→idに対応したタイプのbit&gt; へ変換するvector型の辞書<br>
+      &nbsp;&nbsp;&nbsp; std::vector&lt;TileBit&gt; gidTypeBits{ 0 };<br>
+      public:<br>
+      &nbsp;&nbsp;&nbsp; inline TileBit&amp; gidTypeBit(unsigned int gid)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (gid &gt;= (int)gidTypeBits.size()) gidTypeBits.resize(gid + 1, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return (gid &lt; 0) ? gidTypeBits[0] : gidTypeBits[gid];<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; // id→ビットのタイプ の辞書に |= でbitTypeをビット論理和して、Wall:壁 や Bounce:はずむ などの特性を追加する<br>
+      &nbsp;&nbsp;&nbsp; TileBit SetTypeBit(unsigned int gid, TileBit bitType) { return gidTypeBit(gid) |= bitType; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // id→ビットのタイプ の辞書で &amp; ビット論理積で 指定したidが Wall:壁 や Bounce:はずむ などの特性を持つかを判定する<br>
+      &nbsp;&nbsp;&nbsp; inline bool isType(unsigned int gid, TileType bitType) { return gidTypeBit(gid) &amp; bitType; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // id→ビットのタイプ の辞書で &amp; ビット論理積で 指定したidが Wall:壁 や Bounce:はずむ などの特性を持つかを判定し一致したBitを返す(複数が1のビットもありうる)<br>
+      &nbsp;&nbsp;&nbsp; inline TileBit matchTypes(unsigned int gid, TileBit bitType) { return gidTypeBit(gid) &amp; bitType; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // tilesetsの.tsxのfirstgidをたどって、SetTypeBitでビット辞書に<br>
+      &nbsp;&nbsp;&nbsp; // csvのtileSettingsから読み取っておいたビット設定を登録<br>
+      &nbsp;&nbsp;&nbsp; bool InitTypeBit(const Tilesets&amp; tilesets)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; assert(tilesets.size() &gt; 0 &amp;&amp; "ステージのjsonファイルにタイルセット設定が一つもありません");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (tilesets.size() == 0) return false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; pair : tilesets)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto firstgid = pair.first;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; tsxFilePath = pair.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; tsxInfo = tilesets.umTsxInfo.at(tsxFilePath);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // [親フォルダを抽出] https://qiita.com/takano_tak/items/acf34b4a30cb974bab65<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t path_i = tsxFilePath.find_last_of("\\/");<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (path_i + 1 &gt;= tsxFilePath.size()) continue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto tsxFile = tsxFilePath.substr(path_i + 1);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto csvInfo = tileSettings.info.find(tsxFile);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (csvInfo == end(tileSettings.info)) continue; // csv側にタイルの情報がなかった<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // gidが0 idが-1 のデフォルトのタイルのビット特性を設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SetTypeBit(0, csvInfo-&gt;second-&gt;idTypeBit(-1));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int id = 0; // gidじゃなく0から始まるローカルなid<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto gid = firstgid, iEnd = firstgid + tsxInfo.tilecount; gid &lt; iEnd; ++gid)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // このMapのgidのビット辞書にcsvのtileSettingsから読み取っておいたビット設定を登録<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SetTypeBit(gid, csvInfo-&gt;second-&gt;idTypeBit(id));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ++id; // ローカルなidも次に進める<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // マップファイルのロード<br>
+      &nbsp;&nbsp;&nbsp; void Load(const std::string&amp; filePath)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this-&gt;FilePath = filePath;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ★jsonファイルの読み込み<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmxData.Load(filePath);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // tilesetsの.tsxのfirstgidをたどって、SetTypeBitでビット辞書に<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // csvのtileSettingsから読み取っておいたビット設定を登録<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; InitTypeBit(tmxData.tilesets);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto info = settings[filePath];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (info.spawnRange.umRange.size() != 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spawnRange = info.spawnRange;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spawnRange.InitRange(MapRange::Type::Ellipse, 10, 10);// 敵の新規出現レンジをプレイヤから半径X,Yの楕円にする<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (info.CellSize != 1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SetCellSize(info.CellSize); // csvに書かれているCellSizeを設定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmxData.SetGridSize({(float)info.CellSize ,(float)info.CellSize ,(float)info.CellSize });<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // if (info.CellSize == 1)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SetCellSize(tmxData.tmxInfo.tilewidth); // tmxのタイルの幅を取得<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // オブジェクトを Factoryクラスで className に応じて見きわめて 生成・配置する<br>
+      &nbsp;&nbsp;&nbsp; template&lt;typename TypeT&gt;<br>
+      &nbsp;&nbsp;&nbsp; inline std::shared_ptr&lt;TypeT&gt; SpawnTmxObject(const std::string&amp; className, std::shared_ptr&lt;InitParams&gt; initParams, Vector3 spawnPos, Quaternion rotation = { 0,0,0,1 })<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //IDに応じてFactory工場で作り分ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Factory::MakeSharedObject&lt;TypeT&gt;(className, initParams, m_world, spawnPos);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 画面スクロール（位置の更新）<br>
+      &nbsp;&nbsp;&nbsp; void Scroll3D(Vector3 prevPos, Vector3 delta, MapRange* pSpawnRange = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; std::vector&lt;TMXobjects*&gt; tmxObjectsList{ &amp;tmxData.enemies,&amp;tmxData.lights,&amp;tmxData.items,&amp;tmxData.objects };<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp; tmxObjects : tmxObjectsList)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (tmxObjects-&gt;data.size() == 0) continue; // リストにデータが一つもなければスクロールせず次へ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmxObjects-&gt;Scroll(prevPos, delta, (pSpawnRange != nullptr) ? *pSpawnRange : (tmxObjects-&gt;pSpawnRange != nullptr) ? *(tmxObjects-&gt;pSpawnRange) : spawnRange,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [&amp;](int gridX, int gridY, int gridZ)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pObject = tmxObjects-&gt;top(gridX, gridY, gridZ); // グリッドからオブジェクトを取り出す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; while (pObject != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pObj = (TMXobject*)pObject;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //int spawnID = pObj-&gt;spawnID; // 生成する敵のID情報をTMXの jsonファイルのデータから読み取る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float ratioX = (float)tmxObjects-&gt;cellWidth / tmxData.tmxInfo.tilewidth;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float ratioY = (float)tmxObjects-&gt;cellHeight / tmxData.tmxInfo.tileheight; // タイルマップエディタとのスケールの違いの比率を計算<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float ratioZ = (float)tmxObjects-&gt;cellDepth / tmxData.tmxInfo.tilewidth;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //クラス名とベースクラス名に応じて工場で作り分ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pObj-&gt;baseType == "Enemy")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_world-&gt;enemies.emplace_back(SpawnTmxObject&lt;Enemy&gt;(pObj-&gt;type, pObj-&gt;GetInitProperty(), Vector3(pObj-&gt;x * ratioX, pObj-&gt;z * ratioZ, pObj-&gt;y * ratioY)));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (pObj-&gt;baseType == "Light")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; m_world-&gt;lights.emplace_back(SpawnTmxObject&lt;Light&gt;(pObj-&gt;type, Vector3(pObj-&gt;x * ratioX, pObj-&gt;z * ratioZ, pObj-&gt;y * ratioY)));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <em>if (pObj-&gt;baseType == "Item")<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; m_world-&gt;items.emplace_back(SpawnTmxObject&lt;Item&gt;(pObj-&gt;type, pObj-&gt;GetInitProperty(), Vector3(pObj-&gt;x * ratioX, pObj-&gt;z * ratioZ, pObj-&gt;y * ratioY)));</em><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (pObj-&gt;baseType == "Object")<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; m_world-&gt;objects.emplace_back(SpawnTmxObject&lt;Object&gt;(pObj-&gt;type, Vector3(pObj-&gt;x * ratioX, pObj-&gt;z * ratioZ, pObj-&gt;y * ratioY)));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //m_world-&gt;enemies.emplace_back(Factory::MakeSharedTmxObject(spawnID,m_world, Vector3(pEnemy-&gt;x * ratioX, pEnemy-&gt;z * ratioZ, pEnemy-&gt;y * ratioY)));<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pObject = pObject-&gt;m_pNext; // 同じグリッドの次のオブジェクトへ<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmxObjects-&gt;Erase(pObj); // tmxObjectsのdataとグリッドからデータを消して再びスポーンしないようにする<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // このグリッドには何もいなくなるのでマス目自体eraseして高速化<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmxObjects-&gt;cellData.erase(CellXYZ(gridX, gridY, gridZ));<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 指定された座標（ワールド座標）の地形データを取得する<br>
+      &nbsp;&nbsp;&nbsp; unsigned int GetTerrain(float worldX, float worldY, float worldZ = (std::numeric_limits&lt;float&gt;::min)())<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (worldZ != (std::numeric_limits&lt;float&gt;::min)())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float tmpY = worldY;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; worldY = worldZ; //【YとZを変換】Zの入力があるときはZをYとして扱う<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; worldZ = tmpY; //【YとZを変換】<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 負の座標が指定された場合は、何も無いものとして扱う<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (worldX &lt; 0 || worldY &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Tile::None;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // マップ座標系（二次元配列の行と列）に変換する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int mapX = (int)(worldX / m_CellSize);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int mapY = (int)(worldY / m_CellSize);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int mapZ = (int)(worldZ / m_CellSize);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (tmxData.terrains.count(mapZ) == 0) // zの階層がまだなかったとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Tile::None; // 配列の範囲外は、何も無いものとして扱う<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; terrainZ = tmxData.terrains[mapZ]; // 辞書からZに対応するデータへの参照を得る<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (mapY &gt;= terrainZ.size() || mapX &gt;= terrainZ[mapY].size())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return Tile::None; // 配列の範囲外は、何も無いものとして扱う<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return terrainZ[mapY][mapX]; // 二次元配列から地形IDを取り出して返却する<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 指定された座標（ワールド座標）の地形データを書き換える return には書き換える前のgidが返る<br>
+      &nbsp;&nbsp;&nbsp; bool SetTerrain(unsigned int gid, float worldX, float worldY, float worldZ = (std::numeric_limits&lt;float&gt;::min)())<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (worldZ != (std::numeric_limits&lt;float&gt;::min)())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float tmpY = worldY;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; worldY = worldZ; //【YとZを変換】Zの入力があるときはZをYとして扱う<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; worldZ = tmpY; //【YとZを変換】<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 負の座標が指定された場合は、書き換えられない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (worldX &lt; 0 || worldY &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return false;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // マップ座標系（二次元配列の行と列）に変換する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int mapX = (int)(worldX / m_CellSize);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int mapY = (int)(worldY / m_CellSize);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int mapZ = (int)(worldZ / m_CellSize);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 二次元配列の範囲外は、書き換えられない<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //if (mapY &gt;= terrain.size() || mapX &gt;= terrain[mapY].size())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; return;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isNewZ = false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (tmxData.terrains.count(mapZ) == 0) isNewZ = true; // 新しい z の階層の場合<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; terrainZ = tmxData.terrains[mapZ]; // 辞書からZに対応するデータへの参照を得る<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isNewZ) // 新しい z の階層の場合<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; terrainZ.z = mapZ;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; terrainZ.tilesets = &amp;(tmxData.tilesets); //&nbsp; 新しい z の階層のtilesetsを設定する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; terrainZ.Width = tmxData.tmxInfo.width; terrainZ.Height = tmxData.tmxInfo.height;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; terrinZYX = terrainZ[mapY][mapX];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; terrinZYX.tilesets = &amp;(tmxData.tilesets);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; terrinZYX = gid; // 地形データ書き換え<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; terrainZ[mapY][mapX] = gid; // 地形データ書き換え<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return true;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // gidに応じてタイルを描き分ける<br>
+      &nbsp;&nbsp;&nbsp; void DrawTile(unsigned int gid, float worldX, float worldY, float worldZ, float ExRate)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto texture = TsxInfo::id_images[gid].second.lock();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int id = TsxInfo::id_images[gid].first;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isType(gid, TileType::Floor)) // 板ポリゴンで床を描く <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivRotaFloorF3D(MyDraw::Plane::Y, worldX, worldY, worldZ, ExRate, 0, *texture, id);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (isType(gid, TileType::Wall)) //壁のときはボックスを描く <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyDraw::DrawDivBoxF3D(worldX, worldY, worldZ, ExRate, *texture, id);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 地形をタイルで描く<br>
+      &nbsp;&nbsp;&nbsp; void DrawTerrain()<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; terrainN : tmxData.terrains)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; terrainZ = *terrainN.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int cellZ = terrainN.first;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int cellY = 0, ySize = terrainZ.size(); cellY &lt; ySize; cellY++)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int cellX = 0, xSize = terrainZ[cellY].size(); cellX &lt; ySize; cellX++)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float x = centerX(cellX); //マス目サイズ/2ずらし<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float y = centerY(cellY); //マス目サイズ/2ずらし<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float z = centerZ(cellZ); //マス目サイズ/2ずらし<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int id = -1;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; unsigned int gid = 0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (cellY &lt; terrainZ.size() &amp;&amp; cellX &lt; terrainZ[cellY].size())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gid = terrainZ[cellY][cellX];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 &lt;= gid &amp;&amp; gid &lt; TsxInfo::id_images.size())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto pTileImage = TsxInfo::id_images[gid].second.lock();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pTileImage == nullptr) continue;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ワールドに存在するすべてのカメラに関連づいたスクリーンに対して描画する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (auto&amp;&amp; keyValue : world()-&gt;cameras) // ワールドにあるすべてのカメラぶんループ<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; camera = keyValue.second;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //auto stepXYZs = MyMath::CrossGridVec(camera-&gt;pos - camera-&gt;m_targetXYZ, Vector3{ CellSize, CellSize, CellSize });<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; camera-&gt;Draw([&amp;]()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float ExRate = (float)m_CellSize / (float)pTileImage-&gt;m_XSize;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DrawTile(gid, x, z, y, ExRate); // idに応じてタイルを描き分ける<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 指定された座標（ワールド座標）の地形が壁か調べる<br>
+      &nbsp;&nbsp;&nbsp; inline bool IsWall(float worldX, float worldY, float worldZ = (std::numeric_limits&lt;float&gt;::min)())<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto terrainID = GetTerrain(worldX, worldY, worldZ); // 指定された座標の地形のIDを取得<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return IsWall(terrainID);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; //あるIDが壁かどうかだけ調べる<br>
+      &nbsp;&nbsp;&nbsp; inline bool IsWall(unsigned int gid)<br>
+      &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 地形が壁ならtrue、違うならfalseを返却する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return isType(gid, TileType::Wall);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; // 指定された座標worldPosの地形が 壁 や ダメージブロックかなどをチェックする関数<br>
+      &nbsp;&nbsp;&nbsp; bool checkID(TileBit checkBit, float worldX, float worldY, float worldZ,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int* pMapX = nullptr, int* pMapY = nullptr, int* pMapZ = nullptr, unsigned int* pTerrainID = nullptr, TileBit* pMatchBits = nullptr)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; unsigned int terrainID; // 指定された座標の地形のID<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (worldZ != (std::numeric_limits&lt;float&gt;::min)())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; //【YとZを変換】Zの入力があるときはZをYとして扱う タイルマップの X,Yは3DではYがZ:奥行に対応するから<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float tmpY = worldY;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; worldY = worldZ;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; worldZ = tmpY; //【YとZを変換】<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (worldX &lt; 0 || worldY &lt; 0) return false; // 負の座標が指定された場合<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // マップ座標系（二次元配列の行と列）に変換する<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int mapX = cellX(worldX), mapY = cellY(worldY), mapZ = cellZ(worldZ);<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (tmxData.terrains.count(mapZ) == 0) // zの階層がまだなかったときは 0<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; terrainID = 0; // 範囲外のときは 0<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // zの階層がすでにあったとき<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp; // 二次元配列の範囲内か判定<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auto&amp; terrainZ = tmxData.terrains[mapZ];<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (mapY &gt;= terrainZ.size() || mapX &gt;= terrainZ[mapY].size())<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; terrainID = 0; // 範囲外のときは 0<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; terrainID = terrainZ[mapY][mapX]; // 配列から地形IDを取り出す<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pTerrainID != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *pTerrainID = terrainID;<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TileBit matchBits = matchTypes(terrainID, checkBit); // ビット論理積 &amp; で地形のchekckBitを確かめる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool isCheckBit = matchBits != (TileBit)TileType::None;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (isCheckBit &amp;&amp; pMapX != nullptr &amp;&amp; pMapY != nullptr &amp;&amp; pMapZ != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *pMapX = mapX, * pMapY = mapY, * pMapZ = mapZ; // ブロックのマス目のセル番号をポインタに記録(nullptrの場合は記録しない)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pMatchBits != nullptr)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *pMatchBits = matchBits; // マッチしたビットをポインタ先に代入して返す<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return isCheckBit;<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      };<br>
+      <br>
+      #endif<br>
     </p>
     <br>
     <br>
