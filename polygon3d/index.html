@@ -40,20 +40,21 @@
       画像ファイルは<a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId0003">シュー ティングの別記事を参考</a>にImage/boss1.pngで保管されている前提で進めます)</p>
     <p class="source">#include "DxLib.h"<br>
       #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+      #include &lt;vector&gt;&nbsp;<br>
       #include "Screen.h"<br>
       <br>
       // 設定画面の【リンカー】→【システム】の【サブシステム】をWindows(SUBSYSTEM:WINDOWS)に設定するとWinMain からプログラムが開始する<br>
       int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
-      &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
-      &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-      &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-      &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-      &nbsp;&nbsp;&nbsp; SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
-      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib::DxLib_Init() &lt; 0)<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return -1;<br>
@@ -61,27 +62,27 @@
       <br>
       &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
       &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
-      &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawScreen(DX_SCREEN_BACK);<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ゲームのwhileループを開始する前の初期化処理<br>
       &nbsp;&nbsp;&nbsp; int texImage = -1;<br>
       &nbsp;&nbsp;&nbsp; texImage = LoadGraph("Image/boss1.png");<br>
       &nbsp;&nbsp;&nbsp; assert(texImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       &nbsp;&nbsp;&nbsp; float imgWidth, imgHeight;<br>
-      &nbsp;&nbsp;&nbsp; GetGraphSizeF(texImage, &amp;imgWidth, &amp;imgHeight); // テクスチャ画像のサイズを得る<br>
+      &nbsp;&nbsp;&nbsp; DxLib::GetGraphSizeF(texImage, &amp;imgWidth, &amp;imgHeight); // テクスチャ画像のサイズを得る<br>
       <br>
       &nbsp;&nbsp;&nbsp; VECTOR keyControlXYZ; // 上下左右キーでxy位置を動かせるように<br>
       &nbsp;&nbsp;&nbsp; keyControlXYZ.x = 0; keyControlXYZ.y = Screen::Height; keyControlXYZ.z = 0;<br>
       &nbsp;&nbsp;&nbsp; float keyControlAngle = 0.0f; // 回転<br>
       &nbsp;&nbsp;&nbsp; int animTime = 0; // アニメーションの時刻カウンタ<br>
       <br>
-      &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
       <br>
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-      &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0) <br>
+      &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0) <br>
       &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ProcessMessage() == 0になるのは×ボタン押したときなど<br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int PadInput = GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int PadInput = DxLib::GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int speed = 5;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 上下左右キーでポリゴンを描く起点(x,y)を移動<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_LEFT)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyControlXYZ.x -= speed;<br>
@@ -183,19 +184,20 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(VGet(x, y, z), 4.0f, 8, GetColor(255, 255, 0), GetColor(255, 255, 0),TRUE); // 左上に黄色の3D球を描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 0, GetColor(255, 255, 0), "x:%f y:%f Angle:%f", x, y, keyControlAngle);<br>
       <br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
       &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
       &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
       &nbsp;&nbsp;&nbsp; return 0;<br>
       }</p>
     <p><code>main.cpp</code>のプログラムを変更し、ポリゴンのインデックスの順番がポリゴンの表(時計回 り)と裏(反時計回り)に 影響を与えることを確認しましょう。</p>
     <p class="source">#include "DxLib.h"<br>
       #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+      #include &lt;vector&gt;<br>
       #include "Screen.h"<br>
       // ＃includeで別ファイルのヘッダファイル.hをこのコード内に読み込む<br>
       <br>
@@ -203,14 +205,14 @@
       int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
       {<br>
       &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
-      &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
-      &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-      &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-      &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-      &nbsp;&nbsp;&nbsp; SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
-      &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+      &nbsp;&nbsp;&nbsp; if (DxLib::DxLib_Init() &lt; 0)<br>
       &nbsp;&nbsp;&nbsp; {<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return -1;<br>
@@ -218,14 +220,14 @@
       <br>
       &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
       &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
-      &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+      &nbsp;&nbsp;&nbsp; DxLib::SetDrawScreen(DX_SCREEN_BACK);<br>
       <br>
       &nbsp;&nbsp;&nbsp; // ゲームのwhileループを開始する前の初期化処理<br>
       &nbsp;&nbsp;&nbsp; int texImage = -1;<br>
-      &nbsp;&nbsp;&nbsp; texImage = LoadGraph("Image/boss1.png");<br>
+      &nbsp;&nbsp;&nbsp; texImage = DxLib::LoadGraph("Image/boss1.png");<br>
       &nbsp;&nbsp;&nbsp; assert(texImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
       &nbsp;&nbsp;&nbsp; float imgWidth, imgHeight;<br>
-      &nbsp;&nbsp;&nbsp; GetGraphSizeF(texImage, &amp;imgWidth, &amp;imgHeight); // テクスチャ画像のサイズを得る<br>
+      &nbsp;&nbsp;&nbsp; DxLib::GetGraphSizeF(texImage, &amp;imgWidth, &amp;imgHeight); // テクスチャ画像のサイズを得る<br>
       <br>
       &nbsp;&nbsp;&nbsp; VECTOR keyControlXYZ; // 上下左右キーでxy位置を動かせるように<br>
       &nbsp;&nbsp;&nbsp; keyControlXYZ.x = 0; keyControlXYZ.y = Screen::Height; keyControlXYZ.z = 0;<br>
@@ -235,13 +237,13 @@
       &nbsp;&nbsp;&nbsp; <em>// バックカリングするか?(裏面になっているポリゴンを書かない処理)<br>
         &nbsp;&nbsp;&nbsp; DxLib::SetUseBackCulling(TRUE);</em><br>
       <br>
-      &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
       <br>
       &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
       &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0) <br>
       &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ProcessMessage() == 0になるのは×ボタン押したときなど<br>
       &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int PadInput = GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int PadInput = DxLib::GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int speed = 5;<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 上下左右キーでポリゴンを描く起点(x,y)を移動<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (PadInput &amp; PAD_INPUT_LEFT)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyControlXYZ.x -= speed;<br>
@@ -343,13 +345,13 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(VGet(x, y, z), 4.0f, 8, GetColor(255, 255, 0), GetColor(255, 255, 0),TRUE); // 左上に黄色の3D球を描く<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 0, GetColor(255, 255, 0), "x:%f y:%f Angle:%f", x, y, keyControlAngle);<br>
       <br>
-      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
       &nbsp;&nbsp;&nbsp; }<br>
       <br>
       &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-      &nbsp;&nbsp;&nbsp; WaitKey();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
       &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-      &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+      &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
       &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
       &nbsp;&nbsp;&nbsp; return 0;<br>
       }</p>
@@ -363,6 +365,7 @@
       <p><code>main.cpp</code>のプログラムを変更し、ポリゴンの<span style="text-decoration: underline;">difの値(拡散反射光:ディフューズ値)</span>がポリゴンの反射 する色に影響を与えることを確認しましょう。</p>
       <p class="source">#include "DxLib.h"<br>
         #include &lt;assert.h&gt;&nbsp;// 画像読み込みの読込み失敗表示用<br>
+        #include &lt;vector&gt;<br>
         #include "Screen.h"<br>
         // ＃includeで別ファイルのヘッダファイル.hをこのコード内に読み込む<br>
         <br>
@@ -370,14 +373,14 @@
         int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
-        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
-        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-        &nbsp;&nbsp;&nbsp; SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(Screen::Width, Screen::Height, 32 ) ; // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
         <br>
         &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
-        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib::DxLib_Init() &lt; 0)<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
         &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return -1;<br>
@@ -385,14 +388,14 @@
         <br>
         &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
         &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
-        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetDrawScreen(DX_SCREEN_BACK);<br>
         <br>
         &nbsp;&nbsp;&nbsp; // ゲームのwhileループを開始する前の初期化処理<br>
         &nbsp;&nbsp;&nbsp; int texImage = -1;<br>
         &nbsp;&nbsp;&nbsp; texImage = LoadGraph("Image/boss1.png");<br>
         &nbsp;&nbsp;&nbsp; assert(texImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
         &nbsp;&nbsp;&nbsp; float imgWidth, imgHeight;<br>
-        &nbsp;&nbsp;&nbsp; GetGraphSizeF(texImage, &amp;imgWidth, &amp;imgHeight); // テクスチャ画像のサイズを得る<br>
+        &nbsp;&nbsp;&nbsp; DxLib::GetGraphSizeF(texImage, &amp;imgWidth, &amp;imgHeight); // テクスチャ画像のサイズを得る<br>
         <br>
         &nbsp;&nbsp;&nbsp; VECTOR keyControlXYZ; // 上下左右キーでxy位置を動かせるように<br>
         &nbsp;&nbsp;&nbsp; keyControlXYZ.x = 0; keyControlXYZ.y = Screen::Height; keyControlXYZ.z = 0;<br>
@@ -402,12 +405,12 @@
         &nbsp;&nbsp;&nbsp; // バックカリングするか?(裏面になっているポリゴンを書かない処理)<br>
         &nbsp;&nbsp;&nbsp; DxLib::SetUseBackCulling(TRUE);<br>
         <br>
-        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
         <br>
         &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0) <br>
+        &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0) <br>
         &nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // ProcessMessage() == 0になるのは×ボタン押したときなど<br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int PadInput = GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int speed = 5;<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 上下左右キーでポリゴンを描く起点(x,y)を移動<br>
@@ -510,11 +513,11 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawSphere3D(VGet(x, y, z), 4.0f, 8, GetColor(255, 255, 0), GetColor(255, 255, 0),TRUE); // 左上に黄色の3D球を描く<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 0, GetColor(255, 255, 0), "x:%f y:%f Angle:%f", x, y, keyControlAngle);<br>
         <br>
-        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
         &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
         &nbsp;&nbsp;&nbsp; DxLib_End();<br>
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
@@ -1016,6 +1019,7 @@
       <p><code>main.cppを一旦まっさらにリセットしてから</code>下記のプログラムで、.ply形式のファイルをロードしてポリゴンで サイコロ型の3Dモデルが表示できるかテストします。</p>
       <p class="source">#include "DxLib.h"<br>
         #include &lt;assert.h&gt; // 画像読み込みの読込み失敗表示用<br>
+        #include &lt;vector&gt;<br>
         #include "Screen.h"<br>
         <span style="font-weight: bold;">#include "Ply.h"</span><br>
         <br>
@@ -1023,14 +1027,14 @@
         int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)<br>
         {<br>
         &nbsp;&nbsp;&nbsp; // 画面モードの設定<br>
-        &nbsp;&nbsp;&nbsp; SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
-        &nbsp;&nbsp;&nbsp; SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
-        &nbsp;&nbsp;&nbsp; ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
-        &nbsp;&nbsp;&nbsp; SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
-        &nbsp;&nbsp;&nbsp; SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetGraphMode(Screen::Width, Screen::Height, 32); // 画面サイズWidth×Heightのカラービット数32ビットで起動<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetWindowSize(Screen::Width, Screen::Height);// ウィンドウサイズWidth×Height(こことSetGraphModeのサイズが異なると画像がゆがむ)<br>
+        &nbsp;&nbsp;&nbsp; DxLib::ChangeWindowMode(TRUE);//フルスクリーン表示かウィンドウ表示か<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetMouseDispFlag(TRUE);// ここをFALSEにするとマウスカーソル非表示<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetMainWindowText("ゲームのウィンドウ名を変えるときはここ");//この行でエラーになったら【設定】マルチバイト文字セットが間 違ってるかも<br>
         <br>
         &nbsp;&nbsp;&nbsp; // ＤＸライブラリの初期化<br>
-        &nbsp;&nbsp;&nbsp; if (DxLib_Init() &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp; if (DxLib::DxLib_Init() &lt; 0)<br>
         &nbsp;&nbsp;&nbsp; {<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // DXの初期化にエラーが発生したらプログラム自体を終了(returnで)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;<br>
@@ -1038,14 +1042,14 @@
         <br>
         &nbsp;&nbsp;&nbsp; //表示しているスクリーンの後ろで隠れて次に描く画像を先に描くモード<br>
         &nbsp;&nbsp;&nbsp; // これとペアでScreenFlip();でつぎのページと入れ替えでちらつきを防ぐ<br>
-        &nbsp;&nbsp;&nbsp; SetDrawScreen(DX_SCREEN_BACK);<br>
+        &nbsp;&nbsp;&nbsp; DxLib::SetDrawScreen(DX_SCREEN_BACK);<br>
         <br>
         &nbsp;&nbsp;&nbsp; // ゲームのwhileループを開始する前の初期化処理<br>
         &nbsp;&nbsp;&nbsp; int texImage = -1;<br>
         &nbsp;&nbsp;&nbsp; texImage = LoadGraph("Image/boss1.png");<br>
         &nbsp;&nbsp;&nbsp; assert(texImage != -1); // 画像読込失敗、ファイル名かフォルダ名が間違ってる<br>
         &nbsp;&nbsp;&nbsp; float imgWidth, imgHeight;<br>
-        &nbsp;&nbsp;&nbsp; GetGraphSizeF(texImage, &amp;imgWidth, &amp;imgHeight); // テクスチャ画像のサイズを得る<br>
+        &nbsp;&nbsp;&nbsp; DxLib::GetGraphSizeF(texImage, &amp;imgWidth, &amp;imgHeight); // テクスチャ画像のサイズを得る<br>
         <br>
         &nbsp;&nbsp;&nbsp; Ply::Data Data; // .plyのデータのクラス<br>
         &nbsp;&nbsp;&nbsp; Ply::load("Image/<span style="font-weight: bold;">dicetest.ply</span>", Data); // .plyデータをロード<br>
@@ -1145,12 +1149,12 @@
         &nbsp;&nbsp;&nbsp; // バックカリングするか?(裏面になっているポリゴンを書かない処理)<br>
         &nbsp;&nbsp;&nbsp; DxLib::SetUseBackCulling(TRUE);<br>
         <br>
-        &nbsp;&nbsp;&nbsp; ScreenFlip();<br>
+        &nbsp;&nbsp;&nbsp; DxLib::ScreenFlip();<br>
         <br>
         &nbsp;&nbsp;&nbsp; // アニメーション(パラパラ漫画)するにはWhile文<br>
-        &nbsp;&nbsp;&nbsp; while (ProcessMessage() == 0)<br>
+        &nbsp;&nbsp;&nbsp; while (DxLib::ProcessMessage() == 0)<br>
         &nbsp;&nbsp;&nbsp; {// ProcessMessage() == 0になるのは×ボタン押したときなど<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ClearDrawScreen();// 一旦キャンバスをきれいにまっさらに<br>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int PadInput = GetJoypadInputState(DX_INPUT_KEY_PAD1);<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int speed = 5;<br>
@@ -1209,13 +1213,13 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::DrawFormatString(0, 0, GetColor(255, 255, 0), "x:%f y:%f Angle:%f %f %f", position.x, position.y, keyControlAngle.x, keyControlAngle.y, keyControlAngle.z);<br>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DxLib::ScreenFlip(); //隠れて裏側で描いておいた画像を表面に入れ替え<br>
         &nbsp;&nbsp;&nbsp; }<br>
         <br>
         &nbsp;&nbsp;&nbsp; // キー入力待ちをする<br>
-        &nbsp;&nbsp;&nbsp; WaitKey();<br>
+        &nbsp;&nbsp;&nbsp; DxLib::WaitKey();<br>
         &nbsp;&nbsp;&nbsp; // ＤＸライブラリの後始末<br>
-        &nbsp;&nbsp;&nbsp; DxLib_End();<br>
+        &nbsp;&nbsp;&nbsp; DxLib::DxLib_End();<br>
         &nbsp;&nbsp;&nbsp; // ソフトの終了<br>
         &nbsp;&nbsp;&nbsp; return 0;<br>
         }</p>
