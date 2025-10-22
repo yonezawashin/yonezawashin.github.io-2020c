@@ -8013,8 +8013,6 @@
 <br>
     <h1><a id="mozTocId0021" class="mozTocH1"></a>地形をBlock(アニメ機能付き)とTile(データ読込とブロック描画)という概念に切り分けたプログラム</h1>
 <br>
-      <a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId40022"><code>DataCsv.h</code>code>の作り方はこちらを参考にしてください</a>
-      <br>
       <br>
       まずは地形という概念について哲学してみましょう。<br>
       この2Dゲーム世界の地形の構成要素はブロックです。マインクラフトならボクセルです。<br>
@@ -8242,6 +8240,9 @@
       &nbsp;&nbsp;&nbsp;&nbsp;pCamera-&gt;DrawString(pos.x, pos.y, std::to_string(id).c_str(), GetColor(255, 255, 255));<br>
       }<br>
     </p>
+    <br>
+    <a href="https://yonezawashin.github.io/yonezawashin.github.io-2020c/#mozTocId40022">DataCsv.h の作り方はこちらを参考にしてください</a>
+    <br>
     <p><code>Tile.hを新規作成</code>してCSVからマップの1つ1つのブロックidを読み出して(x,y)に対応するマス目(cellX,cellY)のidに応じてブロックをまとめて描くクラスを作成します。</p>
     <p class="source">#ifndef TILE_H_<br>
       #define TILE_H_<br>
@@ -8888,8 +8889,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&amp;&amp; <em>mapData.</em>blockSwitch.count(id) &gt; 0)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>mapData.</em>isSwitchOn = !<em>mapData.</em>isSwitchOn; // trueとfalseを!で反転<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int cellY = 0; cellY &lt; Height; ++cellY) // 行をすべて調べる<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int cellX = 0; cellX &lt; Width; ++cellX) // 列をすべて調べる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int cellY = 0; cellY &lt; <em>mapData.</em>Height; ++cellY) // 行をすべて調べる<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int cellX = 0; cellX &lt; <em>mapData.</em>Width; ++cellX) // 列をすべて調べる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (auto switchID : <em>mapData.</em>blockSwitch[id]) // スイッチに反応するブロックのIDすべてを調べる<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (mapData[cellY][cellX] == switchID)<br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
